@@ -1,0 +1,20 @@
+Il piano va bene come base, con queste correzioni prima di partire.
+
+CORREZIONI AL MODELLO DATI
+1. Mandati: non indicano quali tipi di pratica un collaboratore può trattare. Tutti i collaboratori possono aprire tutti i tipi di pratica. Il mandato è un documento (file) che l'admin carica per ogni combinazione collaboratore + tipo di pratica, e che il collaboratore trova e scarica quando apre una pratica di quel tipo. L'admin deve poterlo sostituire anche per un solo collaboratore.
+2. Impostazioni orari: non sono orari di apertura informativi. Sono le fasce in cui i collaboratori possono inviare pratiche, impostate dall'admin. Fuori da quelle fasce l'invio è bloccato lato server. Valore iniziale: blocco da venerdì alle 18:00 a lunedì alle 9:00 (Europe/Rome). L'accesso alla piattaforma resta sempre possibile.
+3. Estratti: non sono estratti conto con saldo iniziale e finale. Un estratto è l'elenco delle pratiche chiuse e pagabili di un collaboratore: assistito, numero pratica, tipo, data, punti, ristorno in euro, con totale punti, totale ristorno e data di stampa. Ogni tipo di pratica ha quindi: pagabile sì/no, punti, valore in euro. Una pratica può stare in un solo estratto. Il pagamento si registra sull'estratto (data, importo, metodo) e porta le pratiche allo stato Pagata.
+4. Dare/avere: non è un registro generico di movimenti. È un prospetto per collaboratore e anno, diviso in sezioni fisse: Naspi, Pensionati, Patronato, CAF, Debiti. Ogni riga ha descrizione, importo, data di pagamento, nota. La sezione Patronato si alimenta dai totali degli estratti. Totale avere = somma degli importi meno i debiti.
+5. Partecipanti agli eventi: li inserisce il collaboratore con nome e cognome. Ognuno ha un QR code personale e gli orari di entrata e di uscita registrati al check-in, modificabili a mano dall'admin.
+6. Tipi di pratica: oltre ai documenti obbligatori, ogni tipo ha anche i moduli da compilare che il collaboratore scarica. Servono inoltre le categorie degli allegati, gestite dall'admin, per il menu a tendina dell'operatore.
+7. Non serve una "vista compensi" per il collaboratore: riceve l'estratto per email.
+
+RISPOSTE AI TUOI CINQUE PUNTI
+1. Unicità: codice fiscale e cellulare unici sull'insieme di collaboratori e assistiti. La stessa persona non può essere sia collaboratore sia assistito.
+2. Orari: vedi correzione 2, devono bloccare l'invio delle pratiche.
+3. Archiviazione log: va bene come proposto.
+4. Commenti: sono la chat della pratica tra collaboratore e back office. Entrambi vedono tutti i messaggi, con autore, data e ora. Niente commenti interni.
+5. Frontend unico con due aree: va bene.
+
+PIANO DI LAVORO
+Non seguire il tuo piano in sei task: ti mando io le fasi una per volta, da 1 a 9, e a fine fase ti fermi per la mia verifica. Aggiorna il modello dati con queste correzioni, confermami in breve cosa hai cambiato e aspetta la fase 1. Non costruire ancora nulla.
