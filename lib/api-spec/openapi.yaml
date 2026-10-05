@@ -10,6 +10,16 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Accesso e sessione
+  - name: utenti
+    description: Utenti interni del back office
+  - name: collaboratori
+    description: Anagrafica collaboratori (sedi) e gruppi
+  - name: luoghi
+    description: Comuni italiani, stati esteri e nazionalita
+  - name: log
+    description: Log delle operazioni
 paths:
   /healthz:
     get:
@@ -24,7 +34,365 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Accesso con email e password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Accesso eseguito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessioneUtente"
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Esce dalla sessione corrente
+      responses:
+        "204":
+          description: Sessione chiusa
+  /auth/me:
+    get:
+      operationId: getSessione
+      tags: [auth]
+      summary: Utente della sessione corrente
+      responses:
+        "200":
+          description: Utente autenticato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessioneUtente"
+  /auth/cambio-password:
+    post:
+      operationId: cambiaPassword
+      tags: [auth]
+      summary: Cambia la password dell'utente corrente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CambioPasswordInput"
+      responses:
+        "200":
+          description: Password cambiata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessioneUtente"
+
+  /utenti:
+    get:
+      operationId: listUtenti
+      tags: [utenti]
+      summary: Elenco utenti interni
+      responses:
+        "200":
+          description: Utenti interni
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Utente"
+    post:
+      operationId: createUtente
+      tags: [utenti]
+      summary: Crea un utente interno con password provvisoria
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UtenteInput"
+      responses:
+        "201":
+          description: Utente creato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Utente"
+  /utenti/{id}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    get:
+      operationId: getUtente
+      tags: [utenti]
+      summary: Dettaglio utente interno
+      responses:
+        "200":
+          description: Utente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Utente"
+    put:
+      operationId: updateUtente
+      tags: [utenti]
+      summary: Modifica un utente interno
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UtenteUpdate"
+      responses:
+        "200":
+          description: Utente aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Utente"
+  /utenti/{id}/password-provvisoria:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    post:
+      operationId: impostaPasswordProvvisoriaUtente
+      tags: [utenti]
+      summary: Imposta una nuova password provvisoria (da cambiare al primo accesso)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordProvvisoriaInput"
+      responses:
+        "200":
+          description: Password provvisoria impostata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Utente"
+
+  /collaboratori:
+    get:
+      operationId: listCollaboratori
+      tags: [collaboratori]
+      summary: Elenco collaboratori
+      parameters:
+        - name: q
+          in: query
+          required: false
+          description: Ricerca su nome, cognome, codice fiscale, cellulare, email, numero di sportello
+          schema:
+            type: string
+        - name: tipologia
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/Tipologia"
+        - name: capogruppoId
+          in: query
+          required: false
+          description: Solo i collaboratori del gruppo di questo capogruppo
+          schema:
+            type: integer
+        - name: stato
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [attivi, disattivati, tutti]
+      responses:
+        "200":
+          description: Collaboratori
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Collaboratore"
+    post:
+      operationId: createCollaboratore
+      tags: [collaboratori]
+      summary: Crea un collaboratore e il suo accesso con password provvisoria
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CollaboratoreInput"
+      responses:
+        "201":
+          description: Collaboratore creato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollaboratoreDettaglio"
+  /collaboratori/{id}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    get:
+      operationId: getCollaboratore
+      tags: [collaboratori]
+      summary: Scheda collaboratore, con i collaboratori del suo gruppo se e' capogruppo
+      responses:
+        "200":
+          description: Collaboratore
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollaboratoreDettaglio"
+    put:
+      operationId: updateCollaboratore
+      tags: [collaboratori]
+      summary: Modifica un collaboratore (anagrafica, sportello, capogruppo, attivo)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CollaboratoreUpdate"
+      responses:
+        "200":
+          description: Collaboratore aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollaboratoreDettaglio"
+  /collaboratori/{id}/password-provvisoria:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    post:
+      operationId: impostaPasswordProvvisoriaCollaboratore
+      tags: [collaboratori]
+      summary: Imposta una nuova password provvisoria (da cambiare al primo accesso)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordProvvisoriaInput"
+      responses:
+        "200":
+          description: Password provvisoria impostata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollaboratoreDettaglio"
+
+  /luoghi:
+    get:
+      operationId: cercaLuoghi
+      tags: [luoghi]
+      summary: Cerca comuni italiani e stati esteri (luogo di nascita)
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Almeno 2 caratteri
+          schema:
+            type: string
+        - name: tipo
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [comune, stato]
+      responses:
+        "200":
+          description: Luoghi trovati (massimo 20)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Luogo"
+  /nazionalita:
+    get:
+      operationId: listNazionalita
+      tags: [luoghi]
+      summary: Elenco delle nazionalita selezionabili
+      responses:
+        "200":
+          description: Nazionalita (Italia per prima)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Nazionalita"
+
+  /log-operazioni:
+    get:
+      operationId: listLogOperazioni
+      tags: [log]
+      summary: Log delle operazioni, dal piu recente
+      parameters:
+        - name: utenteId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: da
+          in: query
+          required: false
+          description: Data iniziale (AAAA-MM-GG, fuso Europe/Rome), inclusa
+          schema:
+            type: string
+        - name: a
+          in: query
+          required: false
+          description: Data finale (AAAA-MM-GG, fuso Europe/Rome), inclusa
+          schema:
+            type: string
+        - name: azione
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: pagina
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+        - name: perPagina
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+      responses:
+        "200":
+          description: Pagina di log
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogOperazioniPagina"
+  /log-operazioni/filtri:
+    get:
+      operationId: getFiltriLog
+      tags: [log]
+      summary: Valori selezionabili nei filtri del log
+      responses:
+        "200":
+          description: Utenti presenti nel log e tipi di azione
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FiltriLog"
+
 components:
+  parameters:
+    IdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
   schemas:
     HealthStatus:
       type: object
@@ -34,3 +402,485 @@ components:
       required:
         - status
 
+    ErroreApi:
+      type: object
+      description: Formato degli errori (400, 401, 403, 404, 409, 429). Il messaggio e' in italiano.
+      required: [error]
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+          description: >
+            Codice stabile, ad esempio PASSWORD_DA_CAMBIARE, CODICE_FISCALE_DUPLICATO,
+            CELLULARE_DUPLICATO, EMAIL_DUPLICATA, SPORTELLO_DUPLICATO.
+        campo:
+          type: string
+          description: Nome del campo del modulo a cui si riferisce l'errore
+
+    Ruolo:
+      type: string
+      enum: [super_admin, admin, operatore, collaboratore]
+    RuoloInterno:
+      type: string
+      enum: [super_admin, admin, operatore]
+    Tipologia:
+      type: string
+      enum: [CAF, PATRONATO]
+    Sesso:
+      type: string
+      enum: [M, F]
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+    CambioPasswordInput:
+      type: object
+      required: [passwordAttuale, nuovaPassword]
+      properties:
+        passwordAttuale:
+          type: string
+        nuovaPassword:
+          type: string
+          minLength: 8
+    PasswordProvvisoriaInput:
+      type: object
+      required: [passwordProvvisoria]
+      properties:
+        passwordProvvisoria:
+          type: string
+          minLength: 8
+
+    SessioneCollaboratore:
+      type: object
+      required: [id, numeroSportello, tipologia, capogruppo]
+      properties:
+        id:
+          type: integer
+        numeroSportello:
+          type: string
+        tipologia:
+          $ref: "#/components/schemas/Tipologia"
+        capogruppo:
+          type: boolean
+          description: Vero se ha collaboratori nel proprio gruppo
+    SessioneUtente:
+      type: object
+      required: [id, email, nome, cognome, ruolo, area, deveCambiarePassword, collaboratore]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        nome:
+          type: string
+        cognome:
+          type: string
+        ruolo:
+          $ref: "#/components/schemas/Ruolo"
+        area:
+          type: string
+          enum: [backoffice, collaboratore]
+          description: Area in cui l'utente deve essere portato dopo il login
+        deveCambiarePassword:
+          type: boolean
+          description: Se vero, finche' non cambia la password ogni altra chiamata risponde 403 con code PASSWORD_DA_CAMBIARE
+        collaboratore:
+          oneOf:
+            - $ref: "#/components/schemas/SessioneCollaboratore"
+            - type: "null"
+
+    Utente:
+      type: object
+      required: [id, email, nome, cognome, ruolo, attivo, deveCambiarePassword, ultimoAccesso, creatoIl]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        nome:
+          type: string
+        cognome:
+          type: string
+        ruolo:
+          $ref: "#/components/schemas/RuoloInterno"
+        attivo:
+          type: boolean
+        deveCambiarePassword:
+          type: boolean
+        ultimoAccesso:
+          type: ["string", "null"]
+          description: Istante ISO 8601
+        creatoIl:
+          type: string
+          description: Istante ISO 8601
+    UtenteInput:
+      type: object
+      required: [email, nome, cognome, ruolo, passwordProvvisoria]
+      properties:
+        email:
+          type: string
+        nome:
+          type: string
+          minLength: 1
+        cognome:
+          type: string
+          minLength: 1
+        ruolo:
+          $ref: "#/components/schemas/RuoloInterno"
+        passwordProvvisoria:
+          type: string
+          minLength: 8
+    UtenteUpdate:
+      type: object
+      required: [email, nome, cognome, ruolo, attivo]
+      properties:
+        email:
+          type: string
+        nome:
+          type: string
+          minLength: 1
+        cognome:
+          type: string
+          minLength: 1
+        ruolo:
+          $ref: "#/components/schemas/RuoloInterno"
+        attivo:
+          type: boolean
+
+    Luogo:
+      type: object
+      required: [codice, nome, provincia, tipo, attuale]
+      properties:
+        codice:
+          type: string
+          description: Codice catastale (Belfiore) del comune (es. H501) o dello stato estero (es. Z129)
+        nome:
+          type: string
+        provincia:
+          type: ["string", "null"]
+          description: Sigla della provincia, null per gli stati esteri
+        tipo:
+          type: string
+          enum: [comune, stato]
+        attuale:
+          type: boolean
+          description: Falso per comuni soppressi e stati non piu esistenti
+    Nazionalita:
+      type: object
+      required: [codice, nome]
+      properties:
+        codice:
+          type: string
+          description: IT per l'Italia, altrimenti il codice dello stato estero (es. Z129)
+        nome:
+          type: string
+
+    CollaboratoreRiepilogo:
+      type: object
+      required: [id, nome, cognome, numeroSportello, tipologia, attivo]
+      properties:
+        id:
+          type: integer
+        nome:
+          type: string
+        cognome:
+          type: string
+        numeroSportello:
+          type: string
+        tipologia:
+          $ref: "#/components/schemas/Tipologia"
+        attivo:
+          type: boolean
+    Collaboratore:
+      type: object
+      required:
+        - id
+        - utenteId
+        - nome
+        - cognome
+        - sesso
+        - dataNascita
+        - luogoNascitaCodice
+        - luogoNascitaNome
+        - luogoNascitaProvincia
+        - luogoNascitaEstero
+        - nazionalita
+        - nazionalitaNome
+        - straniero
+        - codiceFiscale
+        - email
+        - telefono
+        - cellulare
+        - numeroSportello
+        - tipologia
+        - capogruppoId
+        - capogruppoNome
+        - numeroCollaboratori
+        - attivo
+        - deveCambiarePassword
+        - ultimoAccesso
+        - creatoIl
+      properties:
+        id:
+          type: integer
+        utenteId:
+          type: integer
+        nome:
+          type: string
+        cognome:
+          type: string
+        sesso:
+          $ref: "#/components/schemas/Sesso"
+        dataNascita:
+          type: string
+          description: AAAA-MM-GG
+        luogoNascitaCodice:
+          type: string
+        luogoNascitaNome:
+          type: string
+        luogoNascitaProvincia:
+          type: ["string", "null"]
+        luogoNascitaEstero:
+          type: boolean
+        nazionalita:
+          type: string
+          description: IT oppure codice dello stato estero
+        nazionalitaNome:
+          type: string
+        straniero:
+          type: boolean
+          description: Vero se la nazionalita non e' italiana
+        codiceFiscale:
+          type: string
+        email:
+          type: string
+        telefono:
+          type: ["string", "null"]
+        cellulare:
+          type: string
+          description: Formato internazionale, es. +393331234567
+        numeroSportello:
+          type: string
+        tipologia:
+          $ref: "#/components/schemas/Tipologia"
+        capogruppoId:
+          type: ["integer", "null"]
+        capogruppoNome:
+          type: ["string", "null"]
+          description: Cognome e nome del capogruppo
+        numeroCollaboratori:
+          type: integer
+          description: Quanti collaboratori ha nel proprio gruppo (0 se non e' capogruppo)
+        attivo:
+          type: boolean
+        deveCambiarePassword:
+          type: boolean
+        ultimoAccesso:
+          type: ["string", "null"]
+        creatoIl:
+          type: string
+    CollaboratoreDettaglio:
+      allOf:
+        - $ref: "#/components/schemas/Collaboratore"
+        - type: object
+          required: [membri]
+          properties:
+            membri:
+              type: array
+              description: Collaboratori che appartengono al gruppo (vuoto se non e' capogruppo)
+              items:
+                $ref: "#/components/schemas/CollaboratoreRiepilogo"
+    CollaboratoreInput:
+      type: object
+      required:
+        - nome
+        - cognome
+        - sesso
+        - dataNascita
+        - luogoNascitaCodice
+        - nazionalita
+        - codiceFiscale
+        - email
+        - cellulare
+        - numeroSportello
+        - tipologia
+        - passwordProvvisoria
+      properties:
+        nome:
+          type: string
+          minLength: 1
+        cognome:
+          type: string
+          minLength: 1
+        sesso:
+          $ref: "#/components/schemas/Sesso"
+        dataNascita:
+          type: string
+          pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+        luogoNascitaCodice:
+          type: string
+          description: Codice del comune o dello stato scelto con la ricerca luoghi
+        nazionalita:
+          type: string
+          description: Codice restituito da listNazionalita
+        codiceFiscale:
+          type: string
+          minLength: 16
+          maxLength: 16
+        email:
+          type: string
+        telefono:
+          type: ["string", "null"]
+        cellulare:
+          type: string
+        numeroSportello:
+          type: string
+          minLength: 1
+        tipologia:
+          $ref: "#/components/schemas/Tipologia"
+        capogruppoId:
+          type: ["integer", "null"]
+        passwordProvvisoria:
+          type: string
+          minLength: 8
+    CollaboratoreUpdate:
+      type: object
+      required:
+        - nome
+        - cognome
+        - sesso
+        - dataNascita
+        - luogoNascitaCodice
+        - nazionalita
+        - codiceFiscale
+        - email
+        - cellulare
+        - numeroSportello
+        - tipologia
+        - attivo
+      properties:
+        nome:
+          type: string
+          minLength: 1
+        cognome:
+          type: string
+          minLength: 1
+        sesso:
+          $ref: "#/components/schemas/Sesso"
+        dataNascita:
+          type: string
+          pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+        luogoNascitaCodice:
+          type: string
+        nazionalita:
+          type: string
+        codiceFiscale:
+          type: string
+          minLength: 16
+          maxLength: 16
+        email:
+          type: string
+        telefono:
+          type: ["string", "null"]
+        cellulare:
+          type: string
+        numeroSportello:
+          type: string
+          minLength: 1
+        tipologia:
+          $ref: "#/components/schemas/Tipologia"
+        capogruppoId:
+          type: ["integer", "null"]
+        attivo:
+          type: boolean
+
+    LogOperazione:
+      type: object
+      required:
+        - id
+        - creatoIl
+        - utenteId
+        - utenteNome
+        - ruolo
+        - azione
+        - azioneEtichetta
+        - entita
+        - entitaId
+        - descrizione
+        - ip
+      properties:
+        id:
+          type: integer
+        creatoIl:
+          type: string
+          description: Istante ISO 8601
+        utenteId:
+          type: ["integer", "null"]
+        utenteNome:
+          type: ["string", "null"]
+        ruolo:
+          type: ["string", "null"]
+        azione:
+          type: string
+          description: Codice dell'azione, es. collaboratore.crea
+        azioneEtichetta:
+          type: string
+        entita:
+          type: ["string", "null"]
+          description: Tipo di record coinvolto, es. collaboratore
+        entitaId:
+          type: ["integer", "null"]
+        descrizione:
+          type: string
+        ip:
+          type: ["string", "null"]
+    LogOperazioniPagina:
+      type: object
+      required: [righe, totale, pagina, perPagina]
+      properties:
+        righe:
+          type: array
+          items:
+            $ref: "#/components/schemas/LogOperazione"
+        totale:
+          type: integer
+        pagina:
+          type: integer
+        perPagina:
+          type: integer
+    FiltroUtenteLog:
+      type: object
+      required: [id, nome, ruolo]
+      properties:
+        id:
+          type: integer
+        nome:
+          type: string
+        ruolo:
+          $ref: "#/components/schemas/Ruolo"
+    FiltroAzioneLog:
+      type: object
+      required: [codice, etichetta]
+      properties:
+        codice:
+          type: string
+        etichetta:
+          type: string
+    FiltriLog:
+      type: object
+      required: [utenti, azioni]
+      properties:
+        utenti:
+          type: array
+          items:
+            $ref: "#/components/schemas/FiltroUtenteLog"
+        azioni:
+          type: array
+          items:
+            $ref: "#/components/schemas/FiltroAzioneLog"

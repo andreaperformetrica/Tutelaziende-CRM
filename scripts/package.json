@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "hello": "tsx ./src/hello.ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "genera-luoghi": "tsx ./src/generaLuoghi.ts"
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "codice-fiscale-js": "2.4.0",
     "tsx": "catalog:"
   }
 }

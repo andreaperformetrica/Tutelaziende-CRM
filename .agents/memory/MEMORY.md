@@ -1,1 +1,2 @@
 - [Tutela CRM domain rules](tutela-crm-domain.md) — confirmed business rules, stack choices, and the phase-by-phase working agreement (stop after each phase)
+- [Phase 1 permission decisions](tutela-crm-phase1-decisions.md) — who manages whom, capogruppo one-level rules, read-only operatore

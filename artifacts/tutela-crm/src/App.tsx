@@ -1,0 +1,87 @@
+import { type ReactNode } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ErrorBoundary } from '@/components/error-boundary';
+import { Toaster } from '@/components/ui/toaster';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import NotFound from '@/pages/not-found';
+import { Redirect, Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
+import { useSession, homeFor } from '@/lib/auth';
+import { BackofficeShell, CollaboratoreShell } from '@/components/layout/shells';
+import { ErrorState } from '@/components/common';
+import { Skeleton } from '@/components/ui/skeleton';
+import LoginPage from '@/pages/login';
+import CambiaPasswordPage from '@/pages/cambia-password';
+import CollaboratoriPage from '@/pages/admin/collaboratori';
+import CollaboratoreNuovo from '@/pages/admin/collaboratore-nuovo';
+import CollaboratoreDettaglioPage from '@/pages/admin/collaboratore-dettaglio';
+import UtentiPage from '@/pages/admin/utenti';
+import LogPage from '@/pages/admin/log';
+import HomeCollaboratore from '@/pages/home-collaboratore';
+
+const queryClient = new QueryClient({ defaultOptions: { queries: { refetchOnWindowFocus: false } } });
+
+const ADMIN = ['super_admin', 'admin'];
+const TUTTI_BO = ['super_admin', 'admin', 'operatore'];
+
+function Gate({ area, roles, children }: { area?: 'backoffice' | 'collaboratore'; roles?: string[]; children: ReactNode }) {
+  const { session, isLoading, failed, refetch } = useSession();
+  const [loc] = useLocation();
+  if (isLoading) return <div className="min-h-[100dvh] p-10 space-y-3"><Skeleton className="h-10 w-64" /><Skeleton className="h-64 w-full" /></div>;
+  if (failed) return <div className="p-10"><ErrorState message="Impossibile verificare la sessione." onRetry={() => refetch()} /></div>;
+  if (!session) return <Redirect to="/login" />;
+  const forzato = session.deveCambiarePassword;
+  if (forzato && loc !== '/cambia-password') return <Redirect to="/cambia-password" />;
+  if (!forzato && area && session.area !== area) return <Redirect to={homeFor(session.area)} />;
+  if (!forzato && roles && !roles.includes(session.ruolo)) return <Redirect to={homeFor(session.area)} />;
+  if (forzato) return <>{children}</>;
+  return session.area === 'collaboratore'
+    ? <CollaboratoreShell s={session}>{children}</CollaboratoreShell>
+    : <BackofficeShell s={session}>{children}</BackofficeShell>;
+}
+
+function Root() {
+  const { session, isLoading } = useSession();
+  if (isLoading) return null;
+  return <Redirect to={session ? (session.deveCambiarePassword ? '/cambia-password' : homeFor(session.area)) : '/login'} />;
+}
+
+const g = (node: ReactNode, area?: 'backoffice' | 'collaboratore', roles?: string[]) => () => <Gate area={area} roles={roles}>{node}</Gate>;
+
+function Router() {
+  return (
+    <RoutedErrorBoundary>
+      <Switch>
+        <Route path="/" component={Root} />
+        <Route path="/login" component={LoginPage} />
+        <Route path="/cambia-password" component={g(<CambiaPasswordPage />)} />
+        <Route path="/admin/collaboratori" component={g(<CollaboratoriPage />, 'backoffice', TUTTI_BO)} />
+        <Route path="/admin/collaboratori/nuovo" component={g(<CollaboratoreNuovo />, 'backoffice', ADMIN)} />
+        <Route path="/admin/collaboratori/:id" component={g(<CollaboratoreDettaglioPage />, 'backoffice', TUTTI_BO)} />
+        <Route path="/admin/utenti" component={g(<UtentiPage />, 'backoffice', ADMIN)} />
+        <Route path="/admin/log" component={g(<LogPage />, 'backoffice', ADMIN)} />
+        <Route path="/collaboratore" component={g(<HomeCollaboratore />, 'collaboratore', ['collaboratore'])} />
+        <Route component={NotFound} />
+      </Switch>
+    </RoutedErrorBoundary>
+  );
+}
+
+function RoutedErrorBoundary({ children }: { children: ReactNode }) {
+  const [location] = useLocation();
+  return <ErrorBoundary resetKey={location}>{children}</ErrorBoundary>;
+}
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+          <Router />
+        </WouterRouter>
+        <Toaster />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
+
+export default App;

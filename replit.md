@@ -26,15 +26,19 @@ _Populate as you build — short repo map plus pointers to the source-of-truth f
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Login is app-managed (email+password, scrypt hashes, server-side sessions in `sessioni`, cookie `tutela_sid` SameSite=None; Secure; Partitioned so it works in the Replit preview iframe). CSRF is handled by an Origin check in `middlewares/auth.ts`.
+- Until the provisional password is changed the API answers 403 `PASSWORD_DA_CAMBIARE` for everything except `/auth/me`, `/auth/logout`, `/auth/cambio-password`.
+- Collaboratori and (phase 2) assistiti share the `persone` table, so codice fiscale and cellulare uniqueness spans both. Validation lives in `artifacts/api-server/src/lib/persone.ts`; codice fiscale algorithm in `lib/anagrafica`.
+- Comuni and foreign states are an in-memory JSON (`artifacts/api-server/src/data/luoghi.json`), regenerated with `pnpm --filter @workspace/scripts run genera-luoghi`.
+- Every mutation writes to `log_operazioni` in the same transaction via `registraLog` (`lib/log.ts`); new actions must be added to `AZIONI_LOG`.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+Tutela CRM (Italian): back office (super admin, admin, operatore) and Web Collaboratore. Phase 1: login, internal users, collaboratori registry with groups (capogruppo), operations log. Test data: `pnpm --filter @workspace/api-server run seed`.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Phases are delivered one at a time; stop after each for user verification. UI in Italian, no emojis, dates gg/mm/aaaa (Europe/Rome), euro with 2 decimals.
 
 ## Gotchas
 

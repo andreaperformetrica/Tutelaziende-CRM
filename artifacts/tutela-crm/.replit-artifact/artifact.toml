@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Tutela CRM"
+description = "Piattaforma gestionale in italiano per un patronato/CAF e la rete dei suoi collaboratori sul territorio. Back office per super admin, admin e operatori e Web Collaboratore per i collaboratori."
+version = "1.0.0"
+id = "artifacts/tutela-crm"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20199
+
+[services.development]
+run = "pnpm --filter @workspace/tutela-crm run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/tutela-crm", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/tutela-crm/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20199"
+BASE_PATH = "/"
