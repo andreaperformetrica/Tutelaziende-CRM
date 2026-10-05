@@ -79,7 +79,7 @@ function LuogoCombobox({ value, label, onPick, invalid }: { value: string; label
       </PopoverTrigger>
       <PopoverContent className="p-0 w-[--radix-popover-trigger-width] min-w-72" align="start">
         <Command shouldFilter={false}>
-          <CommandInput placeholder="Digita almeno 2 lettere" value={q} onValueChange={setQ} data-testid="input-cerca-luogo" />
+          <CommandInput autoComplete="off" placeholder="Digita almeno 2 lettere" value={q} onValueChange={setQ} data-testid="input-cerca-luogo" />
           <CommandList>
             {!attiva && <div className="py-6 text-center text-sm text-muted-foreground">Digita almeno 2 caratteri</div>}
             {attiva && isFetching && <div className="py-6 text-center text-sm text-muted-foreground">Ricerca in corso…</div>}
@@ -125,7 +125,7 @@ function NazionalitaSelect({ value, onPick, invalid }: { value: string; onPick: 
       </PopoverTrigger>
       <PopoverContent className="p-0 w-[--radix-popover-trigger-width] min-w-64" align="start">
         <Command>
-          <CommandInput placeholder="Cerca nazionalità" />
+          <CommandInput autoComplete="off" placeholder="Cerca nazionalità" />
           <CommandList>
             <CommandEmpty>Nessun risultato</CommandEmpty>
             <CommandGroup>
@@ -173,10 +173,10 @@ export function AnagraficaFields() {
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Campo label="Cognome" name="cognome" required err={e.cognome?.message}>
-          <Input id="input-cognome" {...register("cognome")} aria-invalid={!!e.cognome} className={e.cognome ? "border-destructive" : ""} data-testid="input-cognome" />
+          <Input id="input-cognome" autoComplete="off" {...register("cognome")} aria-invalid={!!e.cognome} className={e.cognome ? "border-destructive" : ""} data-testid="input-cognome" />
         </Campo>
         <Campo label="Nome" name="nome" required err={e.nome?.message}>
-          <Input id="input-nome" {...register("nome")} aria-invalid={!!e.nome} className={e.nome ? "border-destructive" : ""} data-testid="input-nome" />
+          <Input id="input-nome" autoComplete="off" {...register("nome")} aria-invalid={!!e.nome} className={e.nome ? "border-destructive" : ""} data-testid="input-nome" />
         </Campo>
         <Campo label="Sesso" name="sesso" required err={e.sesso?.message}>
           <Controller control={control} name="sesso" render={({ field }) => (
@@ -191,7 +191,7 @@ export function AnagraficaFields() {
           )} />
         </Campo>
         <Campo label="Data di nascita" name="dataNascita" required err={e.dataNascita?.message}>
-          <Input id="input-dataNascita" type="date" {...register("dataNascita")} className={e.dataNascita ? "border-destructive" : ""} data-testid="input-data-nascita" />
+          <Input id="input-dataNascita" autoComplete="off" type="date" {...register("dataNascita")} className={e.dataNascita ? "border-destructive" : ""} data-testid="input-data-nascita" />
         </Campo>
         <Campo label="Luogo di nascita" name="luogoNascitaCodice" required err={e.luogoNascitaCodice?.message}>
           <Controller control={control} name="luogoNascitaCodice" render={({ field }) => (
@@ -228,7 +228,7 @@ export function AnagraficaFields() {
           </>
         }>
         <Controller control={control} name="codiceFiscale" render={({ field }) => (
-          <Input id="input-codiceFiscale" value={field.value} maxLength={16} spellCheck={false} data-testid="input-codice-fiscale"
+          <Input id="input-codiceFiscale" autoComplete="off" value={field.value} maxLength={16} spellCheck={false} data-testid="input-codice-fiscale"
             className={cn("font-mono tracking-[0.18em] uppercase", e.codiceFiscale && "border-destructive")}
             onBlur={field.onBlur}
             onChange={(ev) => { const v = normalizzaCodiceFiscale(ev.target.value); manuale.current = v.length > 0; field.onChange(v); }} />
@@ -237,14 +237,14 @@ export function AnagraficaFields() {
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Campo label="Email" name="email" required err={e.email?.message}>
-          <Input id="input-email" type="email" {...register("email")} className={e.email ? "border-destructive" : ""} data-testid="input-email" />
+          <Input id="input-email" autoComplete="off" type="email" {...register("email")} className={e.email ? "border-destructive" : ""} data-testid="input-email" />
         </Campo>
         <Campo label="Cellulare" name="cellulare" required err={e.cellulare?.message}
           hint={cellFmt && !e.cellulare ? <p className="text-xs text-muted-foreground font-mono" data-testid="text-cellulare-formattato">{cellFmt}</p> : undefined}>
-          <Input id="input-cellulare" type="tel" {...register("cellulare")} className={e.cellulare ? "border-destructive" : ""} data-testid="input-cellulare" />
+          <Input id="input-cellulare" autoComplete="off" type="tel" {...register("cellulare")} className={e.cellulare ? "border-destructive" : ""} data-testid="input-cellulare" />
         </Campo>
         <Campo label="Telefono (facoltativo)" name="telefono" err={e.telefono?.message}>
-          <Input id="input-telefono" type="tel" {...register("telefono")} data-testid="input-telefono" />
+          <Input id="input-telefono" autoComplete="off" type="tel" {...register("telefono")} data-testid="input-telefono" />
         </Campo>
       </div>
     </div>

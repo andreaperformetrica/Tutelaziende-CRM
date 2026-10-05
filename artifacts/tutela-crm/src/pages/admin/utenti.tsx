@@ -69,7 +69,7 @@ function UtenteDialog({ open, onClose, utenteId, ruoliOfferti }: { open: boolean
   const campo = (id: "nome" | "cognome" | "email", label: string) => (
     <div className="space-y-1.5">
       <Label htmlFor={`u-${id}`}>{label}</Label>
-      <Input id={`u-${id}`} value={f[id]} onChange={(e) => setF({ ...f, [id]: e.target.value })} className={errs[id] ? "border-destructive" : ""} data-testid={`input-utente-${id}`} />
+      <Input id={`u-${id}`} autoComplete="off" value={f[id]} onChange={(e) => setF({ ...f, [id]: e.target.value })} className={errs[id] ? "border-destructive" : ""} data-testid={`input-utente-${id}`} />
       <FieldError>{errs[id]}</FieldError>
     </div>
   );

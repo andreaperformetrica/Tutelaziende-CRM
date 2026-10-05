@@ -116,13 +116,13 @@ export function CollaboratoreForm({ initial, onSaved, onCancel }: { initial?: Co
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="space-y-1.5">
               <Label htmlFor="input-numeroSportello" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Numero di sportello *</Label>
-              <Input id="input-numeroSportello" {...form.register("numeroSportello")} className={errors.numeroSportello ? "border-destructive" : ""} data-testid="input-numero-sportello" />
+              <Input id="input-numeroSportello" autoComplete="off" {...form.register("numeroSportello")} className={errors.numeroSportello ? "border-destructive" : ""} data-testid="input-numero-sportello" />
               <FieldError id="error-numeroSportello">{errors.numeroSportello?.message}</FieldError>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tipologia *</Label>
               <Controller control={form.control} name="tipologia" render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
+                <Select value={field.value ?? ""} onValueChange={field.onChange}>
                   <SelectTrigger className={errors.tipologia ? "border-destructive" : ""} data-testid="select-tipologia"><SelectValue placeholder="Seleziona" /></SelectTrigger>
                   <SelectContent><SelectItem value="CAF">CAF</SelectItem><SelectItem value="PATRONATO">Patronato</SelectItem></SelectContent>
                 </Select>

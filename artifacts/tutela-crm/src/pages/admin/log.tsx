@@ -45,8 +45,8 @@ export default function LogPage() {
             <SelectTrigger className="w-64 bg-card" data-testid="filtro-azione"><SelectValue /></SelectTrigger>
             <SelectContent><SelectItem value="all">Tutte le azioni</SelectItem>{filtri.data?.azioni.map((x) => <SelectItem key={x.codice} value={x.codice}>{x.etichetta}</SelectItem>)}</SelectContent>
           </Select></div>
-        <div className="space-y-1"><Label htmlFor="da" className="text-[11px] uppercase tracking-wider text-muted-foreground">Dal</Label><Input id="da" type="date" value={da} max={a || undefined} onChange={(e) => cambia(setDa)(e.target.value)} className="w-40 bg-card" data-testid="filtro-da" /></div>
-        <div className="space-y-1"><Label htmlFor="a" className="text-[11px] uppercase tracking-wider text-muted-foreground">Al</Label><Input id="a" type="date" value={a} min={da || undefined} onChange={(e) => cambia(setA)(e.target.value)} className="w-40 bg-card" data-testid="filtro-a" /></div>
+        <div className="space-y-1"><Label htmlFor="da" className="text-[11px] uppercase tracking-wider text-muted-foreground">Dal</Label><Input id="da" autoComplete="off" type="date" value={da} max={a || undefined} onChange={(e) => cambia(setDa)(e.target.value)} className="w-40 bg-card" data-testid="filtro-da" /></div>
+        <div className="space-y-1"><Label htmlFor="a" className="text-[11px] uppercase tracking-wider text-muted-foreground">Al</Label><Input id="a" autoComplete="off" type="date" value={a} min={da || undefined} onChange={(e) => cambia(setA)(e.target.value)} className="w-40 bg-card" data-testid="filtro-a" /></div>
         {filtrato && <Button variant="ghost" onClick={() => { setUtente("all"); setAzione("all"); setDa(""); setA(""); setPagina(1); }} data-testid="button-reset-log"><X className="size-4 mr-1" /> Azzera</Button>}
       </div>
       {q.isLoading ? <div className="space-y-2">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-10" />)}</div>

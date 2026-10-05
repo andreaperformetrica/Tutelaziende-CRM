@@ -38,7 +38,7 @@ export default function CollaboratoriPage() {
       <div className="flex flex-wrap gap-2 mb-4 rise">
         <div className="relative flex-1 min-w-56">
           <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Cerca per nome, codice fiscale, cellulare, email, sportello" className="pl-9 bg-card" data-testid="input-ricerca" />
+          <Input autoComplete="off" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Cerca per nome, codice fiscale, cellulare, email, sportello" className="pl-9 bg-card" data-testid="input-ricerca" />
         </div>
         <Select value={tip} onValueChange={setTip}>
           <SelectTrigger className="w-40 bg-card" data-testid="filtro-tipologia"><SelectValue /></SelectTrigger>
