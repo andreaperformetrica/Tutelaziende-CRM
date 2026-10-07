@@ -4,13 +4,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   getGetAssistitoQueryKey, getListAssistitiQueryKey, useAssociaAssistitoACollaboratore, useGetAssistito,
 } from "@workspace/api-client-react";
-import { ArrowLeft, Pencil, Repeat } from "lucide-react";
+import { ArrowLeft, FilePlus2, Pencil, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BannerStraniero } from "@/components/anagrafica/anagrafica-fields";
 import { AssistitoForm } from "@/components/assistiti/assistito-form";
 import { DialogCollaboratore } from "@/components/assistiti/dialog-collaboratore";
+import { DialogApriPratica } from "@/components/pratiche/dialog-apri-pratica";
 import { ErrorState, PageHeader } from "@/components/common";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@/lib/auth";
@@ -34,6 +35,7 @@ export function AssistitoScheda({ base, etichettaIndietro }: { base: string; eti
   const qc = useQueryClient();
   const [modifica, setModifica] = useState(false);
   const [cambio, setCambio] = useState(false);
+  const [apriPratica, setApriPratica] = useState(false);
   const [errCambio, setErrCambio] = useState<string | null>(null);
   const q = useGetAssistito(id, { query: { enabled: Number.isInteger(id) && id > 0, queryKey: getGetAssistitoQueryKey(id) } });
   const associa = useAssociaAssistitoACollaboratore();
@@ -61,6 +63,7 @@ export function AssistitoScheda({ base, etichettaIndietro }: { base: string; eti
         subtitle={<span className="font-mono">{a.codiceFiscale}</span>}
         actions={
           <>
+            {a.modificabile && <Button onClick={() => setApriPratica(true)} data-testid="button-apri-pratica"><FilePlus2 className="size-4 mr-1.5" /> Apri pratica</Button>}
             {a.modificabile && <Button variant="outline" onClick={() => setModifica(true)} data-testid="button-modifica"><Pencil className="size-4 mr-1.5" /> Modifica</Button>}
             {puoCambiare && <Button variant="outline" onClick={() => { setErrCambio(null); setCambio(true); }} data-testid="button-cambia-collaboratore"><Repeat className="size-4 mr-1.5" /> Cambia collaboratore</Button>}
             {!a.modificabile && !puoCambiare && <Badge variant="secondary" data-testid="badge-sola-lettura">Sola lettura</Badge>}
@@ -112,6 +115,7 @@ export function AssistitoScheda({ base, etichettaIndietro }: { base: string; eti
           },
           onError: (e) => setErrCambio(parseApiError(e).message),
         })} />
+      <DialogApriPratica assistito={apriPratica ? { id: a.id, nome: `${a.cognome} ${a.nome}` } : null} onClose={() => setApriPratica(false)} />
     </div>
   );
 }

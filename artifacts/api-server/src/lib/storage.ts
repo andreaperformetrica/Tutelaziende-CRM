@@ -39,6 +39,9 @@ const TIPI_AMMESSI: Record<string, string> = {
   jpeg: "image/jpeg",
 };
 
+/** Per i documenti delle pratiche: solo PDF e immagini. */
+const ESTENSIONI_DOCUMENTI = new Set(["pdf", "png", "jpg", "jpeg"]);
+
 function posizione(chiave: string): { bucket: string; oggetto: string } {
   const dir = process.env["PRIVATE_OBJECT_DIR"];
   if (!dir) throw new Error("PRIVATE_OBJECT_DIR non configurata: l'App Storage non e' attivo.");
@@ -54,7 +57,11 @@ export interface FileValidato {
 }
 
 /** Controlla nome, estensione e dimensione del file caricato; risponde 400/413 con messaggi in italiano. */
-export function validaFile(nomeGrezzo: unknown, corpo: unknown): FileValidato & { buffer: Buffer } {
+export function validaFile(
+  nomeGrezzo: unknown,
+  corpo: unknown,
+  opzioni: { soloPdfEImmagini?: boolean } = {},
+): FileValidato & { buffer: Buffer } {
   if (!Buffer.isBuffer(corpo) || corpo.length === 0) {
     throw new HttpError(400, "Seleziona un file da caricare.", "FILE_MANCANTE");
   }
@@ -67,13 +74,21 @@ export function validaFile(nomeGrezzo: unknown, corpo: unknown): FileValidato & 
     .slice(0, 200);
   if (!nome) throw new HttpError(400, "Nome del file mancante.", "FILE_MANCANTE");
   const estensione = nome.includes(".") ? nome.split(".").pop()!.toLowerCase() : "";
-  const tipo = TIPI_AMMESSI[estensione];
+  const tipo = opzioni.soloPdfEImmagini && !ESTENSIONI_DOCUMENTI.has(estensione) ? undefined : TIPI_AMMESSI[estensione];
   if (!tipo) {
     throw new HttpError(
       400,
-      "Formato non ammesso. Sono accettati PDF, documenti Word, Excel, OpenDocument, RTF, TXT e immagini PNG o JPG.",
+      opzioni.soloPdfEImmagini
+        ? "Formato non ammesso. Sono accettati solo PDF e immagini PNG o JPG."
+        : "Formato non ammesso. Sono accettati PDF, documenti Word, Excel, OpenDocument, RTF, TXT e immagini PNG o JPG.",
       "FILE_FORMATO_NON_AMMESSO",
     );
+  }
+  if (opzioni.soloPdfEImmagini) {
+    const inizio = corpo.subarray(0, 4);
+    const png = estensione === "png" && inizio.equals(Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+    const jpg = (estensione === "jpg" || estensione === "jpeg") && inizio[0] === 0xff && inizio[1] === 0xd8 && inizio[2] === 0xff;
+    if (estensione !== "pdf" && !png && !jpg) throw new HttpError(400, "Il file non è un'immagine valida.", "FILE_NON_VALIDO");
   }
   if (estensione === "pdf" && corpo.subarray(0, 5).toString("latin1") !== "%PDF-") {
     throw new HttpError(400, "Il file non è un PDF valido.", "FILE_NON_VALIDO");

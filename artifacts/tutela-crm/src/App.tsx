@@ -24,6 +24,8 @@ import LogPage from '@/pages/admin/log';
 import AssistitiBackoffice from '@/pages/admin/assistiti';
 import AssistitoDettaglioBackoffice from '@/pages/admin/assistito-dettaglio';
 import SegnalazioniPage from '@/pages/admin/segnalazioni';
+import PraticheCollaboratore from '@/pages/collaboratore/pratiche';
+import PraticaDettaglioCollaboratore from '@/pages/collaboratore/pratica-dettaglio';
 import AssistitiCollaboratore from '@/pages/collaboratore/assistiti';
 import AssistitoNuovo from '@/pages/collaboratore/assistito-nuovo';
 import AssistitoDettaglioCollaboratore from '@/pages/collaboratore/assistito-dettaglio';
@@ -81,6 +83,8 @@ function Router() {
         <Route path="/collaboratore/assistiti" component={g(<AssistitiCollaboratore />, 'collaboratore', ['collaboratore'])} />
         <Route path="/collaboratore/assistiti/nuovo" component={g(<AssistitoNuovo />, 'collaboratore', ['collaboratore'])} />
         <Route path="/collaboratore/assistiti/:id" component={g(<AssistitoDettaglioCollaboratore />, 'collaboratore', ['collaboratore'])} />
+        <Route path="/collaboratore/pratiche" component={g(<PraticheCollaboratore />, 'collaboratore', ['collaboratore'])} />
+        <Route path="/collaboratore/pratiche/:id" component={g(<PraticaDettaglioCollaboratore />, 'collaboratore', ['collaboratore'])} />
         <Route path="/collaboratore" component={g(<HomeCollaboratore />, 'collaboratore', ['collaboratore'])} />
         <Route component={NotFound} />
       </Switch>

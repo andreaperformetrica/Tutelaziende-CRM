@@ -34,27 +34,36 @@ import type {
   CollaboratoreDettaglio,
   CollaboratoreInput,
   CollaboratoreUpdate,
+  CommentoPraticaInput,
   ConteggioSegnalazioni,
   DocumentoTipoInput,
   FiltriLog,
   HealthStatus,
+  InvioPraticaInput,
+  InvioPratiche,
   ListAssegnazioniMandatoParams,
   ListAssistitiParams,
   ListCollaboratoriParams,
   ListLogOperazioniParams,
   ListMandatiParams,
+  ListPraticheParams,
   ListSegnalazioniDuplicatiParams,
   LogOperazioniPagina,
   LoginInput,
   Luogo,
   Mandato,
   MandatoInput,
+  MessaggioPraticaInput,
   ModuloTipoInput,
   Nazionalita,
   OrariCaricamento,
   OrariCaricamentoInput,
   OrdineInput,
   PasswordProvvisoriaInput,
+  PraticaDettaglio,
+  PraticaInput,
+  PraticaTipoRiepilogo,
+  PratichePagina,
   RimuoviAssegnazioneMandatoParams,
   SegnalazioneDuplicato,
   SessioneUtente,
@@ -3768,6 +3777,826 @@ export const useRimuoviAssegnazioneMandato = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getRimuoviAssegnazioneMandatoMutationOptions(options));
+    }
+
+export const getListPraticheUrl = (params?: ListPraticheParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/pratiche?${stringifiedParams}` : `/api/pratiche`
+}
+
+/**
+ * @summary Le mie pratiche (e quelle del gruppo, se capogruppo)
+ */
+export const listPratiche = async (params?: ListPraticheParams, options?: Parameters<typeof customFetch>[1]): Promise<PratichePagina> => {
+
+  return customFetch<PratichePagina>(getListPraticheUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPraticheQueryKey = (params?: ListPraticheParams,) => {
+    return [
+    `/api/pratiche`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListPraticheQueryOptions = <TData = Awaited<ReturnType<typeof listPratiche>>, TError = ErrorType<unknown>>(params?: ListPraticheParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPratiche>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPraticheQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPratiche>>> = ({ signal }) => listPratiche(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPratiche>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListPraticheQueryResult = NonNullable<Awaited<ReturnType<typeof listPratiche>>>
+export type ListPraticheQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Le mie pratiche (e quelle del gruppo, se capogruppo)
+ */
+
+export function useListPratiche<TData = Awaited<ReturnType<typeof listPratiche>>, TError = ErrorType<unknown>>(
+ params?: ListPraticheParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPratiche>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListPraticheQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreatePraticaUrl = () => {
+
+
+
+
+  return `/api/pratiche`
+}
+
+/**
+ * @summary Apre una pratica in bozza per un proprio assistito
+ */
+export const createPratica = async (praticaInput: PraticaInput, options?: Parameters<typeof customFetch>[1]): Promise<PraticaDettaglio> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<PraticaDettaglio>(getCreatePraticaUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(praticaInput)
+  }
+);}
+
+
+
+
+
+export const getCreatePraticaMutationKey = () => ['createPratica'] as const;
+
+export const getCreatePraticaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPratica>>, TError,CreatePraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createPratica>>, TError,CreatePraticaMutationVariables, TContext> => {
+
+const mutationKey = getCreatePraticaMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPratica>>, CreatePraticaMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createPratica(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreatePraticaMutationResult = NonNullable<Awaited<ReturnType<typeof createPratica>>>
+    export type CreatePraticaMutationBody = BodyType<PraticaInput>
+    export type CreatePraticaMutationError = ErrorType<unknown>
+    export type CreatePraticaMutationVariables = {data: BodyType<PraticaInput>}
+
+    /**
+ * @summary Apre una pratica in bozza per un proprio assistito
+ */
+export const useCreatePratica = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPratica>>, TError,CreatePraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createPratica>>,
+        TError,
+        CreatePraticaMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreatePraticaMutationOptions(options));
+    }
+
+export const getGetStatoInvioPraticheUrl = () => {
+
+
+
+
+  return `/api/pratiche/stato-invio`
+}
+
+/**
+ * @summary Dice se in questo momento si possono inviare pratiche
+ */
+export const getStatoInvioPratiche = async ( options?: Parameters<typeof customFetch>[1]): Promise<InvioPratiche> => {
+
+  return customFetch<InvioPratiche>(getGetStatoInvioPraticheUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetStatoInvioPraticheQueryKey = () => {
+    return [
+    `/api/pratiche/stato-invio`
+    ] as const;
+    }
+
+
+export const getGetStatoInvioPraticheQueryOptions = <TData = Awaited<ReturnType<typeof getStatoInvioPratiche>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStatoInvioPratiche>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetStatoInvioPraticheQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStatoInvioPratiche>>> = ({ signal }) => getStatoInvioPratiche({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getStatoInvioPratiche>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetStatoInvioPraticheQueryResult = NonNullable<Awaited<ReturnType<typeof getStatoInvioPratiche>>>
+export type GetStatoInvioPraticheQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Dice se in questo momento si possono inviare pratiche
+ */
+
+export function useGetStatoInvioPratiche<TData = Awaited<ReturnType<typeof getStatoInvioPratiche>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStatoInvioPratiche>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetStatoInvioPraticheQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListTipiPraticaDisponibiliUrl = () => {
+
+
+
+
+  return `/api/pratiche/tipi-disponibili`
+}
+
+/**
+ * @summary Tipi di pratica attivi tra cui scegliere all'apertura di una pratica
+ */
+export const listTipiPraticaDisponibili = async ( options?: Parameters<typeof customFetch>[1]): Promise<PraticaTipoRiepilogo[]> => {
+
+  return customFetch<PraticaTipoRiepilogo[]>(getListTipiPraticaDisponibiliUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTipiPraticaDisponibiliQueryKey = () => {
+    return [
+    `/api/pratiche/tipi-disponibili`
+    ] as const;
+    }
+
+
+export const getListTipiPraticaDisponibiliQueryOptions = <TData = Awaited<ReturnType<typeof listTipiPraticaDisponibili>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTipiPraticaDisponibili>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTipiPraticaDisponibiliQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTipiPraticaDisponibili>>> = ({ signal }) => listTipiPraticaDisponibili({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTipiPraticaDisponibili>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTipiPraticaDisponibiliQueryResult = NonNullable<Awaited<ReturnType<typeof listTipiPraticaDisponibili>>>
+export type ListTipiPraticaDisponibiliQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Tipi di pratica attivi tra cui scegliere all'apertura di una pratica
+ */
+
+export function useListTipiPraticaDisponibili<TData = Awaited<ReturnType<typeof listTipiPraticaDisponibili>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTipiPraticaDisponibili>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTipiPraticaDisponibiliQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetPraticaUrl = (id: number,) => {
+
+
+
+
+  return `/api/pratiche/${id}`
+}
+
+/**
+ * @summary Dettaglio pratica
+ */
+export const getPratica = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<PraticaDettaglio> => {
+
+  return customFetch<PraticaDettaglio>(getGetPraticaUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPraticaQueryKey = (id: number,) => {
+    return [
+    `/api/pratiche/${id}`
+    ] as const;
+    }
+
+
+export const getGetPraticaQueryOptions = <TData = Awaited<ReturnType<typeof getPratica>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPratica>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPraticaQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPratica>>> = ({ signal }) => getPratica(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPratica>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPraticaQueryResult = NonNullable<Awaited<ReturnType<typeof getPratica>>>
+export type GetPraticaQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Dettaglio pratica
+ */
+
+export function useGetPratica<TData = Awaited<ReturnType<typeof getPratica>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPratica>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPraticaQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getDeletePraticaUrl = (id: number,) => {
+
+
+
+
+  return `/api/pratiche/${id}`
+}
+
+/**
+ * @summary Cancella una pratica in bozza (le pratiche inviate non si cancellano)
+ */
+export const deletePratica = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeletePraticaUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeletePraticaMutationKey = () => ['deletePratica'] as const;
+
+export const getDeletePraticaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePratica>>, TError,DeletePraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deletePratica>>, TError,DeletePraticaMutationVariables, TContext> => {
+
+const mutationKey = getDeletePraticaMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deletePratica>>, DeletePraticaMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deletePratica(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeletePraticaMutationResult = NonNullable<Awaited<ReturnType<typeof deletePratica>>>
+
+    export type DeletePraticaMutationError = ErrorType<unknown>
+    export type DeletePraticaMutationVariables = {id: number}
+
+    /**
+ * @summary Cancella una pratica in bozza (le pratiche inviate non si cancellano)
+ */
+export const useDeletePratica = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePratica>>, TError,DeletePraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deletePratica>>,
+        TError,
+        DeletePraticaMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeletePraticaMutationOptions(options));
+    }
+
+export const getSalvaMessaggioPraticaUrl = (id: number,) => {
+
+
+
+
+  return `/api/pratiche/${id}/messaggio`
+}
+
+/**
+ * @summary Salva il messaggio di una pratica in bozza
+ */
+export const salvaMessaggioPratica = async (id: number,
+    messaggioPraticaInput: MessaggioPraticaInput, options?: Parameters<typeof customFetch>[1]): Promise<PraticaDettaglio> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<PraticaDettaglio>(getSalvaMessaggioPraticaUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(messaggioPraticaInput)
+  }
+);}
+
+
+
+
+
+export const getSalvaMessaggioPraticaMutationKey = () => ['salvaMessaggioPratica'] as const;
+
+export const getSalvaMessaggioPraticaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof salvaMessaggioPratica>>, TError,SalvaMessaggioPraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof salvaMessaggioPratica>>, TError,SalvaMessaggioPraticaMutationVariables, TContext> => {
+
+const mutationKey = getSalvaMessaggioPraticaMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof salvaMessaggioPratica>>, SalvaMessaggioPraticaMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  salvaMessaggioPratica(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SalvaMessaggioPraticaMutationResult = NonNullable<Awaited<ReturnType<typeof salvaMessaggioPratica>>>
+    export type SalvaMessaggioPraticaMutationBody = BodyType<MessaggioPraticaInput>
+    export type SalvaMessaggioPraticaMutationError = ErrorType<unknown>
+    export type SalvaMessaggioPraticaMutationVariables = {id: number;data: BodyType<MessaggioPraticaInput>}
+
+    /**
+ * @summary Salva il messaggio di una pratica in bozza
+ */
+export const useSalvaMessaggioPratica = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof salvaMessaggioPratica>>, TError,SalvaMessaggioPraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof salvaMessaggioPratica>>,
+        TError,
+        SalvaMessaggioPraticaMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSalvaMessaggioPraticaMutationOptions(options));
+    }
+
+export const getDeleteDocumentoPraticaUrl = (id: number,
+    docId: number,) => {
+
+
+
+
+  return `/api/pratiche/${id}/documenti/${docId}`
+}
+
+/**
+ * @summary Toglie un documento da una pratica in bozza
+ */
+export const deleteDocumentoPratica = async (id: number,
+    docId: number, options?: Parameters<typeof customFetch>[1]): Promise<PraticaDettaglio> => {
+
+  return customFetch<PraticaDettaglio>(getDeleteDocumentoPraticaUrl(id,docId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteDocumentoPraticaMutationKey = () => ['deleteDocumentoPratica'] as const;
+
+export const getDeleteDocumentoPraticaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDocumentoPratica>>, TError,DeleteDocumentoPraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteDocumentoPratica>>, TError,DeleteDocumentoPraticaMutationVariables, TContext> => {
+
+const mutationKey = getDeleteDocumentoPraticaMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteDocumentoPratica>>, DeleteDocumentoPraticaMutationVariables> = (props) => {
+          const {id,docId} = props ?? {};
+
+          return  deleteDocumentoPratica(id,docId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteDocumentoPraticaMutationResult = NonNullable<Awaited<ReturnType<typeof deleteDocumentoPratica>>>
+
+    export type DeleteDocumentoPraticaMutationError = ErrorType<unknown>
+    export type DeleteDocumentoPraticaMutationVariables = {id: number;docId: number}
+
+    /**
+ * @summary Toglie un documento da una pratica in bozza
+ */
+export const useDeleteDocumentoPratica = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDocumentoPratica>>, TError,DeleteDocumentoPraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteDocumentoPratica>>,
+        TError,
+        DeleteDocumentoPraticaMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteDocumentoPraticaMutationOptions(options));
+    }
+
+export const getInviaPraticaUrl = (id: number,) => {
+
+
+
+
+  return `/api/pratiche/${id}/invio`
+}
+
+/**
+ * @summary Invia la pratica (solo negli orari consentiti e con tutti i documenti caricati)
+ */
+export const inviaPratica = async (id: number,
+    invioPraticaInput?: InvioPraticaInput, options?: Parameters<typeof customFetch>[1]): Promise<PraticaDettaglio> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<PraticaDettaglio>(getInviaPraticaUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(invioPraticaInput)
+  }
+);}
+
+
+
+
+
+export const getInviaPraticaMutationKey = () => ['inviaPratica'] as const;
+
+export const getInviaPraticaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inviaPratica>>, TError,InviaPraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof inviaPratica>>, TError,InviaPraticaMutationVariables, TContext> => {
+
+const mutationKey = getInviaPraticaMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof inviaPratica>>, InviaPraticaMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  inviaPratica(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InviaPraticaMutationResult = NonNullable<Awaited<ReturnType<typeof inviaPratica>>>
+    export type InviaPraticaMutationBody = BodyType<InvioPraticaInput> | undefined
+    export type InviaPraticaMutationError = ErrorType<unknown>
+    export type InviaPraticaMutationVariables = {id: number;data?: BodyType<InvioPraticaInput>}
+
+    /**
+ * @summary Invia la pratica (solo negli orari consentiti e con tutti i documenti caricati)
+ */
+export const useInviaPratica = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inviaPratica>>, TError,InviaPraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof inviaPratica>>,
+        TError,
+        InviaPraticaMutationVariables,
+        TContext
+      > => {
+      return useMutation(getInviaPraticaMutationOptions(options));
+    }
+
+export const getCreateCommentoPraticaUrl = (id: number,) => {
+
+
+
+
+  return `/api/pratiche/${id}/commenti`
+}
+
+/**
+ * @summary Risponde nella chat di una pratica inviata
+ */
+export const createCommentoPratica = async (id: number,
+    commentoPraticaInput: CommentoPraticaInput, options?: Parameters<typeof customFetch>[1]): Promise<PraticaDettaglio> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<PraticaDettaglio>(getCreateCommentoPraticaUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(commentoPraticaInput)
+  }
+);}
+
+
+
+
+
+export const getCreateCommentoPraticaMutationKey = () => ['createCommentoPratica'] as const;
+
+export const getCreateCommentoPraticaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCommentoPratica>>, TError,CreateCommentoPraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createCommentoPratica>>, TError,CreateCommentoPraticaMutationVariables, TContext> => {
+
+const mutationKey = getCreateCommentoPraticaMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCommentoPratica>>, CreateCommentoPraticaMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  createCommentoPratica(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateCommentoPraticaMutationResult = NonNullable<Awaited<ReturnType<typeof createCommentoPratica>>>
+    export type CreateCommentoPraticaMutationBody = BodyType<CommentoPraticaInput>
+    export type CreateCommentoPraticaMutationError = ErrorType<unknown>
+    export type CreateCommentoPraticaMutationVariables = {id: number;data: BodyType<CommentoPraticaInput>}
+
+    /**
+ * @summary Risponde nella chat di una pratica inviata
+ */
+export const useCreateCommentoPratica = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCommentoPratica>>, TError,CreateCommentoPraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createCommentoPratica>>,
+        TError,
+        CreateCommentoPraticaMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateCommentoPraticaMutationOptions(options));
     }
 
 export const getListStatiPraticaUrl = () => {

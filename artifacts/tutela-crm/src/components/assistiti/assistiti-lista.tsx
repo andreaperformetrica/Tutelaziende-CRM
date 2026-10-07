@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useListAssistiti, useListCollaboratori } from "@workspace/api-client-react";
-import { ChevronLeft, ChevronRight, Globe2, Plus, Search, UserRound, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, FilePlus2, Globe2, Plus, Search, UserRound, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState, ErrorState, PageHeader } from "@/components/common";
+import { DialogApriPratica } from "@/components/pratiche/dialog-apri-pratica";
 import { fmtCellulare, fmtData, parseApiError } from "@/lib/format";
 
 const PER_PAGINA = 25;
@@ -23,6 +24,7 @@ export function AssistitiLista({ base, backoffice, capogruppo, puoCreare }: { ba
   const [dq, setDq] = useState("");
   const [coll, setColl] = useState("all");
   const [pagina, setPagina] = useState(1);
+  const [apriPer, setApriPer] = useState<{ id: number; nome: string } | null>(null);
   useEffect(() => { const t = setTimeout(() => { setDq(q.trim()); setPagina(1); }, 250); return () => clearTimeout(t); }, [q]);
 
   const lista = useListAssistiti({
@@ -35,7 +37,7 @@ export function AssistitiLista({ base, backoffice, capogruppo, puoCreare }: { ba
   const pagine = Math.max(1, Math.ceil(totale / PER_PAGINA));
   const reset = () => { setQ(""); setColl("all"); setPagina(1); };
 
-  const intestazioni = ["Cognome e nome", "Codice fiscale", "Nascita", "Cellulare", "Città", ...(mostraCollaboratore ? ["Collaboratore"] : [])];
+  const intestazioni = ["Cognome e nome", "Codice fiscale", "Nascita", "Cellulare", "Città", ...(mostraCollaboratore ? ["Collaboratore"] : []), ...(puoCreare ? [""] : [])];
 
   return (
     <div>
@@ -92,6 +94,15 @@ export function AssistitiLista({ base, backoffice, capogruppo, puoCreare }: { ba
                         {a.collaboratore.cognome} {a.collaboratore.nome} <span className="font-mono text-xs text-muted-foreground">· {a.collaboratore.numeroSportello}</span>
                       </TableCell>
                     )}
+                    {puoCreare && (
+                      <TableCell className="text-right whitespace-nowrap">
+                        {a.modificabile && (
+                          <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setApriPer({ id: a.id, nome: `${a.cognome} ${a.nome}` }); }} data-testid={`button-apri-pratica-${a.id}`}>
+                            <FilePlus2 className="size-4 mr-1.5" /> Apri pratica
+                          </Button>
+                        )}
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
@@ -108,6 +119,7 @@ export function AssistitiLista({ base, backoffice, capogruppo, puoCreare }: { ba
           )}
         </>
       )}
+      <DialogApriPratica assistito={apriPer} onClose={() => setApriPer(null)} />
     </div>
   );
 }

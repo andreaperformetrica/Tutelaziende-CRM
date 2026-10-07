@@ -61,3 +61,9 @@ export function generaPassword(len = 12): string {
 export function fmtEuro(n: number): string {
   return new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 }
+
+/** Solo la data (gg/mm/aaaa) di un istante, nel fuso Europe/Rome. */
+export function fmtDataIstante(iso?: string | null): string {
+  const s = fmtIstante(iso);
+  return s.includes(" ") ? s.split(" ")[0]! : s;
+}

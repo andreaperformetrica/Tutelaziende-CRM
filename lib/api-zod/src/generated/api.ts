@@ -1485,6 +1485,728 @@ export const RimuoviAssegnazioneMandatoResponse = zod.void()
 
 
 /**
+ * @summary Le mie pratiche (e quelle del gruppo, se capogruppo)
+ */
+
+export const listPraticheQueryPerPaginaMax = 200;
+
+
+
+export const ListPraticheQueryParams = zod.object({
+  "q": zod.coerce.string().optional().describe('Ricerca su nome, cognome e codice fiscale dell\'assistito o sul numero pratica'),
+  "collaboratoreId": zod.coerce.number().int().optional().describe('Solo le pratiche di questo collaboratore del gruppo'),
+  "pagina": zod.coerce.number().int().min(1).optional(),
+  "perPagina": zod.coerce.number().int().min(1).max(listPraticheQueryPerPaginaMax).optional()
+})
+
+export const ListPraticheResponse = zod.object({
+  "elementi": zod.array(zod.object({
+  "id": zod.number().int(),
+  "numero": zod.number().int().nullable().describe('Numero progressivo, assegnato all\'invio'),
+  "bozza": zod.boolean(),
+  "stato": zod.string().describe('Nome dello stato; Bozza finche\' non e\' inviata'),
+  "assistito": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "codiceFiscale": zod.string()
+}),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string()
+}),
+  "tipo": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+}),
+  "dataRichiesta": zod.coerce.date().nullable().describe('Data di invio; vuota per le bozze'),
+  "creataIl": zod.coerce.date(),
+  "gestitaDa": zod.string().nullable().describe('Operatore del back office che la gestisce'),
+  "propria": zod.boolean().describe('Vero se la pratica e\' del collaboratore che la guarda (non di un collaboratore del gruppo)')
+})),
+  "totale": zod.number().int(),
+  "pagina": zod.number().int(),
+  "perPagina": zod.number().int()
+})
+
+
+/**
+ * @summary Apre una pratica in bozza per un proprio assistito
+ */
+export const CreatePraticaBody = zod.object({
+  "assistitoId": zod.number().int(),
+  "tipoPraticaId": zod.number().int()
+})
+
+export const CreatePraticaResponse = zod.object({
+  "id": zod.number().int(),
+  "numero": zod.number().int().nullable(),
+  "bozza": zod.boolean(),
+  "stato": zod.string(),
+  "assistito": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "sesso": zod.enum(['M', 'F']),
+  "dataNascita": zod.string(),
+  "luogoNascitaCodice": zod.string(),
+  "luogoNascitaNome": zod.string(),
+  "luogoNascitaProvincia": zod.string().nullish(),
+  "luogoNascitaEstero": zod.boolean(),
+  "nazionalita": zod.string(),
+  "nazionalitaNome": zod.string(),
+  "straniero": zod.boolean(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "email": zod.string().nullish(),
+  "citta": zod.string(),
+  "indirizzo": zod.string().nullish(),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+}).describe('Collaboratore a cui e\' associato l\'assistito'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "creatoIl": zod.coerce.date(),
+  "modificatoIl": zod.coerce.date()
+}),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string()
+}),
+  "tipo": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+}),
+  "moduli": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "dimensione": zod.number().int()
+})),
+  "mandato": zod.union([zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "dimensione": zod.number().int()
+}),zod.null()]),
+  "mandatoMancante": zod.boolean().describe('Il tipo richiede il mandato ma al collaboratore non e\' stato assegnato'),
+  "richiesti": zod.array(zod.object({
+  "id": zod.number().int().describe('Id del documento obbligatorio del tipo di pratica'),
+  "nome": zod.string()
+})).describe('Documenti obbligatori da caricare (vuoto dopo l\'invio)'),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "documentoTipoId": zod.number().int().nullable().describe('Vuoto per gli allegati aggiuntivi'),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date(),
+  "caricatoDa": zod.string(),
+  "dopoInvio": zod.boolean()
+})),
+  "messaggio": zod.string(),
+  "commenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "testo": zod.string(),
+  "autore": zod.string(),
+  "ruolo": zod.enum(['collaboratore', 'backoffice']),
+  "creatoIl": zod.coerce.date(),
+  "mio": zod.boolean()
+})),
+  "creataIl": zod.coerce.date(),
+  "inviataIl": zod.coerce.date().nullable(),
+  "gestitaDa": zod.string().nullable(),
+  "modificabile": zod.boolean().describe('Bozza di un proprio assistito: si puo\' modificare e inviare'),
+  "puoAllegare": zod.boolean().describe('Pratica inviata propria: si possono aggiungere allegati'),
+  "puoCommentare": zod.boolean(),
+  "mancanti": zod.array(zod.string()).describe('Cosa impedisce l\'invio (documenti non caricati, mandato mancante)'),
+  "invio": zod.object({
+  "consentito": zod.boolean(),
+  "bloccatoFinoA": zod.coerce.date().nullable(),
+  "messaggio": zod.string().nullable().describe('Spiegazione in italiano quando l\'invio e\' bloccato')
+})
+})
+
+
+/**
+ * @summary Dice se in questo momento si possono inviare pratiche
+ */
+export const GetStatoInvioPraticheResponse = zod.object({
+  "consentito": zod.boolean(),
+  "bloccatoFinoA": zod.coerce.date().nullable(),
+  "messaggio": zod.string().nullable().describe('Spiegazione in italiano quando l\'invio e\' bloccato')
+})
+
+
+/**
+ * @summary Tipi di pratica attivi tra cui scegliere all'apertura di una pratica
+ */
+export const ListTipiPraticaDisponibiliResponseItem = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+})
+export const ListTipiPraticaDisponibiliResponse = zod.array(ListTipiPraticaDisponibiliResponseItem)
+
+
+/**
+ * @summary Dettaglio pratica
+ */
+export const GetPraticaParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const GetPraticaResponse = zod.object({
+  "id": zod.number().int(),
+  "numero": zod.number().int().nullable(),
+  "bozza": zod.boolean(),
+  "stato": zod.string(),
+  "assistito": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "sesso": zod.enum(['M', 'F']),
+  "dataNascita": zod.string(),
+  "luogoNascitaCodice": zod.string(),
+  "luogoNascitaNome": zod.string(),
+  "luogoNascitaProvincia": zod.string().nullish(),
+  "luogoNascitaEstero": zod.boolean(),
+  "nazionalita": zod.string(),
+  "nazionalitaNome": zod.string(),
+  "straniero": zod.boolean(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "email": zod.string().nullish(),
+  "citta": zod.string(),
+  "indirizzo": zod.string().nullish(),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+}).describe('Collaboratore a cui e\' associato l\'assistito'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "creatoIl": zod.coerce.date(),
+  "modificatoIl": zod.coerce.date()
+}),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string()
+}),
+  "tipo": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+}),
+  "moduli": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "dimensione": zod.number().int()
+})),
+  "mandato": zod.union([zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "dimensione": zod.number().int()
+}),zod.null()]),
+  "mandatoMancante": zod.boolean().describe('Il tipo richiede il mandato ma al collaboratore non e\' stato assegnato'),
+  "richiesti": zod.array(zod.object({
+  "id": zod.number().int().describe('Id del documento obbligatorio del tipo di pratica'),
+  "nome": zod.string()
+})).describe('Documenti obbligatori da caricare (vuoto dopo l\'invio)'),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "documentoTipoId": zod.number().int().nullable().describe('Vuoto per gli allegati aggiuntivi'),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date(),
+  "caricatoDa": zod.string(),
+  "dopoInvio": zod.boolean()
+})),
+  "messaggio": zod.string(),
+  "commenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "testo": zod.string(),
+  "autore": zod.string(),
+  "ruolo": zod.enum(['collaboratore', 'backoffice']),
+  "creatoIl": zod.coerce.date(),
+  "mio": zod.boolean()
+})),
+  "creataIl": zod.coerce.date(),
+  "inviataIl": zod.coerce.date().nullable(),
+  "gestitaDa": zod.string().nullable(),
+  "modificabile": zod.boolean().describe('Bozza di un proprio assistito: si puo\' modificare e inviare'),
+  "puoAllegare": zod.boolean().describe('Pratica inviata propria: si possono aggiungere allegati'),
+  "puoCommentare": zod.boolean(),
+  "mancanti": zod.array(zod.string()).describe('Cosa impedisce l\'invio (documenti non caricati, mandato mancante)'),
+  "invio": zod.object({
+  "consentito": zod.boolean(),
+  "bloccatoFinoA": zod.coerce.date().nullable(),
+  "messaggio": zod.string().nullable().describe('Spiegazione in italiano quando l\'invio e\' bloccato')
+})
+})
+
+
+/**
+ * @summary Cancella una pratica in bozza (le pratiche inviate non si cancellano)
+ */
+export const DeletePraticaParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const DeletePraticaResponse = zod.void()
+
+
+/**
+ * @summary Salva il messaggio di una pratica in bozza
+ */
+export const SalvaMessaggioPraticaParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const salvaMessaggioPraticaBodyMessaggioMax = 4000;
+
+
+
+export const SalvaMessaggioPraticaBody = zod.object({
+  "messaggio": zod.string().max(salvaMessaggioPraticaBodyMessaggioMax)
+})
+
+export const SalvaMessaggioPraticaResponse = zod.object({
+  "id": zod.number().int(),
+  "numero": zod.number().int().nullable(),
+  "bozza": zod.boolean(),
+  "stato": zod.string(),
+  "assistito": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "sesso": zod.enum(['M', 'F']),
+  "dataNascita": zod.string(),
+  "luogoNascitaCodice": zod.string(),
+  "luogoNascitaNome": zod.string(),
+  "luogoNascitaProvincia": zod.string().nullish(),
+  "luogoNascitaEstero": zod.boolean(),
+  "nazionalita": zod.string(),
+  "nazionalitaNome": zod.string(),
+  "straniero": zod.boolean(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "email": zod.string().nullish(),
+  "citta": zod.string(),
+  "indirizzo": zod.string().nullish(),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+}).describe('Collaboratore a cui e\' associato l\'assistito'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "creatoIl": zod.coerce.date(),
+  "modificatoIl": zod.coerce.date()
+}),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string()
+}),
+  "tipo": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+}),
+  "moduli": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "dimensione": zod.number().int()
+})),
+  "mandato": zod.union([zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "dimensione": zod.number().int()
+}),zod.null()]),
+  "mandatoMancante": zod.boolean().describe('Il tipo richiede il mandato ma al collaboratore non e\' stato assegnato'),
+  "richiesti": zod.array(zod.object({
+  "id": zod.number().int().describe('Id del documento obbligatorio del tipo di pratica'),
+  "nome": zod.string()
+})).describe('Documenti obbligatori da caricare (vuoto dopo l\'invio)'),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "documentoTipoId": zod.number().int().nullable().describe('Vuoto per gli allegati aggiuntivi'),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date(),
+  "caricatoDa": zod.string(),
+  "dopoInvio": zod.boolean()
+})),
+  "messaggio": zod.string(),
+  "commenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "testo": zod.string(),
+  "autore": zod.string(),
+  "ruolo": zod.enum(['collaboratore', 'backoffice']),
+  "creatoIl": zod.coerce.date(),
+  "mio": zod.boolean()
+})),
+  "creataIl": zod.coerce.date(),
+  "inviataIl": zod.coerce.date().nullable(),
+  "gestitaDa": zod.string().nullable(),
+  "modificabile": zod.boolean().describe('Bozza di un proprio assistito: si puo\' modificare e inviare'),
+  "puoAllegare": zod.boolean().describe('Pratica inviata propria: si possono aggiungere allegati'),
+  "puoCommentare": zod.boolean(),
+  "mancanti": zod.array(zod.string()).describe('Cosa impedisce l\'invio (documenti non caricati, mandato mancante)'),
+  "invio": zod.object({
+  "consentito": zod.boolean(),
+  "bloccatoFinoA": zod.coerce.date().nullable(),
+  "messaggio": zod.string().nullable().describe('Spiegazione in italiano quando l\'invio e\' bloccato')
+})
+})
+
+
+/**
+ * @summary Toglie un documento da una pratica in bozza
+ */
+export const DeleteDocumentoPraticaParams = zod.object({
+  "id": zod.coerce.number().int(),
+  "docId": zod.coerce.number().int()
+})
+
+export const DeleteDocumentoPraticaResponse = zod.object({
+  "id": zod.number().int(),
+  "numero": zod.number().int().nullable(),
+  "bozza": zod.boolean(),
+  "stato": zod.string(),
+  "assistito": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "sesso": zod.enum(['M', 'F']),
+  "dataNascita": zod.string(),
+  "luogoNascitaCodice": zod.string(),
+  "luogoNascitaNome": zod.string(),
+  "luogoNascitaProvincia": zod.string().nullish(),
+  "luogoNascitaEstero": zod.boolean(),
+  "nazionalita": zod.string(),
+  "nazionalitaNome": zod.string(),
+  "straniero": zod.boolean(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "email": zod.string().nullish(),
+  "citta": zod.string(),
+  "indirizzo": zod.string().nullish(),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+}).describe('Collaboratore a cui e\' associato l\'assistito'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "creatoIl": zod.coerce.date(),
+  "modificatoIl": zod.coerce.date()
+}),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string()
+}),
+  "tipo": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+}),
+  "moduli": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "dimensione": zod.number().int()
+})),
+  "mandato": zod.union([zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "dimensione": zod.number().int()
+}),zod.null()]),
+  "mandatoMancante": zod.boolean().describe('Il tipo richiede il mandato ma al collaboratore non e\' stato assegnato'),
+  "richiesti": zod.array(zod.object({
+  "id": zod.number().int().describe('Id del documento obbligatorio del tipo di pratica'),
+  "nome": zod.string()
+})).describe('Documenti obbligatori da caricare (vuoto dopo l\'invio)'),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "documentoTipoId": zod.number().int().nullable().describe('Vuoto per gli allegati aggiuntivi'),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date(),
+  "caricatoDa": zod.string(),
+  "dopoInvio": zod.boolean()
+})),
+  "messaggio": zod.string(),
+  "commenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "testo": zod.string(),
+  "autore": zod.string(),
+  "ruolo": zod.enum(['collaboratore', 'backoffice']),
+  "creatoIl": zod.coerce.date(),
+  "mio": zod.boolean()
+})),
+  "creataIl": zod.coerce.date(),
+  "inviataIl": zod.coerce.date().nullable(),
+  "gestitaDa": zod.string().nullable(),
+  "modificabile": zod.boolean().describe('Bozza di un proprio assistito: si puo\' modificare e inviare'),
+  "puoAllegare": zod.boolean().describe('Pratica inviata propria: si possono aggiungere allegati'),
+  "puoCommentare": zod.boolean(),
+  "mancanti": zod.array(zod.string()).describe('Cosa impedisce l\'invio (documenti non caricati, mandato mancante)'),
+  "invio": zod.object({
+  "consentito": zod.boolean(),
+  "bloccatoFinoA": zod.coerce.date().nullable(),
+  "messaggio": zod.string().nullable().describe('Spiegazione in italiano quando l\'invio e\' bloccato')
+})
+})
+
+
+/**
+ * @summary Invia la pratica (solo negli orari consentiti e con tutti i documenti caricati)
+ */
+export const InviaPraticaParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const inviaPraticaBodyMessaggioMax = 4000;
+
+
+
+export const InviaPraticaBody = zod.object({
+  "messaggio": zod.string().max(inviaPraticaBodyMessaggioMax).optional().describe('Se presente sostituisce il messaggio della bozza')
+})
+
+export const InviaPraticaResponse = zod.object({
+  "id": zod.number().int(),
+  "numero": zod.number().int().nullable(),
+  "bozza": zod.boolean(),
+  "stato": zod.string(),
+  "assistito": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "sesso": zod.enum(['M', 'F']),
+  "dataNascita": zod.string(),
+  "luogoNascitaCodice": zod.string(),
+  "luogoNascitaNome": zod.string(),
+  "luogoNascitaProvincia": zod.string().nullish(),
+  "luogoNascitaEstero": zod.boolean(),
+  "nazionalita": zod.string(),
+  "nazionalitaNome": zod.string(),
+  "straniero": zod.boolean(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "email": zod.string().nullish(),
+  "citta": zod.string(),
+  "indirizzo": zod.string().nullish(),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+}).describe('Collaboratore a cui e\' associato l\'assistito'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "creatoIl": zod.coerce.date(),
+  "modificatoIl": zod.coerce.date()
+}),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string()
+}),
+  "tipo": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+}),
+  "moduli": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "dimensione": zod.number().int()
+})),
+  "mandato": zod.union([zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "dimensione": zod.number().int()
+}),zod.null()]),
+  "mandatoMancante": zod.boolean().describe('Il tipo richiede il mandato ma al collaboratore non e\' stato assegnato'),
+  "richiesti": zod.array(zod.object({
+  "id": zod.number().int().describe('Id del documento obbligatorio del tipo di pratica'),
+  "nome": zod.string()
+})).describe('Documenti obbligatori da caricare (vuoto dopo l\'invio)'),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "documentoTipoId": zod.number().int().nullable().describe('Vuoto per gli allegati aggiuntivi'),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date(),
+  "caricatoDa": zod.string(),
+  "dopoInvio": zod.boolean()
+})),
+  "messaggio": zod.string(),
+  "commenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "testo": zod.string(),
+  "autore": zod.string(),
+  "ruolo": zod.enum(['collaboratore', 'backoffice']),
+  "creatoIl": zod.coerce.date(),
+  "mio": zod.boolean()
+})),
+  "creataIl": zod.coerce.date(),
+  "inviataIl": zod.coerce.date().nullable(),
+  "gestitaDa": zod.string().nullable(),
+  "modificabile": zod.boolean().describe('Bozza di un proprio assistito: si puo\' modificare e inviare'),
+  "puoAllegare": zod.boolean().describe('Pratica inviata propria: si possono aggiungere allegati'),
+  "puoCommentare": zod.boolean(),
+  "mancanti": zod.array(zod.string()).describe('Cosa impedisce l\'invio (documenti non caricati, mandato mancante)'),
+  "invio": zod.object({
+  "consentito": zod.boolean(),
+  "bloccatoFinoA": zod.coerce.date().nullable(),
+  "messaggio": zod.string().nullable().describe('Spiegazione in italiano quando l\'invio e\' bloccato')
+})
+})
+
+
+/**
+ * @summary Risponde nella chat di una pratica inviata
+ */
+export const CreateCommentoPraticaParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const createCommentoPraticaBodyTestoMax = 4000;
+
+
+
+export const CreateCommentoPraticaBody = zod.object({
+  "testo": zod.string().max(createCommentoPraticaBodyTestoMax)
+})
+
+export const CreateCommentoPraticaResponse = zod.object({
+  "id": zod.number().int(),
+  "numero": zod.number().int().nullable(),
+  "bozza": zod.boolean(),
+  "stato": zod.string(),
+  "assistito": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "sesso": zod.enum(['M', 'F']),
+  "dataNascita": zod.string(),
+  "luogoNascitaCodice": zod.string(),
+  "luogoNascitaNome": zod.string(),
+  "luogoNascitaProvincia": zod.string().nullish(),
+  "luogoNascitaEstero": zod.boolean(),
+  "nazionalita": zod.string(),
+  "nazionalitaNome": zod.string(),
+  "straniero": zod.boolean(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "email": zod.string().nullish(),
+  "citta": zod.string(),
+  "indirizzo": zod.string().nullish(),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+}).describe('Collaboratore a cui e\' associato l\'assistito'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "creatoIl": zod.coerce.date(),
+  "modificatoIl": zod.coerce.date()
+}),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string()
+}),
+  "tipo": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+}),
+  "moduli": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "dimensione": zod.number().int()
+})),
+  "mandato": zod.union([zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "dimensione": zod.number().int()
+}),zod.null()]),
+  "mandatoMancante": zod.boolean().describe('Il tipo richiede il mandato ma al collaboratore non e\' stato assegnato'),
+  "richiesti": zod.array(zod.object({
+  "id": zod.number().int().describe('Id del documento obbligatorio del tipo di pratica'),
+  "nome": zod.string()
+})).describe('Documenti obbligatori da caricare (vuoto dopo l\'invio)'),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "documentoTipoId": zod.number().int().nullable().describe('Vuoto per gli allegati aggiuntivi'),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date(),
+  "caricatoDa": zod.string(),
+  "dopoInvio": zod.boolean()
+})),
+  "messaggio": zod.string(),
+  "commenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "testo": zod.string(),
+  "autore": zod.string(),
+  "ruolo": zod.enum(['collaboratore', 'backoffice']),
+  "creatoIl": zod.coerce.date(),
+  "mio": zod.boolean()
+})),
+  "creataIl": zod.coerce.date(),
+  "inviataIl": zod.coerce.date().nullable(),
+  "gestitaDa": zod.string().nullable(),
+  "modificabile": zod.boolean().describe('Bozza di un proprio assistito: si puo\' modificare e inviare'),
+  "puoAllegare": zod.boolean().describe('Pratica inviata propria: si possono aggiungere allegati'),
+  "puoCommentare": zod.boolean(),
+  "mancanti": zod.array(zod.string()).describe('Cosa impedisce l\'invio (documenti non caricati, mandato mancante)'),
+  "invio": zod.object({
+  "consentito": zod.boolean(),
+  "bloccatoFinoA": zod.coerce.date().nullable(),
+  "messaggio": zod.string().nullable().describe('Spiegazione in italiano quando l\'invio e\' bloccato')
+})
+})
+
+
+/**
  * @summary Stati pratica nell'ordine scelto dall'admin
  */
 export const ListStatiPraticaResponseItem = zod.object({

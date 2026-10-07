@@ -638,6 +638,180 @@ export interface OrariCaricamentoInput {
   fasce: FasciaBlocco[];
 }
 
+export interface PraticaAssistitoRiepilogo {
+  id: number;
+  nome: string;
+  cognome: string;
+  codiceFiscale: string;
+}
+
+export interface PraticaCollaboratoreRiepilogo {
+  id: number;
+  nome: string;
+  cognome: string;
+  numeroSportello: string;
+}
+
+export interface PraticaTipoRiepilogo {
+  id: number;
+  nome: string;
+}
+
+export interface PraticaRiepilogo {
+  id: number;
+  /**
+     * Numero progressivo, assegnato all'invio
+     * @nullable
+     */
+  numero: number | null;
+  bozza: boolean;
+  /** Nome dello stato; Bozza finche' non e' inviata */
+  stato: string;
+  assistito: PraticaAssistitoRiepilogo;
+  collaboratore: PraticaCollaboratoreRiepilogo;
+  tipo: PraticaTipoRiepilogo;
+  /**
+     * Data di invio; vuota per le bozze
+     * @nullable
+     */
+  dataRichiesta: string | null;
+  creataIl: string;
+  /**
+     * Operatore del back office che la gestisce
+     * @nullable
+     */
+  gestitaDa: string | null;
+  /** Vero se la pratica e' del collaboratore che la guarda (non di un collaboratore del gruppo) */
+  propria: boolean;
+}
+
+export interface PratichePagina {
+  elementi: PraticaRiepilogo[];
+  totale: number;
+  pagina: number;
+  perPagina: number;
+}
+
+export interface PraticaInput {
+  assistitoId: number;
+  tipoPraticaId: number;
+}
+
+export interface MessaggioPraticaInput {
+  /** @maxLength 4000 */
+  messaggio: string;
+}
+
+export interface InvioPraticaInput {
+  /**
+     * Se presente sostituisce il messaggio della bozza
+     * @maxLength 4000
+     */
+  messaggio?: string;
+}
+
+export interface CommentoPraticaInput {
+  /** @maxLength 4000 */
+  testo: string;
+}
+
+export interface InvioPratiche {
+  consentito: boolean;
+  /** @nullable */
+  bloccatoFinoA: string | null;
+  /**
+     * Spiegazione in italiano quando l'invio e' bloccato
+     * @nullable
+     */
+  messaggio: string | null;
+}
+
+export interface ModuloPratica {
+  id: number;
+  nome: string;
+  fileNome: string;
+  dimensione: number;
+}
+
+export interface MandatoPratica {
+  id: number;
+  nome: string;
+  fileNome: string;
+  dimensione: number;
+}
+
+export interface DocumentoRichiesto {
+  /** Id del documento obbligatorio del tipo di pratica */
+  id: number;
+  nome: string;
+}
+
+export interface DocumentoPratica {
+  id: number;
+  /**
+     * Vuoto per gli allegati aggiuntivi
+     * @nullable
+     */
+  documentoTipoId: number | null;
+  nome: string;
+  fileNome: string;
+  fileTipo: string;
+  dimensione: number;
+  caricatoIl: string;
+  caricatoDa: string;
+  dopoInvio: boolean;
+}
+
+export type CommentoPraticaRuolo = typeof CommentoPraticaRuolo[keyof typeof CommentoPraticaRuolo];
+
+
+export const CommentoPraticaRuolo = {
+  collaboratore: 'collaboratore',
+  backoffice: 'backoffice',
+} as const;
+
+export interface CommentoPratica {
+  id: number;
+  testo: string;
+  autore: string;
+  ruolo: CommentoPraticaRuolo;
+  creatoIl: string;
+  mio: boolean;
+}
+
+export interface PraticaDettaglio {
+  id: number;
+  /** @nullable */
+  numero: number | null;
+  bozza: boolean;
+  stato: string;
+  assistito: Assistito;
+  collaboratore: PraticaCollaboratoreRiepilogo;
+  tipo: PraticaTipoRiepilogo;
+  moduli: ModuloPratica[];
+  mandato: MandatoPratica | null;
+  /** Il tipo richiede il mandato ma al collaboratore non e' stato assegnato */
+  mandatoMancante: boolean;
+  /** Documenti obbligatori da caricare (vuoto dopo l'invio) */
+  richiesti: DocumentoRichiesto[];
+  documenti: DocumentoPratica[];
+  messaggio: string;
+  commenti: CommentoPratica[];
+  creataIl: string;
+  /** @nullable */
+  inviataIl: string | null;
+  /** @nullable */
+  gestitaDa: string | null;
+  /** Bozza di un proprio assistito: si puo' modificare e inviare */
+  modificabile: boolean;
+  /** Pratica inviata propria: si possono aggiungere allegati */
+  puoAllegare: boolean;
+  puoCommentare: boolean;
+  /** Cosa impedisce l'invio (documenti non caricati, mandato mancante) */
+  mancanti: string[];
+  invio: InvioPratiche;
+}
+
 export type ListCollaboratoriParams = {
 /**
  * Ricerca su nome, cognome, codice fiscale, cellulare, email, numero di sportello
@@ -743,5 +917,25 @@ collaboratoreId?: number;
 export type RimuoviAssegnazioneMandatoParams = {
 tipoPraticaId: number;
 collaboratoreId: number;
+};
+
+export type ListPraticheParams = {
+/**
+ * Ricerca su nome, cognome e codice fiscale dell'assistito o sul numero pratica
+ */
+q?: string;
+/**
+ * Solo le pratiche di questo collaboratore del gruppo
+ */
+collaboratoreId?: number;
+/**
+ * @minimum 1
+ */
+pagina?: number;
+/**
+ * @minimum 1
+ * @maximum 200
+ */
+perPagina?: number;
 };
 

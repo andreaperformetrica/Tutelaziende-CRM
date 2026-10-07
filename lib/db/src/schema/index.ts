@@ -5,3 +5,4 @@ export * from "./log";
 export * from "./assistiti";
 export * from "./segnalazioni";
 export * from "./configurazione-pratiche";
+export * from "./pratiche";

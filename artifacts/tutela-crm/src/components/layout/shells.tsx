@@ -89,7 +89,7 @@ export function BackofficeShell({ s, children }: { s: SessioneUtente; children: 
 export function CollaboratoreShell({ s, children }: { s: SessioneUtente; children: ReactNode }) {
   const [loc] = useLocation();
   const esci = useEsci();
-  const voci = [{ href: "/collaboratore", label: "Home", icon: Home }, { href: "/collaboratore/assistiti", label: "Assistiti", icon: UserRound }, { href: "/cambia-password", label: "Cambia password", icon: KeyRound }];
+  const voci = [{ href: "/collaboratore", label: "Home", icon: Home }, { href: "/collaboratore/assistiti", label: "Assistiti", icon: UserRound }, { href: "/collaboratore/pratiche", label: "Le mie pratiche", icon: FileText }, { href: "/cambia-password", label: "Cambia password", icon: KeyRound }];
   return (
     <div className="min-h-[100dvh] bg-secondary/40 paper">
       <header className="bg-primary text-primary-foreground border-b-4 border-accent">

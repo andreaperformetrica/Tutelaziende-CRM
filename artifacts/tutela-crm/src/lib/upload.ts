@@ -1,6 +1,8 @@
 /** Caricamento di file verso l'API (corpo binario, fuori dal client generato) e link di download. */
 const BASE = `${import.meta.env.BASE_URL}api`;
 export const MAX_FILE_BYTES = 15 * 1024 * 1024;
+/** Per i documenti delle pratiche sono ammessi solo PDF e immagini. */
+export const FORMATI_DOCUMENTI = ".pdf,.png,.jpg,.jpeg";
 export const FORMATI_FILE = ".pdf,.doc,.docx,.xls,.xlsx,.odt,.ods,.rtf,.txt,.png,.jpg,.jpeg";
 
 export class ErroreUpload extends Error {
@@ -38,6 +40,9 @@ export async function inviaFile<T>(metodo: "POST" | "PUT", percorso: string, que
 
 export const urlModulo = (id: number) => `${BASE}/moduli-tipo/${id}/file`;
 export const urlMandato = (id: number) => `${BASE}/mandati/${id}/file`;
+
+export const urlMandatoPratica = (praticaId: number) => `${BASE}/pratiche/${praticaId}/mandato/file`;
+export const urlDocumentoPratica = (praticaId: number, docId: number) => `${BASE}/pratiche/${praticaId}/documenti/${docId}/file`;
 
 export function formatoDimensione(byte: number): string {
   if (byte < 1024) return `${byte} B`;

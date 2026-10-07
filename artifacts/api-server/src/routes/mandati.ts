@@ -219,7 +219,9 @@ router.delete("/mandati/:id", async (req, res) => {
       });
     });
   } catch (err) {
-    if (codiceErrorePg(err).code === "23503") throw inUso;
+    if (codiceErrorePg(err).code === "23503") {
+      throw new HttpError(409, "Il mandato è stato usato in pratiche già inviate e non può essere eliminato.", "MANDATO_IN_USO");
+    }
     throw err;
   }
   await eliminaFile(m.fileChiave, req.log);

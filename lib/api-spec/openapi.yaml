@@ -24,6 +24,8 @@ tags:
     description: Segnalazioni di assistiti gia' registrati (solo back office)
   - name: configurazione
     description: Configurazione delle pratiche (tipi, documenti, moduli, mandati, stati, orari). Solo admin e super admin
+  - name: pratiche
+    description: Apertura e invio delle pratiche dal Web Collaboratore
   - name: log
     description: Log delle operazioni
 paths:
@@ -848,6 +850,189 @@ paths:
       responses:
         "204":
           description: Eseguito
+  # Upload raw (non nella specifica): POST /pratiche/{id}/documenti/file (query nomeFile, documentoTipoId opzionale, nome opzionale);
+  # download: GET /pratiche/{id}/documenti/{docId}/file e GET /pratiche/{id}/mandato/file.
+  /pratiche:
+    get:
+      operationId: listPratiche
+      tags: [pratiche]
+      summary: Le mie pratiche (e quelle del gruppo, se capogruppo)
+      parameters:
+        - name: q
+          in: query
+          required: false
+          description: Ricerca su nome, cognome e codice fiscale dell'assistito o sul numero pratica
+          schema:
+            type: string
+        - name: collaboratoreId
+          in: query
+          required: false
+          description: Solo le pratiche di questo collaboratore del gruppo
+          schema:
+            type: integer
+        - name: pagina
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+        - name: perPagina
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+      responses:
+        "200":
+          description: Pagina di pratiche
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PratichePagina"
+    post:
+      operationId: createPratica
+      tags: [pratiche]
+      summary: Apre una pratica in bozza per un proprio assistito
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PraticaInput"
+      responses:
+        "201":
+          description: Pratica in bozza
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PraticaDettaglio"
+  /pratiche/stato-invio:
+    get:
+      operationId: getStatoInvioPratiche
+      tags: [pratiche]
+      summary: Dice se in questo momento si possono inviare pratiche
+      responses:
+        "200":
+          description: Stato dell'invio
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvioPratiche"
+  /pratiche/tipi-disponibili:
+    get:
+      operationId: listTipiPraticaDisponibili
+      tags: [pratiche]
+      summary: Tipi di pratica attivi tra cui scegliere all'apertura di una pratica
+      responses:
+        "200":
+          description: Tipi di pratica attivi
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PraticaTipoRiepilogo"
+  /pratiche/{id}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    get:
+      operationId: getPratica
+      tags: [pratiche]
+      summary: Dettaglio pratica
+      responses:
+        "200":
+          description: Pratica
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PraticaDettaglio"
+    delete:
+      operationId: deletePratica
+      tags: [pratiche]
+      summary: Cancella una pratica in bozza (le pratiche inviate non si cancellano)
+      responses:
+        "204":
+          description: Eseguito
+  /pratiche/{id}/messaggio:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    put:
+      operationId: salvaMessaggioPratica
+      tags: [pratiche]
+      summary: Salva il messaggio di una pratica in bozza
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessaggioPraticaInput"
+      responses:
+        "200":
+          description: Pratica aggiornata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PraticaDettaglio"
+  /pratiche/{id}/documenti/{docId}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+      - name: docId
+        in: path
+        required: true
+        schema:
+          type: integer
+    delete:
+      operationId: deleteDocumentoPratica
+      tags: [pratiche]
+      summary: Toglie un documento da una pratica in bozza
+      responses:
+        "200":
+          description: Pratica aggiornata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PraticaDettaglio"
+  /pratiche/{id}/invio:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    post:
+      operationId: inviaPratica
+      tags: [pratiche]
+      summary: Invia la pratica (solo negli orari consentiti e con tutti i documenti caricati)
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvioPraticaInput"
+      responses:
+        "200":
+          description: Pratica inviata, con il numero progressivo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PraticaDettaglio"
+  /pratiche/{id}/commenti:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    post:
+      operationId: createCommentoPratica
+      tags: [pratiche]
+      summary: Risponde nella chat di una pratica inviata
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentoPraticaInput"
+      responses:
+        "201":
+          description: Pratica aggiornata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PraticaDettaglio"
   /stati-pratica:
     get:
       operationId: listStatiPratica
@@ -1867,3 +2052,197 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/FasciaBlocco"
+    PraticaAssistitoRiepilogo:
+      type: object
+      required: [id, nome, cognome, codiceFiscale]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        cognome: { type: string }
+        codiceFiscale: { type: string }
+    PraticaCollaboratoreRiepilogo:
+      type: object
+      required: [id, nome, cognome, numeroSportello]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        cognome: { type: string }
+        numeroSportello: { type: string }
+    PraticaTipoRiepilogo:
+      type: object
+      required: [id, nome]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+    PraticaRiepilogo:
+      type: object
+      required: [id, numero, bozza, stato, assistito, collaboratore, tipo, dataRichiesta, creataIl, gestitaDa, propria]
+      properties:
+        id: { type: integer }
+        numero: { type: [integer, "null"], description: "Numero progressivo, assegnato all'invio" }
+        bozza: { type: boolean }
+        stato: { type: string, description: "Nome dello stato; Bozza finche' non e' inviata" }
+        assistito:
+          $ref: "#/components/schemas/PraticaAssistitoRiepilogo"
+        collaboratore:
+          $ref: "#/components/schemas/PraticaCollaboratoreRiepilogo"
+        tipo:
+          $ref: "#/components/schemas/PraticaTipoRiepilogo"
+        dataRichiesta: { type: [string, "null"], format: date-time, description: "Data di invio; vuota per le bozze" }
+        creataIl: { type: string, format: date-time }
+        gestitaDa: { type: [string, "null"], description: "Operatore del back office che la gestisce" }
+        propria: { type: boolean, description: "Vero se la pratica e' del collaboratore che la guarda (non di un collaboratore del gruppo)" }
+    PratichePagina:
+      type: object
+      required: [elementi, totale, pagina, perPagina]
+      properties:
+        elementi:
+          type: array
+          items:
+            $ref: "#/components/schemas/PraticaRiepilogo"
+        totale: { type: integer }
+        pagina: { type: integer }
+        perPagina: { type: integer }
+    PraticaInput:
+      type: object
+      required: [assistitoId, tipoPraticaId]
+      properties:
+        assistitoId: { type: integer }
+        tipoPraticaId: { type: integer }
+    MessaggioPraticaInput:
+      type: object
+      required: [messaggio]
+      properties:
+        messaggio: { type: string, maxLength: 4000 }
+    InvioPraticaInput:
+      type: object
+      properties:
+        messaggio: { type: string, maxLength: 4000, description: "Se presente sostituisce il messaggio della bozza" }
+    CommentoPraticaInput:
+      type: object
+      required: [testo]
+      properties:
+        testo: { type: string, maxLength: 4000 }
+    InvioPratiche:
+      type: object
+      required: [consentito, bloccatoFinoA, messaggio]
+      properties:
+        consentito: { type: boolean }
+        bloccatoFinoA: { type: [string, "null"], format: date-time }
+        messaggio: { type: [string, "null"], description: "Spiegazione in italiano quando l'invio e' bloccato" }
+    ModuloPratica:
+      type: object
+      required: [id, nome, fileNome, dimensione]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        fileNome: { type: string }
+        dimensione: { type: integer }
+    MandatoPratica:
+      type: object
+      required: [id, nome, fileNome, dimensione]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        fileNome: { type: string }
+        dimensione: { type: integer }
+    DocumentoRichiesto:
+      type: object
+      required: [id, nome]
+      properties:
+        id: { type: integer, description: "Id del documento obbligatorio del tipo di pratica" }
+        nome: { type: string }
+    DocumentoPratica:
+      type: object
+      required: [id, documentoTipoId, nome, fileNome, fileTipo, dimensione, caricatoIl, caricatoDa, dopoInvio]
+      properties:
+        id: { type: integer }
+        documentoTipoId: { type: [integer, "null"], description: "Vuoto per gli allegati aggiuntivi" }
+        nome: { type: string }
+        fileNome: { type: string }
+        fileTipo: { type: string }
+        dimensione: { type: integer }
+        caricatoIl: { type: string, format: date-time }
+        caricatoDa: { type: string }
+        dopoInvio: { type: boolean }
+    CommentoPratica:
+      type: object
+      required: [id, testo, autore, ruolo, creatoIl, mio]
+      properties:
+        id: { type: integer }
+        testo: { type: string }
+        autore: { type: string }
+        ruolo: { type: string, enum: [collaboratore, backoffice] }
+        creatoIl: { type: string, format: date-time }
+        mio: { type: boolean }
+    PraticaDettaglio:
+      type: object
+      required:
+        - id
+        - numero
+        - bozza
+        - stato
+        - assistito
+        - collaboratore
+        - tipo
+        - moduli
+        - mandato
+        - mandatoMancante
+        - richiesti
+        - documenti
+        - messaggio
+        - commenti
+        - creataIl
+        - inviataIl
+        - gestitaDa
+        - modificabile
+        - puoAllegare
+        - puoCommentare
+        - mancanti
+        - invio
+      properties:
+        id: { type: integer }
+        numero: { type: [integer, "null"] }
+        bozza: { type: boolean }
+        stato: { type: string }
+        assistito:
+          $ref: "#/components/schemas/Assistito"
+        collaboratore:
+          $ref: "#/components/schemas/PraticaCollaboratoreRiepilogo"
+        tipo:
+          $ref: "#/components/schemas/PraticaTipoRiepilogo"
+        moduli:
+          type: array
+          items:
+            $ref: "#/components/schemas/ModuloPratica"
+        mandato:
+          oneOf:
+            - $ref: "#/components/schemas/MandatoPratica"
+            - type: "null"
+        mandatoMancante: { type: boolean, description: "Il tipo richiede il mandato ma al collaboratore non e' stato assegnato" }
+        richiesti:
+          type: array
+          description: Documenti obbligatori da caricare (vuoto dopo l'invio)
+          items:
+            $ref: "#/components/schemas/DocumentoRichiesto"
+        documenti:
+          type: array
+          items:
+            $ref: "#/components/schemas/DocumentoPratica"
+        messaggio: { type: string }
+        commenti:
+          type: array
+          items:
+            $ref: "#/components/schemas/CommentoPratica"
+        creataIl: { type: string, format: date-time }
+        inviataIl: { type: [string, "null"], format: date-time }
+        gestitaDa: { type: [string, "null"] }
+        modificabile: { type: boolean, description: "Bozza di un proprio assistito: si puo' modificare e inviare" }
+        puoAllegare: { type: boolean, description: "Pratica inviata propria: si possono aggiungere allegati" }
+        puoCommentare: { type: boolean }
+        mancanti:
+          type: array
+          description: Cosa impedisce l'invio (documenti non caricati, mandato mancante)
+          items: { type: string }
+        invio:
+          $ref: "#/components/schemas/InvioPratiche"

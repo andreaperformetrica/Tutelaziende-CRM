@@ -46,6 +46,15 @@ export const AZIONI_LOG = {
   "stato_pratica.modifica": "Modifica stato pratica",
   "stato_pratica.elimina": "Eliminazione stato pratica",
   "stato_pratica.ordina": "Riordino stati pratica",
+  "pratica.crea": "Apertura pratica (bozza)",
+  "pratica.messaggio": "Salvataggio messaggio della pratica",
+  "pratica.documento_carica": "Caricamento documento di una pratica",
+  "pratica.documento_sostituisci": "Sostituzione documento di una pratica in bozza",
+  "pratica.documento_elimina": "Eliminazione documento di una pratica in bozza",
+  "pratica.allegato_aggiungi": "Aggiunta allegato a una pratica inviata",
+  "pratica.elimina_bozza": "Cancellazione pratica in bozza",
+  "pratica.invia": "Invio pratica",
+  "pratica.commento": "Commento su una pratica",
   "orari.modifica": "Modifica orari di caricamento",
 } as const;
 

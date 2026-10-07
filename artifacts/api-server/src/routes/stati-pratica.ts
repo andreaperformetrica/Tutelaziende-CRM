@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { asc, eq, sql } from "drizzle-orm";
+import { asc, count, eq, sql } from "drizzle-orm";
 import {
   CreateStatoPraticaBody,
   DeleteStatoPraticaParams,
@@ -7,7 +7,7 @@ import {
   UpdateStatoPraticaBody,
   UpdateStatoPraticaParams,
 } from "@workspace/api-zod";
-import { db, statiPraticaTable } from "@workspace/db";
+import { db, praticheTable, statiPraticaTable } from "@workspace/db";
 import { controllaOrdine, pulisciNome } from "../lib/configurazione-pratiche";
 import { HttpError, nonTrovato } from "../lib/errori";
 import { contestoDa, registraLog } from "../lib/log";
@@ -104,7 +104,14 @@ router.put("/stati-pratica/:id", async (req, res) => {
 router.delete("/stati-pratica/:id", async (req, res) => {
   const { id } = valida(DeleteStatoPraticaParams, req.params);
   const s = await carica(id);
-  // Quando esisteranno le pratiche, qui va bloccata l'eliminazione di uno stato in uso.
+  const [uso] = await db.select({ n: count() }).from(praticheTable).where(eq(praticheTable.statoId, id));
+  if ((uso?.n ?? 0) > 0) {
+    throw new HttpError(
+      409,
+      `Lo stato "${s.nome}" è usato da ${uso!.n} ${uso!.n === 1 ? "pratica" : "pratiche"} e non può essere eliminato.`,
+      "STATO_IN_USO",
+    );
+  }
   await db.transaction(async (tx) => {
     await tx.delete(statiPraticaTable).where(eq(statiPraticaTable.id, id));
     await registraLog(tx, contestoDa(req), {

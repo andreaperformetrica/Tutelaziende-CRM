@@ -2,3 +2,4 @@
 - [Phase 1 permission decisions](tutela-crm-phase1-decisions.md) — who manages whom, capogruppo one-level rules, read-only operatore
 - [Phase 2 assistiti decisions](tutela-crm-phase2-decisions.md) — leak-free duplicate messages, segnalazioni flow, visibility, what is not yet built
 - [Phase 3 pratiche config decisions](tutela-crm-phase3-decisions.md) — storage module, orari hook for phase 4, stati/tipi rules, permissions
+- [Phase 4 pratiche opening decisions](tutela-crm-phase4-decisions.md) — ownership, mandato via assignment, initial stato, post-send locks, orari check order
