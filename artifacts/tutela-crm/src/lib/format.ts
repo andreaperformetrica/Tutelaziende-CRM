@@ -57,3 +57,7 @@ export function generaPassword(len = 12): string {
   crypto.getRandomValues(arr);
   return Array.from(arr, (n) => set[n % set.length]).join("");
 }
+
+export function fmtEuro(n: number): string {
+  return new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+}

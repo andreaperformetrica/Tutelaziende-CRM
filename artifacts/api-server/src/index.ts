@@ -1,5 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { inizializzaConfigurazionePratiche } from "./lib/configurazione-iniziale";
 
 const rawPort = process.env["PORT"];
 
@@ -13,6 +14,13 @@ const port = Number(rawPort);
 
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
+}
+
+try {
+  const creata = await inizializzaConfigurazionePratiche();
+  if (creata) logger.info("Configurazione iniziale delle pratiche creata (stati e orari di caricamento)");
+} catch (err) {
+  logger.error({ err }, "Impossibile inizializzare la configurazione delle pratiche");
 }
 
 app.listen(port, (err) => {

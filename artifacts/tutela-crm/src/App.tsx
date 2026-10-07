@@ -11,6 +11,11 @@ import { ErrorState } from '@/components/common';
 import { Skeleton } from '@/components/ui/skeleton';
 import LoginPage from '@/pages/login';
 import CambiaPasswordPage from '@/pages/cambia-password';
+import TipiPraticaPage from '@/pages/admin/tipi-pratica';
+import TipoPraticaDettaglioPage from '@/pages/admin/tipo-pratica-dettaglio';
+import MandatiPage from '@/pages/admin/mandati';
+import StatiPraticaPage from '@/pages/admin/stati-pratica';
+import OrariPage from '@/pages/admin/orari';
 import CollaboratoriPage from '@/pages/admin/collaboratori';
 import CollaboratoreNuovo from '@/pages/admin/collaboratore-nuovo';
 import CollaboratoreDettaglioPage from '@/pages/admin/collaboratore-dettaglio';
@@ -66,6 +71,11 @@ function Router() {
         <Route path="/admin/assistiti" component={g(<AssistitiBackoffice />, 'backoffice', TUTTI_BO)} />
         <Route path="/admin/assistiti/:id" component={g(<AssistitoDettaglioBackoffice />, 'backoffice', TUTTI_BO)} />
         <Route path="/admin/segnalazioni" component={g(<SegnalazioniPage />, 'backoffice', ADMIN)} />
+        <Route path="/admin/tipi-pratica" component={g(<TipiPraticaPage />, 'backoffice', ADMIN)} />
+        <Route path="/admin/tipi-pratica/:id" component={g(<TipoPraticaDettaglioPage />, 'backoffice', ADMIN)} />
+        <Route path="/admin/mandati" component={g(<MandatiPage />, 'backoffice', ADMIN)} />
+        <Route path="/admin/stati-pratica" component={g(<StatiPraticaPage />, 'backoffice', ADMIN)} />
+        <Route path="/admin/orari" component={g(<OrariPage />, 'backoffice', ADMIN)} />
         <Route path="/admin/utenti" component={g(<UtentiPage />, 'backoffice', ADMIN)} />
         <Route path="/admin/log" component={g(<LogPage />, 'backoffice', ADMIN)} />
         <Route path="/collaboratore/assistiti" component={g(<AssistitiCollaboratore />, 'collaboratore', ['collaboratore'])} />

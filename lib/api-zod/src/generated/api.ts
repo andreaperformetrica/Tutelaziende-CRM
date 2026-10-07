@@ -1027,3 +1027,526 @@ export const GetFiltriLogResponse = zod.object({
 })
 
 
+/**
+ * @summary Elenco dei tipi di pratica con documenti e moduli
+ */
+export const ListTipiPraticaResponseItem = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "attivo": zod.boolean(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "creatoIl": zod.coerce.date(),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "mandato": zod.boolean().describe('Se vero e\' il mandato del collaboratore, caricato dal back office'),
+  "ordine": zod.number().int()
+})),
+  "moduli": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date()
+}))
+})
+export const ListTipiPraticaResponse = zod.array(ListTipiPraticaResponseItem)
+
+
+/**
+ * @summary Crea un tipo di pratica
+ */
+export const createTipoPraticaBodyPuntiMin = 0;
+
+export const createTipoPraticaBodyValoreEuroMin = 0;
+
+
+
+export const CreateTipoPraticaBody = zod.object({
+  "nome": zod.string(),
+  "attivo": zod.boolean().optional(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int().min(createTipoPraticaBodyPuntiMin),
+  "valoreEuro": zod.number().min(createTipoPraticaBodyValoreEuroMin)
+})
+
+export const CreateTipoPraticaResponse = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "attivo": zod.boolean(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "creatoIl": zod.coerce.date(),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "mandato": zod.boolean().describe('Se vero e\' il mandato del collaboratore, caricato dal back office'),
+  "ordine": zod.number().int()
+})),
+  "moduli": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Dettaglio di un tipo di pratica
+ */
+export const GetTipoPraticaParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const GetTipoPraticaResponse = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "attivo": zod.boolean(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "creatoIl": zod.coerce.date(),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "mandato": zod.boolean().describe('Se vero e\' il mandato del collaboratore, caricato dal back office'),
+  "ordine": zod.number().int()
+})),
+  "moduli": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Modifica un tipo di pratica
+ */
+export const UpdateTipoPraticaParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const updateTipoPraticaBodyPuntiMin = 0;
+
+export const updateTipoPraticaBodyValoreEuroMin = 0;
+
+
+
+export const UpdateTipoPraticaBody = zod.object({
+  "nome": zod.string(),
+  "attivo": zod.boolean().optional(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int().min(updateTipoPraticaBodyPuntiMin),
+  "valoreEuro": zod.number().min(updateTipoPraticaBodyValoreEuroMin)
+})
+
+export const UpdateTipoPraticaResponse = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "attivo": zod.boolean(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "creatoIl": zod.coerce.date(),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "mandato": zod.boolean().describe('Se vero e\' il mandato del collaboratore, caricato dal back office'),
+  "ordine": zod.number().int()
+})),
+  "moduli": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Aggiunge un documento obbligatorio
+ */
+export const CreateDocumentoTipoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const CreateDocumentoTipoBody = zod.object({
+  "nome": zod.string(),
+  "mandato": zod.boolean()
+})
+
+export const CreateDocumentoTipoResponse = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "attivo": zod.boolean(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "creatoIl": zod.coerce.date(),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "mandato": zod.boolean().describe('Se vero e\' il mandato del collaboratore, caricato dal back office'),
+  "ordine": zod.number().int()
+})),
+  "moduli": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Riordina i documenti obbligatori
+ */
+export const OrdinaDocumentiTipoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const OrdinaDocumentiTipoBody = zod.object({
+  "ids": zod.array(zod.number().int())
+})
+
+export const OrdinaDocumentiTipoResponse = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "attivo": zod.boolean(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "creatoIl": zod.coerce.date(),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "mandato": zod.boolean().describe('Se vero e\' il mandato del collaboratore, caricato dal back office'),
+  "ordine": zod.number().int()
+})),
+  "moduli": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Modifica un documento obbligatorio
+ */
+export const UpdateDocumentoTipoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const UpdateDocumentoTipoBody = zod.object({
+  "nome": zod.string(),
+  "mandato": zod.boolean()
+})
+
+export const UpdateDocumentoTipoResponse = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "attivo": zod.boolean(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "creatoIl": zod.coerce.date(),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "mandato": zod.boolean().describe('Se vero e\' il mandato del collaboratore, caricato dal back office'),
+  "ordine": zod.number().int()
+})),
+  "moduli": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Elimina un documento obbligatorio
+ */
+export const DeleteDocumentoTipoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const DeleteDocumentoTipoResponse = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "attivo": zod.boolean(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "creatoIl": zod.coerce.date(),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "mandato": zod.boolean().describe('Se vero e\' il mandato del collaboratore, caricato dal back office'),
+  "ordine": zod.number().int()
+})),
+  "moduli": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Rinomina un modulo
+ */
+export const RenameModuloTipoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const RenameModuloTipoBody = zod.object({
+  "nome": zod.string()
+})
+
+export const RenameModuloTipoResponse = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "attivo": zod.boolean(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "creatoIl": zod.coerce.date(),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "mandato": zod.boolean().describe('Se vero e\' il mandato del collaboratore, caricato dal back office'),
+  "ordine": zod.number().int()
+})),
+  "moduli": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Elimina un modulo e il suo file
+ */
+export const DeleteModuloTipoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const DeleteModuloTipoResponse = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "attivo": zod.boolean(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "creatoIl": zod.coerce.date(),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "mandato": zod.boolean().describe('Se vero e\' il mandato del collaboratore, caricato dal back office'),
+  "ordine": zod.number().int()
+})),
+  "moduli": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Mandati caricati (tutti, o filtrati per collaboratore o tipo di pratica)
+ */
+export const ListMandatiQueryParams = zod.object({
+  "collaboratoreId": zod.coerce.number().int().optional(),
+  "tipoPraticaId": zod.coerce.number().int().optional()
+})
+
+export const ListMandatiResponseItem = zod.object({
+  "id": zod.number().int(),
+  "collaboratoreId": zod.number().int(),
+  "tipoPraticaId": zod.number().int(),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date(),
+  "caricatoDa": zod.string().nullable()
+})
+export const ListMandatiResponse = zod.array(ListMandatiResponseItem)
+
+
+/**
+ * @summary Stati pratica nell'ordine scelto dall'admin
+ */
+export const ListStatiPraticaResponseItem = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "ordine": zod.number().int(),
+  "chiuso": zod.boolean()
+})
+export const ListStatiPraticaResponse = zod.array(ListStatiPraticaResponseItem)
+
+
+/**
+ * @summary Crea uno stato (in fondo all'elenco)
+ */
+export const CreateStatoPraticaBody = zod.object({
+  "nome": zod.string(),
+  "chiuso": zod.boolean()
+})
+
+export const CreateStatoPraticaResponse = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "ordine": zod.number().int(),
+  "chiuso": zod.boolean()
+})
+
+
+/**
+ * @summary Riordina gli stati pratica
+ */
+export const OrdinaStatiPraticaBody = zod.object({
+  "ids": zod.array(zod.number().int())
+})
+
+export const OrdinaStatiPraticaResponseItem = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "ordine": zod.number().int(),
+  "chiuso": zod.boolean()
+})
+export const OrdinaStatiPraticaResponse = zod.array(OrdinaStatiPraticaResponseItem)
+
+
+/**
+ * @summary Rinomina uno stato o ne cambia il flag chiusa
+ */
+export const UpdateStatoPraticaParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const UpdateStatoPraticaBody = zod.object({
+  "nome": zod.string(),
+  "chiuso": zod.boolean()
+})
+
+export const UpdateStatoPraticaResponse = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "ordine": zod.number().int(),
+  "chiuso": zod.boolean()
+})
+
+
+/**
+ * @summary Elimina uno stato
+ */
+export const DeleteStatoPraticaParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const DeleteStatoPraticaResponse = zod.void()
+
+
+/**
+ * @summary Fasce di blocco e stato attuale dell'invio pratiche
+ */
+export const getOrariCaricamentoResponseFasceItemGiornoInizioMax = 7;
+
+export const getOrariCaricamentoResponseFasceItemGiornoFineMax = 7;
+
+
+
+export const GetOrariCaricamentoResponse = zod.object({
+  "fasce": zod.array(zod.object({
+  "id": zod.number().int().optional(),
+  "giornoInizio": zod.number().int().min(1).max(getOrariCaricamentoResponseFasceItemGiornoInizioMax).describe('1 = lunedi, 7 = domenica'),
+  "oraInizio": zod.string().describe('HH:MM'),
+  "giornoFine": zod.number().int().min(1).max(getOrariCaricamentoResponseFasceItemGiornoFineMax),
+  "oraFine": zod.string().describe('HH:MM'),
+  "attiva": zod.boolean()
+})),
+  "stato": zod.object({
+  "consentito": zod.boolean(),
+  "adesso": zod.coerce.date(),
+  "bloccatoFinoA": zod.coerce.date().nullable().describe('Prossimo momento in cui l\'invio e\' consentito')
+})
+})
+
+
+/**
+ * @summary Sostituisce l'elenco delle fasce di blocco
+ */
+export const updateOrariCaricamentoBodyFasceItemGiornoInizioMax = 7;
+
+export const updateOrariCaricamentoBodyFasceItemGiornoFineMax = 7;
+
+
+
+export const UpdateOrariCaricamentoBody = zod.object({
+  "fasce": zod.array(zod.object({
+  "id": zod.number().int().optional(),
+  "giornoInizio": zod.number().int().min(1).max(updateOrariCaricamentoBodyFasceItemGiornoInizioMax).describe('1 = lunedi, 7 = domenica'),
+  "oraInizio": zod.string().describe('HH:MM'),
+  "giornoFine": zod.number().int().min(1).max(updateOrariCaricamentoBodyFasceItemGiornoFineMax),
+  "oraFine": zod.string().describe('HH:MM'),
+  "attiva": zod.boolean()
+}))
+})
+
+export const updateOrariCaricamentoResponseFasceItemGiornoInizioMax = 7;
+
+export const updateOrariCaricamentoResponseFasceItemGiornoFineMax = 7;
+
+
+
+export const UpdateOrariCaricamentoResponse = zod.object({
+  "fasce": zod.array(zod.object({
+  "id": zod.number().int().optional(),
+  "giornoInizio": zod.number().int().min(1).max(updateOrariCaricamentoResponseFasceItemGiornoInizioMax).describe('1 = lunedi, 7 = domenica'),
+  "oraInizio": zod.string().describe('HH:MM'),
+  "giornoFine": zod.number().int().min(1).max(updateOrariCaricamentoResponseFasceItemGiornoFineMax),
+  "oraFine": zod.string().describe('HH:MM'),
+  "attiva": zod.boolean()
+})),
+  "stato": zod.object({
+  "consentito": zod.boolean(),
+  "adesso": zod.coerce.date(),
+  "bloccatoFinoA": zod.coerce.date().nullable().describe('Prossimo momento in cui l\'invio e\' consentito')
+})
+})
+
+

@@ -50,6 +50,10 @@ const gestoreErrori: ErrorRequestHandler = (err, req, res, _next) => {
     res.status(400).json({ error: "Richiesta non valida.", code: "DATI_NON_VALIDI" });
     return;
   }
+  if (typeof err === "object" && err && (err as { type?: string }).type === "entity.too.large") {
+    res.status(413).json({ error: "Il file supera la dimensione massima di 15 MB.", code: "FILE_TROPPO_GRANDE" });
+    return;
+  }
   req.log.error({ err }, "Errore non gestito");
   res.status(500).json({ error: "Errore interno del server. Riprova piu tardi.", code: "ERRORE_INTERNO" });
 };

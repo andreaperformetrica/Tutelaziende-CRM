@@ -505,6 +505,122 @@ export interface FiltriLog {
   azioni: FiltroAzioneLog[];
 }
 
+export interface DocumentoTipo {
+  id: number;
+  nome: string;
+  /** Se vero e' il mandato del collaboratore, caricato dal back office */
+  mandato: boolean;
+  ordine: number;
+}
+
+export interface ModuloTipo {
+  id: number;
+  nome: string;
+  fileNome: string;
+  fileTipo: string;
+  dimensione: number;
+  caricatoIl: string;
+}
+
+export interface TipoPratica {
+  id: number;
+  nome: string;
+  attivo: boolean;
+  pagabile: boolean;
+  punti: number;
+  /** Euro con due decimali */
+  valoreEuro: number;
+  creatoIl: string;
+  documenti: DocumentoTipo[];
+  moduli: ModuloTipo[];
+}
+
+export interface TipoPraticaInput {
+  nome: string;
+  attivo?: boolean;
+  pagabile: boolean;
+  /** @minimum 0 */
+  punti: number;
+  /** @minimum 0 */
+  valoreEuro: number;
+}
+
+export interface DocumentoTipoInput {
+  nome: string;
+  mandato: boolean;
+}
+
+export interface ModuloTipoInput {
+  nome: string;
+}
+
+export interface OrdineInput {
+  ids: number[];
+}
+
+export interface Mandato {
+  id: number;
+  collaboratoreId: number;
+  tipoPraticaId: number;
+  fileNome: string;
+  fileTipo: string;
+  dimensione: number;
+  caricatoIl: string;
+  /** @nullable */
+  caricatoDa: string | null;
+}
+
+export interface StatoPratica {
+  id: number;
+  nome: string;
+  ordine: number;
+  chiuso: boolean;
+}
+
+export interface StatoPraticaInput {
+  nome: string;
+  chiuso: boolean;
+}
+
+export interface FasciaBlocco {
+  id?: number;
+  /**
+     * 1 = lunedi, 7 = domenica
+     * @minimum 1
+     * @maximum 7
+     */
+  giornoInizio: number;
+  /** HH:MM */
+  oraInizio: string;
+  /**
+     * @minimum 1
+     * @maximum 7
+     */
+  giornoFine: number;
+  /** HH:MM */
+  oraFine: string;
+  attiva: boolean;
+}
+
+export interface StatoInvioPratiche {
+  consentito: boolean;
+  adesso: string;
+  /**
+     * Prossimo momento in cui l'invio e' consentito
+     * @nullable
+     */
+  bloccatoFinoA: string | null;
+}
+
+export interface OrariCaricamento {
+  fasce: FasciaBlocco[];
+  stato: StatoInvioPratiche;
+}
+
+export interface OrariCaricamentoInput {
+  fasce: FasciaBlocco[];
+}
+
 export type ListCollaboratoriParams = {
 /**
  * Ricerca su nome, cognome, codice fiscale, cellulare, email, numero di sportello
@@ -596,5 +712,10 @@ pagina?: number;
  * @maximum 200
  */
 perPagina?: number;
+};
+
+export type ListMandatiParams = {
+collaboratoreId?: number;
+tipoPraticaId?: number;
 };
 

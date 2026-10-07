@@ -4,7 +4,8 @@
  */
 import { eq, sql } from "drizzle-orm";
 import { calcolaCodiceFiscale, normalizzaTelefono } from "@workspace/anagrafica";
-import { assistitiTable, collaboratoriTable, db, pool, personeTable, utentiTable } from "@workspace/db";
+import { assistitiTable, collaboratoriTable, db, documentiTipoTable, pool, personeTable, tipiPraticaTable, utentiTable } from "@workspace/db";
+import { inizializzaConfigurazionePratiche } from "./lib/configurazione-iniziale";
 import { trovaLuogo, trovaNazionalita } from "./lib/luoghi";
 import { hashPassword } from "./lib/password";
 
@@ -88,6 +89,24 @@ async function seedAssistiti() {
   }
 }
 
+const tipiPratica = [
+  { nome: "Assegno familiare", pagabile: true, punti: 1, valoreCentesimi: 500, documenti: [["SR156", false], ["SR163", false], ["Mandato", true]] },
+  { nome: "Dichiarazione ISEE", pagabile: false, punti: 0, valoreCentesimi: 0, documenti: [["Documento di identità", false], ["Mandato", true]] },
+] as const;
+
+async function seedConfigurazionePratiche() {
+  if (await inizializzaConfigurazionePratiche()) console.log("Creati gli stati pratica e gli orari di caricamento iniziali");
+  for (const t of tipiPratica) {
+    const [esiste] = await db.select({ id: tipiPraticaTable.id }).from(tipiPraticaTable).where(sql`lower(${tipiPraticaTable.nome}) = lower(${t.nome})`);
+    if (esiste) continue;
+    await db.transaction(async (tx) => {
+      const [nuovo] = await tx.insert(tipiPraticaTable).values({ nome: t.nome, pagabile: t.pagabile, punti: t.punti, valoreCentesimi: t.valoreCentesimi }).returning({ id: tipiPraticaTable.id });
+      await tx.insert(documentiTipoTable).values(t.documenti.map(([nome, mandato], i) => ({ tipoPraticaId: nuovo!.id, nome, mandato, ordine: i + 1 })));
+    });
+    console.log(`Creato tipo di pratica ${t.nome}`);
+  }
+}
+
 async function main() {
   const passwordHash = await hashPassword(PASSWORD_PROVVISORIA);
 
@@ -153,6 +172,7 @@ async function main() {
     console.log(`Creato collaboratore ${c.cognome} ${c.nome} (${email}, ${codiceFiscale})`);
   }
   await seedAssistiti();
+  await seedConfigurazionePratiche();
   console.log(`Password provvisoria di tutti gli utenti di prova: ${PASSWORD_PROVVISORIA}`);
 }
 

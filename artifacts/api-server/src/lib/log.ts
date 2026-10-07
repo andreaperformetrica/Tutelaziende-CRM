@@ -26,6 +26,23 @@ export const AZIONI_LOG = {
   "assistito.duplicato_segnalato": "Tentativo di inserire un assistito gia presente",
   "segnalazione.associa": "Segnalazione chiusa con associazione",
   "segnalazione.archivia": "Segnalazione archiviata",
+  "tipo_pratica.crea": "Creazione tipo di pratica",
+  "tipo_pratica.modifica": "Modifica tipo di pratica",
+  "documento_tipo.crea": "Aggiunta documento obbligatorio",
+  "documento_tipo.modifica": "Modifica documento obbligatorio",
+  "documento_tipo.elimina": "Eliminazione documento obbligatorio",
+  "documento_tipo.ordina": "Riordino documenti obbligatori",
+  "modulo_tipo.carica": "Caricamento modulo",
+  "modulo_tipo.sostituisci": "Sostituzione file di un modulo",
+  "modulo_tipo.rinomina": "Modifica nome di un modulo",
+  "modulo_tipo.elimina": "Eliminazione modulo",
+  "mandato.carica": "Caricamento mandato",
+  "mandato.sostituisci": "Sostituzione mandato",
+  "stato_pratica.crea": "Creazione stato pratica",
+  "stato_pratica.modifica": "Modifica stato pratica",
+  "stato_pratica.elimina": "Eliminazione stato pratica",
+  "stato_pratica.ordina": "Riordino stati pratica",
+  "orari.modifica": "Modifica orari di caricamento",
 } as const;
 
 export type AzioneLog = keyof typeof AZIONI_LOG;

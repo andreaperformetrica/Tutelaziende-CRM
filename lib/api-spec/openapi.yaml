@@ -22,6 +22,8 @@ tags:
     description: Anagrafica degli assistiti
   - name: segnalazioni
     description: Segnalazioni di assistiti gia' registrati (solo back office)
+  - name: configurazione
+    description: Configurazione delle pratiche (tipi, documenti, moduli, mandati, stati, orari). Solo admin e super admin
   - name: log
     description: Log delle operazioni
 paths:
@@ -573,6 +575,304 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FiltriLog"
+  # I caricamenti di file non sono nella specifica (corpo binario): PUT /mandati/file, POST /tipi-pratica/{id}/moduli/file,
+  # PUT /moduli-tipo/{id}/file, e i download GET /moduli-tipo/{id}/file e GET /mandati/{id}/file.
+  /tipi-pratica:
+    get:
+      operationId: listTipiPratica
+      tags: [configurazione]
+      summary: Elenco dei tipi di pratica con documenti e moduli
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TipoPratica"
+    post:
+      operationId: createTipoPratica
+      tags: [configurazione]
+      summary: Crea un tipo di pratica
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TipoPraticaInput"
+      responses:
+        "201":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TipoPratica"
+  /tipi-pratica/{id}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    get:
+      operationId: getTipoPratica
+      tags: [configurazione]
+      summary: Dettaglio di un tipo di pratica
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TipoPratica"
+    put:
+      operationId: updateTipoPratica
+      tags: [configurazione]
+      summary: Modifica un tipo di pratica
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TipoPraticaInput"
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TipoPratica"
+  /tipi-pratica/{id}/documenti:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    post:
+      operationId: createDocumentoTipo
+      tags: [configurazione]
+      summary: Aggiunge un documento obbligatorio
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentoTipoInput"
+      responses:
+        "201":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TipoPratica"
+  /tipi-pratica/{id}/documenti-ordine:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    put:
+      operationId: ordinaDocumentiTipo
+      tags: [configurazione]
+      summary: Riordina i documenti obbligatori
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrdineInput"
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TipoPratica"
+  /documenti-tipo/{id}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    put:
+      operationId: updateDocumentoTipo
+      tags: [configurazione]
+      summary: Modifica un documento obbligatorio
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentoTipoInput"
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TipoPratica"
+    delete:
+      operationId: deleteDocumentoTipo
+      tags: [configurazione]
+      summary: Elimina un documento obbligatorio
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TipoPratica"
+  /moduli-tipo/{id}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    put:
+      operationId: renameModuloTipo
+      tags: [configurazione]
+      summary: Rinomina un modulo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModuloTipoInput"
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TipoPratica"
+    delete:
+      operationId: deleteModuloTipo
+      tags: [configurazione]
+      summary: Elimina un modulo e il suo file
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TipoPratica"
+  /mandati:
+    get:
+      operationId: listMandati
+      tags: [configurazione]
+      summary: Mandati caricati (tutti, o filtrati per collaboratore o tipo di pratica)
+      parameters:
+        - name: collaboratoreId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: tipoPraticaId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Mandato"
+  /stati-pratica:
+    get:
+      operationId: listStatiPratica
+      tags: [configurazione]
+      summary: Stati pratica nell'ordine scelto dall'admin
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StatoPratica"
+    post:
+      operationId: createStatoPratica
+      tags: [configurazione]
+      summary: Crea uno stato (in fondo all'elenco)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StatoPraticaInput"
+      responses:
+        "201":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatoPratica"
+  /stati-pratica-ordine:
+    put:
+      operationId: ordinaStatiPratica
+      tags: [configurazione]
+      summary: Riordina gli stati pratica
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrdineInput"
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StatoPratica"
+  /stati-pratica/{id}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    put:
+      operationId: updateStatoPratica
+      tags: [configurazione]
+      summary: Rinomina uno stato o ne cambia il flag chiusa
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StatoPraticaInput"
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatoPratica"
+    delete:
+      operationId: deleteStatoPratica
+      tags: [configurazione]
+      summary: Elimina uno stato
+      responses:
+        "204":
+          description: Eseguito
+  /orari-caricamento:
+    get:
+      operationId: getOrariCaricamento
+      tags: [configurazione]
+      summary: Fasce di blocco e stato attuale dell'invio pratiche
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrariCaricamento"
+    put:
+      operationId: updateOrariCaricamento
+      tags: [configurazione]
+      summary: Sostituisce l'elenco delle fasce di blocco
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrariCaricamentoInput"
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrariCaricamento"
 
 components:
   parameters:
@@ -1339,3 +1639,129 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/FiltroAzioneLog"
+
+    TipoPratica:
+      type: object
+      required: [id, nome, attivo, pagabile, punti, valoreEuro, documenti, moduli, creatoIl]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        attivo: { type: boolean }
+        pagabile: { type: boolean }
+        punti: { type: integer }
+        valoreEuro: { type: number, description: "Euro con due decimali" }
+        creatoIl: { type: string, format: date-time }
+        documenti:
+          type: array
+          items:
+            $ref: "#/components/schemas/DocumentoTipo"
+        moduli:
+          type: array
+          items:
+            $ref: "#/components/schemas/ModuloTipo"
+    TipoPraticaInput:
+      type: object
+      required: [nome, pagabile, punti, valoreEuro]
+      properties:
+        nome: { type: string }
+        attivo: { type: boolean }
+        pagabile: { type: boolean }
+        punti: { type: integer, minimum: 0 }
+        valoreEuro: { type: number, minimum: 0 }
+    DocumentoTipo:
+      type: object
+      required: [id, nome, mandato, ordine]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        mandato: { type: boolean, description: "Se vero e' il mandato del collaboratore, caricato dal back office" }
+        ordine: { type: integer }
+    DocumentoTipoInput:
+      type: object
+      required: [nome, mandato]
+      properties:
+        nome: { type: string }
+        mandato: { type: boolean }
+    ModuloTipo:
+      type: object
+      required: [id, nome, fileNome, fileTipo, dimensione, caricatoIl]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        fileNome: { type: string }
+        fileTipo: { type: string }
+        dimensione: { type: integer }
+        caricatoIl: { type: string, format: date-time }
+    ModuloTipoInput:
+      type: object
+      required: [nome]
+      properties:
+        nome: { type: string }
+    OrdineInput:
+      type: object
+      required: [ids]
+      properties:
+        ids:
+          type: array
+          items: { type: integer }
+    Mandato:
+      type: object
+      required: [id, collaboratoreId, tipoPraticaId, fileNome, fileTipo, dimensione, caricatoIl, caricatoDa]
+      properties:
+        id: { type: integer }
+        collaboratoreId: { type: integer }
+        tipoPraticaId: { type: integer }
+        fileNome: { type: string }
+        fileTipo: { type: string }
+        dimensione: { type: integer }
+        caricatoIl: { type: string, format: date-time }
+        caricatoDa: { type: [string, "null"] }
+    StatoPratica:
+      type: object
+      required: [id, nome, ordine, chiuso]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        ordine: { type: integer }
+        chiuso: { type: boolean }
+    StatoPraticaInput:
+      type: object
+      required: [nome, chiuso]
+      properties:
+        nome: { type: string }
+        chiuso: { type: boolean }
+    FasciaBlocco:
+      type: object
+      required: [giornoInizio, oraInizio, giornoFine, oraFine, attiva]
+      properties:
+        id: { type: integer }
+        giornoInizio: { type: integer, minimum: 1, maximum: 7, description: "1 = lunedi, 7 = domenica" }
+        oraInizio: { type: string, description: "HH:MM" }
+        giornoFine: { type: integer, minimum: 1, maximum: 7 }
+        oraFine: { type: string, description: "HH:MM" }
+        attiva: { type: boolean }
+    StatoInvioPratiche:
+      type: object
+      required: [consentito, adesso, bloccatoFinoA]
+      properties:
+        consentito: { type: boolean }
+        adesso: { type: string, format: date-time }
+        bloccatoFinoA: { type: [string, "null"], format: date-time, description: "Prossimo momento in cui l'invio e' consentito" }
+    OrariCaricamento:
+      type: object
+      required: [fasce, stato]
+      properties:
+        fasce:
+          type: array
+          items:
+            $ref: "#/components/schemas/FasciaBlocco"
+        stato:
+          $ref: "#/components/schemas/StatoInvioPratiche"
+    OrariCaricamentoInput:
+      type: object
+      required: [fasce]
+      properties:
+        fasce:
+          type: array
+          items:
+            $ref: "#/components/schemas/FasciaBlocco"

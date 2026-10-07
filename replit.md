@@ -34,7 +34,7 @@ _Populate as you build — short repo map plus pointers to the source-of-truth f
 
 ## Product
 
-Tutela CRM (Italian): back office (super admin, admin, operatore) and Web Collaboratore. Phase 1: login, internal users, collaboratori registry with groups (capogruppo), operations log. Phase 2: assistiti registry (own/group/all visibility), duplicate detection with back-office segnalazioni. Test data: `pnpm --filter @workspace/api-server run seed`.
+Tutela CRM (Italian): back office (super admin, admin, operatore) and Web Collaboratore. Phase 1: login, internal users, collaboratori registry with groups (capogruppo), operations log. Phase 2: assistiti registry (own/group/all visibility), duplicate detection with back-office segnalazioni. Phase 3 (admin only): tipi pratica with required documents and downloadable moduli, mandati per collaboratore, stati pratica, orari di caricamento (weekly block windows). Test data: `pnpm --filter @workspace/api-server run seed`.
 
 ## User preferences
 

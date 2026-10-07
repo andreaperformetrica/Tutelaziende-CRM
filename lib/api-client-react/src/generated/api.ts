@@ -33,19 +33,30 @@ import type {
   CollaboratoreInput,
   CollaboratoreUpdate,
   ConteggioSegnalazioni,
+  DocumentoTipoInput,
   FiltriLog,
   HealthStatus,
   ListAssistitiParams,
   ListCollaboratoriParams,
   ListLogOperazioniParams,
+  ListMandatiParams,
   ListSegnalazioniDuplicatiParams,
   LogOperazioniPagina,
   LoginInput,
   Luogo,
+  Mandato,
+  ModuloTipoInput,
   Nazionalita,
+  OrariCaricamento,
+  OrariCaricamentoInput,
+  OrdineInput,
   PasswordProvvisoriaInput,
   SegnalazioneDuplicato,
   SessioneUtente,
+  StatoPratica,
+  StatoPraticaInput,
+  TipoPratica,
+  TipoPraticaInput,
   Utente,
   UtenteInput,
   UtenteUpdate
@@ -2418,4 +2429,1504 @@ export function useGetFiltriLog<TData = Awaited<ReturnType<typeof getFiltriLog>>
 
 
 
+
+export const getListTipiPraticaUrl = () => {
+
+
+
+
+  return `/api/tipi-pratica`
+}
+
+/**
+ * @summary Elenco dei tipi di pratica con documenti e moduli
+ */
+export const listTipiPratica = async ( options?: Parameters<typeof customFetch>[1]): Promise<TipoPratica[]> => {
+
+  return customFetch<TipoPratica[]>(getListTipiPraticaUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTipiPraticaQueryKey = () => {
+    return [
+    `/api/tipi-pratica`
+    ] as const;
+    }
+
+
+export const getListTipiPraticaQueryOptions = <TData = Awaited<ReturnType<typeof listTipiPratica>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTipiPratica>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTipiPraticaQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTipiPratica>>> = ({ signal }) => listTipiPratica({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTipiPratica>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTipiPraticaQueryResult = NonNullable<Awaited<ReturnType<typeof listTipiPratica>>>
+export type ListTipiPraticaQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Elenco dei tipi di pratica con documenti e moduli
+ */
+
+export function useListTipiPratica<TData = Awaited<ReturnType<typeof listTipiPratica>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTipiPratica>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTipiPraticaQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateTipoPraticaUrl = () => {
+
+
+
+
+  return `/api/tipi-pratica`
+}
+
+/**
+ * @summary Crea un tipo di pratica
+ */
+export const createTipoPratica = async (tipoPraticaInput: TipoPraticaInput, options?: Parameters<typeof customFetch>[1]): Promise<TipoPratica> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<TipoPratica>(getCreateTipoPraticaUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(tipoPraticaInput)
+  }
+);}
+
+
+
+
+
+export const getCreateTipoPraticaMutationKey = () => ['createTipoPratica'] as const;
+
+export const getCreateTipoPraticaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTipoPratica>>, TError,CreateTipoPraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createTipoPratica>>, TError,CreateTipoPraticaMutationVariables, TContext> => {
+
+const mutationKey = getCreateTipoPraticaMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createTipoPratica>>, CreateTipoPraticaMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createTipoPratica(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateTipoPraticaMutationResult = NonNullable<Awaited<ReturnType<typeof createTipoPratica>>>
+    export type CreateTipoPraticaMutationBody = BodyType<TipoPraticaInput>
+    export type CreateTipoPraticaMutationError = ErrorType<unknown>
+    export type CreateTipoPraticaMutationVariables = {data: BodyType<TipoPraticaInput>}
+
+    /**
+ * @summary Crea un tipo di pratica
+ */
+export const useCreateTipoPratica = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTipoPratica>>, TError,CreateTipoPraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createTipoPratica>>,
+        TError,
+        CreateTipoPraticaMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateTipoPraticaMutationOptions(options));
+    }
+
+export const getGetTipoPraticaUrl = (id: number,) => {
+
+
+
+
+  return `/api/tipi-pratica/${id}`
+}
+
+/**
+ * @summary Dettaglio di un tipo di pratica
+ */
+export const getTipoPratica = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<TipoPratica> => {
+
+  return customFetch<TipoPratica>(getGetTipoPraticaUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetTipoPraticaQueryKey = (id: number,) => {
+    return [
+    `/api/tipi-pratica/${id}`
+    ] as const;
+    }
+
+
+export const getGetTipoPraticaQueryOptions = <TData = Awaited<ReturnType<typeof getTipoPratica>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTipoPratica>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTipoPraticaQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTipoPratica>>> = ({ signal }) => getTipoPratica(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTipoPratica>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetTipoPraticaQueryResult = NonNullable<Awaited<ReturnType<typeof getTipoPratica>>>
+export type GetTipoPraticaQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Dettaglio di un tipo di pratica
+ */
+
+export function useGetTipoPratica<TData = Awaited<ReturnType<typeof getTipoPratica>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getTipoPratica>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetTipoPraticaQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateTipoPraticaUrl = (id: number,) => {
+
+
+
+
+  return `/api/tipi-pratica/${id}`
+}
+
+/**
+ * @summary Modifica un tipo di pratica
+ */
+export const updateTipoPratica = async (id: number,
+    tipoPraticaInput: TipoPraticaInput, options?: Parameters<typeof customFetch>[1]): Promise<TipoPratica> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<TipoPratica>(getUpdateTipoPraticaUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(tipoPraticaInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateTipoPraticaMutationKey = () => ['updateTipoPratica'] as const;
+
+export const getUpdateTipoPraticaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTipoPratica>>, TError,UpdateTipoPraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateTipoPratica>>, TError,UpdateTipoPraticaMutationVariables, TContext> => {
+
+const mutationKey = getUpdateTipoPraticaMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateTipoPratica>>, UpdateTipoPraticaMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateTipoPratica(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateTipoPraticaMutationResult = NonNullable<Awaited<ReturnType<typeof updateTipoPratica>>>
+    export type UpdateTipoPraticaMutationBody = BodyType<TipoPraticaInput>
+    export type UpdateTipoPraticaMutationError = ErrorType<unknown>
+    export type UpdateTipoPraticaMutationVariables = {id: number;data: BodyType<TipoPraticaInput>}
+
+    /**
+ * @summary Modifica un tipo di pratica
+ */
+export const useUpdateTipoPratica = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateTipoPratica>>, TError,UpdateTipoPraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateTipoPratica>>,
+        TError,
+        UpdateTipoPraticaMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateTipoPraticaMutationOptions(options));
+    }
+
+export const getCreateDocumentoTipoUrl = (id: number,) => {
+
+
+
+
+  return `/api/tipi-pratica/${id}/documenti`
+}
+
+/**
+ * @summary Aggiunge un documento obbligatorio
+ */
+export const createDocumentoTipo = async (id: number,
+    documentoTipoInput: DocumentoTipoInput, options?: Parameters<typeof customFetch>[1]): Promise<TipoPratica> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<TipoPratica>(getCreateDocumentoTipoUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(documentoTipoInput)
+  }
+);}
+
+
+
+
+
+export const getCreateDocumentoTipoMutationKey = () => ['createDocumentoTipo'] as const;
+
+export const getCreateDocumentoTipoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDocumentoTipo>>, TError,CreateDocumentoTipoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createDocumentoTipo>>, TError,CreateDocumentoTipoMutationVariables, TContext> => {
+
+const mutationKey = getCreateDocumentoTipoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createDocumentoTipo>>, CreateDocumentoTipoMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  createDocumentoTipo(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateDocumentoTipoMutationResult = NonNullable<Awaited<ReturnType<typeof createDocumentoTipo>>>
+    export type CreateDocumentoTipoMutationBody = BodyType<DocumentoTipoInput>
+    export type CreateDocumentoTipoMutationError = ErrorType<unknown>
+    export type CreateDocumentoTipoMutationVariables = {id: number;data: BodyType<DocumentoTipoInput>}
+
+    /**
+ * @summary Aggiunge un documento obbligatorio
+ */
+export const useCreateDocumentoTipo = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createDocumentoTipo>>, TError,CreateDocumentoTipoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createDocumentoTipo>>,
+        TError,
+        CreateDocumentoTipoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateDocumentoTipoMutationOptions(options));
+    }
+
+export const getOrdinaDocumentiTipoUrl = (id: number,) => {
+
+
+
+
+  return `/api/tipi-pratica/${id}/documenti-ordine`
+}
+
+/**
+ * @summary Riordina i documenti obbligatori
+ */
+export const ordinaDocumentiTipo = async (id: number,
+    ordineInput: OrdineInput, options?: Parameters<typeof customFetch>[1]): Promise<TipoPratica> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<TipoPratica>(getOrdinaDocumentiTipoUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ordineInput)
+  }
+);}
+
+
+
+
+
+export const getOrdinaDocumentiTipoMutationKey = () => ['ordinaDocumentiTipo'] as const;
+
+export const getOrdinaDocumentiTipoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ordinaDocumentiTipo>>, TError,OrdinaDocumentiTipoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof ordinaDocumentiTipo>>, TError,OrdinaDocumentiTipoMutationVariables, TContext> => {
+
+const mutationKey = getOrdinaDocumentiTipoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof ordinaDocumentiTipo>>, OrdinaDocumentiTipoMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  ordinaDocumentiTipo(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type OrdinaDocumentiTipoMutationResult = NonNullable<Awaited<ReturnType<typeof ordinaDocumentiTipo>>>
+    export type OrdinaDocumentiTipoMutationBody = BodyType<OrdineInput>
+    export type OrdinaDocumentiTipoMutationError = ErrorType<unknown>
+    export type OrdinaDocumentiTipoMutationVariables = {id: number;data: BodyType<OrdineInput>}
+
+    /**
+ * @summary Riordina i documenti obbligatori
+ */
+export const useOrdinaDocumentiTipo = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ordinaDocumentiTipo>>, TError,OrdinaDocumentiTipoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof ordinaDocumentiTipo>>,
+        TError,
+        OrdinaDocumentiTipoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getOrdinaDocumentiTipoMutationOptions(options));
+    }
+
+export const getUpdateDocumentoTipoUrl = (id: number,) => {
+
+
+
+
+  return `/api/documenti-tipo/${id}`
+}
+
+/**
+ * @summary Modifica un documento obbligatorio
+ */
+export const updateDocumentoTipo = async (id: number,
+    documentoTipoInput: DocumentoTipoInput, options?: Parameters<typeof customFetch>[1]): Promise<TipoPratica> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<TipoPratica>(getUpdateDocumentoTipoUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(documentoTipoInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateDocumentoTipoMutationKey = () => ['updateDocumentoTipo'] as const;
+
+export const getUpdateDocumentoTipoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDocumentoTipo>>, TError,UpdateDocumentoTipoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateDocumentoTipo>>, TError,UpdateDocumentoTipoMutationVariables, TContext> => {
+
+const mutationKey = getUpdateDocumentoTipoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateDocumentoTipo>>, UpdateDocumentoTipoMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateDocumentoTipo(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateDocumentoTipoMutationResult = NonNullable<Awaited<ReturnType<typeof updateDocumentoTipo>>>
+    export type UpdateDocumentoTipoMutationBody = BodyType<DocumentoTipoInput>
+    export type UpdateDocumentoTipoMutationError = ErrorType<unknown>
+    export type UpdateDocumentoTipoMutationVariables = {id: number;data: BodyType<DocumentoTipoInput>}
+
+    /**
+ * @summary Modifica un documento obbligatorio
+ */
+export const useUpdateDocumentoTipo = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDocumentoTipo>>, TError,UpdateDocumentoTipoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateDocumentoTipo>>,
+        TError,
+        UpdateDocumentoTipoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateDocumentoTipoMutationOptions(options));
+    }
+
+export const getDeleteDocumentoTipoUrl = (id: number,) => {
+
+
+
+
+  return `/api/documenti-tipo/${id}`
+}
+
+/**
+ * @summary Elimina un documento obbligatorio
+ */
+export const deleteDocumentoTipo = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<TipoPratica> => {
+
+  return customFetch<TipoPratica>(getDeleteDocumentoTipoUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteDocumentoTipoMutationKey = () => ['deleteDocumentoTipo'] as const;
+
+export const getDeleteDocumentoTipoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDocumentoTipo>>, TError,DeleteDocumentoTipoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteDocumentoTipo>>, TError,DeleteDocumentoTipoMutationVariables, TContext> => {
+
+const mutationKey = getDeleteDocumentoTipoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteDocumentoTipo>>, DeleteDocumentoTipoMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteDocumentoTipo(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteDocumentoTipoMutationResult = NonNullable<Awaited<ReturnType<typeof deleteDocumentoTipo>>>
+
+    export type DeleteDocumentoTipoMutationError = ErrorType<unknown>
+    export type DeleteDocumentoTipoMutationVariables = {id: number}
+
+    /**
+ * @summary Elimina un documento obbligatorio
+ */
+export const useDeleteDocumentoTipo = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDocumentoTipo>>, TError,DeleteDocumentoTipoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteDocumentoTipo>>,
+        TError,
+        DeleteDocumentoTipoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteDocumentoTipoMutationOptions(options));
+    }
+
+export const getRenameModuloTipoUrl = (id: number,) => {
+
+
+
+
+  return `/api/moduli-tipo/${id}`
+}
+
+/**
+ * @summary Rinomina un modulo
+ */
+export const renameModuloTipo = async (id: number,
+    moduloTipoInput: ModuloTipoInput, options?: Parameters<typeof customFetch>[1]): Promise<TipoPratica> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<TipoPratica>(getRenameModuloTipoUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(moduloTipoInput)
+  }
+);}
+
+
+
+
+
+export const getRenameModuloTipoMutationKey = () => ['renameModuloTipo'] as const;
+
+export const getRenameModuloTipoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof renameModuloTipo>>, TError,RenameModuloTipoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof renameModuloTipo>>, TError,RenameModuloTipoMutationVariables, TContext> => {
+
+const mutationKey = getRenameModuloTipoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof renameModuloTipo>>, RenameModuloTipoMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  renameModuloTipo(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RenameModuloTipoMutationResult = NonNullable<Awaited<ReturnType<typeof renameModuloTipo>>>
+    export type RenameModuloTipoMutationBody = BodyType<ModuloTipoInput>
+    export type RenameModuloTipoMutationError = ErrorType<unknown>
+    export type RenameModuloTipoMutationVariables = {id: number;data: BodyType<ModuloTipoInput>}
+
+    /**
+ * @summary Rinomina un modulo
+ */
+export const useRenameModuloTipo = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof renameModuloTipo>>, TError,RenameModuloTipoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof renameModuloTipo>>,
+        TError,
+        RenameModuloTipoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRenameModuloTipoMutationOptions(options));
+    }
+
+export const getDeleteModuloTipoUrl = (id: number,) => {
+
+
+
+
+  return `/api/moduli-tipo/${id}`
+}
+
+/**
+ * @summary Elimina un modulo e il suo file
+ */
+export const deleteModuloTipo = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<TipoPratica> => {
+
+  return customFetch<TipoPratica>(getDeleteModuloTipoUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteModuloTipoMutationKey = () => ['deleteModuloTipo'] as const;
+
+export const getDeleteModuloTipoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteModuloTipo>>, TError,DeleteModuloTipoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteModuloTipo>>, TError,DeleteModuloTipoMutationVariables, TContext> => {
+
+const mutationKey = getDeleteModuloTipoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteModuloTipo>>, DeleteModuloTipoMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteModuloTipo(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteModuloTipoMutationResult = NonNullable<Awaited<ReturnType<typeof deleteModuloTipo>>>
+
+    export type DeleteModuloTipoMutationError = ErrorType<unknown>
+    export type DeleteModuloTipoMutationVariables = {id: number}
+
+    /**
+ * @summary Elimina un modulo e il suo file
+ */
+export const useDeleteModuloTipo = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteModuloTipo>>, TError,DeleteModuloTipoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteModuloTipo>>,
+        TError,
+        DeleteModuloTipoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteModuloTipoMutationOptions(options));
+    }
+
+export const getListMandatiUrl = (params?: ListMandatiParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/mandati?${stringifiedParams}` : `/api/mandati`
+}
+
+/**
+ * @summary Mandati caricati (tutti, o filtrati per collaboratore o tipo di pratica)
+ */
+export const listMandati = async (params?: ListMandatiParams, options?: Parameters<typeof customFetch>[1]): Promise<Mandato[]> => {
+
+  return customFetch<Mandato[]>(getListMandatiUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMandatiQueryKey = (params?: ListMandatiParams,) => {
+    return [
+    `/api/mandati`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListMandatiQueryOptions = <TData = Awaited<ReturnType<typeof listMandati>>, TError = ErrorType<unknown>>(params?: ListMandatiParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMandati>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMandatiQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMandati>>> = ({ signal }) => listMandati(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMandati>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMandatiQueryResult = NonNullable<Awaited<ReturnType<typeof listMandati>>>
+export type ListMandatiQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Mandati caricati (tutti, o filtrati per collaboratore o tipo di pratica)
+ */
+
+export function useListMandati<TData = Awaited<ReturnType<typeof listMandati>>, TError = ErrorType<unknown>>(
+ params?: ListMandatiParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMandati>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMandatiQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListStatiPraticaUrl = () => {
+
+
+
+
+  return `/api/stati-pratica`
+}
+
+/**
+ * @summary Stati pratica nell'ordine scelto dall'admin
+ */
+export const listStatiPratica = async ( options?: Parameters<typeof customFetch>[1]): Promise<StatoPratica[]> => {
+
+  return customFetch<StatoPratica[]>(getListStatiPraticaUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListStatiPraticaQueryKey = () => {
+    return [
+    `/api/stati-pratica`
+    ] as const;
+    }
+
+
+export const getListStatiPraticaQueryOptions = <TData = Awaited<ReturnType<typeof listStatiPratica>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listStatiPratica>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListStatiPraticaQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listStatiPratica>>> = ({ signal }) => listStatiPratica({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listStatiPratica>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListStatiPraticaQueryResult = NonNullable<Awaited<ReturnType<typeof listStatiPratica>>>
+export type ListStatiPraticaQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Stati pratica nell'ordine scelto dall'admin
+ */
+
+export function useListStatiPratica<TData = Awaited<ReturnType<typeof listStatiPratica>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listStatiPratica>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListStatiPraticaQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateStatoPraticaUrl = () => {
+
+
+
+
+  return `/api/stati-pratica`
+}
+
+/**
+ * @summary Crea uno stato (in fondo all'elenco)
+ */
+export const createStatoPratica = async (statoPraticaInput: StatoPraticaInput, options?: Parameters<typeof customFetch>[1]): Promise<StatoPratica> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<StatoPratica>(getCreateStatoPraticaUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(statoPraticaInput)
+  }
+);}
+
+
+
+
+
+export const getCreateStatoPraticaMutationKey = () => ['createStatoPratica'] as const;
+
+export const getCreateStatoPraticaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createStatoPratica>>, TError,CreateStatoPraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createStatoPratica>>, TError,CreateStatoPraticaMutationVariables, TContext> => {
+
+const mutationKey = getCreateStatoPraticaMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createStatoPratica>>, CreateStatoPraticaMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createStatoPratica(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateStatoPraticaMutationResult = NonNullable<Awaited<ReturnType<typeof createStatoPratica>>>
+    export type CreateStatoPraticaMutationBody = BodyType<StatoPraticaInput>
+    export type CreateStatoPraticaMutationError = ErrorType<unknown>
+    export type CreateStatoPraticaMutationVariables = {data: BodyType<StatoPraticaInput>}
+
+    /**
+ * @summary Crea uno stato (in fondo all'elenco)
+ */
+export const useCreateStatoPratica = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createStatoPratica>>, TError,CreateStatoPraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createStatoPratica>>,
+        TError,
+        CreateStatoPraticaMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateStatoPraticaMutationOptions(options));
+    }
+
+export const getOrdinaStatiPraticaUrl = () => {
+
+
+
+
+  return `/api/stati-pratica-ordine`
+}
+
+/**
+ * @summary Riordina gli stati pratica
+ */
+export const ordinaStatiPratica = async (ordineInput: OrdineInput, options?: Parameters<typeof customFetch>[1]): Promise<StatoPratica[]> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<StatoPratica[]>(getOrdinaStatiPraticaUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ordineInput)
+  }
+);}
+
+
+
+
+
+export const getOrdinaStatiPraticaMutationKey = () => ['ordinaStatiPratica'] as const;
+
+export const getOrdinaStatiPraticaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ordinaStatiPratica>>, TError,OrdinaStatiPraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof ordinaStatiPratica>>, TError,OrdinaStatiPraticaMutationVariables, TContext> => {
+
+const mutationKey = getOrdinaStatiPraticaMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof ordinaStatiPratica>>, OrdinaStatiPraticaMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  ordinaStatiPratica(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type OrdinaStatiPraticaMutationResult = NonNullable<Awaited<ReturnType<typeof ordinaStatiPratica>>>
+    export type OrdinaStatiPraticaMutationBody = BodyType<OrdineInput>
+    export type OrdinaStatiPraticaMutationError = ErrorType<unknown>
+    export type OrdinaStatiPraticaMutationVariables = {data: BodyType<OrdineInput>}
+
+    /**
+ * @summary Riordina gli stati pratica
+ */
+export const useOrdinaStatiPratica = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof ordinaStatiPratica>>, TError,OrdinaStatiPraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof ordinaStatiPratica>>,
+        TError,
+        OrdinaStatiPraticaMutationVariables,
+        TContext
+      > => {
+      return useMutation(getOrdinaStatiPraticaMutationOptions(options));
+    }
+
+export const getUpdateStatoPraticaUrl = (id: number,) => {
+
+
+
+
+  return `/api/stati-pratica/${id}`
+}
+
+/**
+ * @summary Rinomina uno stato o ne cambia il flag chiusa
+ */
+export const updateStatoPratica = async (id: number,
+    statoPraticaInput: StatoPraticaInput, options?: Parameters<typeof customFetch>[1]): Promise<StatoPratica> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<StatoPratica>(getUpdateStatoPraticaUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(statoPraticaInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateStatoPraticaMutationKey = () => ['updateStatoPratica'] as const;
+
+export const getUpdateStatoPraticaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateStatoPratica>>, TError,UpdateStatoPraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateStatoPratica>>, TError,UpdateStatoPraticaMutationVariables, TContext> => {
+
+const mutationKey = getUpdateStatoPraticaMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateStatoPratica>>, UpdateStatoPraticaMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateStatoPratica(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateStatoPraticaMutationResult = NonNullable<Awaited<ReturnType<typeof updateStatoPratica>>>
+    export type UpdateStatoPraticaMutationBody = BodyType<StatoPraticaInput>
+    export type UpdateStatoPraticaMutationError = ErrorType<unknown>
+    export type UpdateStatoPraticaMutationVariables = {id: number;data: BodyType<StatoPraticaInput>}
+
+    /**
+ * @summary Rinomina uno stato o ne cambia il flag chiusa
+ */
+export const useUpdateStatoPratica = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateStatoPratica>>, TError,UpdateStatoPraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateStatoPratica>>,
+        TError,
+        UpdateStatoPraticaMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateStatoPraticaMutationOptions(options));
+    }
+
+export const getDeleteStatoPraticaUrl = (id: number,) => {
+
+
+
+
+  return `/api/stati-pratica/${id}`
+}
+
+/**
+ * @summary Elimina uno stato
+ */
+export const deleteStatoPratica = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteStatoPraticaUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteStatoPraticaMutationKey = () => ['deleteStatoPratica'] as const;
+
+export const getDeleteStatoPraticaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteStatoPratica>>, TError,DeleteStatoPraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteStatoPratica>>, TError,DeleteStatoPraticaMutationVariables, TContext> => {
+
+const mutationKey = getDeleteStatoPraticaMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteStatoPratica>>, DeleteStatoPraticaMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteStatoPratica(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteStatoPraticaMutationResult = NonNullable<Awaited<ReturnType<typeof deleteStatoPratica>>>
+
+    export type DeleteStatoPraticaMutationError = ErrorType<unknown>
+    export type DeleteStatoPraticaMutationVariables = {id: number}
+
+    /**
+ * @summary Elimina uno stato
+ */
+export const useDeleteStatoPratica = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteStatoPratica>>, TError,DeleteStatoPraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteStatoPratica>>,
+        TError,
+        DeleteStatoPraticaMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteStatoPraticaMutationOptions(options));
+    }
+
+export const getGetOrariCaricamentoUrl = () => {
+
+
+
+
+  return `/api/orari-caricamento`
+}
+
+/**
+ * @summary Fasce di blocco e stato attuale dell'invio pratiche
+ */
+export const getOrariCaricamento = async ( options?: Parameters<typeof customFetch>[1]): Promise<OrariCaricamento> => {
+
+  return customFetch<OrariCaricamento>(getGetOrariCaricamentoUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetOrariCaricamentoQueryKey = () => {
+    return [
+    `/api/orari-caricamento`
+    ] as const;
+    }
+
+
+export const getGetOrariCaricamentoQueryOptions = <TData = Awaited<ReturnType<typeof getOrariCaricamento>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getOrariCaricamento>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetOrariCaricamentoQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getOrariCaricamento>>> = ({ signal }) => getOrariCaricamento({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrariCaricamento>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetOrariCaricamentoQueryResult = NonNullable<Awaited<ReturnType<typeof getOrariCaricamento>>>
+export type GetOrariCaricamentoQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Fasce di blocco e stato attuale dell'invio pratiche
+ */
+
+export function useGetOrariCaricamento<TData = Awaited<ReturnType<typeof getOrariCaricamento>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getOrariCaricamento>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetOrariCaricamentoQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateOrariCaricamentoUrl = () => {
+
+
+
+
+  return `/api/orari-caricamento`
+}
+
+/**
+ * @summary Sostituisce l'elenco delle fasce di blocco
+ */
+export const updateOrariCaricamento = async (orariCaricamentoInput: OrariCaricamentoInput, options?: Parameters<typeof customFetch>[1]): Promise<OrariCaricamento> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<OrariCaricamento>(getUpdateOrariCaricamentoUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(orariCaricamentoInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateOrariCaricamentoMutationKey = () => ['updateOrariCaricamento'] as const;
+
+export const getUpdateOrariCaricamentoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrariCaricamento>>, TError,UpdateOrariCaricamentoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateOrariCaricamento>>, TError,UpdateOrariCaricamentoMutationVariables, TContext> => {
+
+const mutationKey = getUpdateOrariCaricamentoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateOrariCaricamento>>, UpdateOrariCaricamentoMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateOrariCaricamento(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateOrariCaricamentoMutationResult = NonNullable<Awaited<ReturnType<typeof updateOrariCaricamento>>>
+    export type UpdateOrariCaricamentoMutationBody = BodyType<OrariCaricamentoInput>
+    export type UpdateOrariCaricamentoMutationError = ErrorType<unknown>
+    export type UpdateOrariCaricamentoMutationVariables = {data: BodyType<OrariCaricamentoInput>}
+
+    /**
+ * @summary Sostituisce l'elenco delle fasce di blocco
+ */
+export const useUpdateOrariCaricamento = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrariCaricamento>>, TError,UpdateOrariCaricamentoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateOrariCaricamento>>,
+        TError,
+        UpdateOrariCaricamentoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateOrariCaricamentoMutationOptions(options));
+    }
 
