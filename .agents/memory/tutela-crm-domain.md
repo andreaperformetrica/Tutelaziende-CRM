@@ -10,7 +10,7 @@ Stack choices: single web app with /admin and /collaboratore areas; email+passwo
 Domain rules (user-confirmed):
 - "Sede" = collaboratore; no separate Sede entity. Sportello number and tipologia (CAF/Patronato) live on the collaboratore. Capogruppo sees group members' data (one level).
 - Codice fiscale and cellulare are unique across collaboratori AND assistiti together (a person cannot be both).
-- Mandato = a file the admin uploads per (collaboratore, tipo pratica); collaboratore downloads it when opening a pratica of that type; admin can replace it for a single collaboratore. All collaboratori can open all pratica types.
+- Mandato = a named file in a library per tipo pratica (e.g. one per city, uploaded once, user-confirmed); the admin assigns one to each collaboratore per tipo; collaboratore downloads it when opening a pratica of that type; changing a single collaboratore means assigning a different mandato. All collaboratori can open all pratica types.
 - Tipo pratica: required documents, downloadable forms (moduli), pagabile yes/no, punti, valore euro. Attachment categories are admin-managed (operator dropdown).
 - Impostazioni orari = windows when collaboratori may submit pratiche; blocked server-side outside them. Initial: blocked Friday 18:00 to Monday 09:00 Europe/Rome. Login always allowed.
 - Estratto = list of closed, payable pratiche of one collaboratore (assistito, numero, tipo, data, punti, ristorno), with total punti, total ristorno, print date. A pratica belongs to at most one estratto. Payment is recorded on the estratto (date, amount, method) and moves its pratiche to state Pagata. Collaboratore receives the estratto by email (no compensation view in the web area).
@@ -18,3 +18,5 @@ Domain rules (user-confirmed):
 - Event participants are entered by the collaboratore (nome, cognome); each has a personal QR code; entry/exit times recorded at check-in, editable by admin.
 - Comments = pratica chat between collaboratore and back office; both see all messages with author and timestamp; no internal comments.
 - Log archiving: super admin exports a period (CSV in storage); rows are flagged archived, not deleted.
+
+Test users rule (user request): seeded and reset test users must NOT be forced to change password at login ("otherwise I can never test everything"). Keep deve_cambiare_password=false for them; the forced change stays in the app only for users created from the UI. Never re-force it when resetting test data. **Why:** the user asked. **How to apply:** any seed or reset script.

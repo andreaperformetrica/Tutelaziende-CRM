@@ -100,7 +100,7 @@ function DocumentiTipo({ tipo }: { tipo: TipoPratica }) {
     <section className="rounded-lg border border-border bg-card p-5 space-y-4 rise" data-testid="sezione-documenti">
       <div>
         <h2 className="text-lg font-bold">Documenti obbligatori</h2>
-        <p className="text-sm text-muted-foreground">Il documento segnato come mandato viene preso dal mandato caricato per il collaboratore (pagina Mandati).</p>
+        <p className="text-sm text-muted-foreground">Il documento segnato come mandato viene preso dal mandato assegnato al collaboratore (pagina Mandati).</p>
       </div>
       {!tipo.documenti.length ? <p className="text-sm text-muted-foreground" data-testid="nessun-documento">Nessun documento obbligatorio.</p> : (
         <ul className="divide-y divide-border rounded-md border border-border">

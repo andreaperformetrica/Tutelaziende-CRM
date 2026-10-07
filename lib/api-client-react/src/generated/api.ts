@@ -21,6 +21,8 @@ import type {
 
 import type {
   ArchiviaSegnalazioneInput,
+  AssegnazioneMandato,
+  AssegnazioneMandatoInput,
   AssistitiPagina,
   Assistito,
   AssistitoInput,
@@ -36,6 +38,7 @@ import type {
   DocumentoTipoInput,
   FiltriLog,
   HealthStatus,
+  ListAssegnazioniMandatoParams,
   ListAssistitiParams,
   ListCollaboratoriParams,
   ListLogOperazioniParams,
@@ -45,12 +48,14 @@ import type {
   LoginInput,
   Luogo,
   Mandato,
+  MandatoInput,
   ModuloTipoInput,
   Nazionalita,
   OrariCaricamento,
   OrariCaricamentoInput,
   OrdineInput,
   PasswordProvvisoriaInput,
+  RimuoviAssegnazioneMandatoParams,
   SegnalazioneDuplicato,
   SessioneUtente,
   StatoPratica,
@@ -3281,7 +3286,7 @@ export const getListMandatiUrl = (params?: ListMandatiParams,) => {
 }
 
 /**
- * @summary Mandati caricati (tutti, o filtrati per collaboratore o tipo di pratica)
+ * @summary Raccolta dei mandati (tutti, o di un tipo di pratica)
  */
 export const listMandati = async (params?: ListMandatiParams, options?: Parameters<typeof customFetch>[1]): Promise<Mandato[]> => {
 
@@ -3328,7 +3333,7 @@ export type ListMandatiQueryError = ErrorType<unknown>
 
 
 /**
- * @summary Mandati caricati (tutti, o filtrati per collaboratore o tipo di pratica)
+ * @summary Raccolta dei mandati (tutti, o di un tipo di pratica)
  */
 
 export function useListMandati<TData = Awaited<ReturnType<typeof listMandati>>, TError = ErrorType<unknown>>(
@@ -3348,6 +3353,422 @@ export function useListMandati<TData = Awaited<ReturnType<typeof listMandati>>, 
 
 
 
+
+export const getRinominaMandatoUrl = (id: number,) => {
+
+
+
+
+  return `/api/mandati/${id}`
+}
+
+/**
+ * @summary Rinomina un mandato della raccolta
+ */
+export const rinominaMandato = async (id: number,
+    mandatoInput: MandatoInput, options?: Parameters<typeof customFetch>[1]): Promise<Mandato> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<Mandato>(getRinominaMandatoUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(mandatoInput)
+  }
+);}
+
+
+
+
+
+export const getRinominaMandatoMutationKey = () => ['rinominaMandato'] as const;
+
+export const getRinominaMandatoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rinominaMandato>>, TError,RinominaMandatoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof rinominaMandato>>, TError,RinominaMandatoMutationVariables, TContext> => {
+
+const mutationKey = getRinominaMandatoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rinominaMandato>>, RinominaMandatoMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  rinominaMandato(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RinominaMandatoMutationResult = NonNullable<Awaited<ReturnType<typeof rinominaMandato>>>
+    export type RinominaMandatoMutationBody = BodyType<MandatoInput>
+    export type RinominaMandatoMutationError = ErrorType<unknown>
+    export type RinominaMandatoMutationVariables = {id: number;data: BodyType<MandatoInput>}
+
+    /**
+ * @summary Rinomina un mandato della raccolta
+ */
+export const useRinominaMandato = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rinominaMandato>>, TError,RinominaMandatoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof rinominaMandato>>,
+        TError,
+        RinominaMandatoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRinominaMandatoMutationOptions(options));
+    }
+
+export const getDeleteMandatoUrl = (id: number,) => {
+
+
+
+
+  return `/api/mandati/${id}`
+}
+
+/**
+ * @summary Elimina un mandato non assegnato a nessun collaboratore
+ */
+export const deleteMandato = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteMandatoUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteMandatoMutationKey = () => ['deleteMandato'] as const;
+
+export const getDeleteMandatoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMandato>>, TError,DeleteMandatoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteMandato>>, TError,DeleteMandatoMutationVariables, TContext> => {
+
+const mutationKey = getDeleteMandatoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMandato>>, DeleteMandatoMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteMandato(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteMandatoMutationResult = NonNullable<Awaited<ReturnType<typeof deleteMandato>>>
+
+    export type DeleteMandatoMutationError = ErrorType<unknown>
+    export type DeleteMandatoMutationVariables = {id: number}
+
+    /**
+ * @summary Elimina un mandato non assegnato a nessun collaboratore
+ */
+export const useDeleteMandato = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteMandato>>, TError,DeleteMandatoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteMandato>>,
+        TError,
+        DeleteMandatoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteMandatoMutationOptions(options));
+    }
+
+export const getListAssegnazioniMandatoUrl = (params?: ListAssegnazioniMandatoParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/assegnazioni-mandato?${stringifiedParams}` : `/api/assegnazioni-mandato`
+}
+
+/**
+ * @summary Mandato assegnato a ogni collaboratore, per tipo di pratica
+ */
+export const listAssegnazioniMandato = async (params?: ListAssegnazioniMandatoParams, options?: Parameters<typeof customFetch>[1]): Promise<AssegnazioneMandato[]> => {
+
+  return customFetch<AssegnazioneMandato[]>(getListAssegnazioniMandatoUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAssegnazioniMandatoQueryKey = (params?: ListAssegnazioniMandatoParams,) => {
+    return [
+    `/api/assegnazioni-mandato`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListAssegnazioniMandatoQueryOptions = <TData = Awaited<ReturnType<typeof listAssegnazioniMandato>>, TError = ErrorType<unknown>>(params?: ListAssegnazioniMandatoParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAssegnazioniMandato>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAssegnazioniMandatoQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAssegnazioniMandato>>> = ({ signal }) => listAssegnazioniMandato(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAssegnazioniMandato>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAssegnazioniMandatoQueryResult = NonNullable<Awaited<ReturnType<typeof listAssegnazioniMandato>>>
+export type ListAssegnazioniMandatoQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Mandato assegnato a ogni collaboratore, per tipo di pratica
+ */
+
+export function useListAssegnazioniMandato<TData = Awaited<ReturnType<typeof listAssegnazioniMandato>>, TError = ErrorType<unknown>>(
+ params?: ListAssegnazioniMandatoParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAssegnazioniMandato>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAssegnazioniMandatoQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getAssegnaMandatoUrl = () => {
+
+
+
+
+  return `/api/assegnazioni-mandato`
+}
+
+/**
+ * @summary Assegna (o cambia) il mandato di un collaboratore per un tipo di pratica
+ */
+export const assegnaMandato = async (assegnazioneMandatoInput: AssegnazioneMandatoInput, options?: Parameters<typeof customFetch>[1]): Promise<AssegnazioneMandato> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<AssegnazioneMandato>(getAssegnaMandatoUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(assegnazioneMandatoInput)
+  }
+);}
+
+
+
+
+
+export const getAssegnaMandatoMutationKey = () => ['assegnaMandato'] as const;
+
+export const getAssegnaMandatoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assegnaMandato>>, TError,AssegnaMandatoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof assegnaMandato>>, TError,AssegnaMandatoMutationVariables, TContext> => {
+
+const mutationKey = getAssegnaMandatoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof assegnaMandato>>, AssegnaMandatoMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  assegnaMandato(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AssegnaMandatoMutationResult = NonNullable<Awaited<ReturnType<typeof assegnaMandato>>>
+    export type AssegnaMandatoMutationBody = BodyType<AssegnazioneMandatoInput>
+    export type AssegnaMandatoMutationError = ErrorType<unknown>
+    export type AssegnaMandatoMutationVariables = {data: BodyType<AssegnazioneMandatoInput>}
+
+    /**
+ * @summary Assegna (o cambia) il mandato di un collaboratore per un tipo di pratica
+ */
+export const useAssegnaMandato = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assegnaMandato>>, TError,AssegnaMandatoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof assegnaMandato>>,
+        TError,
+        AssegnaMandatoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAssegnaMandatoMutationOptions(options));
+    }
+
+export const getRimuoviAssegnazioneMandatoUrl = (params: RimuoviAssegnazioneMandatoParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/assegnazioni-mandato?${stringifiedParams}` : `/api/assegnazioni-mandato`
+}
+
+/**
+ * @summary Toglie il mandato assegnato a un collaboratore per un tipo di pratica
+ */
+export const rimuoviAssegnazioneMandato = async (params: RimuoviAssegnazioneMandatoParams, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getRimuoviAssegnazioneMandatoUrl(params),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getRimuoviAssegnazioneMandatoMutationKey = () => ['rimuoviAssegnazioneMandato'] as const;
+
+export const getRimuoviAssegnazioneMandatoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rimuoviAssegnazioneMandato>>, TError,RimuoviAssegnazioneMandatoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof rimuoviAssegnazioneMandato>>, TError,RimuoviAssegnazioneMandatoMutationVariables, TContext> => {
+
+const mutationKey = getRimuoviAssegnazioneMandatoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof rimuoviAssegnazioneMandato>>, RimuoviAssegnazioneMandatoMutationVariables> = (props) => {
+          const {params} = props ?? {};
+
+          return  rimuoviAssegnazioneMandato(params,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RimuoviAssegnazioneMandatoMutationResult = NonNullable<Awaited<ReturnType<typeof rimuoviAssegnazioneMandato>>>
+
+    export type RimuoviAssegnazioneMandatoMutationError = ErrorType<unknown>
+    export type RimuoviAssegnazioneMandatoMutationVariables = {params: RimuoviAssegnazioneMandatoParams}
+
+    /**
+ * @summary Toglie il mandato assegnato a un collaboratore per un tipo di pratica
+ */
+export const useRimuoviAssegnazioneMandato = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rimuoviAssegnazioneMandato>>, TError,RimuoviAssegnazioneMandatoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof rimuoviAssegnazioneMandato>>,
+        TError,
+        RimuoviAssegnazioneMandatoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRimuoviAssegnazioneMandatoMutationOptions(options));
+    }
 
 export const getListStatiPraticaUrl = () => {
 

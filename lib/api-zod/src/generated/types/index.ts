@@ -7,6 +7,8 @@
  */
 
 export * from './archiviaSegnalazioneInput';
+export * from './assegnazioneMandato';
+export * from './assegnazioneMandatoInput';
 export * from './assistitiPagina';
 export * from './assistito';
 export * from './assistitoInput';
@@ -30,6 +32,7 @@ export * from './filtriLog';
 export * from './filtroAzioneLog';
 export * from './filtroUtenteLog';
 export * from './healthStatus';
+export * from './listAssegnazioniMandatoParams';
 export * from './listAssistitiParams';
 export * from './listCollaboratoriParams';
 export * from './listCollaboratoriStato';
@@ -43,6 +46,7 @@ export * from './logOperazioniPagina';
 export * from './luogo';
 export * from './luogoTipo';
 export * from './mandato';
+export * from './mandatoInput';
 export * from './moduloTipo';
 export * from './moduloTipoInput';
 export * from './nazionalita';
@@ -50,6 +54,7 @@ export * from './orariCaricamento';
 export * from './orariCaricamentoInput';
 export * from './ordineInput';
 export * from './passwordProvvisoriaInput';
+export * from './rimuoviAssegnazioneMandatoParams';
 export * from './ruolo';
 export * from './ruoloInterno';
 export * from './segnalazioneDatiTentati';

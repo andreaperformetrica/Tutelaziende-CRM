@@ -113,7 +113,7 @@ async function main() {
   for (const u of interni) {
     const [esiste] = await db.select({ id: utentiTable.id }).from(utentiTable).where(sql`lower(${utentiTable.email}) = ${u.email}`);
     if (esiste) continue;
-    await db.insert(utentiTable).values({ ...u, passwordHash, deveCambiarePassword: true });
+    await db.insert(utentiTable).values({ ...u, passwordHash, deveCambiarePassword: false });
     console.log(`Creato utente interno ${u.email} (${u.ruolo})`);
   }
 
@@ -141,7 +141,7 @@ async function main() {
     await db.transaction(async (tx) => {
       const [utente] = await tx
         .insert(utentiTable)
-        .values({ email, nome: c.nome, cognome: c.cognome, ruolo: "collaboratore", passwordHash, deveCambiarePassword: true })
+        .values({ email, nome: c.nome, cognome: c.cognome, ruolo: "collaboratore", passwordHash, deveCambiarePassword: false })
         .returning({ id: utentiTable.id });
       const [persona] = await tx
         .insert(personeTable)

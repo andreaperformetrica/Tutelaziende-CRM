@@ -575,7 +575,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FiltriLog"
-  # I caricamenti di file non sono nella specifica (corpo binario): PUT /mandati/file, POST /tipi-pratica/{id}/moduli/file,
+  # I caricamenti di file non sono nella specifica (corpo binario): POST /mandati/file, PUT /mandati/{id}/file, POST /tipi-pratica/{id}/moduli/file,
   # PUT /moduli-tipo/{id}/file, e i download GET /moduli-tipo/{id}/file e GET /mandati/{id}/file.
   /tipi-pratica:
     get:
@@ -745,13 +745,8 @@ paths:
     get:
       operationId: listMandati
       tags: [configurazione]
-      summary: Mandati caricati (tutti, o filtrati per collaboratore o tipo di pratica)
+      summary: Raccolta dei mandati (tutti, o di un tipo di pratica)
       parameters:
-        - name: collaboratoreId
-          in: query
-          required: false
-          schema:
-            type: integer
         - name: tipoPraticaId
           in: query
           required: false
@@ -766,6 +761,93 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Mandato"
+  /mandati/{id}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    patch:
+      operationId: rinominaMandato
+      tags: [configurazione]
+      summary: Rinomina un mandato della raccolta
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MandatoInput"
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mandato"
+    delete:
+      operationId: deleteMandato
+      tags: [configurazione]
+      summary: Elimina un mandato non assegnato a nessun collaboratore
+      responses:
+        "204":
+          description: Eseguito
+  /assegnazioni-mandato:
+    get:
+      operationId: listAssegnazioniMandato
+      tags: [configurazione]
+      summary: Mandato assegnato a ogni collaboratore, per tipo di pratica
+      parameters:
+        - name: tipoPraticaId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: collaboratoreId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AssegnazioneMandato"
+    put:
+      operationId: assegnaMandato
+      tags: [configurazione]
+      summary: Assegna (o cambia) il mandato di un collaboratore per un tipo di pratica
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssegnazioneMandatoInput"
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssegnazioneMandato"
+    delete:
+      operationId: rimuoviAssegnazioneMandato
+      tags: [configurazione]
+      summary: Toglie il mandato assegnato a un collaboratore per un tipo di pratica
+      parameters:
+        - name: tipoPraticaId
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: collaboratoreId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Eseguito
   /stati-pratica:
     get:
       operationId: listStatiPratica
@@ -1706,16 +1788,36 @@ components:
           items: { type: integer }
     Mandato:
       type: object
-      required: [id, collaboratoreId, tipoPraticaId, fileNome, fileTipo, dimensione, caricatoIl, caricatoDa]
+      required: [id, tipoPraticaId, nome, fileNome, fileTipo, dimensione, caricatoIl, caricatoDa, collaboratoriAssegnati]
       properties:
         id: { type: integer }
-        collaboratoreId: { type: integer }
         tipoPraticaId: { type: integer }
+        nome: { type: string }
         fileNome: { type: string }
         fileTipo: { type: string }
         dimensione: { type: integer }
         caricatoIl: { type: string, format: date-time }
         caricatoDa: { type: [string, "null"] }
+        collaboratoriAssegnati: { type: integer }
+    MandatoInput:
+      type: object
+      required: [nome]
+      properties:
+        nome: { type: string }
+    AssegnazioneMandato:
+      type: object
+      required: [collaboratoreId, tipoPraticaId, mandatoId]
+      properties:
+        collaboratoreId: { type: integer }
+        tipoPraticaId: { type: integer }
+        mandatoId: { type: integer }
+    AssegnazioneMandatoInput:
+      type: object
+      required: [collaboratoreId, tipoPraticaId, mandatoId]
+      properties:
+        collaboratoreId: { type: integer }
+        tipoPraticaId: { type: integer }
+        mandatoId: { type: integer }
     StatoPratica:
       type: object
       required: [id, nome, ordine, chiuso]

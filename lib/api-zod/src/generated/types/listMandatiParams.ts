@@ -7,6 +7,5 @@
  */
 
 export type ListMandatiParams = {
-collaboratoreId?: number;
 tipoPraticaId?: number;
 };

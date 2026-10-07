@@ -8,12 +8,13 @@
 
 export interface Mandato {
   id: number;
-  collaboratoreId: number;
   tipoPraticaId: number;
+  nome: string;
   fileNome: string;
   fileTipo: string;
   dimensione: number;
   caricatoIl: Date;
   /** @nullable */
   caricatoDa: string | null;
+  collaboratoriAssegnati: number;
 }

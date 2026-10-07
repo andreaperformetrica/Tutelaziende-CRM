@@ -1387,24 +1387,101 @@ export const DeleteModuloTipoResponse = zod.object({
 
 
 /**
- * @summary Mandati caricati (tutti, o filtrati per collaboratore o tipo di pratica)
+ * @summary Raccolta dei mandati (tutti, o di un tipo di pratica)
  */
 export const ListMandatiQueryParams = zod.object({
-  "collaboratoreId": zod.coerce.number().int().optional(),
   "tipoPraticaId": zod.coerce.number().int().optional()
 })
 
 export const ListMandatiResponseItem = zod.object({
   "id": zod.number().int(),
-  "collaboratoreId": zod.number().int(),
   "tipoPraticaId": zod.number().int(),
+  "nome": zod.string(),
   "fileNome": zod.string(),
   "fileTipo": zod.string(),
   "dimensione": zod.number().int(),
   "caricatoIl": zod.coerce.date(),
-  "caricatoDa": zod.string().nullable()
+  "caricatoDa": zod.string().nullable(),
+  "collaboratoriAssegnati": zod.number().int()
 })
 export const ListMandatiResponse = zod.array(ListMandatiResponseItem)
+
+
+/**
+ * @summary Rinomina un mandato della raccolta
+ */
+export const RinominaMandatoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const RinominaMandatoBody = zod.object({
+  "nome": zod.string()
+})
+
+export const RinominaMandatoResponse = zod.object({
+  "id": zod.number().int(),
+  "tipoPraticaId": zod.number().int(),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date(),
+  "caricatoDa": zod.string().nullable(),
+  "collaboratoriAssegnati": zod.number().int()
+})
+
+
+/**
+ * @summary Elimina un mandato non assegnato a nessun collaboratore
+ */
+export const DeleteMandatoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const DeleteMandatoResponse = zod.void()
+
+
+/**
+ * @summary Mandato assegnato a ogni collaboratore, per tipo di pratica
+ */
+export const ListAssegnazioniMandatoQueryParams = zod.object({
+  "tipoPraticaId": zod.coerce.number().int().optional(),
+  "collaboratoreId": zod.coerce.number().int().optional()
+})
+
+export const ListAssegnazioniMandatoResponseItem = zod.object({
+  "collaboratoreId": zod.number().int(),
+  "tipoPraticaId": zod.number().int(),
+  "mandatoId": zod.number().int()
+})
+export const ListAssegnazioniMandatoResponse = zod.array(ListAssegnazioniMandatoResponseItem)
+
+
+/**
+ * @summary Assegna (o cambia) il mandato di un collaboratore per un tipo di pratica
+ */
+export const AssegnaMandatoBody = zod.object({
+  "collaboratoreId": zod.number().int(),
+  "tipoPraticaId": zod.number().int(),
+  "mandatoId": zod.number().int()
+})
+
+export const AssegnaMandatoResponse = zod.object({
+  "collaboratoreId": zod.number().int(),
+  "tipoPraticaId": zod.number().int(),
+  "mandatoId": zod.number().int()
+})
+
+
+/**
+ * @summary Toglie il mandato assegnato a un collaboratore per un tipo di pratica
+ */
+export const RimuoviAssegnazioneMandatoQueryParams = zod.object({
+  "tipoPraticaId": zod.coerce.number().int(),
+  "collaboratoreId": zod.coerce.number().int()
+})
+
+export const RimuoviAssegnazioneMandatoResponse = zod.void()
 
 
 /**

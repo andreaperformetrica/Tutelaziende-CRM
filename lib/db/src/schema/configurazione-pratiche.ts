@@ -54,9 +54,28 @@ export const moduliTipoTable = pgTable(
   (t) => [index("moduli_tipo_tipo_idx").on(t.tipoPraticaId)],
 );
 
-/** Mandato: documento caricato dall'admin per ogni coppia (collaboratore, tipo di pratica). */
+/** Mandato della raccolta (es. "Mandato Roma"): caricato una volta e poi assegnato ai collaboratori. Appartiene a un tipo di pratica. */
 export const mandatiTable = pgTable(
   "mandati",
+  {
+    id: serial("id").primaryKey(),
+    tipoPraticaId: integer("tipo_pratica_id")
+      .notNull()
+      .references(() => tipiPraticaTable.id, { onDelete: "cascade" }),
+    nome: text("nome").notNull(),
+    fileChiave: text("file_chiave").notNull(),
+    fileNome: text("file_nome").notNull(),
+    fileTipo: text("file_tipo").notNull(),
+    fileDimensione: integer("file_dimensione").notNull(),
+    caricatoIl: timestamp("caricato_il", { withTimezone: true }).notNull().defaultNow(),
+    caricatoDaUtenteId: integer("caricato_da_utente_id").references(() => utentiTable.id),
+  },
+  (t) => [uniqueIndex("mandati_tipo_nome_uq").on(t.tipoPraticaId, sql`lower(${t.nome})`)],
+);
+
+/** Mandato assegnato a un collaboratore per un tipo di pratica (uno solo per coppia). */
+export const assegnazioniMandatoTable = pgTable(
+  "assegnazioni_mandato",
   {
     id: serial("id").primaryKey(),
     collaboratoreId: integer("collaboratore_id")
@@ -65,14 +84,12 @@ export const mandatiTable = pgTable(
     tipoPraticaId: integer("tipo_pratica_id")
       .notNull()
       .references(() => tipiPraticaTable.id, { onDelete: "cascade" }),
-    fileChiave: text("file_chiave").notNull(),
-    fileNome: text("file_nome").notNull(),
-    fileTipo: text("file_tipo").notNull(),
-    fileDimensione: integer("file_dimensione").notNull(),
-    caricatoIl: timestamp("caricato_il", { withTimezone: true }).notNull().defaultNow(),
-    caricatoDaUtenteId: integer("caricato_da_utente_id").references(() => utentiTable.id),
+    mandatoId: integer("mandato_id")
+      .notNull()
+      .references(() => mandatiTable.id, { onDelete: "restrict" }),
+    assegnatoIl: timestamp("assegnato_il", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("mandati_collaboratore_tipo_uq").on(t.collaboratoreId, t.tipoPraticaId)],
+  (t) => [uniqueIndex("assegnazioni_mandato_coppia_uq").on(t.collaboratoreId, t.tipoPraticaId), index("assegnazioni_mandato_mandato_idx").on(t.mandatoId)],
 );
 
 /** Stato di una pratica: creato, rinominato e ordinato dall'admin. `chiuso` indica se conta come chiusa. */

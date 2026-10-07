@@ -560,14 +560,31 @@ export interface OrdineInput {
 
 export interface Mandato {
   id: number;
-  collaboratoreId: number;
   tipoPraticaId: number;
+  nome: string;
   fileNome: string;
   fileTipo: string;
   dimensione: number;
   caricatoIl: string;
   /** @nullable */
   caricatoDa: string | null;
+  collaboratoriAssegnati: number;
+}
+
+export interface MandatoInput {
+  nome: string;
+}
+
+export interface AssegnazioneMandato {
+  collaboratoreId: number;
+  tipoPraticaId: number;
+  mandatoId: number;
+}
+
+export interface AssegnazioneMandatoInput {
+  collaboratoreId: number;
+  tipoPraticaId: number;
+  mandatoId: number;
 }
 
 export interface StatoPratica {
@@ -715,7 +732,16 @@ perPagina?: number;
 };
 
 export type ListMandatiParams = {
-collaboratoreId?: number;
 tipoPraticaId?: number;
+};
+
+export type ListAssegnazioniMandatoParams = {
+tipoPraticaId?: number;
+collaboratoreId?: number;
+};
+
+export type RimuoviAssegnazioneMandatoParams = {
+tipoPraticaId: number;
+collaboratoreId: number;
 };
 
