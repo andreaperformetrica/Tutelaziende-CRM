@@ -20,6 +20,12 @@ export const AZIONI_LOG = {
   "collaboratore.riattiva": "Riattivazione collaboratore",
   "collaboratore.capogruppo": "Assegnazione capogruppo",
   "collaboratore.password_provvisoria": "Password provvisoria collaboratore",
+  "assistito.crea": "Creazione assistito",
+  "assistito.modifica": "Modifica assistito",
+  "assistito.riassegna": "Cambio collaboratore di un assistito",
+  "assistito.duplicato_segnalato": "Tentativo di inserire un assistito gia presente",
+  "segnalazione.associa": "Segnalazione chiusa con associazione",
+  "segnalazione.archivia": "Segnalazione archiviata",
 } as const;
 
 export type AzioneLog = keyof typeof AZIONI_LOG;

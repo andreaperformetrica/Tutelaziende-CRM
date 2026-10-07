@@ -45,7 +45,7 @@ const colonne = {
   nazionalita: personeTable.nazionalita,
   nazionalitaNome: personeTable.nazionalitaNome,
   codiceFiscale: personeTable.codiceFiscale,
-  email: personeTable.email,
+  email: utentiTable.email,
   telefono: personeTable.telefono,
   cellulare: personeTable.cellulare,
   numeroSportello: collaboratoriTable.numeroSportello,
@@ -232,7 +232,7 @@ router.post("/collaboratori", soloBackofficeScrittura, async (req, res) => {
   const anagrafica = normalizzaAnagrafica(dati);
   const sportello = pulisciSportello(dati.numeroSportello);
   await controllaUnicitaPersona(anagrafica);
-  await controllaSportelloEEmail(sportello, anagrafica.email);
+  await controllaSportelloEEmail(sportello, anagrafica.email!);
   await controllaCapogruppo(dati.capogruppoId);
   const passwordHash = await hashPassword(dati.passwordProvvisoria);
 
@@ -241,7 +241,7 @@ router.post("/collaboratori", soloBackofficeScrittura, async (req, res) => {
       const [utente] = await tx
         .insert(utentiTable)
         .values({
-          email: anagrafica.email,
+          email: anagrafica.email!,
           nome: anagrafica.nome,
           cognome: anagrafica.cognome,
           ruolo: "collaboratore",
@@ -324,7 +324,7 @@ router.put("/collaboratori/:id", soloBackofficeScrittura, async (req, res) => {
   const anagrafica = normalizzaAnagrafica(dati);
   const sportello = pulisciSportello(dati.numeroSportello);
   await controllaUnicitaPersona(anagrafica, prima.personaId);
-  await controllaSportelloEEmail(sportello, anagrafica.email, { collaboratoreId: id, utenteId: prima.utenteId });
+  await controllaSportelloEEmail(sportello, anagrafica.email!, { collaboratoreId: id, utenteId: prima.utenteId });
   const nuovoCapogruppo = dati.capogruppoId ?? null;
   if (nuovoCapogruppo !== prima.capogruppoId) await controllaCapogruppo(nuovoCapogruppo, id);
 
@@ -356,7 +356,7 @@ router.put("/collaboratori/:id", soloBackofficeScrittura, async (req, res) => {
       await tx
         .update(utentiTable)
         .set({
-          email: anagrafica.email,
+          email: anagrafica.email!,
           nome: anagrafica.nome,
           cognome: anagrafica.cognome,
           attivo: dati.attivo,

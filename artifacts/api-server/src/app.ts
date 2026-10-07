@@ -43,7 +43,7 @@ app.use("/api", (_req, res) => {
 
 const gestoreErrori: ErrorRequestHandler = (err, req, res, _next) => {
   if (err instanceof HttpError) {
-    res.status(err.status).json({ error: err.message, code: err.code, campo: err.campo });
+    res.status(err.status).json({ error: err.message, code: err.code, campo: err.campo, ...err.extra });
     return;
   }
   if (typeof err === "object" && err && (err as { type?: string }).type === "entity.parse.failed") {

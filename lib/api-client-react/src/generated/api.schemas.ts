@@ -18,6 +18,8 @@ export interface ErroreApi {
   code?: string;
   /** Nome del campo del modulo a cui si riferisce l'errore */
   campo?: string;
+  /** Solo per ASSISTITO_GIA_NEI_TUOI_ELENCHI, id dell'assistito gia' presente tra quelli visibili */
+  assistitoId?: number;
 }
 
 export type Ruolo = typeof Ruolo[keyof typeof Ruolo];
@@ -282,6 +284,179 @@ export interface CollaboratoreUpdate {
   attivo: boolean;
 }
 
+export interface AssistitoInput {
+  /** @minLength 1 */
+  nome: string;
+  /** @minLength 1 */
+  cognome: string;
+  sesso: Sesso;
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  dataNascita: string;
+  /** Codice del comune o dello stato scelto con la ricerca luoghi */
+  luogoNascitaCodice: string;
+  /** Codice restituito da listNazionalita */
+  nazionalita: string;
+  /**
+     * @minLength 16
+     * @maxLength 16
+     */
+  codiceFiscale: string;
+  cellulare: string;
+  /** @minLength 1 */
+  citta: string;
+  /** @nullable */
+  indirizzo?: string | null;
+  /** @nullable */
+  email?: string | null;
+}
+
+/**
+ * Collaboratore a cui e' associato l'assistito
+ */
+export interface CollaboratoreAssistito {
+  id: number;
+  nome: string;
+  cognome: string;
+  numeroSportello: string;
+  tipologia: Tipologia;
+}
+
+export interface Assistito {
+  id: number;
+  nome: string;
+  cognome: string;
+  sesso: Sesso;
+  dataNascita: string;
+  luogoNascitaCodice: string;
+  luogoNascitaNome: string;
+  /** @nullable */
+  luogoNascitaProvincia?: string | null;
+  luogoNascitaEstero: boolean;
+  nazionalita: string;
+  nazionalitaNome: string;
+  straniero: boolean;
+  codiceFiscale: string;
+  cellulare: string;
+  /** @nullable */
+  email?: string | null;
+  citta: string;
+  /** @nullable */
+  indirizzo?: string | null;
+  collaboratore: CollaboratoreAssistito;
+  /** Vero solo per il collaboratore a cui l'assistito e' associato */
+  modificabile: boolean;
+  creatoIl: string;
+  modificatoIl: string;
+}
+
+export interface AssistitiPagina {
+  elementi: Assistito[];
+  totale: number;
+  pagina: number;
+  perPagina: number;
+}
+
+export interface AssociaCollaboratoreInput {
+  collaboratoreId: number;
+}
+
+export interface AssociaSegnalazioneInput {
+  collaboratoreId: number;
+  /** @nullable */
+  nota?: string | null;
+}
+
+export interface ArchiviaSegnalazioneInput {
+  /** @nullable */
+  nota?: string | null;
+}
+
+export interface ConteggioSegnalazioni {
+  aperte: number;
+}
+
+export type SegnalazionePersonaTipo = typeof SegnalazionePersonaTipo[keyof typeof SegnalazionePersonaTipo];
+
+
+export const SegnalazionePersonaTipo = {
+  assistito: 'assistito',
+  collaboratore: 'collaboratore',
+} as const;
+
+/**
+ * Persona gia' registrata (visibile solo al back office)
+ */
+export interface SegnalazionePersona {
+  personaId: number;
+  tipo: SegnalazionePersonaTipo;
+  nome: string;
+  cognome: string;
+  codiceFiscale: string;
+  cellulare: string;
+  /** @nullable */
+  assistitoId?: number | null;
+  /** Per un assistito, il collaboratore a cui e' associato; per un collaboratore, lui stesso */
+  collaboratore?: CollaboratoreAssistito | null;
+}
+
+export interface SegnalazioneDatiTentati {
+  nome: string;
+  cognome: string;
+  sesso?: string;
+  dataNascita?: string;
+  luogoNascita?: string;
+  nazionalita?: string;
+  codiceFiscale: string;
+  cellulare: string;
+  citta: string;
+  /** @nullable */
+  indirizzo?: string | null;
+  /** @nullable */
+  email?: string | null;
+}
+
+export type SegnalazioneDuplicatoCampiItem = typeof SegnalazioneDuplicatoCampiItem[keyof typeof SegnalazioneDuplicatoCampiItem];
+
+
+export const SegnalazioneDuplicatoCampiItem = {
+  codice_fiscale: 'codice_fiscale',
+  cellulare: 'cellulare',
+} as const;
+
+export type SegnalazioneDuplicatoStato = typeof SegnalazioneDuplicatoStato[keyof typeof SegnalazioneDuplicatoStato];
+
+
+export const SegnalazioneDuplicatoStato = {
+  aperta: 'aperta',
+  gestita: 'gestita',
+} as const;
+
+export interface SegnalazioneDuplicato {
+  id: number;
+  creataIl: string;
+  ultimoTentativoIl: string;
+  tentativi: number;
+  richiedente: CollaboratoreAssistito;
+  esistente: SegnalazionePersona;
+  campi: SegnalazioneDuplicatoCampiItem[];
+  datiTentati: SegnalazioneDatiTentati;
+  stato: SegnalazioneDuplicatoStato;
+  /**
+     * associata oppure archiviata
+     * @nullable
+     */
+  esito?: string | null;
+  /** @nullable */
+  nota?: string | null;
+  /** @nullable */
+  gestitaIl?: string | null;
+  /**
+     * Nome di chi ha gestito la segnalazione
+     * @nullable
+     */
+  gestitaDa?: string | null;
+}
+
 export interface LogOperazione {
   id: number;
   /** Istante ISO 8601 */
@@ -350,6 +525,39 @@ export const ListCollaboratoriStato = {
   attivi: 'attivi',
   disattivati: 'disattivati',
   tutti: 'tutti',
+} as const;
+
+export type ListAssistitiParams = {
+/**
+ * Ricerca su nome, cognome e codice fiscale (con piu parole devono corrispondere tutte)
+ */
+q?: string;
+/**
+ * Solo gli assistiti di questo collaboratore
+ */
+collaboratoreId?: number;
+/**
+ * @minimum 1
+ */
+pagina?: number;
+/**
+ * @minimum 1
+ * @maximum 200
+ */
+perPagina?: number;
+};
+
+export type ListSegnalazioniDuplicatiParams = {
+stato?: ListSegnalazioniDuplicatiStato;
+};
+
+export type ListSegnalazioniDuplicatiStato = typeof ListSegnalazioniDuplicatiStato[keyof typeof ListSegnalazioniDuplicatiStato];
+
+
+export const ListSegnalazioniDuplicatiStato = {
+  aperte: 'aperte',
+  gestite: 'gestite',
+  tutte: 'tutte',
 } as const;
 
 export type CercaLuoghiParams = {

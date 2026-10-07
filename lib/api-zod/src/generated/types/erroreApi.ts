@@ -15,4 +15,6 @@ export interface ErroreApi {
   code?: string;
   /** Nome del campo del modulo a cui si riferisce l'errore */
   campo?: string;
+  /** Solo per ASSISTITO_GIA_NEI_TUOI_ELENCHI, id dell'assistito gia' presente tra quelli visibili */
+  assistitoId?: number;
 }

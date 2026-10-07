@@ -20,21 +20,31 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  ArchiviaSegnalazioneInput,
+  AssistitiPagina,
+  Assistito,
+  AssistitoInput,
+  AssociaCollaboratoreInput,
+  AssociaSegnalazioneInput,
   CambioPasswordInput,
   CercaLuoghiParams,
   Collaboratore,
   CollaboratoreDettaglio,
   CollaboratoreInput,
   CollaboratoreUpdate,
+  ConteggioSegnalazioni,
   FiltriLog,
   HealthStatus,
+  ListAssistitiParams,
   ListCollaboratoriParams,
   ListLogOperazioniParams,
+  ListSegnalazioniDuplicatiParams,
   LogOperazioniPagina,
   LoginInput,
   Luogo,
   Nazionalita,
   PasswordProvvisoriaInput,
+  SegnalazioneDuplicato,
   SessioneUtente,
   Utente,
   UtenteInput,
@@ -1318,6 +1328,773 @@ export const useImpostaPasswordProvvisoriaCollaboratore = <TError = ErrorType<un
         TContext
       > => {
       return useMutation(getImpostaPasswordProvvisoriaCollaboratoreMutationOptions(options));
+    }
+
+export const getListAssistitiUrl = (params?: ListAssistitiParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/assistiti?${stringifiedParams}` : `/api/assistiti`
+}
+
+/**
+ * @summary Elenco assistiti visibili all'utente (propri, del gruppo se capogruppo, tutti per il back office)
+ */
+export const listAssistiti = async (params?: ListAssistitiParams, options?: Parameters<typeof customFetch>[1]): Promise<AssistitiPagina> => {
+
+  return customFetch<AssistitiPagina>(getListAssistitiUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAssistitiQueryKey = (params?: ListAssistitiParams,) => {
+    return [
+    `/api/assistiti`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListAssistitiQueryOptions = <TData = Awaited<ReturnType<typeof listAssistiti>>, TError = ErrorType<unknown>>(params?: ListAssistitiParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAssistiti>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAssistitiQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAssistiti>>> = ({ signal }) => listAssistiti(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAssistiti>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAssistitiQueryResult = NonNullable<Awaited<ReturnType<typeof listAssistiti>>>
+export type ListAssistitiQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Elenco assistiti visibili all'utente (propri, del gruppo se capogruppo, tutti per il back office)
+ */
+
+export function useListAssistiti<TData = Awaited<ReturnType<typeof listAssistiti>>, TError = ErrorType<unknown>>(
+ params?: ListAssistitiParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAssistiti>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAssistitiQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateAssistitoUrl = () => {
+
+
+
+
+  return `/api/assistiti`
+}
+
+/**
+ * Se il codice fiscale o il cellulare corrispondono a una persona gia' registrata e non visibile al collaboratore risponde 409 con codice ASSISTITO_GIA_PRESENTE senza rivelare chi sia e crea una segnalazione per il back office. Se l'assistito e' gia' tra quelli visibili al collaboratore risponde 409 con codice ASSISTITO_GIA_NEI_TUOI_ELENCHI e l'id dell'assistito.
+ * @summary Crea un assistito (solo collaboratori, per se stessi)
+ */
+export const createAssistito = async (assistitoInput: AssistitoInput, options?: Parameters<typeof customFetch>[1]): Promise<Assistito> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<Assistito>(getCreateAssistitoUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(assistitoInput)
+  }
+);}
+
+
+
+
+
+export const getCreateAssistitoMutationKey = () => ['createAssistito'] as const;
+
+export const getCreateAssistitoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAssistito>>, TError,CreateAssistitoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createAssistito>>, TError,CreateAssistitoMutationVariables, TContext> => {
+
+const mutationKey = getCreateAssistitoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAssistito>>, CreateAssistitoMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createAssistito(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateAssistitoMutationResult = NonNullable<Awaited<ReturnType<typeof createAssistito>>>
+    export type CreateAssistitoMutationBody = BodyType<AssistitoInput>
+    export type CreateAssistitoMutationError = ErrorType<unknown>
+    export type CreateAssistitoMutationVariables = {data: BodyType<AssistitoInput>}
+
+    /**
+ * @summary Crea un assistito (solo collaboratori, per se stessi)
+ */
+export const useCreateAssistito = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAssistito>>, TError,CreateAssistitoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createAssistito>>,
+        TError,
+        CreateAssistitoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateAssistitoMutationOptions(options));
+    }
+
+export const getGetAssistitoUrl = (id: number,) => {
+
+
+
+
+  return `/api/assistiti/${id}`
+}
+
+/**
+ * @summary Scheda assistito
+ */
+export const getAssistito = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<Assistito> => {
+
+  return customFetch<Assistito>(getGetAssistitoUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAssistitoQueryKey = (id: number,) => {
+    return [
+    `/api/assistiti/${id}`
+    ] as const;
+    }
+
+
+export const getGetAssistitoQueryOptions = <TData = Awaited<ReturnType<typeof getAssistito>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAssistito>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAssistitoQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAssistito>>> = ({ signal }) => getAssistito(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAssistito>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAssistitoQueryResult = NonNullable<Awaited<ReturnType<typeof getAssistito>>>
+export type GetAssistitoQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Scheda assistito
+ */
+
+export function useGetAssistito<TData = Awaited<ReturnType<typeof getAssistito>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAssistito>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAssistitoQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateAssistitoUrl = (id: number,) => {
+
+
+
+
+  return `/api/assistiti/${id}`
+}
+
+/**
+ * @summary Modifica un proprio assistito (solo il collaboratore a cui e' associato)
+ */
+export const updateAssistito = async (id: number,
+    assistitoInput: AssistitoInput, options?: Parameters<typeof customFetch>[1]): Promise<Assistito> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<Assistito>(getUpdateAssistitoUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(assistitoInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateAssistitoMutationKey = () => ['updateAssistito'] as const;
+
+export const getUpdateAssistitoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAssistito>>, TError,UpdateAssistitoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateAssistito>>, TError,UpdateAssistitoMutationVariables, TContext> => {
+
+const mutationKey = getUpdateAssistitoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAssistito>>, UpdateAssistitoMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateAssistito(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateAssistitoMutationResult = NonNullable<Awaited<ReturnType<typeof updateAssistito>>>
+    export type UpdateAssistitoMutationBody = BodyType<AssistitoInput>
+    export type UpdateAssistitoMutationError = ErrorType<unknown>
+    export type UpdateAssistitoMutationVariables = {id: number;data: BodyType<AssistitoInput>}
+
+    /**
+ * @summary Modifica un proprio assistito (solo il collaboratore a cui e' associato)
+ */
+export const useUpdateAssistito = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAssistito>>, TError,UpdateAssistitoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateAssistito>>,
+        TError,
+        UpdateAssistitoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateAssistitoMutationOptions(options));
+    }
+
+export const getAssociaAssistitoACollaboratoreUrl = (id: number,) => {
+
+
+
+
+  return `/api/assistiti/${id}/collaboratore`
+}
+
+/**
+ * @summary Associa l'assistito a un altro collaboratore (admin e super admin)
+ */
+export const associaAssistitoACollaboratore = async (id: number,
+    associaCollaboratoreInput: AssociaCollaboratoreInput, options?: Parameters<typeof customFetch>[1]): Promise<Assistito> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<Assistito>(getAssociaAssistitoACollaboratoreUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(associaCollaboratoreInput)
+  }
+);}
+
+
+
+
+
+export const getAssociaAssistitoACollaboratoreMutationKey = () => ['associaAssistitoACollaboratore'] as const;
+
+export const getAssociaAssistitoACollaboratoreMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof associaAssistitoACollaboratore>>, TError,AssociaAssistitoACollaboratoreMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof associaAssistitoACollaboratore>>, TError,AssociaAssistitoACollaboratoreMutationVariables, TContext> => {
+
+const mutationKey = getAssociaAssistitoACollaboratoreMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof associaAssistitoACollaboratore>>, AssociaAssistitoACollaboratoreMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  associaAssistitoACollaboratore(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AssociaAssistitoACollaboratoreMutationResult = NonNullable<Awaited<ReturnType<typeof associaAssistitoACollaboratore>>>
+    export type AssociaAssistitoACollaboratoreMutationBody = BodyType<AssociaCollaboratoreInput>
+    export type AssociaAssistitoACollaboratoreMutationError = ErrorType<unknown>
+    export type AssociaAssistitoACollaboratoreMutationVariables = {id: number;data: BodyType<AssociaCollaboratoreInput>}
+
+    /**
+ * @summary Associa l'assistito a un altro collaboratore (admin e super admin)
+ */
+export const useAssociaAssistitoACollaboratore = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof associaAssistitoACollaboratore>>, TError,AssociaAssistitoACollaboratoreMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof associaAssistitoACollaboratore>>,
+        TError,
+        AssociaAssistitoACollaboratoreMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAssociaAssistitoACollaboratoreMutationOptions(options));
+    }
+
+export const getListSegnalazioniDuplicatiUrl = (params?: ListSegnalazioniDuplicatiParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/segnalazioni-duplicati?${stringifiedParams}` : `/api/segnalazioni-duplicati`
+}
+
+/**
+ * @summary Segnalazioni di assistiti gia' registrati (admin e super admin)
+ */
+export const listSegnalazioniDuplicati = async (params?: ListSegnalazioniDuplicatiParams, options?: Parameters<typeof customFetch>[1]): Promise<SegnalazioneDuplicato[]> => {
+
+  return customFetch<SegnalazioneDuplicato[]>(getListSegnalazioniDuplicatiUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListSegnalazioniDuplicatiQueryKey = (params?: ListSegnalazioniDuplicatiParams,) => {
+    return [
+    `/api/segnalazioni-duplicati`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListSegnalazioniDuplicatiQueryOptions = <TData = Awaited<ReturnType<typeof listSegnalazioniDuplicati>>, TError = ErrorType<unknown>>(params?: ListSegnalazioniDuplicatiParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSegnalazioniDuplicati>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListSegnalazioniDuplicatiQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listSegnalazioniDuplicati>>> = ({ signal }) => listSegnalazioniDuplicati(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listSegnalazioniDuplicati>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListSegnalazioniDuplicatiQueryResult = NonNullable<Awaited<ReturnType<typeof listSegnalazioniDuplicati>>>
+export type ListSegnalazioniDuplicatiQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Segnalazioni di assistiti gia' registrati (admin e super admin)
+ */
+
+export function useListSegnalazioniDuplicati<TData = Awaited<ReturnType<typeof listSegnalazioniDuplicati>>, TError = ErrorType<unknown>>(
+ params?: ListSegnalazioniDuplicatiParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listSegnalazioniDuplicati>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListSegnalazioniDuplicatiQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetConteggioSegnalazioniUrl = () => {
+
+
+
+
+  return `/api/segnalazioni-duplicati/conteggio`
+}
+
+/**
+ * @summary Numero di segnalazioni aperte (admin e super admin)
+ */
+export const getConteggioSegnalazioni = async ( options?: Parameters<typeof customFetch>[1]): Promise<ConteggioSegnalazioni> => {
+
+  return customFetch<ConteggioSegnalazioni>(getGetConteggioSegnalazioniUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetConteggioSegnalazioniQueryKey = () => {
+    return [
+    `/api/segnalazioni-duplicati/conteggio`
+    ] as const;
+    }
+
+
+export const getGetConteggioSegnalazioniQueryOptions = <TData = Awaited<ReturnType<typeof getConteggioSegnalazioni>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getConteggioSegnalazioni>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetConteggioSegnalazioniQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getConteggioSegnalazioni>>> = ({ signal }) => getConteggioSegnalazioni({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getConteggioSegnalazioni>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetConteggioSegnalazioniQueryResult = NonNullable<Awaited<ReturnType<typeof getConteggioSegnalazioni>>>
+export type GetConteggioSegnalazioniQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Numero di segnalazioni aperte (admin e super admin)
+ */
+
+export function useGetConteggioSegnalazioni<TData = Awaited<ReturnType<typeof getConteggioSegnalazioni>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getConteggioSegnalazioni>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetConteggioSegnalazioniQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getAssociaSegnalazioneUrl = (id: number,) => {
+
+
+
+
+  return `/api/segnalazioni-duplicati/${id}/associa`
+}
+
+/**
+ * @summary Associa l'assistito gia' registrato a un collaboratore e chiude la segnalazione
+ */
+export const associaSegnalazione = async (id: number,
+    associaSegnalazioneInput: AssociaSegnalazioneInput, options?: Parameters<typeof customFetch>[1]): Promise<SegnalazioneDuplicato> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<SegnalazioneDuplicato>(getAssociaSegnalazioneUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(associaSegnalazioneInput)
+  }
+);}
+
+
+
+
+
+export const getAssociaSegnalazioneMutationKey = () => ['associaSegnalazione'] as const;
+
+export const getAssociaSegnalazioneMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof associaSegnalazione>>, TError,AssociaSegnalazioneMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof associaSegnalazione>>, TError,AssociaSegnalazioneMutationVariables, TContext> => {
+
+const mutationKey = getAssociaSegnalazioneMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof associaSegnalazione>>, AssociaSegnalazioneMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  associaSegnalazione(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AssociaSegnalazioneMutationResult = NonNullable<Awaited<ReturnType<typeof associaSegnalazione>>>
+    export type AssociaSegnalazioneMutationBody = BodyType<AssociaSegnalazioneInput>
+    export type AssociaSegnalazioneMutationError = ErrorType<unknown>
+    export type AssociaSegnalazioneMutationVariables = {id: number;data: BodyType<AssociaSegnalazioneInput>}
+
+    /**
+ * @summary Associa l'assistito gia' registrato a un collaboratore e chiude la segnalazione
+ */
+export const useAssociaSegnalazione = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof associaSegnalazione>>, TError,AssociaSegnalazioneMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof associaSegnalazione>>,
+        TError,
+        AssociaSegnalazioneMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAssociaSegnalazioneMutationOptions(options));
+    }
+
+export const getArchiviaSegnalazioneUrl = (id: number,) => {
+
+
+
+
+  return `/api/segnalazioni-duplicati/${id}/archivia`
+}
+
+/**
+ * @summary Chiude la segnalazione senza modificare le associazioni
+ */
+export const archiviaSegnalazione = async (id: number,
+    archiviaSegnalazioneInput?: ArchiviaSegnalazioneInput, options?: Parameters<typeof customFetch>[1]): Promise<SegnalazioneDuplicato> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<SegnalazioneDuplicato>(getArchiviaSegnalazioneUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(archiviaSegnalazioneInput)
+  }
+);}
+
+
+
+
+
+export const getArchiviaSegnalazioneMutationKey = () => ['archiviaSegnalazione'] as const;
+
+export const getArchiviaSegnalazioneMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiviaSegnalazione>>, TError,ArchiviaSegnalazioneMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof archiviaSegnalazione>>, TError,ArchiviaSegnalazioneMutationVariables, TContext> => {
+
+const mutationKey = getArchiviaSegnalazioneMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof archiviaSegnalazione>>, ArchiviaSegnalazioneMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  archiviaSegnalazione(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ArchiviaSegnalazioneMutationResult = NonNullable<Awaited<ReturnType<typeof archiviaSegnalazione>>>
+    export type ArchiviaSegnalazioneMutationBody = BodyType<ArchiviaSegnalazioneInput> | undefined
+    export type ArchiviaSegnalazioneMutationError = ErrorType<unknown>
+    export type ArchiviaSegnalazioneMutationVariables = {id: number;data?: BodyType<ArchiviaSegnalazioneInput>}
+
+    /**
+ * @summary Chiude la segnalazione senza modificare le associazioni
+ */
+export const useArchiviaSegnalazione = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiviaSegnalazione>>, TError,ArchiviaSegnalazioneMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof archiviaSegnalazione>>,
+        TError,
+        ArchiviaSegnalazioneMutationVariables,
+        TContext
+      > => {
+      return useMutation(getArchiviaSegnalazioneMutationOptions(options));
     }
 
 export const getCercaLuoghiUrl = (params: CercaLuoghiParams,) => {

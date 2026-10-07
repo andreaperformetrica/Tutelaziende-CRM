@@ -18,6 +18,10 @@ tags:
     description: Anagrafica collaboratori (sedi) e gruppi
   - name: luoghi
     description: Comuni italiani, stati esteri e nazionalita
+  - name: assistiti
+    description: Anagrafica degli assistiti
+  - name: segnalazioni
+    description: Segnalazioni di assistiti gia' registrati (solo back office)
   - name: log
     description: Log delle operazioni
 paths:
@@ -282,6 +286,191 @@ paths:
               schema:
                 $ref: "#/components/schemas/CollaboratoreDettaglio"
 
+  /assistiti:
+    get:
+      operationId: listAssistiti
+      tags: [assistiti]
+      summary: Elenco assistiti visibili all'utente (propri, del gruppo se capogruppo, tutti per il back office)
+      parameters:
+        - name: q
+          in: query
+          required: false
+          description: "Ricerca su nome, cognome e codice fiscale (con piu parole devono corrispondere tutte)"
+          schema:
+            type: string
+        - name: collaboratoreId
+          in: query
+          required: false
+          description: Solo gli assistiti di questo collaboratore
+          schema:
+            type: integer
+        - name: pagina
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+        - name: perPagina
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+      responses:
+        "200":
+          description: Pagina di assistiti
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssistitiPagina"
+    post:
+      operationId: createAssistito
+      tags: [assistiti]
+      summary: Crea un assistito (solo collaboratori, per se stessi)
+      description: >
+        Se il codice fiscale o il cellulare corrispondono a una persona gia' registrata e non visibile al
+        collaboratore risponde 409 con codice ASSISTITO_GIA_PRESENTE senza rivelare chi sia e crea una
+        segnalazione per il back office. Se l'assistito e' gia' tra quelli visibili al collaboratore risponde
+        409 con codice ASSISTITO_GIA_NEI_TUOI_ELENCHI e l'id dell'assistito.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssistitoInput"
+      responses:
+        "201":
+          description: Assistito creato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assistito"
+  /assistiti/{id}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    get:
+      operationId: getAssistito
+      tags: [assistiti]
+      summary: Scheda assistito
+      responses:
+        "200":
+          description: Assistito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assistito"
+    put:
+      operationId: updateAssistito
+      tags: [assistiti]
+      summary: Modifica un proprio assistito (solo il collaboratore a cui e' associato)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssistitoInput"
+      responses:
+        "200":
+          description: Assistito aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assistito"
+  /assistiti/{id}/collaboratore:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    post:
+      operationId: associaAssistitoACollaboratore
+      tags: [assistiti]
+      summary: Associa l'assistito a un altro collaboratore (admin e super admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssociaCollaboratoreInput"
+      responses:
+        "200":
+          description: Assistito riassegnato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Assistito"
+  /segnalazioni-duplicati:
+    get:
+      operationId: listSegnalazioniDuplicati
+      tags: [segnalazioni]
+      summary: Segnalazioni di assistiti gia' registrati (admin e super admin)
+      parameters:
+        - name: stato
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [aperte, gestite, tutte]
+      responses:
+        "200":
+          description: Segnalazioni
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SegnalazioneDuplicato"
+  /segnalazioni-duplicati/conteggio:
+    get:
+      operationId: getConteggioSegnalazioni
+      tags: [segnalazioni]
+      summary: Numero di segnalazioni aperte (admin e super admin)
+      responses:
+        "200":
+          description: Conteggio
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConteggioSegnalazioni"
+  /segnalazioni-duplicati/{id}/associa:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    post:
+      operationId: associaSegnalazione
+      tags: [segnalazioni]
+      summary: Associa l'assistito gia' registrato a un collaboratore e chiude la segnalazione
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssociaSegnalazioneInput"
+      responses:
+        "200":
+          description: Segnalazione gestita
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SegnalazioneDuplicato"
+  /segnalazioni-duplicati/{id}/archivia:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    post:
+      operationId: archiviaSegnalazione
+      tags: [segnalazioni]
+      summary: Chiude la segnalazione senza modificare le associazioni
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ArchiviaSegnalazioneInput"
+      responses:
+        "200":
+          description: Segnalazione archiviata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SegnalazioneDuplicato"
+
   /luoghi:
     get:
       operationId: cercaLuoghi
@@ -417,6 +606,9 @@ components:
         campo:
           type: string
           description: Nome del campo del modulo a cui si riferisce l'errore
+        assistitoId:
+          type: integer
+          description: Solo per ASSISTITO_GIA_NEI_TUOI_ELENCHI, id dell'assistito gia' presente tra quelli visibili
 
     Ruolo:
       type: string
@@ -800,6 +992,269 @@ components:
         attivo:
           type: boolean
 
+    AssistitoInput:
+      type: object
+      required:
+        - nome
+        - cognome
+        - sesso
+        - dataNascita
+        - luogoNascitaCodice
+        - nazionalita
+        - codiceFiscale
+        - cellulare
+        - citta
+      properties:
+        nome:
+          type: string
+          minLength: 1
+        cognome:
+          type: string
+          minLength: 1
+        sesso:
+          $ref: "#/components/schemas/Sesso"
+        dataNascita:
+          type: string
+          pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+        luogoNascitaCodice:
+          type: string
+          description: Codice del comune o dello stato scelto con la ricerca luoghi
+        nazionalita:
+          type: string
+          description: Codice restituito da listNazionalita
+        codiceFiscale:
+          type: string
+          minLength: 16
+          maxLength: 16
+        cellulare:
+          type: string
+        citta:
+          type: string
+          minLength: 1
+        indirizzo:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+    CollaboratoreAssistito:
+      type: object
+      description: Collaboratore a cui e' associato l'assistito
+      required: [id, nome, cognome, numeroSportello, tipologia]
+      properties:
+        id:
+          type: integer
+        nome:
+          type: string
+        cognome:
+          type: string
+        numeroSportello:
+          type: string
+        tipologia:
+          $ref: "#/components/schemas/Tipologia"
+    Assistito:
+      type: object
+      required:
+        - id
+        - nome
+        - cognome
+        - sesso
+        - dataNascita
+        - luogoNascitaCodice
+        - luogoNascitaNome
+        - luogoNascitaEstero
+        - nazionalita
+        - nazionalitaNome
+        - straniero
+        - codiceFiscale
+        - cellulare
+        - citta
+        - collaboratore
+        - modificabile
+        - creatoIl
+        - modificatoIl
+      properties:
+        id:
+          type: integer
+        nome:
+          type: string
+        cognome:
+          type: string
+        sesso:
+          $ref: "#/components/schemas/Sesso"
+        dataNascita:
+          type: string
+        luogoNascitaCodice:
+          type: string
+        luogoNascitaNome:
+          type: string
+        luogoNascitaProvincia:
+          type: ["string", "null"]
+        luogoNascitaEstero:
+          type: boolean
+        nazionalita:
+          type: string
+        nazionalitaNome:
+          type: string
+        straniero:
+          type: boolean
+        codiceFiscale:
+          type: string
+        cellulare:
+          type: string
+        email:
+          type: ["string", "null"]
+        citta:
+          type: string
+        indirizzo:
+          type: ["string", "null"]
+        collaboratore:
+          $ref: "#/components/schemas/CollaboratoreAssistito"
+        modificabile:
+          type: boolean
+          description: Vero solo per il collaboratore a cui l'assistito e' associato
+        creatoIl:
+          type: string
+          format: date-time
+        modificatoIl:
+          type: string
+          format: date-time
+    AssistitiPagina:
+      type: object
+      required: [elementi, totale, pagina, perPagina]
+      properties:
+        elementi:
+          type: array
+          items:
+            $ref: "#/components/schemas/Assistito"
+        totale:
+          type: integer
+        pagina:
+          type: integer
+        perPagina:
+          type: integer
+    AssociaCollaboratoreInput:
+      type: object
+      required: [collaboratoreId]
+      properties:
+        collaboratoreId:
+          type: integer
+    AssociaSegnalazioneInput:
+      type: object
+      required: [collaboratoreId]
+      properties:
+        collaboratoreId:
+          type: integer
+        nota:
+          type: ["string", "null"]
+    ArchiviaSegnalazioneInput:
+      type: object
+      properties:
+        nota:
+          type: ["string", "null"]
+    ConteggioSegnalazioni:
+      type: object
+      required: [aperte]
+      properties:
+        aperte:
+          type: integer
+    SegnalazionePersona:
+      type: object
+      description: Persona gia' registrata (visibile solo al back office)
+      required: [personaId, tipo, nome, cognome, codiceFiscale, cellulare]
+      properties:
+        personaId:
+          type: integer
+        tipo:
+          type: string
+          enum: [assistito, collaboratore]
+        nome:
+          type: string
+        cognome:
+          type: string
+        codiceFiscale:
+          type: string
+        cellulare:
+          type: string
+        assistitoId:
+          type: ["integer", "null"]
+        collaboratore:
+          description: Per un assistito, il collaboratore a cui e' associato; per un collaboratore, lui stesso
+          oneOf:
+            - $ref: "#/components/schemas/CollaboratoreAssistito"
+            - type: "null"
+    SegnalazioneDatiTentati:
+      type: object
+      required: [nome, cognome, codiceFiscale, cellulare, citta]
+      properties:
+        nome:
+          type: string
+        cognome:
+          type: string
+        sesso:
+          type: string
+        dataNascita:
+          type: string
+        luogoNascita:
+          type: string
+        nazionalita:
+          type: string
+        codiceFiscale:
+          type: string
+        cellulare:
+          type: string
+        citta:
+          type: string
+        indirizzo:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+    SegnalazioneDuplicato:
+      type: object
+      required:
+        - id
+        - creataIl
+        - ultimoTentativoIl
+        - tentativi
+        - richiedente
+        - esistente
+        - campi
+        - datiTentati
+        - stato
+      properties:
+        id:
+          type: integer
+        creataIl:
+          type: string
+          format: date-time
+        ultimoTentativoIl:
+          type: string
+          format: date-time
+        tentativi:
+          type: integer
+        richiedente:
+          $ref: "#/components/schemas/CollaboratoreAssistito"
+        esistente:
+          $ref: "#/components/schemas/SegnalazionePersona"
+        campi:
+          type: array
+          items:
+            type: string
+            enum: [codice_fiscale, cellulare]
+        datiTentati:
+          $ref: "#/components/schemas/SegnalazioneDatiTentati"
+        stato:
+          type: string
+          enum: [aperta, gestita]
+        esito:
+          type: ["string", "null"]
+          description: associata oppure archiviata
+        nota:
+          type: ["string", "null"]
+        gestitaIl:
+          type: ["string", "null"]
+          format: date-time
+        gestitaDa:
+          type: ["string", "null"]
+          description: Nome di chi ha gestito la segnalazione
     LogOperazione:
       type: object
       required:

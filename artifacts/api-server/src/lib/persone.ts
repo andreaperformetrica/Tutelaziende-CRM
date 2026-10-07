@@ -13,7 +13,7 @@ export interface DatiAnagrafica {
   luogoNascitaCodice: string;
   nazionalita: string;
   codiceFiscale: string;
-  email: string;
+  email?: string | null;
   telefono?: string | null;
   cellulare: string;
 }
@@ -35,7 +35,11 @@ function dataValida(valore: string): boolean {
  * Validazione e normalizzazione dell'anagrafica di una persona (collaboratore o, in futuro, assistito).
  * Il codice fiscale deve essere formalmente valido ma non deve coincidere con quello calcolato (omocodia).
  */
-export function normalizzaAnagrafica(dati: DatiAnagrafica): AnagraficaNormalizzata {
+export function normalizzaAnagrafica(
+  dati: DatiAnagrafica,
+  opzioni: { emailObbligatoria?: boolean } = {},
+): AnagraficaNormalizzata {
+  const emailObbligatoria = opzioni.emailObbligatoria ?? true;
   const nome = dati.nome.trim();
   const cognome = dati.cognome.trim();
   if (!nome) throw new HttpError(400, "Il nome e' obbligatorio.", "DATI_NON_VALIDI", "nome");
@@ -58,8 +62,14 @@ export function normalizzaAnagrafica(dati: DatiAnagrafica): AnagraficaNormalizza
     telefono = normalizzaTelefono(dati.telefono);
     if (!telefono) throw new HttpError(400, "Il numero di telefono non e' valido.", "TELEFONO_NON_VALIDO", "telefono");
   }
-  const email = dati.email.trim().toLowerCase();
-  if (!REGEX_EMAIL.test(email)) throw new HttpError(400, "Indirizzo email non valido.", "EMAIL_NON_VALIDA", "email");
+  const emailGrezza = (dati.email ?? "").trim().toLowerCase();
+  if (!emailGrezza && emailObbligatoria) {
+    throw new HttpError(400, "L'indirizzo email e' obbligatorio.", "EMAIL_NON_VALIDA", "email");
+  }
+  if (emailGrezza && !REGEX_EMAIL.test(emailGrezza)) {
+    throw new HttpError(400, "Indirizzo email non valido.", "EMAIL_NON_VALIDA", "email");
+  }
+  const email = emailGrezza || null;
 
   return {
     nome,

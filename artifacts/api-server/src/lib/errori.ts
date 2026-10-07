@@ -4,6 +4,8 @@ export class HttpError extends Error {
     message: string,
     readonly code?: string,
     readonly campo?: string,
+    /** Campi aggiuntivi inclusi nella risposta di errore (es. assistitoId). */
+    readonly extra?: Record<string, unknown>,
   ) {
     super(message);
     this.name = "HttpError";

@@ -18,7 +18,8 @@ export const personeTable = pgTable("persone", {
   nazionalita: text("nazionalita").notNull(),
   nazionalitaNome: text("nazionalita_nome").notNull(),
   codiceFiscale: text("codice_fiscale").notNull().unique(),
-  email: text("email").notNull(),
+  /** Obbligatoria per i collaboratori, facoltativa per gli assistiti. */
+  email: text("email"),
   telefono: text("telefono"),
   cellulare: text("cellulare").notNull().unique(),
   creatoIl: timestamp("creato_il", { withTimezone: true }).notNull().defaultNow(),

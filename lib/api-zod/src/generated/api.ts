@@ -508,6 +508,445 @@ export const ImpostaPasswordProvvisoriaCollaboratoreResponse = zod.object({
 
 
 /**
+ * @summary Elenco assistiti visibili all'utente (propri, del gruppo se capogruppo, tutti per il back office)
+ */
+
+export const listAssistitiQueryPerPaginaMax = 200;
+
+
+
+export const ListAssistitiQueryParams = zod.object({
+  "q": zod.coerce.string().optional().describe('Ricerca su nome, cognome e codice fiscale (con piu parole devono corrispondere tutte)'),
+  "collaboratoreId": zod.coerce.number().int().optional().describe('Solo gli assistiti di questo collaboratore'),
+  "pagina": zod.coerce.number().int().min(1).optional(),
+  "perPagina": zod.coerce.number().int().min(1).max(listAssistitiQueryPerPaginaMax).optional()
+})
+
+export const ListAssistitiResponse = zod.object({
+  "elementi": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "sesso": zod.enum(['M', 'F']),
+  "dataNascita": zod.string(),
+  "luogoNascitaCodice": zod.string(),
+  "luogoNascitaNome": zod.string(),
+  "luogoNascitaProvincia": zod.string().nullish(),
+  "luogoNascitaEstero": zod.boolean(),
+  "nazionalita": zod.string(),
+  "nazionalitaNome": zod.string(),
+  "straniero": zod.boolean(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "email": zod.string().nullish(),
+  "citta": zod.string(),
+  "indirizzo": zod.string().nullish(),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+}).describe('Collaboratore a cui e\' associato l\'assistito'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "creatoIl": zod.coerce.date(),
+  "modificatoIl": zod.coerce.date()
+})),
+  "totale": zod.number().int(),
+  "pagina": zod.number().int(),
+  "perPagina": zod.number().int()
+})
+
+
+/**
+ * Se il codice fiscale o il cellulare corrispondono a una persona gia' registrata e non visibile al collaboratore risponde 409 con codice ASSISTITO_GIA_PRESENTE senza rivelare chi sia e crea una segnalazione per il back office. Se l'assistito e' gia' tra quelli visibili al collaboratore risponde 409 con codice ASSISTITO_GIA_NEI_TUOI_ELENCHI e l'id dell'assistito.
+ * @summary Crea un assistito (solo collaboratori, per se stessi)
+ */
+
+
+export const createAssistitoBodyDataNascitaRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const createAssistitoBodyCodiceFiscaleMin = 16;
+export const createAssistitoBodyCodiceFiscaleMax = 16;
+
+
+
+
+export const CreateAssistitoBody = zod.object({
+  "nome": zod.string().min(1),
+  "cognome": zod.string().min(1),
+  "sesso": zod.enum(['M', 'F']),
+  "dataNascita": zod.string().regex(createAssistitoBodyDataNascitaRegExp),
+  "luogoNascitaCodice": zod.string().describe('Codice del comune o dello stato scelto con la ricerca luoghi'),
+  "nazionalita": zod.string().describe('Codice restituito da listNazionalita'),
+  "codiceFiscale": zod.string().min(createAssistitoBodyCodiceFiscaleMin).max(createAssistitoBodyCodiceFiscaleMax),
+  "cellulare": zod.string(),
+  "citta": zod.string().min(1),
+  "indirizzo": zod.string().nullish(),
+  "email": zod.string().nullish()
+})
+
+export const CreateAssistitoResponse = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "sesso": zod.enum(['M', 'F']),
+  "dataNascita": zod.string(),
+  "luogoNascitaCodice": zod.string(),
+  "luogoNascitaNome": zod.string(),
+  "luogoNascitaProvincia": zod.string().nullish(),
+  "luogoNascitaEstero": zod.boolean(),
+  "nazionalita": zod.string(),
+  "nazionalitaNome": zod.string(),
+  "straniero": zod.boolean(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "email": zod.string().nullish(),
+  "citta": zod.string(),
+  "indirizzo": zod.string().nullish(),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+}).describe('Collaboratore a cui e\' associato l\'assistito'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "creatoIl": zod.coerce.date(),
+  "modificatoIl": zod.coerce.date()
+})
+
+
+/**
+ * @summary Scheda assistito
+ */
+export const GetAssistitoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const GetAssistitoResponse = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "sesso": zod.enum(['M', 'F']),
+  "dataNascita": zod.string(),
+  "luogoNascitaCodice": zod.string(),
+  "luogoNascitaNome": zod.string(),
+  "luogoNascitaProvincia": zod.string().nullish(),
+  "luogoNascitaEstero": zod.boolean(),
+  "nazionalita": zod.string(),
+  "nazionalitaNome": zod.string(),
+  "straniero": zod.boolean(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "email": zod.string().nullish(),
+  "citta": zod.string(),
+  "indirizzo": zod.string().nullish(),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+}).describe('Collaboratore a cui e\' associato l\'assistito'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "creatoIl": zod.coerce.date(),
+  "modificatoIl": zod.coerce.date()
+})
+
+
+/**
+ * @summary Modifica un proprio assistito (solo il collaboratore a cui e' associato)
+ */
+export const UpdateAssistitoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+
+
+export const updateAssistitoBodyDataNascitaRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const updateAssistitoBodyCodiceFiscaleMin = 16;
+export const updateAssistitoBodyCodiceFiscaleMax = 16;
+
+
+
+
+export const UpdateAssistitoBody = zod.object({
+  "nome": zod.string().min(1),
+  "cognome": zod.string().min(1),
+  "sesso": zod.enum(['M', 'F']),
+  "dataNascita": zod.string().regex(updateAssistitoBodyDataNascitaRegExp),
+  "luogoNascitaCodice": zod.string().describe('Codice del comune o dello stato scelto con la ricerca luoghi'),
+  "nazionalita": zod.string().describe('Codice restituito da listNazionalita'),
+  "codiceFiscale": zod.string().min(updateAssistitoBodyCodiceFiscaleMin).max(updateAssistitoBodyCodiceFiscaleMax),
+  "cellulare": zod.string(),
+  "citta": zod.string().min(1),
+  "indirizzo": zod.string().nullish(),
+  "email": zod.string().nullish()
+})
+
+export const UpdateAssistitoResponse = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "sesso": zod.enum(['M', 'F']),
+  "dataNascita": zod.string(),
+  "luogoNascitaCodice": zod.string(),
+  "luogoNascitaNome": zod.string(),
+  "luogoNascitaProvincia": zod.string().nullish(),
+  "luogoNascitaEstero": zod.boolean(),
+  "nazionalita": zod.string(),
+  "nazionalitaNome": zod.string(),
+  "straniero": zod.boolean(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "email": zod.string().nullish(),
+  "citta": zod.string(),
+  "indirizzo": zod.string().nullish(),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+}).describe('Collaboratore a cui e\' associato l\'assistito'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "creatoIl": zod.coerce.date(),
+  "modificatoIl": zod.coerce.date()
+})
+
+
+/**
+ * @summary Associa l'assistito a un altro collaboratore (admin e super admin)
+ */
+export const AssociaAssistitoACollaboratoreParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const AssociaAssistitoACollaboratoreBody = zod.object({
+  "collaboratoreId": zod.number().int()
+})
+
+export const AssociaAssistitoACollaboratoreResponse = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "sesso": zod.enum(['M', 'F']),
+  "dataNascita": zod.string(),
+  "luogoNascitaCodice": zod.string(),
+  "luogoNascitaNome": zod.string(),
+  "luogoNascitaProvincia": zod.string().nullish(),
+  "luogoNascitaEstero": zod.boolean(),
+  "nazionalita": zod.string(),
+  "nazionalitaNome": zod.string(),
+  "straniero": zod.boolean(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "email": zod.string().nullish(),
+  "citta": zod.string(),
+  "indirizzo": zod.string().nullish(),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+}).describe('Collaboratore a cui e\' associato l\'assistito'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "creatoIl": zod.coerce.date(),
+  "modificatoIl": zod.coerce.date()
+})
+
+
+/**
+ * @summary Segnalazioni di assistiti gia' registrati (admin e super admin)
+ */
+export const ListSegnalazioniDuplicatiQueryParams = zod.object({
+  "stato": zod.enum(['aperte', 'gestite', 'tutte']).optional()
+})
+
+export const ListSegnalazioniDuplicatiResponseItem = zod.object({
+  "id": zod.number().int(),
+  "creataIl": zod.coerce.date(),
+  "ultimoTentativoIl": zod.coerce.date(),
+  "tentativi": zod.number().int(),
+  "richiedente": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+}).describe('Collaboratore a cui e\' associato l\'assistito'),
+  "esistente": zod.object({
+  "personaId": zod.number().int(),
+  "tipo": zod.enum(['assistito', 'collaboratore']),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "assistitoId": zod.number().int().nullish(),
+  "collaboratore": zod.union([zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+}).describe('Collaboratore a cui e\' associato l\'assistito'),zod.null()]).optional().describe('Per un assistito, il collaboratore a cui e\' associato; per un collaboratore, lui stesso')
+}).describe('Persona gia\' registrata (visibile solo al back office)'),
+  "campi": zod.array(zod.enum(['codice_fiscale', 'cellulare'])),
+  "datiTentati": zod.object({
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "sesso": zod.string().optional(),
+  "dataNascita": zod.string().optional(),
+  "luogoNascita": zod.string().optional(),
+  "nazionalita": zod.string().optional(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "citta": zod.string(),
+  "indirizzo": zod.string().nullish(),
+  "email": zod.string().nullish()
+}),
+  "stato": zod.enum(['aperta', 'gestita']),
+  "esito": zod.string().nullish().describe('associata oppure archiviata'),
+  "nota": zod.string().nullish(),
+  "gestitaIl": zod.coerce.date().nullish(),
+  "gestitaDa": zod.string().nullish().describe('Nome di chi ha gestito la segnalazione')
+})
+export const ListSegnalazioniDuplicatiResponse = zod.array(ListSegnalazioniDuplicatiResponseItem)
+
+
+/**
+ * @summary Numero di segnalazioni aperte (admin e super admin)
+ */
+export const GetConteggioSegnalazioniResponse = zod.object({
+  "aperte": zod.number().int()
+})
+
+
+/**
+ * @summary Associa l'assistito gia' registrato a un collaboratore e chiude la segnalazione
+ */
+export const AssociaSegnalazioneParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const AssociaSegnalazioneBody = zod.object({
+  "collaboratoreId": zod.number().int(),
+  "nota": zod.string().nullish()
+})
+
+export const AssociaSegnalazioneResponse = zod.object({
+  "id": zod.number().int(),
+  "creataIl": zod.coerce.date(),
+  "ultimoTentativoIl": zod.coerce.date(),
+  "tentativi": zod.number().int(),
+  "richiedente": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+}).describe('Collaboratore a cui e\' associato l\'assistito'),
+  "esistente": zod.object({
+  "personaId": zod.number().int(),
+  "tipo": zod.enum(['assistito', 'collaboratore']),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "assistitoId": zod.number().int().nullish(),
+  "collaboratore": zod.union([zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+}).describe('Collaboratore a cui e\' associato l\'assistito'),zod.null()]).optional().describe('Per un assistito, il collaboratore a cui e\' associato; per un collaboratore, lui stesso')
+}).describe('Persona gia\' registrata (visibile solo al back office)'),
+  "campi": zod.array(zod.enum(['codice_fiscale', 'cellulare'])),
+  "datiTentati": zod.object({
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "sesso": zod.string().optional(),
+  "dataNascita": zod.string().optional(),
+  "luogoNascita": zod.string().optional(),
+  "nazionalita": zod.string().optional(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "citta": zod.string(),
+  "indirizzo": zod.string().nullish(),
+  "email": zod.string().nullish()
+}),
+  "stato": zod.enum(['aperta', 'gestita']),
+  "esito": zod.string().nullish().describe('associata oppure archiviata'),
+  "nota": zod.string().nullish(),
+  "gestitaIl": zod.coerce.date().nullish(),
+  "gestitaDa": zod.string().nullish().describe('Nome di chi ha gestito la segnalazione')
+})
+
+
+/**
+ * @summary Chiude la segnalazione senza modificare le associazioni
+ */
+export const ArchiviaSegnalazioneParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const ArchiviaSegnalazioneBody = zod.object({
+  "nota": zod.string().nullish()
+})
+
+export const ArchiviaSegnalazioneResponse = zod.object({
+  "id": zod.number().int(),
+  "creataIl": zod.coerce.date(),
+  "ultimoTentativoIl": zod.coerce.date(),
+  "tentativi": zod.number().int(),
+  "richiedente": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+}).describe('Collaboratore a cui e\' associato l\'assistito'),
+  "esistente": zod.object({
+  "personaId": zod.number().int(),
+  "tipo": zod.enum(['assistito', 'collaboratore']),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "assistitoId": zod.number().int().nullish(),
+  "collaboratore": zod.union([zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+}).describe('Collaboratore a cui e\' associato l\'assistito'),zod.null()]).optional().describe('Per un assistito, il collaboratore a cui e\' associato; per un collaboratore, lui stesso')
+}).describe('Persona gia\' registrata (visibile solo al back office)'),
+  "campi": zod.array(zod.enum(['codice_fiscale', 'cellulare'])),
+  "datiTentati": zod.object({
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "sesso": zod.string().optional(),
+  "dataNascita": zod.string().optional(),
+  "luogoNascita": zod.string().optional(),
+  "nazionalita": zod.string().optional(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "citta": zod.string(),
+  "indirizzo": zod.string().nullish(),
+  "email": zod.string().nullish()
+}),
+  "stato": zod.enum(['aperta', 'gestita']),
+  "esito": zod.string().nullish().describe('associata oppure archiviata'),
+  "nota": zod.string().nullish(),
+  "gestitaIl": zod.coerce.date().nullish(),
+  "gestitaDa": zod.string().nullish().describe('Nome di chi ha gestito la segnalazione')
+})
+
+
+/**
  * @summary Cerca comuni italiani e stati esteri (luogo di nascita)
  */
 export const CercaLuoghiQueryParams = zod.object({

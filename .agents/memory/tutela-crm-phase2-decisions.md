@@ -1,0 +1,14 @@
+---
+name: Tutela CRM phase 2 (assistiti) decisions
+description: Duplicate-handling, visibility and permission choices made for assistiti and segnalazioni
+---
+
+- Duplicate messages shown to a collaboratore are always generic ("risulta già presente"), never revealing name, role, sportello, or whether the match is an assistito or a collaboratore. Only back-office segnalazioni show detail.
+- Matches on CF or cellulare against another collaboratore's assistito OR against a collaboratore create/update an open segnalazione (deduped per requester + existing person, `tentativi` incremented). Notification to admin is in-app only (sidebar badge); email is deferred.
+- If the match is an assistito already in the user's own or group elenco, a distinct message with a link is returned and no segnalazione is created.
+- Collaboratore edits only own assistiti; capogruppo sees group assistiti read-only. Non-visible assistito returns 404. Only admin/super_admin reassign assistiti and handle segnalazioni; operatore reads assistiti only.
+- "Associare una pratica" to another collaboratore is NOT implemented (pratiche do not exist yet): add it when pratiche arrive.
+- Back-office editing of an assistito's anagrafica is not built.
+
+**Why:** choices made by the agent from the phase 2 brief; user to confirm.
+**How to apply:** keep later phases (pratiche) consistent with these visibility and leak-free duplicate rules.

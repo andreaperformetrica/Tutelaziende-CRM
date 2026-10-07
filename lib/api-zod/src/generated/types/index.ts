@@ -6,22 +6,33 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './archiviaSegnalazioneInput';
+export * from './assistitiPagina';
+export * from './assistito';
+export * from './assistitoInput';
+export * from './associaCollaboratoreInput';
+export * from './associaSegnalazioneInput';
 export * from './cambioPasswordInput';
 export * from './cercaLuoghiParams';
 export * from './cercaLuoghiTipo';
 export * from './collaboratore';
+export * from './collaboratoreAssistito';
 export * from './collaboratoreDettaglio';
 export * from './collaboratoreInput';
 export * from './collaboratoreRiepilogo';
 export * from './collaboratoreUpdate';
+export * from './conteggioSegnalazioni';
 export * from './erroreApi';
 export * from './filtriLog';
 export * from './filtroAzioneLog';
 export * from './filtroUtenteLog';
 export * from './healthStatus';
+export * from './listAssistitiParams';
 export * from './listCollaboratoriParams';
 export * from './listCollaboratoriStato';
 export * from './listLogOperazioniParams';
+export * from './listSegnalazioniDuplicatiParams';
+export * from './listSegnalazioniDuplicatiStato';
 export * from './loginInput';
 export * from './logOperazione';
 export * from './logOperazioniPagina';
@@ -31,6 +42,12 @@ export * from './nazionalita';
 export * from './passwordProvvisoriaInput';
 export * from './ruolo';
 export * from './ruoloInterno';
+export * from './segnalazioneDatiTentati';
+export * from './segnalazioneDuplicato';
+export * from './segnalazioneDuplicatoCampiItem';
+export * from './segnalazioneDuplicatoStato';
+export * from './segnalazionePersona';
+export * from './segnalazionePersonaTipo';
 export * from './sessioneCollaboratore';
 export * from './sessioneUtente';
 export * from './sessioneUtenteArea';

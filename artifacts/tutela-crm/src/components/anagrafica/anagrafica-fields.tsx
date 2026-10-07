@@ -30,6 +30,11 @@ export const anagraficaSchema = z.object({
 });
 export type AnagraficaValues = z.infer<typeof anagraficaSchema>;
 
+/** Come anagraficaSchema ma con email facoltativa (assistiti): se compilata deve essere valida. */
+export const anagraficaEmailFacoltativaSchema = anagraficaSchema.extend({
+  email: z.string().trim().refine((v) => v === "" || z.string().email().safeParse(v).success, "Indirizzo email non valido"),
+});
+
 export function BannerStraniero({ nazionalita }: { nazionalita: string }) {
   return (
     <div role="status" data-testid="banner-straniero"
@@ -43,7 +48,7 @@ export function BannerStraniero({ nazionalita }: { nazionalita: string }) {
   );
 }
 
-function Campo({ label, name, children, hint, err, required }: { label: string; name: string; children: React.ReactNode; hint?: React.ReactNode; err?: string; required?: boolean }) {
+export function Campo({ label, name, children, hint, err, required }: { label: string; name: string; children: React.ReactNode; hint?: React.ReactNode; err?: string; required?: boolean }) {
   return (
     <div className="space-y-1.5" data-campo={name}>
       <Label htmlFor={`input-${name}`} className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -144,7 +149,7 @@ function NazionalitaSelect({ value, onPick, invalid }: { value: string; onPick: 
 }
 
 /** Riutilizzabile: va usato dentro un <FormProvider> con i campi di AnagraficaValues. */
-export function AnagraficaFields() {
+export function AnagraficaFields({ emailObbligatoria = true, mostraTelefono = true }: { emailObbligatoria?: boolean; mostraTelefono?: boolean } = {}) {
   const { register, control, setValue, formState: { errors } } = useFormContext<AnagraficaValues>();
   const [nome, cognome, sesso, dataNascita, luogo, cf, naz, cell] = useWatch({
     control, name: ["nome", "cognome", "sesso", "dataNascita", "luogoNascitaCodice", "codiceFiscale", "nazionalita", "cellulare"],
@@ -235,17 +240,19 @@ export function AnagraficaFields() {
         )} />
       </Campo>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Campo label="Email" name="email" required err={e.email?.message}>
+      <div className={cn("grid gap-4", mostraTelefono ? "sm:grid-cols-3" : "sm:grid-cols-2")}>
+        <Campo label={emailObbligatoria ? "Email" : "Email (facoltativa)"} name="email" required={emailObbligatoria} err={e.email?.message}>
           <Input id="input-email" autoComplete="off" type="email" {...register("email")} className={e.email ? "border-destructive" : ""} data-testid="input-email" />
         </Campo>
         <Campo label="Cellulare" name="cellulare" required err={e.cellulare?.message}
           hint={cellFmt && !e.cellulare ? <p className="text-xs text-muted-foreground font-mono" data-testid="text-cellulare-formattato">{cellFmt}</p> : undefined}>
           <Input id="input-cellulare" autoComplete="off" type="tel" {...register("cellulare")} className={e.cellulare ? "border-destructive" : ""} data-testid="input-cellulare" />
         </Campo>
-        <Campo label="Telefono (facoltativo)" name="telefono" err={e.telefono?.message}>
-          <Input id="input-telefono" autoComplete="off" type="tel" {...register("telefono")} data-testid="input-telefono" />
-        </Campo>
+        {mostraTelefono && (
+          <Campo label="Telefono (facoltativo)" name="telefono" err={e.telefono?.message}>
+            <Input id="input-telefono" autoComplete="off" type="tel" {...register("telefono")} data-testid="input-telefono" />
+          </Campo>
+        )}
       </div>
     </div>
   );

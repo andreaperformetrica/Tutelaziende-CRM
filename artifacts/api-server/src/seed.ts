@@ -4,7 +4,7 @@
  */
 import { eq, sql } from "drizzle-orm";
 import { calcolaCodiceFiscale, normalizzaTelefono } from "@workspace/anagrafica";
-import { collaboratoriTable, db, pool, personeTable, utentiTable } from "@workspace/db";
+import { assistitiTable, collaboratoriTable, db, pool, personeTable, utentiTable } from "@workspace/db";
 import { trovaLuogo, trovaNazionalita } from "./lib/luoghi";
 import { hashPassword } from "./lib/password";
 
@@ -36,6 +36,57 @@ const collaboratori: DatiCollaboratore[] = [
   { nome: "Paolo", cognome: "Neri", sesso: "M", dataNascita: "1968-11-02", luogo: "F839", nazionalita: "IT", cellulare: "3331000103", sportello: "103", tipologia: "CAF", capogruppoSportello: "101" },
   { nome: "Elena", cognome: "Popescu", sesso: "F", dataNascita: "1990-05-14", luogo: "Z129", nazionalita: "Z129", cellulare: "3331000104", sportello: "104", tipologia: "PATRONATO" },
 ];
+
+interface DatiAssistito {
+  nome: string;
+  cognome: string;
+  sesso: "M" | "F";
+  dataNascita: string;
+  luogo: string;
+  nazionalita: string;
+  cellulare: string;
+  citta: string;
+  indirizzo?: string;
+  email?: string;
+  sportello: string;
+}
+
+const assistiti: DatiAssistito[] = [
+  { nome: "Giulia", cognome: "Verdi", sesso: "F", dataNascita: "1985-02-18", luogo: "H501", nazionalita: "IT", cellulare: "3342000001", citta: "Roma", indirizzo: "Via dei Mille 12", email: "giulia.verdi@example.com", sportello: "101" },
+  { nome: "Antonio", cognome: "Russo", sesso: "M", dataNascita: "1959-09-30", luogo: "F839", nazionalita: "IT", cellulare: "3342000002", citta: "Napoli", sportello: "101" },
+  { nome: "Francesca", cognome: "Gallo", sesso: "F", dataNascita: "1991-12-05", luogo: "F205", nazionalita: "IT", cellulare: "3342000003", citta: "Milano", indirizzo: "Corso Buenos Aires 40", sportello: "102" },
+  { nome: "Luca", cognome: "Marino", sesso: "M", dataNascita: "1977-06-21", luogo: "L219", nazionalita: "IT", cellulare: "3342000004", citta: "Torino", sportello: "103" },
+  { nome: "Ion", cognome: "Dumitru", sesso: "M", dataNascita: "1988-04-09", luogo: "Z129", nazionalita: "Z129", cellulare: "3342000005", citta: "Bologna", indirizzo: "Via Zamboni 7", sportello: "104" },
+  { nome: "Maria", cognome: "Esposito", sesso: "F", dataNascita: "1949-01-27", luogo: "D612", nazionalita: "IT", cellulare: "3342000006", citta: "Firenze", sportello: "104" },
+];
+
+async function seedAssistiti() {
+  for (const a of assistiti) {
+    const luogo = trovaLuogo(a.luogo);
+    const naz = trovaNazionalita(a.nazionalita);
+    const cellulare = normalizzaTelefono(a.cellulare);
+    if (!luogo || !naz || !cellulare) throw new Error(`Dati non validi per l'assistito ${a.cognome}`);
+    const codiceFiscale = calcolaCodiceFiscale({ nome: a.nome, cognome: a.cognome, sesso: a.sesso, dataNascita: a.dataNascita, codiceLuogo: luogo.codice });
+    if (!codiceFiscale) throw new Error(`Codice fiscale non calcolabile per ${a.cognome}`);
+    const [esiste] = await db.select({ id: personeTable.id }).from(personeTable).where(eq(personeTable.codiceFiscale, codiceFiscale));
+    if (esiste) continue;
+    const [collab] = await db.select({ id: collaboratoriTable.id }).from(collaboratoriTable).where(eq(collaboratoriTable.numeroSportello, a.sportello));
+    if (!collab) throw new Error(`Sportello ${a.sportello} inesistente: esegui prima il seed dei collaboratori`);
+    await db.transaction(async (tx) => {
+      const [persona] = await tx
+        .insert(personeTable)
+        .values({
+          nome: a.nome, cognome: a.cognome, sesso: a.sesso, dataNascita: a.dataNascita,
+          luogoNascitaCodice: luogo.codice, luogoNascitaNome: luogo.nome, luogoNascitaProvincia: luogo.provincia,
+          luogoNascitaEstero: luogo.tipo === "stato", nazionalita: naz.codice, nazionalitaNome: naz.nome,
+          codiceFiscale, email: a.email ?? null, cellulare,
+        })
+        .returning({ id: personeTable.id });
+      await tx.insert(assistitiTable).values({ personaId: persona!.id, collaboratoreId: collab.id, citta: a.citta, indirizzo: a.indirizzo ?? null });
+    });
+    console.log(`Creato assistito ${a.cognome} ${a.nome} (${codiceFiscale}, sportello ${a.sportello})`);
+  }
+}
 
 async function main() {
   const passwordHash = await hashPassword(PASSWORD_PROVVISORIA);
@@ -101,6 +152,7 @@ async function main() {
     });
     console.log(`Creato collaboratore ${c.cognome} ${c.nome} (${email}, ${codiceFiscale})`);
   }
+  await seedAssistiti();
   console.log(`Password provvisoria di tutti gli utenti di prova: ${PASSWORD_PROVVISORIA}`);
 }
 

@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { useLogout, type SessioneUtente } from "@workspace/api-client-react";
-import { KeyRound, LogOut, ScrollText, ShieldCheck, Users, UsersRound, Home, Landmark } from "lucide-react";
+import { getGetConteggioSegnalazioniQueryKey, useGetConteggioSegnalazioni, useLogout, type SessioneUtente } from "@workspace/api-client-react";
+import { KeyRound, LogOut, ScrollText, ShieldCheck, Users, UsersRound, Home, Landmark, UserRound, TriangleAlert } from "lucide-react";
 import { iniziali, ruoloLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +27,8 @@ function Marchio({ chiaro }: { chiaro?: boolean }) {
 
 const VOCI = [
   { href: "/admin/collaboratori", label: "Collaboratori", icon: UsersRound, roles: ["super_admin", "admin", "operatore"], id: "collaboratori" },
+  { href: "/admin/assistiti", label: "Assistiti", icon: UserRound, roles: ["super_admin", "admin", "operatore"], id: "assistiti" },
+  { href: "/admin/segnalazioni", label: "Segnalazioni", icon: TriangleAlert, roles: ["super_admin", "admin"], id: "segnalazioni" },
   { href: "/admin/utenti", label: "Utenti interni", icon: Users, roles: ["super_admin", "admin"], id: "utenti" },
   { href: "/admin/log", label: "Log operazioni", icon: ScrollText, roles: ["super_admin", "admin"], id: "log" },
 ];
@@ -36,6 +38,9 @@ export function BackofficeShell({ s, children }: { s: SessioneUtente; children: 
   const esci = useEsci();
   const voci = VOCI.filter((v) => v.roles.includes(s.ruolo));
   const attivo = (h: string) => loc === h || loc.startsWith(h + "/");
+  const vedeSegnalazioni = s.ruolo === "super_admin" || s.ruolo === "admin";
+  const conteggio = useGetConteggioSegnalazioni({ query: { enabled: vedeSegnalazioni, refetchInterval: 30000, queryKey: getGetConteggioSegnalazioniQueryKey() } });
+  const aperte = conteggio.data?.aperte ?? 0;
   return (
     <div className="min-h-[100dvh] md:grid md:grid-cols-[17rem_1fr]">
       <aside className="bg-sidebar text-sidebar-foreground md:sticky md:top-0 md:h-[100dvh] flex md:flex-col gap-3 md:gap-0 p-3 md:p-5 items-center md:items-stretch overflow-x-auto">
@@ -48,6 +53,9 @@ export function BackofficeShell({ s, children }: { s: SessioneUtente; children: 
                 attivo(v.href) ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground")}>
               <span className={cn("absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded bg-sidebar-primary transition-transform origin-center", attivo(v.href) ? "scale-y-100" : "scale-y-0")} />
               <v.icon className="size-4 opacity-80" /> {v.label}
+              {v.id === "segnalazioni" && aperte > 0 && (
+                <span className="ml-auto min-w-5 rounded-full bg-sidebar-primary px-1.5 text-center text-[11px] font-bold text-sidebar-primary-foreground" data-testid="badge-segnalazioni" aria-label={`${aperte} segnalazioni aperte`}>{aperte}</span>
+              )}
             </Link>
           ))}
         </nav>
@@ -77,7 +85,7 @@ export function BackofficeShell({ s, children }: { s: SessioneUtente; children: 
 export function CollaboratoreShell({ s, children }: { s: SessioneUtente; children: ReactNode }) {
   const [loc] = useLocation();
   const esci = useEsci();
-  const voci = [{ href: "/collaboratore", label: "Home", icon: Home }, { href: "/cambia-password", label: "Cambia password", icon: KeyRound }];
+  const voci = [{ href: "/collaboratore", label: "Home", icon: Home }, { href: "/collaboratore/assistiti", label: "Assistiti", icon: UserRound }, { href: "/cambia-password", label: "Cambia password", icon: KeyRound }];
   return (
     <div className="min-h-[100dvh] bg-secondary/40 paper">
       <header className="bg-primary text-primary-foreground border-b-4 border-accent">
@@ -86,7 +94,7 @@ export function CollaboratoreShell({ s, children }: { s: SessioneUtente; childre
           <nav className="flex gap-1 ml-2" data-testid="nav-collaboratore">
             {voci.map((v) => (
               <Link key={v.href} href={v.href} data-testid={`link-menu-${v.label.toLowerCase().replace(" ", "-")}`}
-                className={cn("flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors", loc === v.href ? "bg-accent text-accent-foreground" : "hover:bg-primary-foreground/10")}>
+                className={cn("flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors", (loc === v.href || (v.href !== "/collaboratore" && loc.startsWith(v.href + "/"))) ? "bg-accent text-accent-foreground" : "hover:bg-primary-foreground/10")}>
                 <v.icon className="size-4" /><span className="hidden sm:inline">{v.label}</span>
               </Link>
             ))}

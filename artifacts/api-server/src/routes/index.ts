@@ -3,6 +3,8 @@ import healthRouter from "./health";
 import authRouter from "./auth";
 import utentiRouter from "./utenti";
 import collaboratoriRouter from "./collaboratori";
+import assistitiRouter from "./assistiti";
+import segnalazioniRouter from "./segnalazioni";
 import luoghiRouter from "./luoghi";
 import logRouter from "./log";
 import { caricaUtente, controlloOrigine, richiediLogin, richiediPasswordCambiata } from "../middlewares/auth";
@@ -20,6 +22,8 @@ router.use(authRouter);
 router.use(richiediLogin, richiediPasswordCambiata);
 router.use(utentiRouter);
 router.use(collaboratoriRouter);
+router.use(assistitiRouter);
+router.use(segnalazioniRouter);
 router.use(luoghiRouter);
 router.use(logRouter);
 

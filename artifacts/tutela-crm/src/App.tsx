@@ -16,6 +16,12 @@ import CollaboratoreNuovo from '@/pages/admin/collaboratore-nuovo';
 import CollaboratoreDettaglioPage from '@/pages/admin/collaboratore-dettaglio';
 import UtentiPage from '@/pages/admin/utenti';
 import LogPage from '@/pages/admin/log';
+import AssistitiBackoffice from '@/pages/admin/assistiti';
+import AssistitoDettaglioBackoffice from '@/pages/admin/assistito-dettaglio';
+import SegnalazioniPage from '@/pages/admin/segnalazioni';
+import AssistitiCollaboratore from '@/pages/collaboratore/assistiti';
+import AssistitoNuovo from '@/pages/collaboratore/assistito-nuovo';
+import AssistitoDettaglioCollaboratore from '@/pages/collaboratore/assistito-dettaglio';
 import HomeCollaboratore from '@/pages/home-collaboratore';
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { refetchOnWindowFocus: false } } });
@@ -57,8 +63,14 @@ function Router() {
         <Route path="/admin/collaboratori" component={g(<CollaboratoriPage />, 'backoffice', TUTTI_BO)} />
         <Route path="/admin/collaboratori/nuovo" component={g(<CollaboratoreNuovo />, 'backoffice', ADMIN)} />
         <Route path="/admin/collaboratori/:id" component={g(<CollaboratoreDettaglioPage />, 'backoffice', TUTTI_BO)} />
+        <Route path="/admin/assistiti" component={g(<AssistitiBackoffice />, 'backoffice', TUTTI_BO)} />
+        <Route path="/admin/assistiti/:id" component={g(<AssistitoDettaglioBackoffice />, 'backoffice', TUTTI_BO)} />
+        <Route path="/admin/segnalazioni" component={g(<SegnalazioniPage />, 'backoffice', ADMIN)} />
         <Route path="/admin/utenti" component={g(<UtentiPage />, 'backoffice', ADMIN)} />
         <Route path="/admin/log" component={g(<LogPage />, 'backoffice', ADMIN)} />
+        <Route path="/collaboratore/assistiti" component={g(<AssistitiCollaboratore />, 'collaboratore', ['collaboratore'])} />
+        <Route path="/collaboratore/assistiti/nuovo" component={g(<AssistitoNuovo />, 'collaboratore', ['collaboratore'])} />
+        <Route path="/collaboratore/assistiti/:id" component={g(<AssistitoDettaglioCollaboratore />, 'collaboratore', ['collaboratore'])} />
         <Route path="/collaboratore" component={g(<HomeCollaboratore />, 'collaboratore', ['collaboratore'])} />
         <Route component={NotFound} />
       </Switch>
