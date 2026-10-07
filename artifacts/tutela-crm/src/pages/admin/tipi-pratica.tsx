@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { getListTipiPraticaQueryKey, getGetTipoPraticaQueryKey, useCreateTipoPratica, useListTipiPratica } from "@workspace/api-client-react";
-import { FileText, Loader2, Plus } from "lucide-react";
+import { FileText, Loader2, Pencil, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -79,7 +79,7 @@ export default function TipiPraticaPage() {
                 <TableRow>
                   <TableHead>Nome</TableHead><TableHead>Stato</TableHead><TableHead>Pagabile</TableHead>
                   <TableHead className="text-right">Punti</TableHead><TableHead className="text-right">Valore</TableHead>
-                  <TableHead className="text-right">Documenti</TableHead><TableHead className="text-right">Moduli</TableHead>
+                  <TableHead className="text-right">Documenti</TableHead><TableHead className="text-right">Moduli</TableHead><TableHead className="text-right"><span className="sr-only">Azioni</span></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -92,6 +92,7 @@ export default function TipiPraticaPage() {
                     <TableCell className="text-right tabular-nums">{t.pagabile ? fmtEuro(t.valoreEuro) : "-"}</TableCell>
                     <TableCell className="text-right tabular-nums">{t.documenti.length}</TableCell>
                     <TableCell className="text-right tabular-nums">{t.moduli.length}</TableCell>
+                    <TableCell className="text-right"><Button asChild size="sm" variant="outline"><Link href={`/admin/tipi-pratica/${t.id}`} data-testid={`button-modifica-tipo-${t.id}`}><Pencil className="size-4 mr-1.5" /> Modifica</Link></Button></TableCell>
                   </TableRow>
                 ))}
               </TableBody>
