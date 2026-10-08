@@ -108,6 +108,13 @@ export default function PraticaDettaglioCollaboratore() {
           actions={<Badge className={p.bozza ? "" : "bg-primary text-primary-foreground"} variant={p.bozza ? "outline" : "default"} data-testid="badge-stato-pratica">{p.stato}</Badge>} />
       </div>
 
+      {!p.bozza && (
+        <div className="text-sm" data-testid="text-gestita-da">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mr-2">Gestita da</span>
+          <strong>{p.gestitaDa ?? "Non ancora assegnata"}</strong>
+        </div>
+      )}
+
       {bloccato && (
         <div role="alert" className="flex gap-3 rounded-lg border border-amber-500/50 bg-amber-50 text-amber-950 p-4 text-sm" data-testid="banner-invio-bloccato">
           <Lock className="size-5 shrink-0 mt-0.5" /><div><strong className="block">Invio sospeso</strong>{p.invio.messaggio}</div>
