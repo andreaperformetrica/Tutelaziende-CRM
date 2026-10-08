@@ -5,7 +5,7 @@ import {
   getGetStatoNotificheQueryKey, getListNotificheQueryKey, useGetStatoNotifiche, useListNotifiche,
   type ListNotificheParams, type Notifica,
 } from "@workspace/api-client-react";
-import { Bell, ChevronLeft, ChevronRight, Eye, Info, Mail, MessageCircle, X } from "lucide-react";
+import { Bell, ChevronLeft, ChevronRight, Eye, Info, Mail, MessageCircle, Phone, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -20,9 +20,9 @@ import { fmtCellulare, fmtIstante, parseApiError } from "@/lib/format";
 const PER_PAGINA = 50;
 
 function Canale({ c }: { c: Notifica["canale"] }) {
-  return c === "email"
-    ? <span className="inline-flex items-center gap-1.5 text-sm"><Mail className="size-4" /> Email</span>
-    : <span className="inline-flex items-center gap-1.5 text-sm"><MessageCircle className="size-4" /> WhatsApp</span>;
+  if (c === "email") return <span className="inline-flex items-center gap-1.5 text-sm"><Mail className="size-4" /> Email</span>;
+  if (c === "chiamata") return <span className="inline-flex items-center gap-1.5 text-sm"><Phone className="size-4" /> Chiamata</span>;
+  return <span className="inline-flex items-center gap-1.5 text-sm"><MessageCircle className="size-4" /> WhatsApp</span>;
 }
 
 function Esito({ n }: { n: Notifica }) {
@@ -57,7 +57,7 @@ export default function NotifichePage() {
   const tot = q.data?.totale ?? 0;
   const pagine = Math.max(1, Math.ceil(tot / PER_PAGINA));
   const cambia = <T,>(set: (v: T) => void) => (v: T) => { set(v); setPagina(1); };
-  const inattivi = stato.data ? ([["email", "Email", stato.data.email], ["whatsapp", "WhatsApp", stato.data.whatsapp]] as const).filter(([, , s]) => !s.attivo) : [];
+  const inattivi = stato.data ? ([["email", "Email", stato.data.email], ["whatsapp", "WhatsApp", stato.data.whatsapp], ["chiamata", "Chiamata", stato.data.chiamata]] as const).filter(([, , s]) => !s.attivo) : [];
 
   return (
     <div>
@@ -77,7 +77,7 @@ export default function NotifichePage() {
         <div className="space-y-1"><Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Canale</Label>
           <Select value={canale} onValueChange={cambia(setCanale)}>
             <SelectTrigger className="w-40 bg-card" data-testid="filtro-canale"><SelectValue /></SelectTrigger>
-            <SelectContent><SelectItem value="all">Tutti i canali</SelectItem><SelectItem value="email">Email</SelectItem><SelectItem value="whatsapp">WhatsApp</SelectItem></SelectContent>
+            <SelectContent><SelectItem value="all">Tutti i canali</SelectItem><SelectItem value="email">Email</SelectItem><SelectItem value="whatsapp">WhatsApp</SelectItem><SelectItem value="chiamata">Chiamata</SelectItem></SelectContent>
           </Select></div>
         <div className="space-y-1"><Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Esito</Label>
           <Select value={esito} onValueChange={cambia(setEsito)}>
@@ -108,7 +108,7 @@ export default function NotifichePage() {
                     <TableCell className="font-mono text-xs whitespace-nowrap">{fmtIstante(n.elaboratoIl ?? n.creatoIl, true)}</TableCell>
                     <TableCell className="text-sm">
                       <div className="font-medium">{n.destinatarioNome}</div>
-                      <div className="text-xs text-muted-foreground break-all">{n.canale === "whatsapp" && n.destinatarioContatto !== "—" ? fmtCellulare(n.destinatarioContatto) : n.destinatarioContatto}</div>
+                      <div className="text-xs text-muted-foreground break-all">{n.canale !== "email" && n.destinatarioContatto !== "—" ? fmtCellulare(n.destinatarioContatto) : n.destinatarioContatto}</div>
                     </TableCell>
                     <TableCell><Canale c={n.canale} /></TableCell>
                     <TableCell className="text-sm min-w-48">{n.eventoEtichetta}</TableCell>
@@ -131,13 +131,13 @@ export default function NotifichePage() {
       <Dialog open={!!aperta} onOpenChange={(o) => { if (!o) setAperta(null); }}>
         <DialogContent data-testid="dialog-messaggio-notifica">
           <DialogHeader>
-            <DialogTitle>{aperta?.canale === "email" ? "Email" : "Messaggio WhatsApp"}</DialogTitle>
+            <DialogTitle>{aperta?.canale === "email" ? "Email" : aperta?.canale === "chiamata" ? "Chiamata automatica" : "Messaggio WhatsApp"}</DialogTitle>
             <DialogDescription>{aperta ? `A ${aperta.destinatarioNome} · ${aperta.eventoEtichetta}` : ""}</DialogDescription>
           </DialogHeader>
           {aperta && (
             <div className="space-y-3 text-sm">
               {aperta.oggetto && <div><div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Oggetto</div><div className="font-medium">{aperta.oggetto}</div></div>}
-              <div><div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{aperta.canale === "whatsapp" ? "Testo del template" : "Testo"}</div><p className="whitespace-pre-wrap break-words rounded-md bg-secondary/60 p-3" data-testid="testo-notifica">{aperta.testo}</p></div>
+              <div><div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{aperta.canale === "whatsapp" ? "Testo del template" : aperta.canale === "chiamata" ? "Testo letto al telefono" : "Testo"}</div><p className="whitespace-pre-wrap break-words rounded-md bg-secondary/60 p-3" data-testid="testo-notifica">{aperta.testo}</p></div>
             </div>
           )}
         </DialogContent>

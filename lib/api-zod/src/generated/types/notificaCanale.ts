@@ -12,4 +12,5 @@ export type NotificaCanale = typeof NotificaCanale[keyof typeof NotificaCanale];
 export const NotificaCanale = {
   email: 'email',
   whatsapp: 'whatsapp',
+  chiamata: 'chiamata',
 } as const;

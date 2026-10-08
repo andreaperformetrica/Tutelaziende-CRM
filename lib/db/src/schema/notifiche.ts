@@ -1,7 +1,7 @@
 import { index, integer, jsonb, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 
 /**
- * Registro delle notifiche (email e WhatsApp). Ogni riga e' un messaggio a un destinatario su un canale.
+ * Registro delle notifiche (email, WhatsApp e chiamata). Ogni riga e' un messaggio a un destinatario su un canale.
  * La riga nasce "in_coda" nella stessa transazione dell'operazione che la genera e viene aggiornata dopo il tentativo di invio.
  * Nessun riferimento a tabelle: il registro resta leggibile anche se pratica o utente vengono cancellati.
  */
@@ -13,7 +13,7 @@ export const notificheTable = pgTable(
     /** Istante del tentativo di invio (o della registrazione senza invio). */
     elaboratoIl: timestamp("elaborato_il", { withTimezone: true }),
     evento: text("evento").notNull(),
-    canale: text("canale", { enum: ["email", "whatsapp"] }).notNull(),
+    canale: text("canale", { enum: ["email", "whatsapp", "chiamata"] }).notNull(),
     destinatarioUtenteId: integer("destinatario_utente_id"),
     destinatarioNome: text("destinatario_nome").notNull(),
     /** Indirizzo email o numero di cellulare. */

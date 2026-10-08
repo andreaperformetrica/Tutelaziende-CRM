@@ -15,5 +15,7 @@ export type CommentoPraticaBackofficeCanaleAvviso = typeof CommentoPraticaBackof
 export const CommentoPraticaBackofficeCanaleAvviso = {
   email: 'email',
   whatsapp: 'whatsapp',
+  chiamata: 'chiamata',
   entrambi: 'entrambi',
+  tutti: 'tutti',
 } as const;

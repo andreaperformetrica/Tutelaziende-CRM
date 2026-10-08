@@ -1,5 +1,6 @@
 /**
- * Servizio notifiche unico, con due canali: email (Resend) e WhatsApp (Twilio, template approvati).
+ * Servizio notifiche unico, con tre canali: email (Resend), WhatsApp (Twilio, template approvati) e
+ * chiamata vocale automatica (Twilio Voice, voce sintetica in italiano).
  *
  * Ogni notifica e' una riga del registro (`notifiche`). La riga nasce "in_coda" nella stessa transazione
  * dell'operazione che la genera (`accodaNotifiche`) e viene recapitata dopo il commit (`recapitaNotifiche`),
@@ -10,6 +11,7 @@
  *  - email:    RESEND_API_KEY, NOTIFICHE_EMAIL_MITTENTE (es. "Tutela <notifiche@tuodominio.it>")
  *  - WhatsApp: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_DA (numero mittente),
  *              TWILIO_WHATSAPP_TEMPLATE_SID (Content SID del template approvato)
+ *  - chiamata: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN (gli stessi di WhatsApp), TWILIO_CHIAMATA_DA (numero mittente)
  *  - link:     URL_PIATTAFORMA (indirizzo pubblico della piattaforma; in sviluppo si usa il dominio dell'ambiente)
  */
 import { and, eq, inArray, isNull, lt, sql } from "drizzle-orm";
@@ -17,7 +19,7 @@ import { db, notificheTable, type NotificaRow } from "@workspace/db";
 import type { Executor } from "./log";
 import { logger } from "./logger";
 
-export type CanaleNotifica = "email" | "whatsapp";
+export type CanaleNotifica = "email" | "whatsapp" | "chiamata";
 
 export const EVENTI_NOTIFICA = {
   pratica_inviata_sede: "Pratica inviata (alla sede)",
@@ -41,6 +43,12 @@ export const ESITI_NOTIFICA = {
  * Mai tipo di pratica ne' dati dell'assistito.
  */
 export const TESTO_TEMPLATE_WHATSAPP = "Buongiorno {{nome}}, c'è un aggiornamento sulla pratica n. {{numero}}. Accedi alla piattaforma: {{link}}";
+
+/**
+ * Testo letto dalla chiamata automatica. Come per WhatsApp: mai tipo di pratica ne' dati dell'assistito,
+ * solo il numero della pratica.
+ */
+export const TESTO_CHIAMATA = "Buongiorno {{nome}}, la chiamiamo da Tutela. C'è un aggiornamento sulla pratica numero {{numero}}. Acceda alla piattaforma per leggerlo. Grazie e buona giornata.";
 
 const TIMEOUT_MS = 10_000;
 
@@ -73,13 +81,19 @@ const valore = (nome: string): string | null => {
 };
 
 const CHIAVI_EMAIL = ["RESEND_API_KEY", "NOTIFICHE_EMAIL_MITTENTE"] as const;
+const CHIAVI_CHIAMATA = ["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_CHIAMATA_DA"] as const;
 const CHIAVI_WHATSAPP = ["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_WHATSAPP_DA", "TWILIO_WHATSAPP_TEMPLATE_SID"] as const;
 
 export function statoCanali(): Record<CanaleNotifica, { attivo: boolean; mancanti: string[] }> {
   const mancanti = (chiavi: readonly string[]) => chiavi.filter((k) => !valore(k));
   const e = mancanti(CHIAVI_EMAIL);
   const w = mancanti(CHIAVI_WHATSAPP);
-  return { email: { attivo: e.length === 0, mancanti: e }, whatsapp: { attivo: w.length === 0, mancanti: w } };
+  const c = mancanti(CHIAVI_CHIAMATA);
+  return {
+    email: { attivo: e.length === 0, mancanti: e },
+    whatsapp: { attivo: w.length === 0, mancanti: w },
+    chiamata: { attivo: c.length === 0, mancanti: c },
+  };
 }
 
 export function urlPiattaforma(percorso = "/"): string {
@@ -93,7 +107,11 @@ export function urlPiattaforma(percorso = "/"): string {
 // Coda (nella transazione dell'operazione)
 // ---------------------------------------------------------------------------------------------
 
-const MOTIVO_SENZA_RECAPITO = { email: "Il destinatario non ha un indirizzo email.", whatsapp: "Il destinatario non ha un numero di cellulare." } as const;
+const MOTIVO_SENZA_RECAPITO = {
+  email: "Il destinatario non ha un indirizzo email.",
+  whatsapp: "Il destinatario non ha un numero di cellulare.",
+  chiamata: "Il destinatario non ha un numero di cellulare.",
+} as const;
 
 /** Scrive le righe del registro. Restituisce gli id da passare a `recapitaNotifiche` dopo il commit. */
 export async function accodaNotifiche(executor: Executor, r: RichiestaNotifica): Promise<number[]> {
@@ -110,9 +128,12 @@ export async function accodaNotifiche(executor: Executor, r: RichiestaNotifica):
         numeroPratica: r.pratica?.numero ?? null,
       };
       const contatto = canale === "email" ? d.email : d.cellulare;
-      if (canale === "whatsapp" && !r.pratica) continue; // il template WhatsApp parla sempre di una pratica
-      const variabili = canale === "whatsapp" ? { nome: d.nome, numero: String(r.pratica!.numero), link } : null;
-      const testo = canale === "email" ? r.testoEmail(d, link) : riempiTemplate(variabili!);
+      if (canale !== "email" && !r.pratica) continue; // WhatsApp e chiamata parlano sempre di una pratica
+      const variabili: Record<string, string> | null =
+        canale === "whatsapp" ? { nome: d.nome, numero: String(r.pratica!.numero), link }
+        : canale === "chiamata" ? { nome: d.nome, numero: String(r.pratica!.numero) }
+        : null;
+      const testo = canale === "email" ? r.testoEmail(d, link) : riempiTemplate(canale === "whatsapp" ? TESTO_TEMPLATE_WHATSAPP : TESTO_CHIAMATA, variabili!);
       righe.push({
         ...base,
         destinatarioContatto: contatto ?? "—",
@@ -128,8 +149,8 @@ export async function accodaNotifiche(executor: Executor, r: RichiestaNotifica):
   return inserite.filter((x) => x.esito === "in_coda").map((x) => x.id);
 }
 
-function riempiTemplate(v: Record<string, string>): string {
-  return TESTO_TEMPLATE_WHATSAPP.replace(/\{\{(\w+)\}\}/g, (_, k: string) => v[k] ?? "");
+function riempiTemplate(modello: string, v: Record<string, string>): string {
+  return modello.replace(/\{\{(\w+)\}\}/g, (_, k: string) => v[k] ?? "");
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -204,6 +225,27 @@ async function inviaWhatsapp(n: NotificaRow): Promise<EsitoInvio> {
   return { esito: "inviata", dettaglio: null, idEsterno: j.sid ?? null };
 }
 
+async function inviaChiamata(n: NotificaRow): Promise<EsitoInvio> {
+  const { attivo, mancanti } = statoCanali().chiamata;
+  if (!attivo) return { esito: "non_inviata", dettaglio: `Chiavi chiamata mancanti: ${mancanti.join(", ")}.` };
+  const sid = valore("TWILIO_ACCOUNT_SID")!;
+  // Il testo letto e' quello registrato: voce sintetica italiana.
+  const twiml = `<Response><Say language="it-IT" voice="Polly.Bianca">${escapeHtml(n.testo)}</Say></Response>`;
+  const corpo = new URLSearchParams({ From: valore("TWILIO_CHIAMATA_DA")!, To: n.destinatarioContatto, Twiml: twiml });
+  const r = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Calls.json`, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${Buffer.from(`${sid}:${valore("TWILIO_AUTH_TOKEN")}`).toString("base64")}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: corpo,
+    signal: AbortSignal.timeout(TIMEOUT_MS),
+  });
+  if (!r.ok) return { esito: "errore", dettaglio: await leggiErrore(r) };
+  const j = (await r.json().catch(() => ({}))) as { sid?: string };
+  return { esito: "inviata", dettaglio: null, idEsterno: j.sid ?? null };
+}
+
 /** Recapita le notifiche in coda. Non lancia mai errori: l'esito di ognuna finisce nel registro. */
 export async function recapitaNotifiche(ids: number[]): Promise<void> {
   if (ids.length === 0) return;
@@ -217,7 +259,7 @@ export async function recapitaNotifiche(ids: number[]): Promise<void> {
     for (const n of righe) {
       let e: EsitoInvio;
       try {
-        e = n.canale === "email" ? await inviaEmail(n) : await inviaWhatsapp(n);
+        e = n.canale === "email" ? await inviaEmail(n) : n.canale === "chiamata" ? await inviaChiamata(n) : await inviaWhatsapp(n);
       } catch (err) {
         e = { esito: "errore", dettaglio: troncato(err instanceof Error ? err.message : "Errore di rete") };
       }

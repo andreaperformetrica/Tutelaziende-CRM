@@ -8,7 +8,16 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { collaboratoriTable, personeTable, utentiTable } from "@workspace/db";
 import type { Executor } from "./log";
-import { accodaNotifiche, type DestinatarioNotifica } from "./notifiche";
+import { accodaNotifiche, type CanaleNotifica, type DestinatarioNotifica } from "./notifiche";
+
+export type CanaleAvviso = "email" | "whatsapp" | "chiamata" | "entrambi" | "tutti";
+const CANALI_AVVISO: Record<CanaleAvviso, CanaleNotifica[]> = {
+  email: ["email"],
+  whatsapp: ["whatsapp"],
+  chiamata: ["chiamata"],
+  entrambi: ["email", "whatsapp"],
+  tutti: ["email", "whatsapp", "chiamata"],
+};
 
 type Ruolo = "super_admin" | "admin" | "operatore";
 interface PraticaNotifica {
@@ -81,13 +90,13 @@ export async function notificaPraticaInviata(ex: Executor, p: PraticaNotifica): 
 }
 
 /** 2. Nuovo commento dell'operatore: alla sede, sul canale scelto dall'operatore. */
-export async function notificaCommentoUfficio(ex: Executor, p: PraticaNotifica, canale: "email" | "whatsapp" | "entrambi"): Promise<number[]> {
+export async function notificaCommentoUfficio(ex: Executor, p: PraticaNotifica, canale: CanaleAvviso): Promise<number[]> {
   const sede = await caricaSede(ex, p.collaboratoreId);
   if (!sede) return [];
   return accodaNotifiche(ex, {
     evento: "commento_ufficio",
     destinatari: [sede],
-    canali: canale === "entrambi" ? ["email", "whatsapp"] : [canale],
+    canali: CANALI_AVVISO[canale],
     pratica: { id: p.id, numero: p.numero },
     percorso: `/collaboratore/pratiche/${p.id}`,
     oggetto: `Aggiornamento sulla pratica n. ${p.numero}`,

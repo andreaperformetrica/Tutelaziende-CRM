@@ -25,6 +25,7 @@ router.get("/notifiche/stato", (_req, res) => {
   res.json({
     email: s.email,
     whatsapp: s.whatsapp,
+    chiamata: s.chiamata,
     eventi: Object.entries(EVENTI_NOTIFICA).map(([codice, e]) => ({ codice, etichetta: e })),
     esiti: Object.entries(ESITI_NOTIFICA).map(([codice, e]) => ({ codice, etichetta: e })),
   });

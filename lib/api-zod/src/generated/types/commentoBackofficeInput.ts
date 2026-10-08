@@ -9,6 +9,6 @@ import type { CommentoBackofficeInputCanale } from './commentoBackofficeInputCan
 
 export interface CommentoBackofficeInput {
   testo: string;
-  /** Canale con cui avvisare la sede (notifica senza il testo del commento) */
+  /** Canale con cui avvisare la sede (notifica senza il testo del commento). entrambi = email e WhatsApp; tutti = email, WhatsApp e chiamata */
   canale: CommentoBackofficeInputCanale;
 }

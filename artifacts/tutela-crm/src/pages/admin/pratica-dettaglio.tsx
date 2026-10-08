@@ -6,7 +6,7 @@ import {
   useGetFiltriPraticheBackoffice, useGetPraticaBackoffice, useListCategorieAllegato, usePrendiInCaricoPratica,
   type DocumentoPratica, type PraticaBackoffice,
 } from "@workspace/api-client-react";
-import { AlertTriangle, ArrowLeft, Download, Eye, FileText, HandHelping, Loader2, Mail, MessageCircle, Paperclip, Send, Trash2, Upload, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Download, Eye, FileText, HandHelping, Loader2, Mail, MessageCircle, Paperclip, Phone, Send, Trash2, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -24,11 +24,13 @@ import {
   ErroreUpload, FORMATI_DOCUMENTI, formatoDimensione, inviaFile, urlDocumentoBackoffice, urlMandatoBackoffice,
 } from "@/lib/upload";
 
-type Canale = "email" | "whatsapp" | "entrambi";
+type Canale = "email" | "whatsapp" | "chiamata" | "entrambi" | "tutti";
 const CANALI: { value: Canale; label: string }[] = [
   { value: "email", label: "Email" },
   { value: "whatsapp", label: "WhatsApp" },
+  { value: "chiamata", label: "Chiamata automatica" },
   { value: "entrambi", label: "Email e WhatsApp" },
+  { value: "tutti", label: "Email, WhatsApp e chiamata" },
 ];
 const etichettaCanale = (c: string | null | undefined) => CANALI.find((x) => x.value === c)?.label ?? "";
 
@@ -265,7 +267,7 @@ export default function PraticaDettaglioBackoffice() {
                 <SelectTrigger id="canale-avviso" className="mt-1 w-52 bg-card" data-testid="select-canale"><SelectValue /></SelectTrigger>
                 <SelectContent>{CANALI.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
               </Select>
-              <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">{canale !== "whatsapp" && <Mail className="size-3" />}{canale !== "email" && <MessageCircle className="size-3" />} La sede riceve un avviso con il numero della pratica e il link, senza il testo del commento.</p>
+              <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">{["email", "entrambi", "tutti"].includes(canale) && <Mail className="size-3" />}{["whatsapp", "entrambi", "tutti"].includes(canale) && <MessageCircle className="size-3" />}{["chiamata", "tutti"].includes(canale) && <Phone className="size-3" />} {canale === "chiamata" ? "La sede riceve una telefonata automatica che indica solo il numero della pratica." : "La sede riceve un avviso con il numero della pratica, senza il testo del commento."}</p>
             </div>
             <Button disabled={!testo.trim() || commenta.isPending} data-testid="button-invia-commento"
               onClick={() => { setErrore(null); commenta.mutate({ id, data: { testo, canale } }, { onSuccess: (n) => { aggiorna(n); setTesto(""); }, onError: fallita }); }}>

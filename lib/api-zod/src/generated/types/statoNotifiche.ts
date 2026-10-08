@@ -11,6 +11,7 @@ import type { StatoCanaleNotifiche } from './statoCanaleNotifiche';
 export interface StatoNotifiche {
   email: StatoCanaleNotifiche;
   whatsapp: StatoCanaleNotifiche;
+  chiamata: StatoCanaleNotifiche;
   eventi: EtichettaFiltroNotifiche[];
   esiti: EtichettaFiltroNotifiche[];
 }

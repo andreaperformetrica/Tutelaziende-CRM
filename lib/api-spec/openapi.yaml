@@ -592,7 +592,7 @@ paths:
           required: false
           schema:
             type: string
-            enum: [email, whatsapp]
+            enum: [email, whatsapp, chiamata]
         - name: esito
           in: query
           required: false
@@ -2129,7 +2129,7 @@ components:
         elaboratoIl: { type: [string, "null"], description: Istante del tentativo di invio }
         evento: { type: string }
         eventoEtichetta: { type: string }
-        canale: { type: string, enum: [email, whatsapp] }
+        canale: { type: string, enum: [email, whatsapp, chiamata] }
         destinatarioNome: { type: string }
         destinatarioContatto: { type: string }
         praticaId: { type: [integer, "null"] }
@@ -2164,10 +2164,11 @@ components:
         etichetta: { type: string }
     StatoNotifiche:
       type: object
-      required: [email, whatsapp, eventi, esiti]
+      required: [email, whatsapp, chiamata, eventi, esiti]
       properties:
         email: { $ref: "#/components/schemas/StatoCanaleNotifiche" }
         whatsapp: { $ref: "#/components/schemas/StatoCanaleNotifiche" }
+        chiamata: { $ref: "#/components/schemas/StatoCanaleNotifiche" }
         eventi:
           type: array
           items: { $ref: "#/components/schemas/EtichettaFiltroNotifiche" }
@@ -2567,7 +2568,7 @@ components:
       required: [testo, canale]
       properties:
         testo: { type: string }
-        canale: { type: string, enum: [email, whatsapp, entrambi], description: "Canale con cui avvisare la sede (notifica senza il testo del commento)" }
+        canale: { type: string, enum: [email, whatsapp, chiamata, entrambi, tutti], description: "Canale con cui avvisare la sede (notifica senza il testo del commento). entrambi = email e WhatsApp; tutti = email, WhatsApp e chiamata" }
     OperatorePratica:
       type: object
       required: [id, nome, cognome]
@@ -2655,7 +2656,7 @@ components:
         autore: { type: string }
         ruolo: { type: string, enum: [super_admin, admin, operatore, collaboratore] }
         creatoIl: { type: string, format: date-time }
-        canaleAvviso: { type: [string, "null"], enum: [email, whatsapp, entrambi, null] }
+        canaleAvviso: { type: [string, "null"], enum: [email, whatsapp, chiamata, entrambi, tutti, null] }
         mio: { type: boolean }
     EventoCronologiaPratica:
       type: object

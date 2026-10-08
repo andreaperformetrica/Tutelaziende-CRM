@@ -21,7 +21,7 @@ const utenteAutore = alias(utentiTable, "utente_autore_bo");
 
 export const NOME_STATO_BOZZA = "bozza";
 
-export const ETICHETTA_CANALE = { email: "email", whatsapp: "WhatsApp", entrambi: "email e WhatsApp" } as const;
+export const ETICHETTA_CANALE = { email: "email", whatsapp: "WhatsApp", chiamata: "chiamata", entrambi: "email e WhatsApp", tutti: "email, WhatsApp e chiamata" } as const;
 
 /** Vero se il collaboratore ha fatto qualcosa a cui il back office non ha ancora risposto. */
 export const aggiornataSql = sql`(${praticheTable.ultimaAttivitaCollaboratoreIl} is not null and (${praticheTable.ultimaAttivitaBackofficeIl} is null or ${praticheTable.ultimaAttivitaCollaboratoreIl} > ${praticheTable.ultimaAttivitaBackofficeIl}))`;

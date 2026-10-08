@@ -495,6 +495,7 @@ export type NotificaCanale = typeof NotificaCanale[keyof typeof NotificaCanale];
 export const NotificaCanale = {
   email: 'email',
   whatsapp: 'whatsapp',
+  chiamata: 'chiamata',
 } as const;
 
 export type NotificaEsito = typeof NotificaEsito[keyof typeof NotificaEsito];
@@ -556,6 +557,7 @@ export interface EtichettaFiltroNotifiche {
 export interface StatoNotifiche {
   email: StatoCanaleNotifiche;
   whatsapp: StatoCanaleNotifiche;
+  chiamata: StatoCanaleNotifiche;
   eventi: EtichettaFiltroNotifiche[];
   esiti: EtichettaFiltroNotifiche[];
 }
@@ -904,7 +906,7 @@ export interface CambioStatoInput {
 }
 
 /**
- * Canale con cui avvisare la sede (notifica senza il testo del commento)
+ * Canale con cui avvisare la sede (notifica senza il testo del commento). entrambi = email e WhatsApp; tutti = email, WhatsApp e chiamata
  */
 export type CommentoBackofficeInputCanale = typeof CommentoBackofficeInputCanale[keyof typeof CommentoBackofficeInputCanale];
 
@@ -912,12 +914,14 @@ export type CommentoBackofficeInputCanale = typeof CommentoBackofficeInputCanale
 export const CommentoBackofficeInputCanale = {
   email: 'email',
   whatsapp: 'whatsapp',
+  chiamata: 'chiamata',
   entrambi: 'entrambi',
+  tutti: 'tutti',
 } as const;
 
 export interface CommentoBackofficeInput {
   testo: string;
-  /** Canale con cui avvisare la sede (notifica senza il testo del commento) */
+  /** Canale con cui avvisare la sede (notifica senza il testo del commento). entrambi = email e WhatsApp; tutti = email, WhatsApp e chiamata */
   canale: CommentoBackofficeInputCanale;
 }
 
@@ -990,7 +994,9 @@ export type CommentoPraticaBackofficeCanaleAvviso = typeof CommentoPraticaBackof
 export const CommentoPraticaBackofficeCanaleAvviso = {
   email: 'email',
   whatsapp: 'whatsapp',
+  chiamata: 'chiamata',
   entrambi: 'entrambi',
+  tutti: 'tutti',
 } as const;
 
 export interface CommentoPraticaBackoffice {
@@ -1182,6 +1188,7 @@ export type ListNotificheCanale = typeof ListNotificheCanale[keyof typeof ListNo
 export const ListNotificheCanale = {
   email: 'email',
   whatsapp: 'whatsapp',
+  chiamata: 'chiamata',
 } as const;
 
 export type ListNotificheEsito = typeof ListNotificheEsito[keyof typeof ListNotificheEsito];

@@ -12,4 +12,5 @@ export type ListNotificheCanale = typeof ListNotificheCanale[keyof typeof ListNo
 export const ListNotificheCanale = {
   email: 'email',
   whatsapp: 'whatsapp',
+  chiamata: 'chiamata',
 } as const;

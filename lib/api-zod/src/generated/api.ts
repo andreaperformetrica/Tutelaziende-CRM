@@ -1036,7 +1036,7 @@ export const listNotificheQueryPerPaginaMax = 200;
 
 
 export const ListNotificheQueryParams = zod.object({
-  "canale": zod.enum(['email', 'whatsapp']).optional(),
+  "canale": zod.enum(['email', 'whatsapp', 'chiamata']).optional(),
   "esito": zod.enum(['in_coda', 'inviata', 'non_inviata', 'errore']).optional(),
   "evento": zod.coerce.string().optional(),
   "da": zod.coerce.string().optional().describe('Data iniziale (AAAA-MM-GG, fuso Europe/Rome), inclusa'),
@@ -1052,7 +1052,7 @@ export const ListNotificheResponse = zod.object({
   "elaboratoIl": zod.string().nullable().describe('Istante del tentativo di invio'),
   "evento": zod.string(),
   "eventoEtichetta": zod.string(),
-  "canale": zod.enum(['email', 'whatsapp']),
+  "canale": zod.enum(['email', 'whatsapp', 'chiamata']),
   "destinatarioNome": zod.string(),
   "destinatarioContatto": zod.string(),
   "praticaId": zod.number().int().nullable(),
@@ -1078,6 +1078,10 @@ export const GetStatoNotificheResponse = zod.object({
   "mancanti": zod.array(zod.string()).describe('Nomi dei Secrets mancanti')
 }),
   "whatsapp": zod.object({
+  "attivo": zod.boolean().describe('Vero se le chiavi sono presenti e i messaggi partono davvero'),
+  "mancanti": zod.array(zod.string()).describe('Nomi dei Secrets mancanti')
+}),
+  "chiamata": zod.object({
   "attivo": zod.boolean().describe('Vero se le chiavi sono presenti e i messaggi partono davvero'),
   "mancanti": zod.array(zod.string()).describe('Nomi dei Secrets mancanti')
 }),
@@ -2617,7 +2621,7 @@ export const GetPraticaBackofficeResponse = zod.object({
   "autore": zod.string(),
   "ruolo": zod.enum(['super_admin', 'admin', 'operatore', 'collaboratore']),
   "creatoIl": zod.coerce.date(),
-  "canaleAvviso": zod.union([zod.literal('email'),zod.literal('whatsapp'),zod.literal('entrambi'),zod.literal(null)]).nullable(),
+  "canaleAvviso": zod.union([zod.literal('email'),zod.literal('whatsapp'),zod.literal('chiamata'),zod.literal('entrambi'),zod.literal('tutti'),zod.literal(null)]).nullable(),
   "mio": zod.boolean()
 })),
   "cronologia": zod.array(zod.object({
@@ -2745,7 +2749,7 @@ export const PrendiInCaricoPraticaResponse = zod.object({
   "autore": zod.string(),
   "ruolo": zod.enum(['super_admin', 'admin', 'operatore', 'collaboratore']),
   "creatoIl": zod.coerce.date(),
-  "canaleAvviso": zod.union([zod.literal('email'),zod.literal('whatsapp'),zod.literal('entrambi'),zod.literal(null)]).nullable(),
+  "canaleAvviso": zod.union([zod.literal('email'),zod.literal('whatsapp'),zod.literal('chiamata'),zod.literal('entrambi'),zod.literal('tutti'),zod.literal(null)]).nullable(),
   "mio": zod.boolean()
 })),
   "cronologia": zod.array(zod.object({
@@ -2867,7 +2871,7 @@ export const CambiaStatoPraticaResponse = zod.object({
   "autore": zod.string(),
   "ruolo": zod.enum(['super_admin', 'admin', 'operatore', 'collaboratore']),
   "creatoIl": zod.coerce.date(),
-  "canaleAvviso": zod.union([zod.literal('email'),zod.literal('whatsapp'),zod.literal('entrambi'),zod.literal(null)]).nullable(),
+  "canaleAvviso": zod.union([zod.literal('email'),zod.literal('whatsapp'),zod.literal('chiamata'),zod.literal('entrambi'),zod.literal('tutti'),zod.literal(null)]).nullable(),
   "mio": zod.boolean()
 })),
   "cronologia": zod.array(zod.object({
@@ -2898,7 +2902,7 @@ export const CreateCommentoPraticaBackofficeParams = zod.object({
 
 export const CreateCommentoPraticaBackofficeBody = zod.object({
   "testo": zod.string(),
-  "canale": zod.enum(['email', 'whatsapp', 'entrambi']).describe('Canale con cui avvisare la sede (notifica senza il testo del commento)')
+  "canale": zod.enum(['email', 'whatsapp', 'chiamata', 'entrambi', 'tutti']).describe('Canale con cui avvisare la sede (notifica senza il testo del commento). entrambi = email e WhatsApp; tutti = email, WhatsApp e chiamata')
 })
 
 export const CreateCommentoPraticaBackofficeResponse = zod.object({
@@ -2990,7 +2994,7 @@ export const CreateCommentoPraticaBackofficeResponse = zod.object({
   "autore": zod.string(),
   "ruolo": zod.enum(['super_admin', 'admin', 'operatore', 'collaboratore']),
   "creatoIl": zod.coerce.date(),
-  "canaleAvviso": zod.union([zod.literal('email'),zod.literal('whatsapp'),zod.literal('entrambi'),zod.literal(null)]).nullable(),
+  "canaleAvviso": zod.union([zod.literal('email'),zod.literal('whatsapp'),zod.literal('chiamata'),zod.literal('entrambi'),zod.literal('tutti'),zod.literal(null)]).nullable(),
   "mio": zod.boolean()
 })),
   "cronologia": zod.array(zod.object({

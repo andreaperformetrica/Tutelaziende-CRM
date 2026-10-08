@@ -91,7 +91,7 @@ export const commentiPraticaTable = pgTable(
       .references(() => utentiTable.id),
     testo: text("testo").notNull(),
     /** Canale scelto dall'operatore per avvisare la sede (l'invio vero arriva con le notifiche). Vuoto per i commenti del collaboratore. */
-    canaleAvviso: text("canale_avviso", { enum: ["email", "whatsapp", "entrambi"] }),
+    canaleAvviso: text("canale_avviso", { enum: ["email", "whatsapp", "chiamata", "entrambi", "tutti"] }),
     creatoIl: timestamp("creato_il", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("commenti_pratica_pratica_idx").on(t.praticaId)],
