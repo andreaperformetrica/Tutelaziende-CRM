@@ -1,6 +1,7 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 import { inizializzaConfigurazionePratiche } from "./lib/configurazione-iniziale";
+import { recapitaNotificheRimaste } from "./lib/notifiche";
 
 const rawPort = process.env["PORT"];
 
@@ -22,6 +23,8 @@ try {
 } catch (err) {
   logger.error({ err }, "Impossibile inizializzare la configurazione delle pratiche");
 }
+
+recapitaNotificheRimaste().catch((err) => logger.error({ err }, "Impossibile recapitare le notifiche rimaste in coda"));
 
 app.listen(port, (err) => {
   if (err) {

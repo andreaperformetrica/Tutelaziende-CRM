@@ -6,3 +6,4 @@ export * from "./assistiti";
 export * from "./segnalazioni";
 export * from "./configurazione-pratiche";
 export * from "./pratiche";
+export * from "./notifiche";

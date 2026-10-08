@@ -4,3 +4,4 @@
 - [Phase 3 pratiche config decisions](tutela-crm-phase3-decisions.md) — storage module, orari hook for phase 4, stati/tipi rules, permissions
 - [Phase 4 pratiche opening decisions](tutela-crm-phase4-decisions.md) — ownership, mandato via assignment, initial stato, post-send locks, orari check order
 - [Phase 5 back-office pratiche decisions](tutela-crm-phase5-decisions.md) — aggiornata/lavorate meaning, città, takeover, canale only saved, who deletes
+- [Phase 6 notifications decisions](tutela-crm-phase6-decisions.md) — Resend + Twilio template, secret names, recipients, privacy rule, outbox-style delivery

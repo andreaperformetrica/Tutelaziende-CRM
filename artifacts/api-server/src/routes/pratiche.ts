@@ -47,6 +47,8 @@ import {
 } from "../lib/pratiche";
 import { DIMENSIONE_MASSIMA_FILE, eliminaFile, leggiFile, salvaFile, validaFile } from "../lib/storage";
 import { statoInvioPratiche } from "../lib/orari";
+import { notificaPraticaInviata, notificaRispostaSede } from "../lib/notifiche-eventi";
+import { recapitaInBackground } from "../lib/notifiche";
 import { valida } from "../lib/validazione";
 import { richiediRuolo } from "../middlewares/auth";
 import { inviaFile } from "./tipi-pratica";
@@ -329,7 +331,7 @@ router.post("/pratiche/:id/invio", async (req, res) => {
 
   const messaggio = pulisciMessaggio(b.messaggio ?? p.messaggio);
   const ora = new Date();
-  const numero = await db.transaction(async (tx) => {
+  const { numero, notifiche } = await db.transaction(async (tx) => {
     // Numeri progressivi senza buchi: l'assegnazione e' serializzata da un blocco di transazione.
     await tx.execute(sql`select pg_advisory_xact_lock(4001)`);
     const [m] = await tx.select({ max: sql<number>`coalesce(max(${praticheTable.numero}), 0)::int` }).from(praticheTable);
@@ -348,8 +350,10 @@ router.post("/pratiche/:id/invio", async (req, res) => {
       descrizione: `Inviata la pratica n. ${nuovo}: ${descrizionePratica(p)}`,
       dettagli: { numero: nuovo, statoId: iniziale.id, mandatoId: mandato?.id ?? null },
     });
-    return r.numero;
+    const notifiche = await notificaPraticaInviata(tx, { id, numero: nuovo, collaboratoreId: p.collaboratoreId });
+    return { numero: r.numero, notifiche };
   });
+  recapitaInBackground(notifiche);
   req.log.info({ praticaId: id, numero }, "Pratica inviata");
   res.json(await dettaglioPratica(req, id));
 });
@@ -361,7 +365,7 @@ router.post("/pratiche/:id/commenti", async (req, res) => {
   if (!p.inviataIl) throw ERRORE_PRATICA_BOZZA;
   const pulito = pulisciMessaggio(testo);
   if (!pulito) throw new HttpError(400, "Scrivi un messaggio.", "DATI_NON_VALIDI", "testo");
-  await db.transaction(async (tx) => {
+  const notifiche = await db.transaction(async (tx) => {
     const [c] = await tx.insert(commentiPraticaTable).values({ praticaId: id, utenteId: req.utente!.id, testo: pulito }).returning({ id: commentiPraticaTable.id });
     await tx.update(praticheTable).set({ ultimaAttivitaCollaboratoreIl: new Date() }).where(eq(praticheTable.id, id));
     await registraLog(tx, contestoDa(req), {
@@ -371,7 +375,9 @@ router.post("/pratiche/:id/commenti", async (req, res) => {
       descrizione: `Commento sulla pratica n. ${p.numero}: ${descrizionePratica(p)}`,
       dettagli: { commentoId: c!.id },
     });
+    return notificaRispostaSede(tx, { id, numero: p.numero!, collaboratoreId: p.collaboratoreId }, p.gestitaDaUtenteId);
   });
+  recapitaInBackground(notifiche);
   res.status(201).json(await dettaglioPratica(req, id));
 });
 

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetConteggioSegnalazioniQueryKey, useGetConteggioSegnalazioni, useLogout, type SessioneUtente } from "@workspace/api-client-react";
-import { Inbox, Paperclip, UserCheck, KeyRound, LogOut, ScrollText, ShieldCheck, Users, UsersRound, Home, Landmark, UserRound, TriangleAlert, FileText, FileSignature, ListOrdered, Clock } from "lucide-react";
+import { Inbox, Paperclip, UserCheck, KeyRound, LogOut, ScrollText, ShieldCheck, Users, UsersRound, Home, Landmark, UserRound, TriangleAlert, FileText, FileSignature, ListOrdered, Clock, Bell } from "lucide-react";
 import { iniziali, ruoloLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +37,7 @@ const VOCI = [
   { href: "/admin/categorie-allegato", label: "Categorie allegati", icon: Paperclip, roles: ["super_admin", "admin"], id: "categorie-allegato" },
   { href: "/admin/orari", label: "Orari di caricamento", icon: Clock, roles: ["super_admin", "admin"], id: "orari" },
   { href: "/admin/utenti", label: "Utenti interni", icon: Users, roles: ["super_admin", "admin"], id: "utenti" },
+  { href: "/admin/notifiche", label: "Registro notifiche", icon: Bell, roles: ["super_admin", "admin"], id: "notifiche" },
   { href: "/admin/log", label: "Log operazioni", icon: ScrollText, roles: ["super_admin", "admin"], id: "log" },
 ];
 

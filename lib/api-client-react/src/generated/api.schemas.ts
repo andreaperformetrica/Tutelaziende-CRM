@@ -489,6 +489,77 @@ export interface LogOperazioniPagina {
   perPagina: number;
 }
 
+export type NotificaCanale = typeof NotificaCanale[keyof typeof NotificaCanale];
+
+
+export const NotificaCanale = {
+  email: 'email',
+  whatsapp: 'whatsapp',
+} as const;
+
+export type NotificaEsito = typeof NotificaEsito[keyof typeof NotificaEsito];
+
+
+export const NotificaEsito = {
+  in_coda: 'in_coda',
+  inviata: 'inviata',
+  non_inviata: 'non_inviata',
+  errore: 'errore',
+} as const;
+
+export interface Notifica {
+  id: number;
+  /** Istante ISO 8601 */
+  creatoIl: string;
+  /**
+     * Istante del tentativo di invio
+     * @nullable
+     */
+  elaboratoIl: string | null;
+  evento: string;
+  eventoEtichetta: string;
+  canale: NotificaCanale;
+  destinatarioNome: string;
+  destinatarioContatto: string;
+  /** @nullable */
+  praticaId: number | null;
+  /** @nullable */
+  numeroPratica: number | null;
+  /** @nullable */
+  oggetto: string | null;
+  testo: string;
+  esito: NotificaEsito;
+  esitoEtichetta: string;
+  /** @nullable */
+  dettaglioEsito: string | null;
+}
+
+export interface NotifichePagina {
+  righe: Notifica[];
+  totale: number;
+  pagina: number;
+  perPagina: number;
+}
+
+export interface StatoCanaleNotifiche {
+  /** Vero se le chiavi sono presenti e i messaggi partono davvero */
+  attivo: boolean;
+  /** Nomi dei Secrets mancanti */
+  mancanti: string[];
+}
+
+export interface EtichettaFiltroNotifiche {
+  codice: string;
+  etichetta: string;
+}
+
+export interface StatoNotifiche {
+  email: StatoCanaleNotifiche;
+  whatsapp: StatoCanaleNotifiche;
+  eventi: EtichettaFiltroNotifiche[];
+  esiti: EtichettaFiltroNotifiche[];
+}
+
 export interface FiltroUtenteLog {
   id: number;
   nome: string;
@@ -833,7 +904,7 @@ export interface CambioStatoInput {
 }
 
 /**
- * Canale con cui avvisare la sede; l'invio vero arriva con le notifiche
+ * Canale con cui avvisare la sede (notifica senza il testo del commento)
  */
 export type CommentoBackofficeInputCanale = typeof CommentoBackofficeInputCanale[keyof typeof CommentoBackofficeInputCanale];
 
@@ -846,7 +917,7 @@ export const CommentoBackofficeInputCanale = {
 
 export interface CommentoBackofficeInput {
   testo: string;
-  /** Canale con cui avvisare la sede; l'invio vero arriva con le notifiche */
+  /** Canale con cui avvisare la sede (notifica senza il testo del commento) */
   canale: CommentoBackofficeInputCanale;
 }
 
@@ -1081,6 +1152,47 @@ pagina?: number;
  */
 perPagina?: number;
 };
+
+export type ListNotificheParams = {
+canale?: ListNotificheCanale;
+esito?: ListNotificheEsito;
+evento?: string;
+/**
+ * Data iniziale (AAAA-MM-GG, fuso Europe/Rome), inclusa
+ */
+da?: string;
+/**
+ * Data finale (AAAA-MM-GG, fuso Europe/Rome), inclusa
+ */
+a?: string;
+/**
+ * @minimum 1
+ */
+pagina?: number;
+/**
+ * @minimum 1
+ * @maximum 200
+ */
+perPagina?: number;
+};
+
+export type ListNotificheCanale = typeof ListNotificheCanale[keyof typeof ListNotificheCanale];
+
+
+export const ListNotificheCanale = {
+  email: 'email',
+  whatsapp: 'whatsapp',
+} as const;
+
+export type ListNotificheEsito = typeof ListNotificheEsito[keyof typeof ListNotificheEsito];
+
+
+export const ListNotificheEsito = {
+  in_coda: 'in_coda',
+  inviata: 'inviata',
+  non_inviata: 'non_inviata',
+  errore: 'errore',
+} as const;
 
 export type ListMandatiParams = {
 tipoPraticaId?: number;

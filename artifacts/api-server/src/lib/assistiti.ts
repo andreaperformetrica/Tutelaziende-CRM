@@ -11,6 +11,8 @@ import {
 } from "@workspace/db";
 import { HttpError, nonTrovato } from "./errori";
 import { contestoDa, registraLog, type Transazione } from "./log";
+import { recapitaInBackground } from "./notifiche";
+import { notificaAnagraficaDuplicata } from "./notifiche-eventi";
 import { CODICE_ITALIA } from "./luoghi";
 import type { AnagraficaNormalizzata } from "./persone";
 
@@ -215,7 +217,7 @@ async function registraSegnalazione(
   azione: "creare" | "modificare",
 ): Promise<void> {
   const u = req.utente!;
-  await db.transaction(async (tx) => {
+  const notifiche = await db.transaction(async (tx) => {
     const [aperta] = await tx
       .select({ id: segnalazioniDuplicatiTable.id, campi: segnalazioniDuplicatiTable.campi })
       .from(segnalazioniDuplicatiTable)
@@ -228,6 +230,7 @@ async function registraSegnalazione(
       )
       .for("update");
     let segnalazioneId: number;
+    let nuovaSegnalazione = false;
     if (aperta) {
       segnalazioneId = aperta.id;
       await tx
@@ -252,6 +255,7 @@ async function registraSegnalazione(
         })
         .returning({ id: segnalazioniDuplicatiTable.id });
       segnalazioneId = nuova!.id;
+      nuovaSegnalazione = true;
     }
     await registraLog(tx, contestoDa(req), {
       azione: "assistito.duplicato_segnalato",
@@ -262,7 +266,10 @@ async function registraSegnalazione(
         .join(" e ")} coincide con ${c.tipo === "collaboratore" ? "un collaboratore" : "un assistito"} gia registrato`,
       dettagli: { personaEsistenteId: c.personaId, tipo: c.tipo, campi: c.campi, assistitoId: c.assistitoId },
     });
+    // Gli admin ricevono l'avviso alla prima segnalazione, non a ogni nuovo tentativo sulla stessa persona.
+    return nuovaSegnalazione ? notificaAnagraficaDuplicata(tx, u.collaboratoreId!) : [];
   });
+  recapitaInBackground(notifiche);
 }
 
 /**

@@ -21,6 +21,7 @@ import CollaboratoreNuovo from '@/pages/admin/collaboratore-nuovo';
 import CollaboratoreDettaglioPage from '@/pages/admin/collaboratore-dettaglio';
 import UtentiPage from '@/pages/admin/utenti';
 import LogPage from '@/pages/admin/log';
+import NotifichePage from '@/pages/admin/notifiche';
 import AssistitiBackoffice from '@/pages/admin/assistiti';
 import AssistitoDettaglioBackoffice from '@/pages/admin/assistito-dettaglio';
 import PraticheBackoffice from '@/pages/admin/pratiche';
@@ -88,6 +89,7 @@ function Router() {
         <Route path="/admin/orari" component={g(<OrariPage />, 'backoffice', ADMIN)} />
         <Route path="/admin/utenti" component={g(<UtentiPage />, 'backoffice', ADMIN)} />
         <Route path="/admin/log" component={g(<LogPage />, 'backoffice', ADMIN)} />
+        <Route path="/admin/notifiche" component={g(<NotifichePage />, 'backoffice', ADMIN)} />
         <Route path="/collaboratore/assistiti" component={g(<AssistitiCollaboratore />, 'collaboratore', ['collaboratore'])} />
         <Route path="/collaboratore/assistiti/nuovo" component={g(<AssistitoNuovo />, 'collaboratore', ['collaboratore'])} />
         <Route path="/collaboratore/assistiti/:id" component={g(<AssistitoDettaglioCollaboratore />, 'collaboratore', ['collaboratore'])} />

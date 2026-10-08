@@ -9,6 +9,6 @@ import type { CommentoBackofficeInputCanale } from './commentoBackofficeInputCan
 
 export interface CommentoBackofficeInput {
   testo: string;
-  /** Canale con cui avvisare la sede; l'invio vero arriva con le notifiche */
+  /** Canale con cui avvisare la sede (notifica senza il testo del commento) */
   canale: CommentoBackofficeInputCanale;
 }

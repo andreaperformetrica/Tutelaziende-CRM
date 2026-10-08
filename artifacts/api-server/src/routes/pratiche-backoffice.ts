@@ -37,6 +37,8 @@ import {
   NOME_STATO_BOZZA,
 } from "../lib/pratiche-backoffice";
 import { DIMENSIONE_MASSIMA_FILE, eliminaFile, leggiFile, salvaFile, validaFile } from "../lib/storage";
+import { notificaCommentoUfficio } from "../lib/notifiche-eventi";
+import { recapitaInBackground } from "../lib/notifiche";
 import { valida } from "../lib/validazione";
 import { richiediRuolo } from "../middlewares/auth";
 import { inviaFile } from "./tipi-pratica";
@@ -223,7 +225,7 @@ router.post("/backoffice/pratiche/:id/commenti", async (req, res) => {
   const pulito = testo.replace(/\r\n/g, "\n").trim();
   if (!pulito) throw new HttpError(400, "Scrivi un messaggio.", "DATI_NON_VALIDI", "testo");
   if (pulito.length > MAX_MESSAGGIO) throw new HttpError(400, `Il messaggio può avere al massimo ${MAX_MESSAGGIO} caratteri.`, "DATI_NON_VALIDI", "testo");
-  await db.transaction(async (tx) => {
+  const notifiche = await db.transaction(async (tx) => {
     const [c] = await tx
       .insert(commentiPraticaTable)
       .values({ praticaId: id, utenteId: req.utente!.id, testo: pulito, canaleAvviso: canale })
@@ -237,7 +239,9 @@ router.post("/backoffice/pratiche/:id/commenti", async (req, res) => {
       descrizione: `Commento sulla pratica ${descrizionePraticaBo(p)} (avviso alla sede: ${ETICHETTA_CANALE[canale]})`,
       dettagli: { commentoId: c!.id, canale },
     });
+    return notificaCommentoUfficio(tx, { id, numero: p.numero!, collaboratoreId: p.collaboratoreId }, canale);
   });
+  recapitaInBackground(notifiche);
   res.status(201).json(await dettaglioBackoffice(req, id));
 });
 

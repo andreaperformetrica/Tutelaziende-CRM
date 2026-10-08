@@ -30,6 +30,8 @@ tags:
     description: Gestione delle pratiche nel back office (elenco, scheda, presa in carico, stati, commenti)
   - name: log
     description: Log delle operazioni
+  - name: notifiche
+    description: Registro delle notifiche email e WhatsApp. Solo admin e super admin
 paths:
   /healthz:
     get:
@@ -579,6 +581,73 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FiltriLog"
+  /notifiche:
+    get:
+      operationId: listNotifiche
+      tags: [notifiche]
+      summary: Registro delle notifiche, dalla piu recente
+      parameters:
+        - name: canale
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [email, whatsapp]
+        - name: esito
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [in_coda, inviata, non_inviata, errore]
+        - name: evento
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: da
+          in: query
+          required: false
+          description: Data iniziale (AAAA-MM-GG, fuso Europe/Rome), inclusa
+          schema:
+            type: string
+        - name: a
+          in: query
+          required: false
+          description: Data finale (AAAA-MM-GG, fuso Europe/Rome), inclusa
+          schema:
+            type: string
+        - name: pagina
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+        - name: perPagina
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+      responses:
+        "200":
+          description: Pagina del registro
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotifichePagina"
+  /notifiche/stato:
+    get:
+      operationId: getStatoNotifiche
+      tags: [notifiche]
+      summary: Stato dei canali (invio reale attivo oppure solo registrazione) e valori dei filtri
+      responses:
+        "200":
+          description: Stato dei canali
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatoNotifiche"
   # I caricamenti di file non sono nella specifica (corpo binario): POST /mandati/file, PUT /mandati/{id}/file, POST /tipi-pratica/{id}/moduli/file,
   # PUT /moduli-tipo/{id}/file, e i download GET /moduli-tipo/{id}/file e GET /mandati/{id}/file.
   /tipi-pratica:
@@ -2051,6 +2120,60 @@ components:
           type: integer
         perPagina:
           type: integer
+    Notifica:
+      type: object
+      required: [id, creatoIl, elaboratoIl, evento, eventoEtichetta, canale, destinatarioNome, destinatarioContatto, praticaId, numeroPratica, oggetto, testo, esito, esitoEtichetta, dettaglioEsito]
+      properties:
+        id: { type: integer }
+        creatoIl: { type: string, description: Istante ISO 8601 }
+        elaboratoIl: { type: [string, "null"], description: Istante del tentativo di invio }
+        evento: { type: string }
+        eventoEtichetta: { type: string }
+        canale: { type: string, enum: [email, whatsapp] }
+        destinatarioNome: { type: string }
+        destinatarioContatto: { type: string }
+        praticaId: { type: [integer, "null"] }
+        numeroPratica: { type: [integer, "null"] }
+        oggetto: { type: [string, "null"] }
+        testo: { type: string }
+        esito: { type: string, enum: [in_coda, inviata, non_inviata, errore] }
+        esitoEtichetta: { type: string }
+        dettaglioEsito: { type: [string, "null"] }
+    NotifichePagina:
+      type: object
+      required: [righe, totale, pagina, perPagina]
+      properties:
+        righe:
+          type: array
+          items:
+            $ref: "#/components/schemas/Notifica"
+        totale: { type: integer }
+        pagina: { type: integer }
+        perPagina: { type: integer }
+    StatoCanaleNotifiche:
+      type: object
+      required: [attivo, mancanti]
+      properties:
+        attivo: { type: boolean, description: "Vero se le chiavi sono presenti e i messaggi partono davvero" }
+        mancanti: { type: array, items: { type: string }, description: Nomi dei Secrets mancanti }
+    EtichettaFiltroNotifiche:
+      type: object
+      required: [codice, etichetta]
+      properties:
+        codice: { type: string }
+        etichetta: { type: string }
+    StatoNotifiche:
+      type: object
+      required: [email, whatsapp, eventi, esiti]
+      properties:
+        email: { $ref: "#/components/schemas/StatoCanaleNotifiche" }
+        whatsapp: { $ref: "#/components/schemas/StatoCanaleNotifiche" }
+        eventi:
+          type: array
+          items: { $ref: "#/components/schemas/EtichettaFiltroNotifiche" }
+        esiti:
+          type: array
+          items: { $ref: "#/components/schemas/EtichettaFiltroNotifiche" }
     FiltroUtenteLog:
       type: object
       required: [id, nome, ruolo]
@@ -2444,7 +2567,7 @@ components:
       required: [testo, canale]
       properties:
         testo: { type: string }
-        canale: { type: string, enum: [email, whatsapp, entrambi], description: "Canale con cui avvisare la sede; l'invio vero arriva con le notifiche" }
+        canale: { type: string, enum: [email, whatsapp, entrambi], description: "Canale con cui avvisare la sede (notifica senza il testo del commento)" }
     OperatorePratica:
       type: object
       required: [id, nome, cognome]

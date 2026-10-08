@@ -265,7 +265,7 @@ export default function PraticaDettaglioBackoffice() {
                 <SelectTrigger id="canale-avviso" className="mt-1 w-52 bg-card" data-testid="select-canale"><SelectValue /></SelectTrigger>
                 <SelectContent>{CANALI.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
               </Select>
-              <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">{canale !== "whatsapp" && <Mail className="size-3" />}{canale !== "email" && <MessageCircle className="size-3" />} Per ora la scelta viene solo registrata: l'avviso non parte ancora.</p>
+              <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">{canale !== "whatsapp" && <Mail className="size-3" />}{canale !== "email" && <MessageCircle className="size-3" />} La sede riceve un avviso con il numero della pratica e il link, senza il testo del commento.</p>
             </div>
             <Button disabled={!testo.trim() || commenta.isPending} data-testid="button-invia-commento"
               onClick={() => { setErrore(null); commenta.mutate({ id, data: { testo, canale } }, { onSuccess: (n) => { aggiorna(n); setTesto(""); }, onError: fallita }); }}>

@@ -1028,6 +1028,71 @@ export const GetFiltriLogResponse = zod.object({
 
 
 /**
+ * @summary Registro delle notifiche, dalla piu recente
+ */
+
+export const listNotificheQueryPerPaginaMax = 200;
+
+
+
+export const ListNotificheQueryParams = zod.object({
+  "canale": zod.enum(['email', 'whatsapp']).optional(),
+  "esito": zod.enum(['in_coda', 'inviata', 'non_inviata', 'errore']).optional(),
+  "evento": zod.coerce.string().optional(),
+  "da": zod.coerce.string().optional().describe('Data iniziale (AAAA-MM-GG, fuso Europe/Rome), inclusa'),
+  "a": zod.coerce.string().optional().describe('Data finale (AAAA-MM-GG, fuso Europe/Rome), inclusa'),
+  "pagina": zod.coerce.number().int().min(1).optional(),
+  "perPagina": zod.coerce.number().int().min(1).max(listNotificheQueryPerPaginaMax).optional()
+})
+
+export const ListNotificheResponse = zod.object({
+  "righe": zod.array(zod.object({
+  "id": zod.number().int(),
+  "creatoIl": zod.string().describe('Istante ISO 8601'),
+  "elaboratoIl": zod.string().nullable().describe('Istante del tentativo di invio'),
+  "evento": zod.string(),
+  "eventoEtichetta": zod.string(),
+  "canale": zod.enum(['email', 'whatsapp']),
+  "destinatarioNome": zod.string(),
+  "destinatarioContatto": zod.string(),
+  "praticaId": zod.number().int().nullable(),
+  "numeroPratica": zod.number().int().nullable(),
+  "oggetto": zod.string().nullable(),
+  "testo": zod.string(),
+  "esito": zod.enum(['in_coda', 'inviata', 'non_inviata', 'errore']),
+  "esitoEtichetta": zod.string(),
+  "dettaglioEsito": zod.string().nullable()
+})),
+  "totale": zod.number().int(),
+  "pagina": zod.number().int(),
+  "perPagina": zod.number().int()
+})
+
+
+/**
+ * @summary Stato dei canali (invio reale attivo oppure solo registrazione) e valori dei filtri
+ */
+export const GetStatoNotificheResponse = zod.object({
+  "email": zod.object({
+  "attivo": zod.boolean().describe('Vero se le chiavi sono presenti e i messaggi partono davvero'),
+  "mancanti": zod.array(zod.string()).describe('Nomi dei Secrets mancanti')
+}),
+  "whatsapp": zod.object({
+  "attivo": zod.boolean().describe('Vero se le chiavi sono presenti e i messaggi partono davvero'),
+  "mancanti": zod.array(zod.string()).describe('Nomi dei Secrets mancanti')
+}),
+  "eventi": zod.array(zod.object({
+  "codice": zod.string(),
+  "etichetta": zod.string()
+})),
+  "esiti": zod.array(zod.object({
+  "codice": zod.string(),
+  "etichetta": zod.string()
+}))
+})
+
+
+/**
  * @summary Elenco dei tipi di pratica con documenti e moduli
  */
 export const ListTipiPraticaResponseItem = zod.object({
@@ -2833,7 +2898,7 @@ export const CreateCommentoPraticaBackofficeParams = zod.object({
 
 export const CreateCommentoPraticaBackofficeBody = zod.object({
   "testo": zod.string(),
-  "canale": zod.enum(['email', 'whatsapp', 'entrambi']).describe('Canale con cui avvisare la sede; l\'invio vero arriva con le notifiche')
+  "canale": zod.enum(['email', 'whatsapp', 'entrambi']).describe('Canale con cui avvisare la sede (notifica senza il testo del commento)')
 })
 
 export const CreateCommentoPraticaBackofficeResponse = zod.object({

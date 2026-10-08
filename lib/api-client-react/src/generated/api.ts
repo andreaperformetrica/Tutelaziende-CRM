@@ -51,6 +51,7 @@ import type {
   ListCollaboratoriParams,
   ListLogOperazioniParams,
   ListMandatiParams,
+  ListNotificheParams,
   ListPraticheBackofficeParams,
   ListPraticheParams,
   ListSegnalazioniDuplicatiParams,
@@ -62,6 +63,7 @@ import type {
   MessaggioPraticaInput,
   ModuloTipoInput,
   Nazionalita,
+  NotifichePagina,
   OrariCaricamento,
   OrariCaricamentoInput,
   OrdineInput,
@@ -75,6 +77,7 @@ import type {
   RimuoviAssegnazioneMandatoParams,
   SegnalazioneDuplicato,
   SessioneUtente,
+  StatoNotifiche,
   StatoPratica,
   StatoPraticaInput,
   TipoPratica,
@@ -2440,6 +2443,167 @@ export function useGetFiltriLog<TData = Awaited<ReturnType<typeof getFiltriLog>>
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetFiltriLogQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListNotificheUrl = (params?: ListNotificheParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/notifiche?${stringifiedParams}` : `/api/notifiche`
+}
+
+/**
+ * @summary Registro delle notifiche, dalla piu recente
+ */
+export const listNotifiche = async (params?: ListNotificheParams, options?: Parameters<typeof customFetch>[1]): Promise<NotifichePagina> => {
+
+  return customFetch<NotifichePagina>(getListNotificheUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListNotificheQueryKey = (params?: ListNotificheParams,) => {
+    return [
+    `/api/notifiche`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListNotificheQueryOptions = <TData = Awaited<ReturnType<typeof listNotifiche>>, TError = ErrorType<unknown>>(params?: ListNotificheParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listNotifiche>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListNotificheQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listNotifiche>>> = ({ signal }) => listNotifiche(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listNotifiche>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListNotificheQueryResult = NonNullable<Awaited<ReturnType<typeof listNotifiche>>>
+export type ListNotificheQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Registro delle notifiche, dalla piu recente
+ */
+
+export function useListNotifiche<TData = Awaited<ReturnType<typeof listNotifiche>>, TError = ErrorType<unknown>>(
+ params?: ListNotificheParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listNotifiche>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListNotificheQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetStatoNotificheUrl = () => {
+
+
+
+
+  return `/api/notifiche/stato`
+}
+
+/**
+ * @summary Stato dei canali (invio reale attivo oppure solo registrazione) e valori dei filtri
+ */
+export const getStatoNotifiche = async ( options?: Parameters<typeof customFetch>[1]): Promise<StatoNotifiche> => {
+
+  return customFetch<StatoNotifiche>(getGetStatoNotificheUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetStatoNotificheQueryKey = () => {
+    return [
+    `/api/notifiche/stato`
+    ] as const;
+    }
+
+
+export const getGetStatoNotificheQueryOptions = <TData = Awaited<ReturnType<typeof getStatoNotifiche>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStatoNotifiche>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetStatoNotificheQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStatoNotifiche>>> = ({ signal }) => getStatoNotifiche({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getStatoNotifiche>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetStatoNotificheQueryResult = NonNullable<Awaited<ReturnType<typeof getStatoNotifiche>>>
+export type GetStatoNotificheQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Stato dei canali (invio reale attivo oppure solo registrazione) e valori dei filtri
+ */
+
+export function useGetStatoNotifiche<TData = Awaited<ReturnType<typeof getStatoNotifiche>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStatoNotifiche>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetStatoNotificheQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

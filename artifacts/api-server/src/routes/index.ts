@@ -14,6 +14,7 @@ import statiPraticaRouter from "./stati-pratica";
 import orariRouter from "./orari";
 import luoghiRouter from "./luoghi";
 import logRouter from "./log";
+import notificheRouter from "./notifiche";
 import { caricaUtente, controlloOrigine, richiediLogin, richiediPasswordCambiata } from "../middlewares/auth";
 
 const router: IRouter = Router();
@@ -40,5 +41,6 @@ router.use(statiPraticaRouter);
 router.use(orariRouter);
 router.use(luoghiRouter);
 router.use(logRouter);
+router.use(notificheRouter);
 
 export default router;
