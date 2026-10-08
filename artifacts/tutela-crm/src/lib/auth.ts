@@ -12,4 +12,4 @@ export function useSession() {
     refetch: q.refetch,
   };
 }
-export const homeFor = (area?: string) => (area === "collaboratore" ? "/collaboratore" : "/admin/collaboratori");
+export const homeFor = (area?: string) => (area === "collaboratore" ? "/collaboratore" : "/admin/pratiche");

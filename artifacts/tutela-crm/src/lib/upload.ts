@@ -44,6 +44,11 @@ export const urlMandato = (id: number) => `${BASE}/mandati/${id}/file`;
 export const urlMandatoPratica = (praticaId: number) => `${BASE}/pratiche/${praticaId}/mandato/file`;
 export const urlDocumentoPratica = (praticaId: number, docId: number) => `${BASE}/pratiche/${praticaId}/documenti/${docId}/file`;
 
+export const urlDocumentoBackoffice = (praticaId: number, docId: number, anteprima = false) =>
+  `${BASE}/backoffice/pratiche/${praticaId}/documenti/${docId}/file${anteprima ? "?anteprima=1" : ""}`;
+export const urlMandatoBackoffice = (praticaId: number, anteprima = false) =>
+  `${BASE}/backoffice/pratiche/${praticaId}/mandato/file${anteprima ? "?anteprima=1" : ""}`;
+
 export function formatoDimensione(byte: number): string {
   if (byte < 1024) return `${byte} B`;
   if (byte < 1024 * 1024) return `${(byte / 1024).toFixed(0)} KB`;

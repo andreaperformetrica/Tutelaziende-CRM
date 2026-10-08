@@ -246,7 +246,8 @@ router.post("/pratiche/:id/documenti/file", corpoFile, async (req, res) => {
         descrizione: `${esistente ? "Sostituito" : bozza ? "Caricato" : "Aggiunto"} ${documentoTipoId === null ? "l'allegato" : "il documento"} "${nome}" (${file.nome}) nella pratica ${quando} ${descrizionePratica(p)}`,
         dettagli: { documentoId: docId, documentoTipoId, fileNome: file.nome, dimensione: file.dimensione },
       });
-      if (bozza) await tx.update(praticheTable).set({ modificataIl: new Date() }).where(eq(praticheTable.id, id));
+      const ora = new Date();
+      await tx.update(praticheTable).set(bozza ? { modificataIl: ora } : { modificataIl: ora, ultimaAttivitaCollaboratoreIl: ora }).where(eq(praticheTable.id, id));
     });
   } catch (err) {
     await eliminaFile(chiave, req.log);
@@ -327,6 +328,7 @@ router.post("/pratiche/:id/invio", async (req, res) => {
   }
 
   const messaggio = pulisciMessaggio(b.messaggio ?? p.messaggio);
+  const ora = new Date();
   const numero = await db.transaction(async (tx) => {
     // Numeri progressivi senza buchi: l'assegnazione e' serializzata da un blocco di transazione.
     await tx.execute(sql`select pg_advisory_xact_lock(4001)`);
@@ -334,7 +336,7 @@ router.post("/pratiche/:id/invio", async (req, res) => {
     const nuovo = (m?.max ?? 0) + 1;
     const [r] = await tx
       .update(praticheTable)
-      .set({ numero: nuovo, statoId: iniziale.id, mandatoId: mandato?.id ?? null, messaggio, inviataIl: new Date(), modificataIl: new Date() })
+      .set({ numero: nuovo, statoId: iniziale.id, mandatoId: mandato?.id ?? null, messaggio, inviataIl: ora, modificataIl: ora, ultimaAttivitaCollaboratoreIl: ora })
       .where(and(eq(praticheTable.id, id), isNull(praticheTable.inviataIl)))
       .returning({ numero: praticheTable.numero });
     if (!r) throw ERRORE_PRATICA_INVIATA("Non puoi inviarla di nuovo");
@@ -361,6 +363,7 @@ router.post("/pratiche/:id/commenti", async (req, res) => {
   if (!pulito) throw new HttpError(400, "Scrivi un messaggio.", "DATI_NON_VALIDI", "testo");
   await db.transaction(async (tx) => {
     const [c] = await tx.insert(commentiPraticaTable).values({ praticaId: id, utenteId: req.utente!.id, testo: pulito }).returning({ id: commentiPraticaTable.id });
+    await tx.update(praticheTable).set({ ultimaAttivitaCollaboratoreIl: new Date() }).where(eq(praticheTable.id, id));
     await registraLog(tx, contestoDa(req), {
       azione: "pratica.commento",
       entita: "pratica",

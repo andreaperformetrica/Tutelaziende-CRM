@@ -5,6 +5,7 @@ import { alias } from "drizzle-orm/pg-core";
 import {
   assegnazioniMandatoTable,
   assistitiTable,
+  categorieAllegatoTable,
   collaboratoriTable,
   commentiPraticaTable,
   db,
@@ -46,7 +47,7 @@ export function condizioneVisibilitaPratiche(req: Request): SQL {
 
 const stato = sql<string>`coalesce(${statiPraticaTable.nome}, 'Bozza')`;
 
-export function selezionaPratiche(where: SQL | undefined) {
+export function selezionaPratiche(where: SQL | undefined, ordine?: SQL[]) {
   return db
     .select({
       id: praticheTable.id,
@@ -60,6 +61,12 @@ export function selezionaPratiche(where: SQL | undefined) {
       creataIl: praticheTable.creataIl,
       inviataIl: praticheTable.inviataIl,
       statoNome: stato,
+      statoChiuso: sql<boolean>`coalesce(${statiPraticaTable.chiuso}, false)`,
+      statoOrdine: statiPraticaTable.ordine,
+      gestitaDaUtenteId: praticheTable.gestitaDaUtenteId,
+      ultimaAttivitaCollaboratoreIl: praticheTable.ultimaAttivitaCollaboratoreIl,
+      ultimaAttivitaBackofficeIl: praticheTable.ultimaAttivitaBackofficeIl,
+      assCitta: assistitiTable.citta,
       tipoNome: tipiPraticaTable.nome,
       tipoAttivo: tipiPraticaTable.attivo,
       assNome: personeTable.nome,
@@ -81,7 +88,7 @@ export function selezionaPratiche(where: SQL | undefined) {
     .leftJoin(statiPraticaTable, eq(statiPraticaTable.id, praticheTable.statoId))
     .leftJoin(utenteGestore, eq(utenteGestore.id, praticheTable.gestitaDaUtenteId))
     .where(where)
-    .orderBy(desc(sql`coalesce(${praticheTable.inviataIl}, ${praticheTable.creataIl})`), desc(praticheTable.id))
+    .orderBy(...(ordine ?? [desc(sql`coalesce(${praticheTable.inviataIl}, ${praticheTable.creataIl})`), desc(praticheTable.id)]))
     .$dynamic();
 }
 
@@ -194,6 +201,33 @@ export async function verificaCompletezza(p: RigaPratica, mandato: unknown): Pro
   return { mancanti, richiesti, mandatoMancante };
 }
 
+export function mappaDocumentoPratica(
+  d: typeof documentiPraticaTable.$inferSelect,
+  nome: string | null,
+  cognome: string | null,
+  categorie: Map<number, string>,
+) {
+  return {
+    id: d.id,
+    documentoTipoId: d.documentoTipoId,
+    nome: d.nome,
+    fileNome: d.fileNome,
+    fileTipo: d.fileTipo,
+    dimensione: d.fileDimensione,
+    caricatoIl: d.caricatoIl.toISOString(),
+    caricatoDa: cognome ? `${cognome} ${nome}` : "—",
+    dopoInvio: d.dopoInvio,
+    daUfficio: d.daBackoffice,
+    categoria: d.categoriaId ? (categorie.get(d.categoriaId) ?? null) : null,
+  };
+}
+
+/** Nomi delle categorie degli allegati, per id. */
+export async function mappaCategorieAllegato(): Promise<Map<number, string>> {
+  const righe = await db.select({ id: categorieAllegatoTable.id, nome: categorieAllegatoTable.nome }).from(categorieAllegatoTable);
+  return new Map(righe.map((r) => [r.id, r.nome]));
+}
+
 /** Dettaglio completo della pratica per la scheda del collaboratore. */
 export async function dettaglioPratica(req: Request, id: number) {
   const p = await caricaPraticaVisibile(req, id);
@@ -215,6 +249,7 @@ export async function dettaglioPratica(req: Request, id: number) {
     .innerJoin(utentiTable, eq(utentiTable.id, commentiPraticaTable.utenteId))
     .where(eq(commentiPraticaTable.praticaId, id))
     .orderBy(asc(commentiPraticaTable.creatoIl), asc(commentiPraticaTable.id));
+  const categorie = await mappaCategorieAllegato();
   const completezza = bozza ? await verificaCompletezza(p, mandato) : { mancanti: [], richiesti: [], mandatoMancante: false };
   return {
     ...mappaRiepilogo(p, mio),
@@ -223,17 +258,7 @@ export async function dettaglioPratica(req: Request, id: number) {
     mandato: mandato ? { id: mandato.id, nome: mandato.nome, fileNome: mandato.fileNome, dimensione: mandato.dimensione } : null,
     mandatoMancante: completezza.mandatoMancante,
     richiesti: completezza.richiesti,
-    documenti: documenti.map(({ d, nome, cognome }) => ({
-      id: d.id,
-      documentoTipoId: d.documentoTipoId,
-      nome: d.nome,
-      fileNome: d.fileNome,
-      fileTipo: d.fileTipo,
-      dimensione: d.fileDimensione,
-      caricatoIl: d.caricatoIl.toISOString(),
-      caricatoDa: cognome ? `${cognome} ${nome}` : "—",
-      dopoInvio: d.dopoInvio,
-    })),
+    documenti: documenti.map(({ d, nome, cognome }) => mappaDocumentoPratica(d, nome, cognome, categorie)),
     messaggio: p.messaggio,
     commenti: commenti.map(({ c, nome, cognome, ruolo }) => ({
       id: c.id,

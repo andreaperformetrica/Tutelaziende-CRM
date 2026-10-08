@@ -87,7 +87,8 @@ export default function PraticaDettaglioCollaboratore() {
     finally { setCaricando(null); }
   };
   const docDi = (tipoId: number) => p.documenti.find((d) => d.documentoTipoId === tipoId);
-  const allegati = p.documenti.filter((d) => d.documentoTipoId === null);
+  const allegati = p.documenti.filter((d) => d.documentoTipoId === null && !d.daUfficio);
+  const daUfficio = p.documenti.filter((d) => d.daUfficio);
   const bloccato = p.modificabile && !p.invio.consentito;
   const puoInviare = p.modificabile && p.mancanti.length === 0 && p.invio.consentito;
 
@@ -207,6 +208,20 @@ export default function PraticaDettaglioCollaboratore() {
                 ))}
               </ul>
             )}
+          </div>
+        )}
+        {daUfficio.length > 0 && (
+          <div className="mt-5 pt-4 border-t border-border" data-testid="sezione-allegati-ufficio">
+            <h3 className="font-bold flex items-center gap-2 mb-2"><Paperclip className="size-4" /> Allegati dell'ufficio</h3>
+            <ul className="divide-y divide-border">
+              {daUfficio.map((d) => (
+                <li key={d.id} className="py-2" data-testid={`allegato-ufficio-${d.id}`}>
+                  <div className="text-sm font-semibold">{d.nome} <Badge variant="outline" className="ml-2">Ufficio</Badge>{d.categoria && <Badge variant="secondary" className="ml-1">{d.categoria}</Badge>}</div>
+                  <LinkFile href={urlDocumentoPratica(id, d.id)} nome={d.fileNome} dimensione={d.dimensione} />
+                  <div className="text-xs text-muted-foreground">Aggiunto il {fmtIstante(d.caricatoIl)}</div>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
       </Sezione>

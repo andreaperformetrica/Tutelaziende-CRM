@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetConteggioSegnalazioniQueryKey, useGetConteggioSegnalazioni, useLogout, type SessioneUtente } from "@workspace/api-client-react";
-import { KeyRound, LogOut, ScrollText, ShieldCheck, Users, UsersRound, Home, Landmark, UserRound, TriangleAlert, FileText, FileSignature, ListOrdered, Clock } from "lucide-react";
+import { Inbox, Paperclip, UserCheck, KeyRound, LogOut, ScrollText, ShieldCheck, Users, UsersRound, Home, Landmark, UserRound, TriangleAlert, FileText, FileSignature, ListOrdered, Clock } from "lucide-react";
 import { iniziali, ruoloLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -26,12 +26,15 @@ function Marchio({ chiaro }: { chiaro?: boolean }) {
 }
 
 const VOCI = [
+  { href: "/admin/pratiche", label: "Pratiche", icon: Inbox, roles: ["super_admin", "admin", "operatore"], id: "pratiche" },
+  { href: "/admin/le-mie-pratiche", label: "Le mie pratiche", icon: UserCheck, roles: ["super_admin", "admin", "operatore"], id: "le-mie-pratiche" },
   { href: "/admin/collaboratori", label: "Collaboratori", icon: UsersRound, roles: ["super_admin", "admin", "operatore"], id: "collaboratori" },
   { href: "/admin/assistiti", label: "Assistiti", icon: UserRound, roles: ["super_admin", "admin", "operatore"], id: "assistiti" },
   { href: "/admin/segnalazioni", label: "Segnalazioni", icon: TriangleAlert, roles: ["super_admin", "admin"], id: "segnalazioni" },
   { href: "/admin/tipi-pratica", label: "Tipi di pratica", icon: FileText, roles: ["super_admin", "admin"], id: "tipi-pratica" },
   { href: "/admin/mandati", label: "Mandati", icon: FileSignature, roles: ["super_admin", "admin"], id: "mandati" },
   { href: "/admin/stati-pratica", label: "Stati pratica", icon: ListOrdered, roles: ["super_admin", "admin"], id: "stati-pratica" },
+  { href: "/admin/categorie-allegato", label: "Categorie allegati", icon: Paperclip, roles: ["super_admin", "admin"], id: "categorie-allegato" },
   { href: "/admin/orari", label: "Orari di caricamento", icon: Clock, roles: ["super_admin", "admin"], id: "orari" },
   { href: "/admin/utenti", label: "Utenti interni", icon: Users, roles: ["super_admin", "admin"], id: "utenti" },
   { href: "/admin/log", label: "Log operazioni", icon: ScrollText, roles: ["super_admin", "admin"], id: "log" },

@@ -760,6 +760,13 @@ export interface DocumentoPratica {
   caricatoIl: string;
   caricatoDa: string;
   dopoInvio: boolean;
+  /** Allegato aggiunto da un operatore del back office */
+  daUfficio: boolean;
+  /**
+     * Categoria degli allegati dell'ufficio
+     * @nullable
+     */
+  categoria: string | null;
 }
 
 export type CommentoPraticaRuolo = typeof CommentoPraticaRuolo[keyof typeof CommentoPraticaRuolo];
@@ -810,6 +817,176 @@ export interface PraticaDettaglio {
   /** Cosa impedisce l'invio (documenti non caricati, mandato mancante) */
   mancanti: string[];
   invio: InvioPratiche;
+}
+
+export interface CategoriaAllegato {
+  id: number;
+  nome: string;
+}
+
+export interface CategoriaAllegatoInput {
+  nome: string;
+}
+
+export interface CambioStatoInput {
+  statoId: number;
+}
+
+/**
+ * Canale con cui avvisare la sede; l'invio vero arriva con le notifiche
+ */
+export type CommentoBackofficeInputCanale = typeof CommentoBackofficeInputCanale[keyof typeof CommentoBackofficeInputCanale];
+
+
+export const CommentoBackofficeInputCanale = {
+  email: 'email',
+  whatsapp: 'whatsapp',
+  entrambi: 'entrambi',
+} as const;
+
+export interface CommentoBackofficeInput {
+  testo: string;
+  /** Canale con cui avvisare la sede; l'invio vero arriva con le notifiche */
+  canale: CommentoBackofficeInputCanale;
+}
+
+export interface OperatorePratica {
+  id: number;
+  nome: string;
+  cognome: string;
+}
+
+export interface StatoPraticaRiepilogo {
+  id: number;
+  nome: string;
+  chiuso: boolean;
+}
+
+export interface PraticaBackofficeRiepilogo {
+  id: number;
+  numero: number;
+  assistito: PraticaAssistitoRiepilogo;
+  collaboratore: PraticaCollaboratoreRiepilogo;
+  /** Citta' dell'assistito */
+  citta: string;
+  dataRichiesta: string;
+  stato: StatoPraticaRiepilogo;
+  tipo: PraticaTipoRiepilogo;
+  gestitaDa: OperatorePratica | null;
+  /** Il collaboratore ha scritto o allegato qualcosa e il back office non ha ancora risposto */
+  aggiornata: boolean;
+}
+
+export interface PratichePaginaBackoffice {
+  elementi: PraticaBackofficeRiepilogo[];
+  totale: number;
+  pagina: number;
+  perPagina: number;
+}
+
+export interface OperatoreFiltro {
+  id: number;
+  nome: string;
+  cognome: string;
+  ruolo: string;
+}
+
+export interface FiltriPraticheBackoffice {
+  collaboratori: PraticaCollaboratoreRiepilogo[];
+  tipi: PraticaTipoRiepilogo[];
+  stati: StatoPraticaRiepilogo[];
+  operatori: OperatoreFiltro[];
+  /** Mesi (AAAA-MM) in cui sono state richieste pratiche, dal piu' recente */
+  mesi: string[];
+}
+
+export type CommentoPraticaBackofficeRuolo = typeof CommentoPraticaBackofficeRuolo[keyof typeof CommentoPraticaBackofficeRuolo];
+
+
+export const CommentoPraticaBackofficeRuolo = {
+  super_admin: 'super_admin',
+  admin: 'admin',
+  operatore: 'operatore',
+  collaboratore: 'collaboratore',
+} as const;
+
+/**
+ * @nullable
+ */
+export type CommentoPraticaBackofficeCanaleAvviso = typeof CommentoPraticaBackofficeCanaleAvviso[keyof typeof CommentoPraticaBackofficeCanaleAvviso] | null;
+
+
+export const CommentoPraticaBackofficeCanaleAvviso = {
+  email: 'email',
+  whatsapp: 'whatsapp',
+  entrambi: 'entrambi',
+} as const;
+
+export interface CommentoPraticaBackoffice {
+  id: number;
+  testo: string;
+  autore: string;
+  ruolo: CommentoPraticaBackofficeRuolo;
+  creatoIl: string;
+  /** @nullable */
+  canaleAvviso: CommentoPraticaBackofficeCanaleAvviso;
+  mio: boolean;
+}
+
+export type EventoCronologiaPraticaTipo = typeof EventoCronologiaPraticaTipo[keyof typeof EventoCronologiaPraticaTipo];
+
+
+export const EventoCronologiaPraticaTipo = {
+  invio: 'invio',
+  presa_in_carico: 'presa_in_carico',
+  cambio_stato: 'cambio_stato',
+  allegato: 'allegato',
+  commento: 'commento',
+} as const;
+
+export interface EventoCronologiaPratica {
+  id: string;
+  tipo: EventoCronologiaPraticaTipo;
+  creatoIl: string;
+  autore: string;
+  descrizione: string;
+}
+
+export interface CollaboratorePratica {
+  id: number;
+  nome: string;
+  cognome: string;
+  numeroSportello: string;
+  tipologia: string;
+  /** @nullable */
+  email: string | null;
+  cellulare: string;
+}
+
+export interface PraticaBackoffice {
+  id: number;
+  numero: number;
+  stato: StatoPraticaRiepilogo;
+  tipo: PraticaTipoRiepilogo;
+  assistito: Assistito;
+  collaboratore: CollaboratorePratica;
+  mandato: MandatoPratica | null;
+  /** Documenti e allegati caricati dal collaboratore */
+  documenti: DocumentoPratica[];
+  /** Allegati aggiunti dagli operatori */
+  allegatiUfficio: DocumentoPratica[];
+  /** Messaggio iniziale scritto dal collaboratore */
+  messaggio: string;
+  commenti: CommentoPraticaBackoffice[];
+  /** Eventi della pratica, dal piu' recente */
+  cronologia: EventoCronologiaPratica[];
+  inviataIl: string;
+  gestitaDa: OperatorePratica | null;
+  aggiornata: boolean;
+  /** La pratica e' gia' in carico all'utente che la sta guardando */
+  mieInCarico: boolean;
+  /** Solo il super admin puo' cancellare una pratica */
+  puoEliminare: boolean;
 }
 
 export type ListCollaboratoriParams = {
@@ -938,4 +1115,72 @@ pagina?: number;
  */
 perPagina?: number;
 };
+
+export type ListPraticheBackofficeParams = {
+collaboratoreId?: number;
+tipoPraticaId?: number;
+statoId?: number;
+/**
+ * Operatore che gestisce la pratica
+ */
+gestitaDaUtenteId?: number;
+/**
+ * Solo le pratiche che nessuno ha preso in carico
+ */
+nonAssegnate?: boolean;
+/**
+ * Mese della richiesta (AAAA-MM, fuso Europe/Rome)
+ */
+mese?: string;
+/**
+ * Data richiesta iniziale (AAAA-MM-GG), inclusa
+ */
+dal?: string;
+/**
+ * Data richiesta finale (AAAA-MM-GG), inclusa
+ */
+al?: string;
+/**
+ * Solo le pratiche gia' prese in carico da un operatore
+ */
+soloLavorate?: boolean;
+/**
+ * Solo le pratiche aggiornate dal collaboratore e in attesa del back office
+ */
+soloAggiornate?: boolean;
+/**
+ * Mette in cima le pratiche aggiornate
+ */
+aggiornatePrima?: boolean;
+ordina?: ListPraticheBackofficeOrdina;
+direzione?: ListPraticheBackofficeDirezione;
+/**
+ * @minimum 1
+ */
+pagina?: number;
+/**
+ * @minimum 1
+ * @maximum 200
+ */
+perPagina?: number;
+};
+
+export type ListPraticheBackofficeOrdina = typeof ListPraticheBackofficeOrdina[keyof typeof ListPraticheBackofficeOrdina];
+
+
+export const ListPraticheBackofficeOrdina = {
+  data: 'data',
+  citta: 'citta',
+  numero: 'numero',
+  stato: 'stato',
+  tipo: 'tipo',
+} as const;
+
+export type ListPraticheBackofficeDirezione = typeof ListPraticheBackofficeDirezione[keyof typeof ListPraticheBackofficeDirezione];
+
+
+export const ListPraticheBackofficeDirezione = {
+  asc: 'asc',
+  desc: 'desc',
+} as const;
 

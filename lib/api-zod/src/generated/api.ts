@@ -1610,7 +1610,9 @@ export const CreatePraticaResponse = zod.object({
   "dimensione": zod.number().int(),
   "caricatoIl": zod.coerce.date(),
   "caricatoDa": zod.string(),
-  "dopoInvio": zod.boolean()
+  "dopoInvio": zod.boolean(),
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office'),
+  "categoria": zod.string().nullable().describe('Categoria degli allegati dell\'ufficio')
 })),
   "messaggio": zod.string(),
   "commenti": zod.array(zod.object({
@@ -1733,7 +1735,9 @@ export const GetPraticaResponse = zod.object({
   "dimensione": zod.number().int(),
   "caricatoIl": zod.coerce.date(),
   "caricatoDa": zod.string(),
-  "dopoInvio": zod.boolean()
+  "dopoInvio": zod.boolean(),
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office'),
+  "categoria": zod.string().nullable().describe('Categoria degli allegati dell\'ufficio')
 })),
   "messaggio": zod.string(),
   "commenti": zod.array(zod.object({
@@ -1854,7 +1858,9 @@ export const SalvaMessaggioPraticaResponse = zod.object({
   "dimensione": zod.number().int(),
   "caricatoIl": zod.coerce.date(),
   "caricatoDa": zod.string(),
-  "dopoInvio": zod.boolean()
+  "dopoInvio": zod.boolean(),
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office'),
+  "categoria": zod.string().nullable().describe('Categoria degli allegati dell\'ufficio')
 })),
   "messaggio": zod.string(),
   "commenti": zod.array(zod.object({
@@ -1958,7 +1964,9 @@ export const DeleteDocumentoPraticaResponse = zod.object({
   "dimensione": zod.number().int(),
   "caricatoIl": zod.coerce.date(),
   "caricatoDa": zod.string(),
-  "dopoInvio": zod.boolean()
+  "dopoInvio": zod.boolean(),
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office'),
+  "categoria": zod.string().nullable().describe('Categoria degli allegati dell\'ufficio')
 })),
   "messaggio": zod.string(),
   "commenti": zod.array(zod.object({
@@ -2069,7 +2077,9 @@ export const InviaPraticaResponse = zod.object({
   "dimensione": zod.number().int(),
   "caricatoIl": zod.coerce.date(),
   "caricatoDa": zod.string(),
-  "dopoInvio": zod.boolean()
+  "dopoInvio": zod.boolean(),
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office'),
+  "categoria": zod.string().nullable().describe('Categoria degli allegati dell\'ufficio')
 })),
   "messaggio": zod.string(),
   "commenti": zod.array(zod.object({
@@ -2180,7 +2190,9 @@ export const CreateCommentoPraticaResponse = zod.object({
   "dimensione": zod.number().int(),
   "caricatoIl": zod.coerce.date(),
   "caricatoDa": zod.string(),
-  "dopoInvio": zod.boolean()
+  "dopoInvio": zod.boolean(),
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office'),
+  "categoria": zod.string().nullable().describe('Categoria degli allegati dell\'ufficio')
 })),
   "messaggio": zod.string(),
   "commenti": zod.array(zod.object({
@@ -2347,5 +2359,641 @@ export const UpdateOrariCaricamentoResponse = zod.object({
   "bloccatoFinoA": zod.coerce.date().nullable().describe('Prossimo momento in cui l\'invio e\' consentito')
 })
 })
+
+
+/**
+ * @summary Elenco delle pratiche inviate (back office)
+ */
+
+export const listPraticheBackofficeQueryPerPaginaMax = 200;
+
+
+
+export const ListPraticheBackofficeQueryParams = zod.object({
+  "collaboratoreId": zod.coerce.number().int().optional(),
+  "tipoPraticaId": zod.coerce.number().int().optional(),
+  "statoId": zod.coerce.number().int().optional(),
+  "gestitaDaUtenteId": zod.coerce.number().int().optional().describe('Operatore che gestisce la pratica'),
+  "nonAssegnate": zod.coerce.boolean().optional().describe('Solo le pratiche che nessuno ha preso in carico'),
+  "mese": zod.coerce.string().optional().describe('Mese della richiesta (AAAA-MM, fuso Europe/Rome)'),
+  "dal": zod.coerce.string().optional().describe('Data richiesta iniziale (AAAA-MM-GG), inclusa'),
+  "al": zod.coerce.string().optional().describe('Data richiesta finale (AAAA-MM-GG), inclusa'),
+  "soloLavorate": zod.coerce.boolean().optional().describe('Solo le pratiche gia\' prese in carico da un operatore'),
+  "soloAggiornate": zod.coerce.boolean().optional().describe('Solo le pratiche aggiornate dal collaboratore e in attesa del back office'),
+  "aggiornatePrima": zod.coerce.boolean().optional().describe('Mette in cima le pratiche aggiornate'),
+  "ordina": zod.enum(['data', 'citta', 'numero', 'stato', 'tipo']).optional(),
+  "direzione": zod.enum(['asc', 'desc']).optional(),
+  "pagina": zod.coerce.number().int().min(1).optional(),
+  "perPagina": zod.coerce.number().int().min(1).max(listPraticheBackofficeQueryPerPaginaMax).optional()
+})
+
+export const ListPraticheBackofficeResponse = zod.object({
+  "elementi": zod.array(zod.object({
+  "id": zod.number().int(),
+  "numero": zod.number().int(),
+  "assistito": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "codiceFiscale": zod.string()
+}),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string()
+}),
+  "citta": zod.string().describe('Citta\' dell\'assistito'),
+  "dataRichiesta": zod.coerce.date(),
+  "stato": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "chiuso": zod.boolean()
+}),
+  "tipo": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+}),
+  "gestitaDa": zod.union([zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string()
+}),zod.null()]),
+  "aggiornata": zod.boolean().describe('Il collaboratore ha scritto o allegato qualcosa e il back office non ha ancora risposto')
+})),
+  "totale": zod.number().int(),
+  "pagina": zod.number().int(),
+  "perPagina": zod.number().int()
+})
+
+
+/**
+ * @summary Valori selezionabili nei filtri dell'elenco pratiche
+ */
+export const GetFiltriPraticheBackofficeResponse = zod.object({
+  "collaboratori": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string()
+})),
+  "tipi": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+})),
+  "stati": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "chiuso": zod.boolean()
+})),
+  "operatori": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "ruolo": zod.string()
+})),
+  "mesi": zod.array(zod.string()).describe('Mesi (AAAA-MM) in cui sono state richieste pratiche, dal piu\' recente')
+})
+
+
+/**
+ * @summary Scheda pratica (back office)
+ */
+export const GetPraticaBackofficeParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const GetPraticaBackofficeResponse = zod.object({
+  "id": zod.number().int(),
+  "numero": zod.number().int(),
+  "stato": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "chiuso": zod.boolean()
+}),
+  "tipo": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+}),
+  "assistito": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "sesso": zod.enum(['M', 'F']),
+  "dataNascita": zod.string(),
+  "luogoNascitaCodice": zod.string(),
+  "luogoNascitaNome": zod.string(),
+  "luogoNascitaProvincia": zod.string().nullish(),
+  "luogoNascitaEstero": zod.boolean(),
+  "nazionalita": zod.string(),
+  "nazionalitaNome": zod.string(),
+  "straniero": zod.boolean(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "email": zod.string().nullish(),
+  "citta": zod.string(),
+  "indirizzo": zod.string().nullish(),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+}).describe('Collaboratore a cui e\' associato l\'assistito'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "creatoIl": zod.coerce.date(),
+  "modificatoIl": zod.coerce.date()
+}),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.string(),
+  "email": zod.string().nullable(),
+  "cellulare": zod.string()
+}),
+  "mandato": zod.union([zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "dimensione": zod.number().int()
+}),zod.null()]),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "documentoTipoId": zod.number().int().nullable().describe('Vuoto per gli allegati aggiuntivi'),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date(),
+  "caricatoDa": zod.string(),
+  "dopoInvio": zod.boolean(),
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office'),
+  "categoria": zod.string().nullable().describe('Categoria degli allegati dell\'ufficio')
+})).describe('Documenti e allegati caricati dal collaboratore'),
+  "allegatiUfficio": zod.array(zod.object({
+  "id": zod.number().int(),
+  "documentoTipoId": zod.number().int().nullable().describe('Vuoto per gli allegati aggiuntivi'),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date(),
+  "caricatoDa": zod.string(),
+  "dopoInvio": zod.boolean(),
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office'),
+  "categoria": zod.string().nullable().describe('Categoria degli allegati dell\'ufficio')
+})).describe('Allegati aggiunti dagli operatori'),
+  "messaggio": zod.string().describe('Messaggio iniziale scritto dal collaboratore'),
+  "commenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "testo": zod.string(),
+  "autore": zod.string(),
+  "ruolo": zod.enum(['super_admin', 'admin', 'operatore', 'collaboratore']),
+  "creatoIl": zod.coerce.date(),
+  "canaleAvviso": zod.union([zod.literal('email'),zod.literal('whatsapp'),zod.literal('entrambi'),zod.literal(null)]).nullable(),
+  "mio": zod.boolean()
+})),
+  "cronologia": zod.array(zod.object({
+  "id": zod.string(),
+  "tipo": zod.enum(['invio', 'presa_in_carico', 'cambio_stato', 'allegato', 'commento']),
+  "creatoIl": zod.coerce.date(),
+  "autore": zod.string(),
+  "descrizione": zod.string()
+})).describe('Eventi della pratica, dal piu\' recente'),
+  "inviataIl": zod.coerce.date(),
+  "gestitaDa": zod.union([zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string()
+}),zod.null()]),
+  "aggiornata": zod.boolean(),
+  "mieInCarico": zod.boolean().describe('La pratica e\' gia\' in carico all\'utente che la sta guardando'),
+  "puoEliminare": zod.boolean().describe('Solo il super admin puo\' cancellare una pratica')
+})
+
+
+/**
+ * @summary Cancella una pratica (solo super admin)
+ */
+export const DeletePraticaBackofficeParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const DeletePraticaBackofficeResponse = zod.void()
+
+
+/**
+ * @summary Assegna la pratica all'operatore che la prende in carico
+ */
+export const PrendiInCaricoPraticaParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const PrendiInCaricoPraticaResponse = zod.object({
+  "id": zod.number().int(),
+  "numero": zod.number().int(),
+  "stato": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "chiuso": zod.boolean()
+}),
+  "tipo": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+}),
+  "assistito": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "sesso": zod.enum(['M', 'F']),
+  "dataNascita": zod.string(),
+  "luogoNascitaCodice": zod.string(),
+  "luogoNascitaNome": zod.string(),
+  "luogoNascitaProvincia": zod.string().nullish(),
+  "luogoNascitaEstero": zod.boolean(),
+  "nazionalita": zod.string(),
+  "nazionalitaNome": zod.string(),
+  "straniero": zod.boolean(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "email": zod.string().nullish(),
+  "citta": zod.string(),
+  "indirizzo": zod.string().nullish(),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+}).describe('Collaboratore a cui e\' associato l\'assistito'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "creatoIl": zod.coerce.date(),
+  "modificatoIl": zod.coerce.date()
+}),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.string(),
+  "email": zod.string().nullable(),
+  "cellulare": zod.string()
+}),
+  "mandato": zod.union([zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "dimensione": zod.number().int()
+}),zod.null()]),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "documentoTipoId": zod.number().int().nullable().describe('Vuoto per gli allegati aggiuntivi'),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date(),
+  "caricatoDa": zod.string(),
+  "dopoInvio": zod.boolean(),
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office'),
+  "categoria": zod.string().nullable().describe('Categoria degli allegati dell\'ufficio')
+})).describe('Documenti e allegati caricati dal collaboratore'),
+  "allegatiUfficio": zod.array(zod.object({
+  "id": zod.number().int(),
+  "documentoTipoId": zod.number().int().nullable().describe('Vuoto per gli allegati aggiuntivi'),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date(),
+  "caricatoDa": zod.string(),
+  "dopoInvio": zod.boolean(),
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office'),
+  "categoria": zod.string().nullable().describe('Categoria degli allegati dell\'ufficio')
+})).describe('Allegati aggiunti dagli operatori'),
+  "messaggio": zod.string().describe('Messaggio iniziale scritto dal collaboratore'),
+  "commenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "testo": zod.string(),
+  "autore": zod.string(),
+  "ruolo": zod.enum(['super_admin', 'admin', 'operatore', 'collaboratore']),
+  "creatoIl": zod.coerce.date(),
+  "canaleAvviso": zod.union([zod.literal('email'),zod.literal('whatsapp'),zod.literal('entrambi'),zod.literal(null)]).nullable(),
+  "mio": zod.boolean()
+})),
+  "cronologia": zod.array(zod.object({
+  "id": zod.string(),
+  "tipo": zod.enum(['invio', 'presa_in_carico', 'cambio_stato', 'allegato', 'commento']),
+  "creatoIl": zod.coerce.date(),
+  "autore": zod.string(),
+  "descrizione": zod.string()
+})).describe('Eventi della pratica, dal piu\' recente'),
+  "inviataIl": zod.coerce.date(),
+  "gestitaDa": zod.union([zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string()
+}),zod.null()]),
+  "aggiornata": zod.boolean(),
+  "mieInCarico": zod.boolean().describe('La pratica e\' gia\' in carico all\'utente che la sta guardando'),
+  "puoEliminare": zod.boolean().describe('Solo il super admin puo\' cancellare una pratica')
+})
+
+
+/**
+ * @summary Cambia lo stato di lavorazione della pratica
+ */
+export const CambiaStatoPraticaParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const CambiaStatoPraticaBody = zod.object({
+  "statoId": zod.number().int()
+})
+
+export const CambiaStatoPraticaResponse = zod.object({
+  "id": zod.number().int(),
+  "numero": zod.number().int(),
+  "stato": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "chiuso": zod.boolean()
+}),
+  "tipo": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+}),
+  "assistito": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "sesso": zod.enum(['M', 'F']),
+  "dataNascita": zod.string(),
+  "luogoNascitaCodice": zod.string(),
+  "luogoNascitaNome": zod.string(),
+  "luogoNascitaProvincia": zod.string().nullish(),
+  "luogoNascitaEstero": zod.boolean(),
+  "nazionalita": zod.string(),
+  "nazionalitaNome": zod.string(),
+  "straniero": zod.boolean(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "email": zod.string().nullish(),
+  "citta": zod.string(),
+  "indirizzo": zod.string().nullish(),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+}).describe('Collaboratore a cui e\' associato l\'assistito'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "creatoIl": zod.coerce.date(),
+  "modificatoIl": zod.coerce.date()
+}),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.string(),
+  "email": zod.string().nullable(),
+  "cellulare": zod.string()
+}),
+  "mandato": zod.union([zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "dimensione": zod.number().int()
+}),zod.null()]),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "documentoTipoId": zod.number().int().nullable().describe('Vuoto per gli allegati aggiuntivi'),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date(),
+  "caricatoDa": zod.string(),
+  "dopoInvio": zod.boolean(),
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office'),
+  "categoria": zod.string().nullable().describe('Categoria degli allegati dell\'ufficio')
+})).describe('Documenti e allegati caricati dal collaboratore'),
+  "allegatiUfficio": zod.array(zod.object({
+  "id": zod.number().int(),
+  "documentoTipoId": zod.number().int().nullable().describe('Vuoto per gli allegati aggiuntivi'),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date(),
+  "caricatoDa": zod.string(),
+  "dopoInvio": zod.boolean(),
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office'),
+  "categoria": zod.string().nullable().describe('Categoria degli allegati dell\'ufficio')
+})).describe('Allegati aggiunti dagli operatori'),
+  "messaggio": zod.string().describe('Messaggio iniziale scritto dal collaboratore'),
+  "commenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "testo": zod.string(),
+  "autore": zod.string(),
+  "ruolo": zod.enum(['super_admin', 'admin', 'operatore', 'collaboratore']),
+  "creatoIl": zod.coerce.date(),
+  "canaleAvviso": zod.union([zod.literal('email'),zod.literal('whatsapp'),zod.literal('entrambi'),zod.literal(null)]).nullable(),
+  "mio": zod.boolean()
+})),
+  "cronologia": zod.array(zod.object({
+  "id": zod.string(),
+  "tipo": zod.enum(['invio', 'presa_in_carico', 'cambio_stato', 'allegato', 'commento']),
+  "creatoIl": zod.coerce.date(),
+  "autore": zod.string(),
+  "descrizione": zod.string()
+})).describe('Eventi della pratica, dal piu\' recente'),
+  "inviataIl": zod.coerce.date(),
+  "gestitaDa": zod.union([zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string()
+}),zod.null()]),
+  "aggiornata": zod.boolean(),
+  "mieInCarico": zod.boolean().describe('La pratica e\' gia\' in carico all\'utente che la sta guardando'),
+  "puoEliminare": zod.boolean().describe('Solo il super admin puo\' cancellare una pratica')
+})
+
+
+/**
+ * @summary Scrive un commento nella chat della pratica e sceglie il canale con cui avvisare la sede
+ */
+export const CreateCommentoPraticaBackofficeParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const CreateCommentoPraticaBackofficeBody = zod.object({
+  "testo": zod.string(),
+  "canale": zod.enum(['email', 'whatsapp', 'entrambi']).describe('Canale con cui avvisare la sede; l\'invio vero arriva con le notifiche')
+})
+
+export const CreateCommentoPraticaBackofficeResponse = zod.object({
+  "id": zod.number().int(),
+  "numero": zod.number().int(),
+  "stato": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "chiuso": zod.boolean()
+}),
+  "tipo": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+}),
+  "assistito": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "sesso": zod.enum(['M', 'F']),
+  "dataNascita": zod.string(),
+  "luogoNascitaCodice": zod.string(),
+  "luogoNascitaNome": zod.string(),
+  "luogoNascitaProvincia": zod.string().nullish(),
+  "luogoNascitaEstero": zod.boolean(),
+  "nazionalita": zod.string(),
+  "nazionalitaNome": zod.string(),
+  "straniero": zod.boolean(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "email": zod.string().nullish(),
+  "citta": zod.string(),
+  "indirizzo": zod.string().nullish(),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+}).describe('Collaboratore a cui e\' associato l\'assistito'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "creatoIl": zod.coerce.date(),
+  "modificatoIl": zod.coerce.date()
+}),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.string(),
+  "email": zod.string().nullable(),
+  "cellulare": zod.string()
+}),
+  "mandato": zod.union([zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "dimensione": zod.number().int()
+}),zod.null()]),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "documentoTipoId": zod.number().int().nullable().describe('Vuoto per gli allegati aggiuntivi'),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date(),
+  "caricatoDa": zod.string(),
+  "dopoInvio": zod.boolean(),
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office'),
+  "categoria": zod.string().nullable().describe('Categoria degli allegati dell\'ufficio')
+})).describe('Documenti e allegati caricati dal collaboratore'),
+  "allegatiUfficio": zod.array(zod.object({
+  "id": zod.number().int(),
+  "documentoTipoId": zod.number().int().nullable().describe('Vuoto per gli allegati aggiuntivi'),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date(),
+  "caricatoDa": zod.string(),
+  "dopoInvio": zod.boolean(),
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office'),
+  "categoria": zod.string().nullable().describe('Categoria degli allegati dell\'ufficio')
+})).describe('Allegati aggiunti dagli operatori'),
+  "messaggio": zod.string().describe('Messaggio iniziale scritto dal collaboratore'),
+  "commenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "testo": zod.string(),
+  "autore": zod.string(),
+  "ruolo": zod.enum(['super_admin', 'admin', 'operatore', 'collaboratore']),
+  "creatoIl": zod.coerce.date(),
+  "canaleAvviso": zod.union([zod.literal('email'),zod.literal('whatsapp'),zod.literal('entrambi'),zod.literal(null)]).nullable(),
+  "mio": zod.boolean()
+})),
+  "cronologia": zod.array(zod.object({
+  "id": zod.string(),
+  "tipo": zod.enum(['invio', 'presa_in_carico', 'cambio_stato', 'allegato', 'commento']),
+  "creatoIl": zod.coerce.date(),
+  "autore": zod.string(),
+  "descrizione": zod.string()
+})).describe('Eventi della pratica, dal piu\' recente'),
+  "inviataIl": zod.coerce.date(),
+  "gestitaDa": zod.union([zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string()
+}),zod.null()]),
+  "aggiornata": zod.boolean(),
+  "mieInCarico": zod.boolean().describe('La pratica e\' gia\' in carico all\'utente che la sta guardando'),
+  "puoEliminare": zod.boolean().describe('Solo il super admin puo\' cancellare una pratica')
+})
+
+
+/**
+ * @summary Categorie degli allegati dell'operatore
+ */
+export const ListCategorieAllegatoResponseItem = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+})
+export const ListCategorieAllegatoResponse = zod.array(ListCategorieAllegatoResponseItem)
+
+
+/**
+ * @summary Crea una categoria di allegato (admin)
+ */
+export const CreateCategoriaAllegatoBody = zod.object({
+  "nome": zod.string()
+})
+
+export const CreateCategoriaAllegatoResponse = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+})
+
+
+/**
+ * @summary Rinomina una categoria di allegato (admin)
+ */
+export const UpdateCategoriaAllegatoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const UpdateCategoriaAllegatoBody = zod.object({
+  "nome": zod.string()
+})
+
+export const UpdateCategoriaAllegatoResponse = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+})
+
+
+/**
+ * @summary Elimina una categoria non usata (admin)
+ */
+export const DeleteCategoriaAllegatoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const DeleteCategoriaAllegatoResponse = zod.void()
 
 

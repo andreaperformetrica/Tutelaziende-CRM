@@ -29,15 +29,20 @@ import type {
   AssociaCollaboratoreInput,
   AssociaSegnalazioneInput,
   CambioPasswordInput,
+  CambioStatoInput,
+  CategoriaAllegato,
+  CategoriaAllegatoInput,
   CercaLuoghiParams,
   Collaboratore,
   CollaboratoreDettaglio,
   CollaboratoreInput,
   CollaboratoreUpdate,
+  CommentoBackofficeInput,
   CommentoPraticaInput,
   ConteggioSegnalazioni,
   DocumentoTipoInput,
   FiltriLog,
+  FiltriPraticheBackoffice,
   HealthStatus,
   InvioPraticaInput,
   InvioPratiche,
@@ -46,6 +51,7 @@ import type {
   ListCollaboratoriParams,
   ListLogOperazioniParams,
   ListMandatiParams,
+  ListPraticheBackofficeParams,
   ListPraticheParams,
   ListSegnalazioniDuplicatiParams,
   LogOperazioniPagina,
@@ -60,10 +66,12 @@ import type {
   OrariCaricamentoInput,
   OrdineInput,
   PasswordProvvisoriaInput,
+  PraticaBackoffice,
   PraticaDettaglio,
   PraticaInput,
   PraticaTipoRiepilogo,
   PratichePagina,
+  PratichePaginaBackoffice,
   RimuoviAssegnazioneMandatoParams,
   SegnalazioneDuplicato,
   SessioneUtente,
@@ -5178,5 +5186,897 @@ export const useUpdateOrariCaricamento = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getUpdateOrariCaricamentoMutationOptions(options));
+    }
+
+export const getListPraticheBackofficeUrl = (params?: ListPraticheBackofficeParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/backoffice/pratiche?${stringifiedParams}` : `/api/backoffice/pratiche`
+}
+
+/**
+ * @summary Elenco delle pratiche inviate (back office)
+ */
+export const listPraticheBackoffice = async (params?: ListPraticheBackofficeParams, options?: Parameters<typeof customFetch>[1]): Promise<PratichePaginaBackoffice> => {
+
+  return customFetch<PratichePaginaBackoffice>(getListPraticheBackofficeUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPraticheBackofficeQueryKey = (params?: ListPraticheBackofficeParams,) => {
+    return [
+    `/api/backoffice/pratiche`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListPraticheBackofficeQueryOptions = <TData = Awaited<ReturnType<typeof listPraticheBackoffice>>, TError = ErrorType<unknown>>(params?: ListPraticheBackofficeParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPraticheBackoffice>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPraticheBackofficeQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPraticheBackoffice>>> = ({ signal }) => listPraticheBackoffice(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPraticheBackoffice>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListPraticheBackofficeQueryResult = NonNullable<Awaited<ReturnType<typeof listPraticheBackoffice>>>
+export type ListPraticheBackofficeQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Elenco delle pratiche inviate (back office)
+ */
+
+export function useListPraticheBackoffice<TData = Awaited<ReturnType<typeof listPraticheBackoffice>>, TError = ErrorType<unknown>>(
+ params?: ListPraticheBackofficeParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPraticheBackoffice>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListPraticheBackofficeQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetFiltriPraticheBackofficeUrl = () => {
+
+
+
+
+  return `/api/backoffice/pratiche/filtri`
+}
+
+/**
+ * @summary Valori selezionabili nei filtri dell'elenco pratiche
+ */
+export const getFiltriPraticheBackoffice = async ( options?: Parameters<typeof customFetch>[1]): Promise<FiltriPraticheBackoffice> => {
+
+  return customFetch<FiltriPraticheBackoffice>(getGetFiltriPraticheBackofficeUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFiltriPraticheBackofficeQueryKey = () => {
+    return [
+    `/api/backoffice/pratiche/filtri`
+    ] as const;
+    }
+
+
+export const getGetFiltriPraticheBackofficeQueryOptions = <TData = Awaited<ReturnType<typeof getFiltriPraticheBackoffice>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFiltriPraticheBackoffice>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFiltriPraticheBackofficeQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFiltriPraticheBackoffice>>> = ({ signal }) => getFiltriPraticheBackoffice({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFiltriPraticheBackoffice>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetFiltriPraticheBackofficeQueryResult = NonNullable<Awaited<ReturnType<typeof getFiltriPraticheBackoffice>>>
+export type GetFiltriPraticheBackofficeQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Valori selezionabili nei filtri dell'elenco pratiche
+ */
+
+export function useGetFiltriPraticheBackoffice<TData = Awaited<ReturnType<typeof getFiltriPraticheBackoffice>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFiltriPraticheBackoffice>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetFiltriPraticheBackofficeQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetPraticaBackofficeUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/pratiche/${id}`
+}
+
+/**
+ * @summary Scheda pratica (back office)
+ */
+export const getPraticaBackoffice = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<PraticaBackoffice> => {
+
+  return customFetch<PraticaBackoffice>(getGetPraticaBackofficeUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPraticaBackofficeQueryKey = (id: number,) => {
+    return [
+    `/api/backoffice/pratiche/${id}`
+    ] as const;
+    }
+
+
+export const getGetPraticaBackofficeQueryOptions = <TData = Awaited<ReturnType<typeof getPraticaBackoffice>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPraticaBackoffice>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPraticaBackofficeQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPraticaBackoffice>>> = ({ signal }) => getPraticaBackoffice(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPraticaBackoffice>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPraticaBackofficeQueryResult = NonNullable<Awaited<ReturnType<typeof getPraticaBackoffice>>>
+export type GetPraticaBackofficeQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Scheda pratica (back office)
+ */
+
+export function useGetPraticaBackoffice<TData = Awaited<ReturnType<typeof getPraticaBackoffice>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPraticaBackoffice>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPraticaBackofficeQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getDeletePraticaBackofficeUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/pratiche/${id}`
+}
+
+/**
+ * @summary Cancella una pratica (solo super admin)
+ */
+export const deletePraticaBackoffice = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeletePraticaBackofficeUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeletePraticaBackofficeMutationKey = () => ['deletePraticaBackoffice'] as const;
+
+export const getDeletePraticaBackofficeMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePraticaBackoffice>>, TError,DeletePraticaBackofficeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deletePraticaBackoffice>>, TError,DeletePraticaBackofficeMutationVariables, TContext> => {
+
+const mutationKey = getDeletePraticaBackofficeMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deletePraticaBackoffice>>, DeletePraticaBackofficeMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deletePraticaBackoffice(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeletePraticaBackofficeMutationResult = NonNullable<Awaited<ReturnType<typeof deletePraticaBackoffice>>>
+
+    export type DeletePraticaBackofficeMutationError = ErrorType<unknown>
+    export type DeletePraticaBackofficeMutationVariables = {id: number}
+
+    /**
+ * @summary Cancella una pratica (solo super admin)
+ */
+export const useDeletePraticaBackoffice = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePraticaBackoffice>>, TError,DeletePraticaBackofficeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deletePraticaBackoffice>>,
+        TError,
+        DeletePraticaBackofficeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeletePraticaBackofficeMutationOptions(options));
+    }
+
+export const getPrendiInCaricoPraticaUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/pratiche/${id}/presa-in-carico`
+}
+
+/**
+ * @summary Assegna la pratica all'operatore che la prende in carico
+ */
+export const prendiInCaricoPratica = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<PraticaBackoffice> => {
+
+  return customFetch<PraticaBackoffice>(getPrendiInCaricoPraticaUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getPrendiInCaricoPraticaMutationKey = () => ['prendiInCaricoPratica'] as const;
+
+export const getPrendiInCaricoPraticaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof prendiInCaricoPratica>>, TError,PrendiInCaricoPraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof prendiInCaricoPratica>>, TError,PrendiInCaricoPraticaMutationVariables, TContext> => {
+
+const mutationKey = getPrendiInCaricoPraticaMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof prendiInCaricoPratica>>, PrendiInCaricoPraticaMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  prendiInCaricoPratica(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PrendiInCaricoPraticaMutationResult = NonNullable<Awaited<ReturnType<typeof prendiInCaricoPratica>>>
+
+    export type PrendiInCaricoPraticaMutationError = ErrorType<unknown>
+    export type PrendiInCaricoPraticaMutationVariables = {id: number}
+
+    /**
+ * @summary Assegna la pratica all'operatore che la prende in carico
+ */
+export const usePrendiInCaricoPratica = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof prendiInCaricoPratica>>, TError,PrendiInCaricoPraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof prendiInCaricoPratica>>,
+        TError,
+        PrendiInCaricoPraticaMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPrendiInCaricoPraticaMutationOptions(options));
+    }
+
+export const getCambiaStatoPraticaUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/pratiche/${id}/stato`
+}
+
+/**
+ * @summary Cambia lo stato di lavorazione della pratica
+ */
+export const cambiaStatoPratica = async (id: number,
+    cambioStatoInput: CambioStatoInput, options?: Parameters<typeof customFetch>[1]): Promise<PraticaBackoffice> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<PraticaBackoffice>(getCambiaStatoPraticaUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(cambioStatoInput)
+  }
+);}
+
+
+
+
+
+export const getCambiaStatoPraticaMutationKey = () => ['cambiaStatoPratica'] as const;
+
+export const getCambiaStatoPraticaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cambiaStatoPratica>>, TError,CambiaStatoPraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof cambiaStatoPratica>>, TError,CambiaStatoPraticaMutationVariables, TContext> => {
+
+const mutationKey = getCambiaStatoPraticaMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof cambiaStatoPratica>>, CambiaStatoPraticaMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  cambiaStatoPratica(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CambiaStatoPraticaMutationResult = NonNullable<Awaited<ReturnType<typeof cambiaStatoPratica>>>
+    export type CambiaStatoPraticaMutationBody = BodyType<CambioStatoInput>
+    export type CambiaStatoPraticaMutationError = ErrorType<unknown>
+    export type CambiaStatoPraticaMutationVariables = {id: number;data: BodyType<CambioStatoInput>}
+
+    /**
+ * @summary Cambia lo stato di lavorazione della pratica
+ */
+export const useCambiaStatoPratica = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cambiaStatoPratica>>, TError,CambiaStatoPraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof cambiaStatoPratica>>,
+        TError,
+        CambiaStatoPraticaMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCambiaStatoPraticaMutationOptions(options));
+    }
+
+export const getCreateCommentoPraticaBackofficeUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/pratiche/${id}/commenti`
+}
+
+/**
+ * @summary Scrive un commento nella chat della pratica e sceglie il canale con cui avvisare la sede
+ */
+export const createCommentoPraticaBackoffice = async (id: number,
+    commentoBackofficeInput: CommentoBackofficeInput, options?: Parameters<typeof customFetch>[1]): Promise<PraticaBackoffice> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<PraticaBackoffice>(getCreateCommentoPraticaBackofficeUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(commentoBackofficeInput)
+  }
+);}
+
+
+
+
+
+export const getCreateCommentoPraticaBackofficeMutationKey = () => ['createCommentoPraticaBackoffice'] as const;
+
+export const getCreateCommentoPraticaBackofficeMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCommentoPraticaBackoffice>>, TError,CreateCommentoPraticaBackofficeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createCommentoPraticaBackoffice>>, TError,CreateCommentoPraticaBackofficeMutationVariables, TContext> => {
+
+const mutationKey = getCreateCommentoPraticaBackofficeMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCommentoPraticaBackoffice>>, CreateCommentoPraticaBackofficeMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  createCommentoPraticaBackoffice(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateCommentoPraticaBackofficeMutationResult = NonNullable<Awaited<ReturnType<typeof createCommentoPraticaBackoffice>>>
+    export type CreateCommentoPraticaBackofficeMutationBody = BodyType<CommentoBackofficeInput>
+    export type CreateCommentoPraticaBackofficeMutationError = ErrorType<unknown>
+    export type CreateCommentoPraticaBackofficeMutationVariables = {id: number;data: BodyType<CommentoBackofficeInput>}
+
+    /**
+ * @summary Scrive un commento nella chat della pratica e sceglie il canale con cui avvisare la sede
+ */
+export const useCreateCommentoPraticaBackoffice = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCommentoPraticaBackoffice>>, TError,CreateCommentoPraticaBackofficeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createCommentoPraticaBackoffice>>,
+        TError,
+        CreateCommentoPraticaBackofficeMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateCommentoPraticaBackofficeMutationOptions(options));
+    }
+
+export const getListCategorieAllegatoUrl = () => {
+
+
+
+
+  return `/api/categorie-allegato`
+}
+
+/**
+ * @summary Categorie degli allegati dell'operatore
+ */
+export const listCategorieAllegato = async ( options?: Parameters<typeof customFetch>[1]): Promise<CategoriaAllegato[]> => {
+
+  return customFetch<CategoriaAllegato[]>(getListCategorieAllegatoUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCategorieAllegatoQueryKey = () => {
+    return [
+    `/api/categorie-allegato`
+    ] as const;
+    }
+
+
+export const getListCategorieAllegatoQueryOptions = <TData = Awaited<ReturnType<typeof listCategorieAllegato>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCategorieAllegato>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCategorieAllegatoQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCategorieAllegato>>> = ({ signal }) => listCategorieAllegato({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCategorieAllegato>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCategorieAllegatoQueryResult = NonNullable<Awaited<ReturnType<typeof listCategorieAllegato>>>
+export type ListCategorieAllegatoQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Categorie degli allegati dell'operatore
+ */
+
+export function useListCategorieAllegato<TData = Awaited<ReturnType<typeof listCategorieAllegato>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCategorieAllegato>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCategorieAllegatoQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateCategoriaAllegatoUrl = () => {
+
+
+
+
+  return `/api/categorie-allegato`
+}
+
+/**
+ * @summary Crea una categoria di allegato (admin)
+ */
+export const createCategoriaAllegato = async (categoriaAllegatoInput: CategoriaAllegatoInput, options?: Parameters<typeof customFetch>[1]): Promise<CategoriaAllegato> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<CategoriaAllegato>(getCreateCategoriaAllegatoUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(categoriaAllegatoInput)
+  }
+);}
+
+
+
+
+
+export const getCreateCategoriaAllegatoMutationKey = () => ['createCategoriaAllegato'] as const;
+
+export const getCreateCategoriaAllegatoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCategoriaAllegato>>, TError,CreateCategoriaAllegatoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createCategoriaAllegato>>, TError,CreateCategoriaAllegatoMutationVariables, TContext> => {
+
+const mutationKey = getCreateCategoriaAllegatoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCategoriaAllegato>>, CreateCategoriaAllegatoMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createCategoriaAllegato(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateCategoriaAllegatoMutationResult = NonNullable<Awaited<ReturnType<typeof createCategoriaAllegato>>>
+    export type CreateCategoriaAllegatoMutationBody = BodyType<CategoriaAllegatoInput>
+    export type CreateCategoriaAllegatoMutationError = ErrorType<unknown>
+    export type CreateCategoriaAllegatoMutationVariables = {data: BodyType<CategoriaAllegatoInput>}
+
+    /**
+ * @summary Crea una categoria di allegato (admin)
+ */
+export const useCreateCategoriaAllegato = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCategoriaAllegato>>, TError,CreateCategoriaAllegatoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createCategoriaAllegato>>,
+        TError,
+        CreateCategoriaAllegatoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateCategoriaAllegatoMutationOptions(options));
+    }
+
+export const getUpdateCategoriaAllegatoUrl = (id: number,) => {
+
+
+
+
+  return `/api/categorie-allegato/${id}`
+}
+
+/**
+ * @summary Rinomina una categoria di allegato (admin)
+ */
+export const updateCategoriaAllegato = async (id: number,
+    categoriaAllegatoInput: CategoriaAllegatoInput, options?: Parameters<typeof customFetch>[1]): Promise<CategoriaAllegato> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<CategoriaAllegato>(getUpdateCategoriaAllegatoUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(categoriaAllegatoInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateCategoriaAllegatoMutationKey = () => ['updateCategoriaAllegato'] as const;
+
+export const getUpdateCategoriaAllegatoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCategoriaAllegato>>, TError,UpdateCategoriaAllegatoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateCategoriaAllegato>>, TError,UpdateCategoriaAllegatoMutationVariables, TContext> => {
+
+const mutationKey = getUpdateCategoriaAllegatoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateCategoriaAllegato>>, UpdateCategoriaAllegatoMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateCategoriaAllegato(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateCategoriaAllegatoMutationResult = NonNullable<Awaited<ReturnType<typeof updateCategoriaAllegato>>>
+    export type UpdateCategoriaAllegatoMutationBody = BodyType<CategoriaAllegatoInput>
+    export type UpdateCategoriaAllegatoMutationError = ErrorType<unknown>
+    export type UpdateCategoriaAllegatoMutationVariables = {id: number;data: BodyType<CategoriaAllegatoInput>}
+
+    /**
+ * @summary Rinomina una categoria di allegato (admin)
+ */
+export const useUpdateCategoriaAllegato = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateCategoriaAllegato>>, TError,UpdateCategoriaAllegatoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateCategoriaAllegato>>,
+        TError,
+        UpdateCategoriaAllegatoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateCategoriaAllegatoMutationOptions(options));
+    }
+
+export const getDeleteCategoriaAllegatoUrl = (id: number,) => {
+
+
+
+
+  return `/api/categorie-allegato/${id}`
+}
+
+/**
+ * @summary Elimina una categoria non usata (admin)
+ */
+export const deleteCategoriaAllegato = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteCategoriaAllegatoUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteCategoriaAllegatoMutationKey = () => ['deleteCategoriaAllegato'] as const;
+
+export const getDeleteCategoriaAllegatoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCategoriaAllegato>>, TError,DeleteCategoriaAllegatoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteCategoriaAllegato>>, TError,DeleteCategoriaAllegatoMutationVariables, TContext> => {
+
+const mutationKey = getDeleteCategoriaAllegatoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteCategoriaAllegato>>, DeleteCategoriaAllegatoMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteCategoriaAllegato(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteCategoriaAllegatoMutationResult = NonNullable<Awaited<ReturnType<typeof deleteCategoriaAllegato>>>
+
+    export type DeleteCategoriaAllegatoMutationError = ErrorType<unknown>
+    export type DeleteCategoriaAllegatoMutationVariables = {id: number}
+
+    /**
+ * @summary Elimina una categoria non usata (admin)
+ */
+export const useDeleteCategoriaAllegato = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCategoriaAllegato>>, TError,DeleteCategoriaAllegatoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteCategoriaAllegato>>,
+        TError,
+        DeleteCategoriaAllegatoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteCategoriaAllegatoMutationOptions(options));
     }
 

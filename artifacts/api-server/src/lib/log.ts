@@ -55,6 +55,14 @@ export const AZIONI_LOG = {
   "pratica.elimina_bozza": "Cancellazione pratica in bozza",
   "pratica.invia": "Invio pratica",
   "pratica.commento": "Commento su una pratica",
+  "pratica.presa_in_carico": "Presa in carico di una pratica",
+  "pratica.cambio_stato": "Cambio di stato di una pratica",
+  "pratica.commento_backoffice": "Commento del back office su una pratica",
+  "pratica.allegato_backoffice": "Allegato dell'operatore su una pratica",
+  "pratica.elimina": "Cancellazione di una pratica",
+  "categoria_allegato.crea": "Creazione categoria allegato",
+  "categoria_allegato.modifica": "Modifica categoria allegato",
+  "categoria_allegato.elimina": "Eliminazione categoria allegato",
   "orari.modifica": "Modifica orari di caricamento",
 } as const;
 

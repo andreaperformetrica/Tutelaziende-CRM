@@ -37,10 +37,11 @@ router.get("/moduli-tipo/:id/file", async (req, res) => {
   inviaFile(res, stream, m.fileNome, m.fileTipo, m.fileDimensione);
 });
 
-export function inviaFile(res: express.Response, stream: NodeJS.ReadableStream, nome: string, tipo: string, dimensione: number) {
+/** Con `inline` il file si apre nel browser (anteprima) invece di essere scaricato. */
+export function inviaFile(res: express.Response, stream: NodeJS.ReadableStream, nome: string, tipo: string, dimensione: number, inline = false) {
   res.setHeader("Content-Type", tipo);
   res.setHeader("Content-Length", String(dimensione));
-  res.setHeader("Content-Disposition", `attachment; filename="download"; filename*=UTF-8''${encodeURIComponent(nome)}`);
+  res.setHeader("Content-Disposition", `${inline ? "inline" : "attachment"}; filename="download"; filename*=UTF-8''${encodeURIComponent(nome)}`);
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("Cache-Control", "private, no-store");
   stream.on("error", () => res.destroy());

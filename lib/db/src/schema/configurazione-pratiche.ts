@@ -105,6 +105,17 @@ export const statiPraticaTable = pgTable(
   (t) => [uniqueIndex("stati_pratica_nome_uq").on(sql`lower(${t.nome})`)],
 );
 
+/** Categoria degli allegati che l'operatore aggiunge a una pratica (es. Estratto contributivo): gestita dall'admin. */
+export const categorieAllegatoTable = pgTable(
+  "categorie_allegato",
+  {
+    id: serial("id").primaryKey(),
+    nome: text("nome").notNull(),
+    creatoIl: timestamp("creato_il", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("categorie_allegato_nome_uq").on(sql`lower(${t.nome})`)],
+);
+
 /**
  * Fascia settimanale in cui NON si possono inviare pratiche. Giorni ISO (1 = lunedi, 7 = domenica),
  * orari in minuti dalla mezzanotte (fuso Europe/Rome). Se la fine precede l'inizio la fascia attraversa

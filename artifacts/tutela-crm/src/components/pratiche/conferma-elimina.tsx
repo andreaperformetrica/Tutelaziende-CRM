@@ -1,7 +1,7 @@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
-export function ConfermaElimina({ aperto, titolo, testo, onConferma, onAnnulla }: {
-  aperto: boolean; titolo: string; testo: string; onConferma: () => void; onAnnulla: () => void;
+export function ConfermaElimina({ aperto, titolo, testo, onConferma, onAnnulla, azione = "Elimina" }: {
+  aperto: boolean; titolo: string; testo: string; onConferma: () => void; onAnnulla: () => void; azione?: string;
 }) {
   return (
     <AlertDialog open={aperto} onOpenChange={(o) => { if (!o) onAnnulla(); }}>
@@ -12,7 +12,7 @@ export function ConfermaElimina({ aperto, titolo, testo, onConferma, onAnnulla }
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel data-testid="button-annulla-elimina">Annulla</AlertDialogCancel>
-          <AlertDialogAction onClick={onConferma} data-testid="button-conferma-elimina">Elimina</AlertDialogAction>
+          <AlertDialogAction onClick={onConferma} data-testid="button-conferma-elimina">{azione}</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

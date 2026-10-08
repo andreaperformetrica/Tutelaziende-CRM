@@ -26,6 +26,8 @@ tags:
     description: Configurazione delle pratiche (tipi, documenti, moduli, mandati, stati, orari). Solo admin e super admin
   - name: pratiche
     description: Apertura e invio delle pratiche dal Web Collaboratore
+  - name: gestione-pratiche
+    description: Gestione delle pratiche nel back office (elenco, scheda, presa in carico, stati, commenti)
   - name: log
     description: Log delle operazioni
 paths:
@@ -1141,6 +1143,179 @@ paths:
               schema:
                 $ref: "#/components/schemas/OrariCaricamento"
 
+  /backoffice/pratiche:
+    get:
+      operationId: listPraticheBackoffice
+      tags: [gestione-pratiche]
+      summary: Elenco delle pratiche inviate (back office)
+      parameters:
+        - { name: collaboratoreId, in: query, required: false, schema: { type: integer } }
+        - { name: tipoPraticaId, in: query, required: false, schema: { type: integer } }
+        - { name: statoId, in: query, required: false, schema: { type: integer } }
+        - { name: gestitaDaUtenteId, in: query, required: false, description: "Operatore che gestisce la pratica", schema: { type: integer } }
+        - { name: nonAssegnate, in: query, required: false, description: "Solo le pratiche che nessuno ha preso in carico", schema: { type: boolean } }
+        - { name: mese, in: query, required: false, description: "Mese della richiesta (AAAA-MM, fuso Europe/Rome)", schema: { type: string } }
+        - { name: dal, in: query, required: false, description: "Data richiesta iniziale (AAAA-MM-GG), inclusa", schema: { type: string } }
+        - { name: al, in: query, required: false, description: "Data richiesta finale (AAAA-MM-GG), inclusa", schema: { type: string } }
+        - { name: soloLavorate, in: query, required: false, description: "Solo le pratiche gia' prese in carico da un operatore", schema: { type: boolean } }
+        - { name: soloAggiornate, in: query, required: false, description: "Solo le pratiche aggiornate dal collaboratore e in attesa del back office", schema: { type: boolean } }
+        - { name: aggiornatePrima, in: query, required: false, description: "Mette in cima le pratiche aggiornate", schema: { type: boolean } }
+        - { name: ordina, in: query, required: false, schema: { type: string, enum: [data, citta, numero, stato, tipo] } }
+        - { name: direzione, in: query, required: false, schema: { type: string, enum: [asc, desc] } }
+        - { name: pagina, in: query, required: false, schema: { type: integer, minimum: 1 } }
+        - { name: perPagina, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 200 } }
+      responses:
+        "200":
+          description: Pagina di pratiche
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PratichePaginaBackoffice"
+  /backoffice/pratiche/filtri:
+    get:
+      operationId: getFiltriPraticheBackoffice
+      tags: [gestione-pratiche]
+      summary: Valori selezionabili nei filtri dell'elenco pratiche
+      responses:
+        "200":
+          description: Opzioni dei filtri
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FiltriPraticheBackoffice"
+  /backoffice/pratiche/{id}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    get:
+      operationId: getPraticaBackoffice
+      tags: [gestione-pratiche]
+      summary: Scheda pratica (back office)
+      responses:
+        "200":
+          description: Pratica
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PraticaBackoffice"
+    delete:
+      operationId: deletePraticaBackoffice
+      tags: [gestione-pratiche]
+      summary: Cancella una pratica (solo super admin)
+      responses:
+        "204":
+          description: Eseguito
+  /backoffice/pratiche/{id}/presa-in-carico:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    post:
+      operationId: prendiInCaricoPratica
+      tags: [gestione-pratiche]
+      summary: Assegna la pratica all'operatore che la prende in carico
+      responses:
+        "200":
+          description: Pratica aggiornata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PraticaBackoffice"
+  /backoffice/pratiche/{id}/stato:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    put:
+      operationId: cambiaStatoPratica
+      tags: [gestione-pratiche]
+      summary: Cambia lo stato di lavorazione della pratica
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CambioStatoInput"
+      responses:
+        "200":
+          description: Pratica aggiornata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PraticaBackoffice"
+  /backoffice/pratiche/{id}/commenti:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    post:
+      operationId: createCommentoPraticaBackoffice
+      tags: [gestione-pratiche]
+      summary: Scrive un commento nella chat della pratica e sceglie il canale con cui avvisare la sede
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentoBackofficeInput"
+      responses:
+        "201":
+          description: Pratica aggiornata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PraticaBackoffice"
+  /categorie-allegato:
+    get:
+      operationId: listCategorieAllegato
+      tags: [gestione-pratiche]
+      summary: Categorie degli allegati dell'operatore
+      responses:
+        "200":
+          description: Categorie in ordine alfabetico
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CategoriaAllegato"
+    post:
+      operationId: createCategoriaAllegato
+      tags: [configurazione]
+      summary: Crea una categoria di allegato (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoriaAllegatoInput"
+      responses:
+        "201":
+          description: Categoria creata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoriaAllegato"
+  /categorie-allegato/{id}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    put:
+      operationId: updateCategoriaAllegato
+      tags: [configurazione]
+      summary: Rinomina una categoria di allegato (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoriaAllegatoInput"
+      responses:
+        "200":
+          description: Categoria aggiornata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CategoriaAllegato"
+    delete:
+      operationId: deleteCategoriaAllegato
+      tags: [configurazione]
+      summary: Elimina una categoria non usata (admin)
+      responses:
+        "204":
+          description: Eseguito
 components:
   parameters:
     IdPath:
@@ -2154,7 +2329,7 @@ components:
         nome: { type: string }
     DocumentoPratica:
       type: object
-      required: [id, documentoTipoId, nome, fileNome, fileTipo, dimensione, caricatoIl, caricatoDa, dopoInvio]
+      required: [id, documentoTipoId, nome, fileNome, fileTipo, dimensione, caricatoIl, caricatoDa, dopoInvio, daUfficio, categoria]
       properties:
         id: { type: integer }
         documentoTipoId: { type: [integer, "null"], description: "Vuoto per gli allegati aggiuntivi" }
@@ -2165,6 +2340,8 @@ components:
         caricatoIl: { type: string, format: date-time }
         caricatoDa: { type: string }
         dopoInvio: { type: boolean }
+        daUfficio: { type: boolean, description: "Allegato aggiunto da un operatore del back office" }
+        categoria: { type: [string, "null"], description: "Categoria degli allegati dell'ufficio" }
     CommentoPratica:
       type: object
       required: [id, testo, autore, ruolo, creatoIl, mio]
@@ -2246,3 +2423,197 @@ components:
           items: { type: string }
         invio:
           $ref: "#/components/schemas/InvioPratiche"
+    CategoriaAllegato:
+      type: object
+      required: [id, nome]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+    CategoriaAllegatoInput:
+      type: object
+      required: [nome]
+      properties:
+        nome: { type: string }
+    CambioStatoInput:
+      type: object
+      required: [statoId]
+      properties:
+        statoId: { type: integer }
+    CommentoBackofficeInput:
+      type: object
+      required: [testo, canale]
+      properties:
+        testo: { type: string }
+        canale: { type: string, enum: [email, whatsapp, entrambi], description: "Canale con cui avvisare la sede; l'invio vero arriva con le notifiche" }
+    OperatorePratica:
+      type: object
+      required: [id, nome, cognome]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        cognome: { type: string }
+    StatoPraticaRiepilogo:
+      type: object
+      required: [id, nome, chiuso]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        chiuso: { type: boolean }
+    PraticaBackofficeRiepilogo:
+      type: object
+      required: [id, numero, assistito, collaboratore, citta, dataRichiesta, stato, tipo, gestitaDa, aggiornata]
+      properties:
+        id: { type: integer }
+        numero: { type: integer }
+        assistito:
+          $ref: "#/components/schemas/PraticaAssistitoRiepilogo"
+        collaboratore:
+          $ref: "#/components/schemas/PraticaCollaboratoreRiepilogo"
+        citta: { type: string, description: "Citta' dell'assistito" }
+        dataRichiesta: { type: string, format: date-time }
+        stato:
+          $ref: "#/components/schemas/StatoPraticaRiepilogo"
+        tipo:
+          $ref: "#/components/schemas/PraticaTipoRiepilogo"
+        gestitaDa:
+          oneOf:
+            - $ref: "#/components/schemas/OperatorePratica"
+            - type: "null"
+        aggiornata: { type: boolean, description: "Il collaboratore ha scritto o allegato qualcosa e il back office non ha ancora risposto" }
+    PratichePaginaBackoffice:
+      type: object
+      required: [elementi, totale, pagina, perPagina]
+      properties:
+        elementi:
+          type: array
+          items:
+            $ref: "#/components/schemas/PraticaBackofficeRiepilogo"
+        totale: { type: integer }
+        pagina: { type: integer }
+        perPagina: { type: integer }
+    OperatoreFiltro:
+      type: object
+      required: [id, nome, cognome, ruolo]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        cognome: { type: string }
+        ruolo: { type: string }
+    FiltriPraticheBackoffice:
+      type: object
+      required: [collaboratori, tipi, stati, operatori, mesi]
+      properties:
+        collaboratori:
+          type: array
+          items:
+            $ref: "#/components/schemas/PraticaCollaboratoreRiepilogo"
+        tipi:
+          type: array
+          items:
+            $ref: "#/components/schemas/PraticaTipoRiepilogo"
+        stati:
+          type: array
+          items:
+            $ref: "#/components/schemas/StatoPraticaRiepilogo"
+        operatori:
+          type: array
+          items:
+            $ref: "#/components/schemas/OperatoreFiltro"
+        mesi:
+          type: array
+          description: Mesi (AAAA-MM) in cui sono state richieste pratiche, dal piu' recente
+          items: { type: string }
+    CommentoPraticaBackoffice:
+      type: object
+      required: [id, testo, autore, ruolo, creatoIl, canaleAvviso, mio]
+      properties:
+        id: { type: integer }
+        testo: { type: string }
+        autore: { type: string }
+        ruolo: { type: string, enum: [super_admin, admin, operatore, collaboratore] }
+        creatoIl: { type: string, format: date-time }
+        canaleAvviso: { type: [string, "null"], enum: [email, whatsapp, entrambi, null] }
+        mio: { type: boolean }
+    EventoCronologiaPratica:
+      type: object
+      required: [id, tipo, creatoIl, autore, descrizione]
+      properties:
+        id: { type: string }
+        tipo: { type: string, enum: [invio, presa_in_carico, cambio_stato, allegato, commento] }
+        creatoIl: { type: string, format: date-time }
+        autore: { type: string }
+        descrizione: { type: string }
+    CollaboratorePratica:
+      type: object
+      required: [id, nome, cognome, numeroSportello, tipologia, email, cellulare]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        cognome: { type: string }
+        numeroSportello: { type: string }
+        tipologia: { type: string }
+        email: { type: [string, "null"] }
+        cellulare: { type: string }
+    PraticaBackoffice:
+      type: object
+      required:
+        - id
+        - numero
+        - stato
+        - tipo
+        - assistito
+        - collaboratore
+        - mandato
+        - documenti
+        - allegatiUfficio
+        - messaggio
+        - commenti
+        - cronologia
+        - inviataIl
+        - gestitaDa
+        - aggiornata
+        - mieInCarico
+        - puoEliminare
+      properties:
+        id: { type: integer }
+        numero: { type: integer }
+        stato:
+          $ref: "#/components/schemas/StatoPraticaRiepilogo"
+        tipo:
+          $ref: "#/components/schemas/PraticaTipoRiepilogo"
+        assistito:
+          $ref: "#/components/schemas/Assistito"
+        collaboratore:
+          $ref: "#/components/schemas/CollaboratorePratica"
+        mandato:
+          oneOf:
+            - $ref: "#/components/schemas/MandatoPratica"
+            - type: "null"
+        documenti:
+          type: array
+          description: Documenti e allegati caricati dal collaboratore
+          items:
+            $ref: "#/components/schemas/DocumentoPratica"
+        allegatiUfficio:
+          type: array
+          description: Allegati aggiunti dagli operatori
+          items:
+            $ref: "#/components/schemas/DocumentoPratica"
+        messaggio: { type: string, description: "Messaggio iniziale scritto dal collaboratore" }
+        commenti:
+          type: array
+          items:
+            $ref: "#/components/schemas/CommentoPraticaBackoffice"
+        cronologia:
+          type: array
+          description: Eventi della pratica, dal piu' recente
+          items:
+            $ref: "#/components/schemas/EventoCronologiaPratica"
+        inviataIl: { type: string, format: date-time }
+        gestitaDa:
+          oneOf:
+            - $ref: "#/components/schemas/OperatorePratica"
+            - type: "null"
+        aggiornata: { type: boolean }
+        mieInCarico: { type: boolean, description: "La pratica e' gia' in carico all'utente che la sta guardando" }
+        puoEliminare: { type: boolean, description: "Solo il super admin puo' cancellare una pratica" }
