@@ -3,7 +3,7 @@ import { Link, useParams } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetEventoBackofficeQueryKey, useGetEventoBackoffice, useRegistraCheckInEvento, type CheckInEsito } from "@workspace/api-client-react";
 import jsQR from "jsqr";
-import { AlertTriangle, ArrowLeft, Camera, CameraOff, CheckCircle2, LogIn, LogOut, XCircle } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Camera, CameraOff, CheckCircle2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,7 +11,6 @@ import { ErrorState } from "@/components/common";
 import { cn } from "@/lib/utils";
 import { fmtData, fmtIstante, parseApiError } from "@/lib/format";
 
-type Tipo = "entrata" | "uscita";
 type Esito = { tipo: "ok" | "avviso" | "errore"; titolo: string; testo?: string; ora: string };
 
 export default function EventoCheckIn() {
@@ -20,7 +19,6 @@ export default function EventoCheckIn() {
   const qc = useQueryClient();
   const evento = useGetEventoBackoffice(id);
   const check = useRegistraCheckInEvento();
-  const [tipo, setTipo] = useState<Tipo>("entrata");
   const [esito, setEsito] = useState<Esito | null>(null);
   const [recenti, setRecenti] = useState<Esito[]>([]);
   const [manuale, setManuale] = useState("");
@@ -32,20 +30,17 @@ export default function EventoCheckIn() {
   const raf = useRef<number | null>(null);
   const ultimo = useRef<{ codice: string; quando: number } | null>(null);
   const occupato = useRef(false);
-  const tipoRef = useRef<Tipo>(tipo);
-  tipoRef.current = tipo;
 
   const registra = useCallback((codice: string) => {
     const c = codice.trim();
     if (!c || occupato.current) return;
     occupato.current = true;
-    const t = tipoRef.current;
     const ora = new Date().toISOString();
     const nota = (e: Esito) => { setEsito(e); setRecenti((r) => [e, ...r].slice(0, 6)); };
-    check.mutate({ id, data: { codice: c, tipo: t } }, {
+    check.mutate({ id, data: { codice: c } }, {
       onSuccess: (r: CheckInEsito) => {
         const nome = `${r.partecipante.cognome} ${r.partecipante.nome}`;
-        const verbo = t === "entrata" ? "Entrata" : "Uscita";
+        const verbo = r.tipo === "entrata" ? "Entrata" : "Uscita";
         if (r.esito === "registrato") nota({ tipo: r.avviso ? "avviso" : "ok", titolo: `${verbo} registrata: ${nome}`, testo: r.avviso ?? `${r.partecipante.sedeNome}`, ora });
         else nota({ tipo: "avviso", titolo: nome, testo: r.avviso ?? `${verbo} già registrata.`, ora });
         if (navigator.vibrate) navigator.vibrate(r.esito === "registrato" ? 80 : [60, 60, 60]);
@@ -90,11 +85,11 @@ export default function EventoCheckIn() {
           const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
           const r = jsQR(img.data, img.width, img.height, { inversionAttempts: "dontInvert" });
           if (r?.data) {
+            // Lo stesso QR si registra di nuovo solo dopo che è uscito dall'inquadratura.
             const adesso = Date.now();
-            if (!ultimo.current || ultimo.current.codice !== r.data || adesso - ultimo.current.quando > 4000) {
-              ultimo.current = { codice: r.data, quando: adesso };
-              registra(r.data);
-            }
+            const nuovo = !ultimo.current || ultimo.current.codice !== r.data || adesso - ultimo.current.quando > 2500;
+            ultimo.current = { codice: r.data, quando: adesso };
+            if (nuovo) registra(r.data);
           }
         }
         raf.current = requestAnimationFrame(ciclo);
@@ -122,15 +117,7 @@ export default function EventoCheckIn() {
         <p className="text-sm mt-1" data-testid="text-riepilogo-check-in"><strong>{presenti}</strong> entrati · <strong>{usciti}</strong> usciti · {evento.data.partecipanti.length} iscritti</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-2" role="group" aria-label="Tipo di registrazione">
-        {([["entrata", "Entrata", LogIn], ["uscita", "Uscita", LogOut]] as const).map(([v, label, Icona]) => (
-          <button key={v} type="button" onClick={() => setTipo(v)} aria-pressed={tipo === v} data-testid={`button-tipo-${v}`}
-            className={cn("h-16 rounded-lg border-2 text-lg font-bold flex items-center justify-center gap-2 transition-colors",
-              tipo === v ? "bg-primary text-primary-foreground border-primary" : "bg-card border-input hover:bg-secondary/60")}>
-            <Icona className="size-5" /> {label}
-          </button>
-        ))}
-      </div>
+      <p className="text-sm text-muted-foreground">Una persona che si presenta la prima volta viene registrata in entrata; alla seconda scansione, in uscita.</p>
 
       <div className="rounded-lg border border-border bg-card p-3 space-y-3">
         <div className={cn("relative aspect-square w-full overflow-hidden rounded-md bg-black/90", camera === "spenta" && "grid place-items-center")}>

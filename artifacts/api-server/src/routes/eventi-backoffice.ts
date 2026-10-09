@@ -1,5 +1,5 @@
 import express, { Router, type IRouter, type Response } from "express";
-import { and, asc, count, eq, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
+import { and, asc, count, eq, inArray, isNotNull, isNull, lte, or, sql } from "drizzle-orm";
 import {
   AddInvitiEventoBody,
   AddInvitiEventoParams,
@@ -52,6 +52,9 @@ import { inviaFile } from "./tipi-pratica";
 const router: IRouter = Router();
 router.use("/backoffice/eventi", richiediRuolo("super_admin", "admin"));
 const corpoFile = express.raw({ type: () => true, limit: DIMENSIONE_MASSIMA_FILE });
+
+/** Dopo l'entrata, una nuova scansione ravvicinata non vale come uscita. */
+const SECONDI_MINIMI_TRA_ENTRATA_E_USCITA = 60;
 
 const descrizioneData = (e: { data: string; oraInizio: string }) => `${formattaData(e.data)} ore ${e.oraInizio}`;
 
@@ -322,34 +325,50 @@ router.post("/backoffice/eventi/:id/check-in", async (req, res) => {
   if (!p) throw nonTrovato("QR code non riconosciuto.");
   if (p.eventoId !== id) throw new HttpError(409, "Questo QR code appartiene a un altro evento.", "QR_ALTRO_EVENTO");
 
-  const campo = b.tipo === "entrata" ? eventiPartecipantiTable.entrataIl : eventiPartecipantiTable.uscitaIl;
   const adesso = new Date();
-  const esito = await db.transaction(async (tx) => {
-    const [agg] = await tx
+  const esito = await db.transaction(async (tx): Promise<{ tipo: "entrata" | "uscita"; registrato: boolean; avviso: string | null }> => {
+    // Prima scansione: entrata. L'aggiornamento condizionato evita che due scansioni ravvicinate registrino entrambe l'entrata.
+    const [entrata] = await tx
       .update(eventiPartecipantiTable)
-      .set(b.tipo === "entrata" ? { entrataIl: adesso } : { uscitaIl: adesso })
-      .where(and(eq(eventiPartecipantiTable.id, p.id), isNull(campo)))
+      .set({ entrataIl: adesso })
+      .where(and(eq(eventiPartecipantiTable.id, p.id), isNull(eventiPartecipantiTable.entrataIl)))
       .returning({ id: eventiPartecipantiTable.id });
-    if (!agg) return false;
-    await registraLog(tx, contestoDa(req), {
-      azione: "evento.check_in",
-      entita: "evento",
-      entitaId: id,
-      descrizione: `${b.tipo === "entrata" ? "Entrata" : "Uscita"} di ${nomeCompleto(p)} all'evento "${e.titolo}" alle ${oraRoma(adesso)}`,
-      dettagli: { partecipanteId: p.id, tipo: b.tipo },
-    });
-    return true;
+    if (entrata) {
+      await registraLog(tx, contestoDa(req), {
+        azione: "evento.check_in",
+        entita: "evento",
+        entitaId: id,
+        descrizione: `Entrata di ${nomeCompleto(p)} all'evento "${e.titolo}" alle ${oraRoma(adesso)}`,
+        dettagli: { partecipanteId: p.id, tipo: "entrata" },
+      });
+      return { tipo: "entrata", registrato: true, avviso: null };
+    }
+    // Seconda scansione: uscita, ma non subito dopo l'entrata (la stessa persona inquadrata due volte di seguito).
+    const limite = new Date(adesso.getTime() - SECONDI_MINIMI_TRA_ENTRATA_E_USCITA * 1000);
+    const [uscita] = await tx
+      .update(eventiPartecipantiTable)
+      .set({ uscitaIl: adesso })
+      .where(and(eq(eventiPartecipantiTable.id, p.id), isNull(eventiPartecipantiTable.uscitaIl), lte(eventiPartecipantiTable.entrataIl, limite)))
+      .returning({ id: eventiPartecipantiTable.id });
+    if (uscita) {
+      await registraLog(tx, contestoDa(req), {
+        azione: "evento.check_in",
+        entita: "evento",
+        entitaId: id,
+        descrizione: `Uscita di ${nomeCompleto(p)} all'evento "${e.titolo}" alle ${oraRoma(adesso)}`,
+        dettagli: { partecipanteId: p.id, tipo: "uscita" },
+      });
+      return { tipo: "uscita", registrato: true, avviso: null };
+    }
+    const [att] = await tx.select().from(eventiPartecipantiTable).where(eq(eventiPartecipantiTable.id, p.id));
+    if (att?.uscitaIl) {
+      return { tipo: "uscita", registrato: false, avviso: `Entrata (${att.entrataIl ? oraRoma(att.entrataIl) : ""}) e uscita (${oraRoma(att.uscitaIl)}) già registrate.` };
+    }
+    return { tipo: "entrata", registrato: false, avviso: `Entrata già registrata alle ${att?.entrataIl ? oraRoma(att.entrataIl) : ""}: attendi qualche istante prima di registrare l'uscita.` };
   });
   const lista = await partecipantiBackoffice(id);
   const aggiornato = lista.find((x) => x.id === p.id)!;
-  let avviso: string | null = null;
-  if (!esito) {
-    const gia = b.tipo === "entrata" ? p.entrataIl : p.uscitaIl;
-    avviso = `${b.tipo === "entrata" ? "Entrata" : "Uscita"} già registrata alle ${gia ? oraRoma(gia) : ""}.`;
-  } else if (b.tipo === "uscita" && !p.entrataIl) {
-    avviso = "Entrata mancante: è stata registrata solo l'uscita.";
-  }
-  res.json({ esito: esito ? "registrato" : "gia_registrato", tipo: b.tipo, avviso, partecipante: aggiornato });
+  res.json({ esito: esito.registrato ? "registrato" : "gia_registrato", tipo: esito.tipo, avviso: esito.avviso, partecipante: aggiornato });
 });
 
 // ---------------------------------------------------------------------------------------------

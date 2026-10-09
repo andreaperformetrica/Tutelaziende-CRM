@@ -5,7 +5,8 @@ description: Permissions, locks and design choices for eventi, QR, check-in, att
 - Only admin/super_admin manage eventi and check-in; a sede sees only events it is invited to (no group visibility).
 - A sede must confirm before adding participants; it can edit/delete a participant only while no entrata/uscita exists.
 - An invito can be removed only if the sede has no participants; an evento can be deleted, or its date changed, only while no orari are recorded.
-- "Presente" = entrataIl not null (used for the "all presenti" attestati). Uscita without entrata is accepted with a warning.
+- Check-in has no Entrata/Uscita toggle: the first scan of a QR is the entrata, the second the uscita. The uscita is refused (reported as gia_registrato) within 60 s of the entrata, so a QR held in front of the camera is not counted twice. The user chose this explicitly.
+- "Presente" = entrataIl not null (used for the "all presenti" attestati).
 - QR content is the `codiceQr` token, generated client-side; only the sede response exposes it, never the admin one.
 - Attestato: layout PDF/PNG/JPG, name centred at x/y % with auto-shrink; admin-only. Questionario: any allowed file type, downloadable by invited sedi.
 - WhatsApp invite uses a second Twilio template (secret `TWILIO_WHATSAPP_TEMPLATE_EVENTO_SID`), deliberately not part of the general channel status.

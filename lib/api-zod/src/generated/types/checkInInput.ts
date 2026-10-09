@@ -5,7 +5,6 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { CheckInInputTipo } from './checkInInputTipo';
 
 export interface CheckInInput {
   /**
@@ -13,5 +12,4 @@ export interface CheckInInput {
      * @maxLength 100
      */
   codice: string;
-  tipo: CheckInInputTipo;
 }

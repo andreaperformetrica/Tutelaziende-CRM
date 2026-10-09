@@ -1533,7 +1533,7 @@ export const UpdateOrariPartecipanteResponse = zod.object({
 
 
 /**
- * @summary Registra l'entrata o l'uscita leggendo il QR code di un partecipante
+ * @summary Legge il QR code di un partecipante, la prima scansione registra l'entrata e la seconda l'uscita
  */
 export const RegistraCheckInEventoParams = zod.object({
   "id": zod.coerce.number().int()
@@ -1544,8 +1544,7 @@ export const registraCheckInEventoBodyCodiceMax = 100;
 
 
 export const RegistraCheckInEventoBody = zod.object({
-  "codice": zod.string().min(1).max(registraCheckInEventoBodyCodiceMax),
-  "tipo": zod.enum(['entrata', 'uscita'])
+  "codice": zod.string().min(1).max(registraCheckInEventoBodyCodiceMax)
 })
 
 export const RegistraCheckInEventoResponse = zod.object({

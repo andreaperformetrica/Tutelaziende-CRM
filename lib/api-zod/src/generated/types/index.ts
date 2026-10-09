@@ -25,7 +25,6 @@ export * from './checkInEsito';
 export * from './checkInEsitoEsito';
 export * from './checkInEsitoTipo';
 export * from './checkInInput';
-export * from './checkInInputTipo';
 export * from './collaboratore';
 export * from './collaboratoreAssistito';
 export * from './collaboratoreDettaglio';

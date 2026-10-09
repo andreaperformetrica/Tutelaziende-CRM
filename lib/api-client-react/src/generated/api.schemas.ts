@@ -707,21 +707,12 @@ export interface OrariPartecipanteInput {
   uscita: string | null;
 }
 
-export type CheckInInputTipo = typeof CheckInInputTipo[keyof typeof CheckInInputTipo];
-
-
-export const CheckInInputTipo = {
-  entrata: 'entrata',
-  uscita: 'uscita',
-} as const;
-
 export interface CheckInInput {
   /**
      * @minLength 1
      * @maxLength 100
      */
   codice: string;
-  tipo: CheckInInputTipo;
 }
 
 export type CheckInEsitoEsito = typeof CheckInEsitoEsito[keyof typeof CheckInEsitoEsito];

@@ -3298,7 +3298,7 @@ export const getRegistraCheckInEventoUrl = (id: number,) => {
 }
 
 /**
- * @summary Registra l'entrata o l'uscita leggendo il QR code di un partecipante
+ * @summary Legge il QR code di un partecipante, la prima scansione registra l'entrata e la seconda l'uscita
  */
 export const registraCheckInEvento = async (id: number,
     checkInInput: CheckInInput, options?: Parameters<typeof customFetch>[1]): Promise<CheckInEsito> => {
@@ -3365,7 +3365,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type RegistraCheckInEventoMutationVariables = {id: number;data: BodyType<CheckInInput>}
 
     /**
- * @summary Registra l'entrata o l'uscita leggendo il QR code di un partecipante
+ * @summary Legge il QR code di un partecipante, la prima scansione registra l'entrata e la seconda l'uscita
  */
 export const useRegistraCheckInEvento = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registraCheckInEvento>>, TError,RegistraCheckInEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}

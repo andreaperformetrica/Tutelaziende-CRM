@@ -791,7 +791,7 @@ paths:
     post:
       operationId: registraCheckInEvento
       tags: [eventi-backoffice]
-      summary: Registra l'entrata o l'uscita leggendo il QR code di un partecipante
+      summary: Legge il QR code di un partecipante, la prima scansione registra l'entrata e la seconda l'uscita
       requestBody:
         required: true
         content:
@@ -2599,10 +2599,9 @@ components:
         uscita: { type: [string, "null"], pattern: "^([01]\\d|2[0-3]):[0-5]\\d$", description: "HH:MM nel giorno dell'evento; null per cancellare" }
     CheckInInput:
       type: object
-      required: [codice, tipo]
+      required: [codice]
       properties:
         codice: { type: string, minLength: 1, maxLength: 100 }
-        tipo: { type: string, enum: [entrata, uscita] }
     CheckInEsito:
       type: object
       required: [esito, tipo, avviso, partecipante]
