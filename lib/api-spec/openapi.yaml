@@ -36,6 +36,8 @@ tags:
     description: Eventi e corsi di formazione nel Web Collaboratore
   - name: notifiche
     description: Registro delle notifiche email e WhatsApp. Solo admin e super admin
+  - name: compensi
+    description: Compensi ai collaboratori (resoconto, estratti, pagamenti, dare/avere). Solo admin e super admin
 paths:
   /healthz:
     get:
@@ -954,6 +956,265 @@ paths:
   # I file degli eventi (PUT /backoffice/eventi/{id}/questionario/file e /attestato/file, GET dei file e dei PDF) sono fuori specifica.
   # I caricamenti di file non sono nella specifica (corpo binario): POST /mandati/file, PUT /mandati/{id}/file, POST /tipi-pratica/{id}/moduli/file,
   # PUT /moduli-tipo/{id}/file, e i download GET /moduli-tipo/{id}/file e GET /mandati/{id}/file.
+  /backoffice/compensi/resoconto:
+    get:
+      operationId: getResocontoCompensi
+      tags: [compensi]
+      summary: Pratiche chiuse con compenso maturato e non ancora in un estratto
+      parameters:
+        - name: collaboratoreId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: dal
+          in: query
+          required: false
+          description: Chiuse dal giorno indicato (AAAA-MM-GG, fuso Europe/Rome), incluso
+          schema:
+            type: string
+        - name: al
+          in: query
+          required: false
+          description: Chiuse fino al giorno indicato (AAAA-MM-GG, fuso Europe/Rome), incluso
+          schema:
+            type: string
+        - name: giorni
+          in: query
+          required: false
+          description: Solo le pratiche chiuse da almeno questi giorni (il back office propone 60)
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 3650
+      responses:
+        "200":
+          description: Pratiche da confermare
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResocontoCompensi"
+  /backoffice/compensi/estratti:
+    get:
+      operationId: listEstratti
+      tags: [compensi]
+      summary: Elenco degli estratti, dal piu recente
+      parameters:
+        - name: collaboratoreId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: stato
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [da_pagare, pagato]
+        - name: anno
+          in: query
+          required: false
+          description: Anno della data dell'estratto
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Estratti
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EstrattoRiepilogo"
+    post:
+      operationId: createEstratti
+      tags: [compensi]
+      summary: Crea un estratto per ogni collaboratore delle pratiche confermate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreaEstrattiInput"
+      responses:
+        "201":
+          description: Estratti creati
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EstrattoRiepilogo"
+  /backoffice/compensi/estratti/{id}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    get:
+      operationId: getEstratto
+      tags: [compensi]
+      summary: Estratto con le sue pratiche, il pagamento e gli invii per email
+      responses:
+        "200":
+          description: Estratto
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EstrattoDettaglio"
+    delete:
+      operationId: deleteEstratto
+      tags: [compensi]
+      summary: Elimina un estratto non ancora pagato (le pratiche tornano disponibili)
+      responses:
+        "204":
+          description: Eseguito
+  /backoffice/compensi/estratti/{id}/pagamento:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    post:
+      operationId: registraPagamentoEstratto
+      tags: [compensi]
+      summary: Registra il pagamento dell'estratto; le sue pratiche passano allo stato Pagata
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PagamentoEstrattoInput"
+      responses:
+        "200":
+          description: Estratto aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EstrattoDettaglio"
+  /backoffice/compensi/estratti/{id}/invio:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    post:
+      operationId: inviaEstratto
+      tags: [compensi]
+      summary: Invia l'estratto in PDF al collaboratore per email
+      responses:
+        "200":
+          description: Esito dell'invio
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvioEstrattoEsito"
+  /backoffice/compensi/impostazioni-stampa:
+    get:
+      operationId: getImpostazioniStampa
+      tags: [compensi]
+      summary: Intestazione, recapiti, logo e note fisse degli stampati
+      responses:
+        "200":
+          description: Impostazioni
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImpostazioniStampa"
+    put:
+      operationId: updateImpostazioniStampa
+      tags: [compensi]
+      summary: Modifica intestazione, recapiti e note fisse degli stampati
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImpostazioniStampaInput"
+      responses:
+        "200":
+          description: Impostazioni aggiornate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImpostazioniStampa"
+  /backoffice/compensi/impostazioni-stampa/logo:
+    delete:
+      operationId: deleteLogoStampa
+      tags: [compensi]
+      summary: Toglie il logo dagli stampati
+      responses:
+        "200":
+          description: Impostazioni aggiornate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImpostazioniStampa"
+  /backoffice/compensi/dare-avere:
+    get:
+      operationId: getDareAvere
+      tags: [compensi]
+      summary: Dare/avere di un collaboratore per un anno
+      parameters:
+        - name: collaboratoreId
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: anno
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 2000
+            maximum: 2100
+      responses:
+        "200":
+          description: Dare/avere
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DareAvere"
+  /backoffice/compensi/dare-avere/righe:
+    post:
+      operationId: createRigaDareAvere
+      tags: [compensi]
+      summary: Aggiunge una riga a mano a una sezione del dare/avere
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RigaDareAvereInput"
+      responses:
+        "201":
+          description: Dare/avere aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DareAvere"
+  /backoffice/compensi/dare-avere/righe/{id}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    put:
+      operationId: updateRigaDareAvere
+      tags: [compensi]
+      summary: Modifica una riga inserita a mano
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RigaDareAvereModificaInput"
+      responses:
+        "200":
+          description: Dare/avere aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DareAvere"
+    delete:
+      operationId: deleteRigaDareAvere
+      tags: [compensi]
+      summary: Elimina una riga inserita a mano
+      responses:
+        "200":
+          description: Dare/avere aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DareAvere"
   /tipi-pratica:
     get:
       operationId: listTipiPratica
@@ -3221,3 +3482,206 @@ components:
         aggiornata: { type: boolean }
         mieInCarico: { type: boolean, description: "La pratica e' gia' in carico all'utente che la sta guardando" }
         puoEliminare: { type: boolean, description: "Solo il super admin puo' cancellare una pratica" }
+
+    RigaResoconto:
+      type: object
+      required: [praticaId, numero, assistito, collaboratoreId, collaboratoreNome, numeroSportello, tipoNome, dataPratica, chiusaIl, giorniDallaChiusura, punti, valoreEuro]
+      properties:
+        praticaId: { type: integer }
+        numero: { type: integer }
+        assistito: { type: string, description: Cognome e nome }
+        collaboratoreId: { type: integer }
+        collaboratoreNome: { type: string, description: Cognome e nome }
+        numeroSportello: { type: string }
+        tipoNome: { type: string }
+        dataPratica: { type: [string, "null"], description: "Data di invio della pratica (AAAA-MM-GG)" }
+        chiusaIl: { type: string, description: Istante ISO 8601 in cui la pratica e' passata a uno stato chiuso }
+        giorniDallaChiusura: { type: integer }
+        punti: { type: integer }
+        valoreEuro: { type: number }
+    ResocontoCompensi:
+      type: object
+      required: [righe, totalePunti, totaleEuro]
+      properties:
+        righe:
+          type: array
+          items:
+            $ref: "#/components/schemas/RigaResoconto"
+        totalePunti: { type: integer }
+        totaleEuro: { type: number }
+    CreaEstrattiInput:
+      type: object
+      required: [praticaIds]
+      properties:
+        praticaIds:
+          type: array
+          minItems: 1
+          maxItems: 2000
+          items: { type: integer }
+    EstrattoRiepilogo:
+      type: object
+      required: [id, collaboratoreId, collaboratoreNome, numeroSportello, dataEstratto, numeroPratiche, totalePunti, totaleEuro, pagato, pagatoIl, pagamentoEuro, pagamentoMetodo]
+      properties:
+        id: { type: integer }
+        collaboratoreId: { type: integer }
+        collaboratoreNome: { type: string, description: Cognome e nome }
+        numeroSportello: { type: string }
+        dataEstratto: { type: string, description: AAAA-MM-GG }
+        numeroPratiche: { type: integer }
+        totalePunti: { type: integer }
+        totaleEuro: { type: number }
+        pagato: { type: boolean }
+        pagatoIl: { type: [string, "null"], description: Data del pagamento (AAAA-MM-GG) }
+        pagamentoEuro: { type: [number, "null"] }
+        pagamentoMetodo:
+          oneOf:
+            - $ref: "#/components/schemas/MetodoPagamento"
+            - type: "null"
+    MetodoPagamento:
+      type: string
+      enum: [bonifico, contanti, assegno, altro]
+    RigaEstratto:
+      type: object
+      required: [praticaId, assistito, numeroPratica, tipoPratica, dataPratica, punti, valoreEuro]
+      properties:
+        praticaId: { type: integer }
+        assistito: { type: string }
+        numeroPratica: { type: integer }
+        tipoPratica: { type: string }
+        dataPratica: { type: [string, "null"] }
+        punti: { type: integer }
+        valoreEuro: { type: number }
+    InvioEstratto:
+      type: object
+      required: [id, creatoIl, destinatarioContatto, esito, esitoEtichetta, dettaglioEsito]
+      properties:
+        id: { type: integer }
+        creatoIl: { type: string }
+        destinatarioContatto: { type: string }
+        esito: { type: string, enum: [in_coda, inviata, non_inviata, errore] }
+        esitoEtichetta: { type: string }
+        dettaglioEsito: { type: [string, "null"] }
+    EstrattoDettaglio:
+      type: object
+      required: [estratto, righe, creatoIl, creatoDa, pagamentoRegistratoIl, pagamentoRegistratoDa, emailDestinatario, invii]
+      properties:
+        estratto: { $ref: "#/components/schemas/EstrattoRiepilogo" }
+        righe:
+          type: array
+          items:
+            $ref: "#/components/schemas/RigaEstratto"
+        creatoIl: { type: string }
+        creatoDa: { type: [string, "null"] }
+        pagamentoRegistratoIl: { type: [string, "null"] }
+        pagamentoRegistratoDa: { type: [string, "null"] }
+        emailDestinatario: { type: [string, "null"], description: Indirizzo del collaboratore a cui va l'estratto }
+        invii:
+          type: array
+          description: Invii per email, dal piu recente
+          items:
+            $ref: "#/components/schemas/InvioEstratto"
+    PagamentoEstrattoInput:
+      type: object
+      required: [data, importoEuro, metodo]
+      properties:
+        data: { type: string, description: "Data del pagamento (AAAA-MM-GG)" }
+        importoEuro: { type: number, exclusiveMinimum: 0, maximum: 10000000 }
+        metodo: { $ref: "#/components/schemas/MetodoPagamento" }
+    InvioEstrattoEsito:
+      type: object
+      required: [estratto, esito, esitoEtichetta, dettaglio]
+      properties:
+        estratto: { $ref: "#/components/schemas/EstrattoDettaglio" }
+        esito: { type: string, enum: [in_coda, inviata, non_inviata, errore] }
+        esitoEtichetta: { type: string }
+        dettaglio: { type: [string, "null"] }
+    LogoStampa:
+      type: object
+      required: [nome, dimensione]
+      properties:
+        nome: { type: string }
+        dimensione: { type: integer }
+    ImpostazioniStampa:
+      type: object
+      required: [nome, motto, indirizzo, telefono, email, nota1, nota2, logo]
+      properties:
+        nome: { type: string }
+        motto: { type: string }
+        indirizzo: { type: string }
+        telefono: { type: string }
+        email: { type: string }
+        nota1: { type: string }
+        nota2: { type: string }
+        logo:
+          oneOf:
+            - $ref: "#/components/schemas/LogoStampa"
+            - type: "null"
+    ImpostazioniStampaInput:
+      type: object
+      required: [nome, motto, indirizzo, telefono, email, nota1, nota2]
+      properties:
+        nome: { type: string, maxLength: 80 }
+        motto: { type: string, maxLength: 120 }
+        indirizzo: { type: string, maxLength: 160 }
+        telefono: { type: string, maxLength: 60 }
+        email: { type: string, maxLength: 120 }
+        nota1: { type: string, maxLength: 600 }
+        nota2: { type: string, maxLength: 600 }
+    SezioneDareAvereCodice:
+      type: string
+      enum: [naspi, pensionati, patronato, caf, debiti]
+    RigaDareAvere:
+      type: object
+      required: [id, descrizione, importoEuro, dataPagamento, riferimento, nota, estrattoId]
+      properties:
+        id: { type: [integer, "null"], description: "Vuoto per le righe del Patronato, che arrivano dagli estratti" }
+        descrizione: { type: string }
+        importoEuro: { type: number }
+        dataPagamento: { type: [string, "null"], description: AAAA-MM-GG }
+        riferimento: { type: [string, "null"], description: "Solo Patronato: es. Estratto 03/08/2026" }
+        nota: { type: string }
+        estrattoId: { type: [integer, "null"] }
+    SezioneDareAvere:
+      type: object
+      required: [sezione, titolo, automatica, righe, totaleEuro]
+      properties:
+        sezione: { $ref: "#/components/schemas/SezioneDareAvereCodice" }
+        titolo: { type: string }
+        automatica: { type: boolean, description: "Vero se le righe arrivano dagli estratti e non si modificano qui" }
+        righe:
+          type: array
+          items:
+            $ref: "#/components/schemas/RigaDareAvere"
+        totaleEuro: { type: number }
+    DareAvere:
+      type: object
+      required: [collaboratoreId, collaboratoreNome, numeroSportello, anno, sezioni, totaleAvereEuro]
+      properties:
+        collaboratoreId: { type: integer }
+        collaboratoreNome: { type: string, description: Cognome e nome }
+        numeroSportello: { type: string }
+        anno: { type: integer }
+        sezioni:
+          type: array
+          items:
+            $ref: "#/components/schemas/SezioneDareAvere"
+        totaleAvereEuro: { type: number, description: "Somma degli importi delle sezioni meno i debiti" }
+    RigaDareAvereInput:
+      type: object
+      required: [collaboratoreId, anno, sezione, descrizione, importoEuro]
+      properties:
+        collaboratoreId: { type: integer }
+        anno: { type: integer, minimum: 2000, maximum: 2100 }
+        sezione: { type: string, enum: [naspi, pensionati, caf, debiti] }
+        descrizione: { type: string, minLength: 1, maxLength: 120 }
+        importoEuro: { type: number, exclusiveMinimum: 0, maximum: 10000000 }
+        dataPagamento: { type: [string, "null"] }
+        nota: { type: string, maxLength: 300 }
+    RigaDareAvereModificaInput:
+      type: object
+      required: [descrizione, importoEuro]
+      properties:
+        descrizione: { type: string, minLength: 1, maxLength: 120 }
+        importoEuro: { type: number, exclusiveMinimum: 0, maximum: 10000000 }
+        dataPagamento: { type: [string, "null"] }
+        nota: { type: string, maxLength: 300 }

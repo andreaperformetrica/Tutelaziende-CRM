@@ -8,3 +8,4 @@ export * from "./configurazione-pratiche";
 export * from "./pratiche";
 export * from "./notifiche";
 export * from "./eventi";
+export * from "./compensi";

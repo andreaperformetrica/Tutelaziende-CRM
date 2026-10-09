@@ -21,7 +21,7 @@ export interface PosizioneNome {
 const LATO_LUNGO_A4 = 841.89;
 
 /** Helvetica codifica solo il latino di base: per altri caratteri si toglie l'accento o si usa "?". */
-function testoStampabile(font: PDFFont, testo: string): string {
+export function testoStampabile(font: PDFFont, testo: string): string {
   try {
     font.widthOfTextAtSize(testo, 10);
     return testo;

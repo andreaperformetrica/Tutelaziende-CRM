@@ -80,6 +80,16 @@ export const AZIONI_LOG = {
   "evento.attestato_carica": "Caricamento layout dell'attestato",
   "evento.attestato_elimina": "Eliminazione layout dell'attestato",
   "evento.attestato_posizione": "Modifica posizione del nome sull'attestato",
+  "estratto.crea": "Creazione estratto pratiche chiuse",
+  "estratto.elimina": "Eliminazione estratto non pagato",
+  "estratto.pagamento": "Pagamento di un estratto",
+  "estratto.invia": "Invio estratto al collaboratore",
+  "compensi.stampa_modifica": "Modifica intestazione e note degli stampati",
+  "compensi.logo_carica": "Caricamento logo degli stampati",
+  "compensi.logo_elimina": "Eliminazione logo degli stampati",
+  "dare_avere.riga_aggiungi": "Aggiunta riga al dare/avere",
+  "dare_avere.riga_modifica": "Modifica riga del dare/avere",
+  "dare_avere.riga_elimina": "Eliminazione riga del dare/avere",
 } as const;
 
 export type AzioneLog = keyof typeof AZIONI_LOG;

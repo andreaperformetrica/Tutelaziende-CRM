@@ -20,6 +20,8 @@ export const notificheTable = pgTable(
     destinatarioContatto: text("destinatario_contatto").notNull(),
     praticaId: integer("pratica_id"),
     numeroPratica: integer("numero_pratica"),
+    /** Estratto allegato all'email (il PDF viene generato al momento dell'invio). */
+    estrattoId: integer("estratto_id"),
     /** Oggetto (solo email). */
     oggetto: text("oggetto"),
     /** Testo che il destinatario riceve (per WhatsApp: il testo del template con le variabili sostituite). */

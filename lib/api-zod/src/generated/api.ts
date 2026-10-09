@@ -1986,6 +1986,506 @@ export const DeletePartecipanteEventoResponse = zod.object({
 
 
 /**
+ * @summary Pratiche chiuse con compenso maturato e non ancora in un estratto
+ */
+export const getResocontoCompensiQueryGiorniMin = 0;
+export const getResocontoCompensiQueryGiorniMax = 3650;
+
+
+
+export const GetResocontoCompensiQueryParams = zod.object({
+  "collaboratoreId": zod.coerce.number().int().optional(),
+  "dal": zod.coerce.string().optional().describe('Chiuse dal giorno indicato (AAAA-MM-GG, fuso Europe/Rome), incluso'),
+  "al": zod.coerce.string().optional().describe('Chiuse fino al giorno indicato (AAAA-MM-GG, fuso Europe/Rome), incluso'),
+  "giorni": zod.coerce.number().int().min(getResocontoCompensiQueryGiorniMin).max(getResocontoCompensiQueryGiorniMax).optional().describe('Solo le pratiche chiuse da almeno questi giorni (il back office propone 60)')
+})
+
+export const GetResocontoCompensiResponse = zod.object({
+  "righe": zod.array(zod.object({
+  "praticaId": zod.number().int(),
+  "numero": zod.number().int(),
+  "assistito": zod.string().describe('Cognome e nome'),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string().describe('Cognome e nome'),
+  "numeroSportello": zod.string(),
+  "tipoNome": zod.string(),
+  "dataPratica": zod.string().nullable().describe('Data di invio della pratica (AAAA-MM-GG)'),
+  "chiusaIl": zod.string().describe('Istante ISO 8601 in cui la pratica e\' passata a uno stato chiuso'),
+  "giorniDallaChiusura": zod.number().int(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number()
+})),
+  "totalePunti": zod.number().int(),
+  "totaleEuro": zod.number()
+})
+
+
+/**
+ * @summary Elenco degli estratti, dal piu recente
+ */
+export const ListEstrattiQueryParams = zod.object({
+  "collaboratoreId": zod.coerce.number().int().optional(),
+  "stato": zod.enum(['da_pagare', 'pagato']).optional(),
+  "anno": zod.coerce.number().int().optional().describe('Anno della data dell\'estratto')
+})
+
+export const ListEstrattiResponseItem = zod.object({
+  "id": zod.number().int(),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string().describe('Cognome e nome'),
+  "numeroSportello": zod.string(),
+  "dataEstratto": zod.string().describe('AAAA-MM-GG'),
+  "numeroPratiche": zod.number().int(),
+  "totalePunti": zod.number().int(),
+  "totaleEuro": zod.number(),
+  "pagato": zod.boolean(),
+  "pagatoIl": zod.string().nullable().describe('Data del pagamento (AAAA-MM-GG)'),
+  "pagamentoEuro": zod.number().nullable(),
+  "pagamentoMetodo": zod.union([zod.enum(['bonifico', 'contanti', 'assegno', 'altro']),zod.null()])
+})
+export const ListEstrattiResponse = zod.array(ListEstrattiResponseItem)
+
+
+/**
+ * @summary Crea un estratto per ogni collaboratore delle pratiche confermate
+ */
+export const createEstrattiBodyPraticaIdsMax = 2000;
+
+
+
+export const CreateEstrattiBody = zod.object({
+  "praticaIds": zod.array(zod.number().int()).min(1).max(createEstrattiBodyPraticaIdsMax)
+})
+
+export const CreateEstrattiResponseItem = zod.object({
+  "id": zod.number().int(),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string().describe('Cognome e nome'),
+  "numeroSportello": zod.string(),
+  "dataEstratto": zod.string().describe('AAAA-MM-GG'),
+  "numeroPratiche": zod.number().int(),
+  "totalePunti": zod.number().int(),
+  "totaleEuro": zod.number(),
+  "pagato": zod.boolean(),
+  "pagatoIl": zod.string().nullable().describe('Data del pagamento (AAAA-MM-GG)'),
+  "pagamentoEuro": zod.number().nullable(),
+  "pagamentoMetodo": zod.union([zod.enum(['bonifico', 'contanti', 'assegno', 'altro']),zod.null()])
+})
+export const CreateEstrattiResponse = zod.array(CreateEstrattiResponseItem)
+
+
+/**
+ * @summary Estratto con le sue pratiche, il pagamento e gli invii per email
+ */
+export const GetEstrattoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const GetEstrattoResponse = zod.object({
+  "estratto": zod.object({
+  "id": zod.number().int(),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string().describe('Cognome e nome'),
+  "numeroSportello": zod.string(),
+  "dataEstratto": zod.string().describe('AAAA-MM-GG'),
+  "numeroPratiche": zod.number().int(),
+  "totalePunti": zod.number().int(),
+  "totaleEuro": zod.number(),
+  "pagato": zod.boolean(),
+  "pagatoIl": zod.string().nullable().describe('Data del pagamento (AAAA-MM-GG)'),
+  "pagamentoEuro": zod.number().nullable(),
+  "pagamentoMetodo": zod.union([zod.enum(['bonifico', 'contanti', 'assegno', 'altro']),zod.null()])
+}),
+  "righe": zod.array(zod.object({
+  "praticaId": zod.number().int(),
+  "assistito": zod.string(),
+  "numeroPratica": zod.number().int(),
+  "tipoPratica": zod.string(),
+  "dataPratica": zod.string().nullable(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number()
+})),
+  "creatoIl": zod.string(),
+  "creatoDa": zod.string().nullable(),
+  "pagamentoRegistratoIl": zod.string().nullable(),
+  "pagamentoRegistratoDa": zod.string().nullable(),
+  "emailDestinatario": zod.string().nullable().describe('Indirizzo del collaboratore a cui va l\'estratto'),
+  "invii": zod.array(zod.object({
+  "id": zod.number().int(),
+  "creatoIl": zod.string(),
+  "destinatarioContatto": zod.string(),
+  "esito": zod.enum(['in_coda', 'inviata', 'non_inviata', 'errore']),
+  "esitoEtichetta": zod.string(),
+  "dettaglioEsito": zod.string().nullable()
+})).describe('Invii per email, dal piu recente')
+})
+
+
+/**
+ * @summary Elimina un estratto non ancora pagato (le pratiche tornano disponibili)
+ */
+export const DeleteEstrattoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const DeleteEstrattoResponse = zod.void()
+
+
+/**
+ * @summary Registra il pagamento dell'estratto; le sue pratiche passano allo stato Pagata
+ */
+export const RegistraPagamentoEstrattoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const registraPagamentoEstrattoBodyImportoEuroExclusiveMin = 0;
+export const registraPagamentoEstrattoBodyImportoEuroMax = 10000000;
+
+
+
+export const RegistraPagamentoEstrattoBody = zod.object({
+  "data": zod.string().describe('Data del pagamento (AAAA-MM-GG)'),
+  "importoEuro": zod.number().gt(registraPagamentoEstrattoBodyImportoEuroExclusiveMin).max(registraPagamentoEstrattoBodyImportoEuroMax),
+  "metodo": zod.enum(['bonifico', 'contanti', 'assegno', 'altro'])
+})
+
+export const RegistraPagamentoEstrattoResponse = zod.object({
+  "estratto": zod.object({
+  "id": zod.number().int(),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string().describe('Cognome e nome'),
+  "numeroSportello": zod.string(),
+  "dataEstratto": zod.string().describe('AAAA-MM-GG'),
+  "numeroPratiche": zod.number().int(),
+  "totalePunti": zod.number().int(),
+  "totaleEuro": zod.number(),
+  "pagato": zod.boolean(),
+  "pagatoIl": zod.string().nullable().describe('Data del pagamento (AAAA-MM-GG)'),
+  "pagamentoEuro": zod.number().nullable(),
+  "pagamentoMetodo": zod.union([zod.enum(['bonifico', 'contanti', 'assegno', 'altro']),zod.null()])
+}),
+  "righe": zod.array(zod.object({
+  "praticaId": zod.number().int(),
+  "assistito": zod.string(),
+  "numeroPratica": zod.number().int(),
+  "tipoPratica": zod.string(),
+  "dataPratica": zod.string().nullable(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number()
+})),
+  "creatoIl": zod.string(),
+  "creatoDa": zod.string().nullable(),
+  "pagamentoRegistratoIl": zod.string().nullable(),
+  "pagamentoRegistratoDa": zod.string().nullable(),
+  "emailDestinatario": zod.string().nullable().describe('Indirizzo del collaboratore a cui va l\'estratto'),
+  "invii": zod.array(zod.object({
+  "id": zod.number().int(),
+  "creatoIl": zod.string(),
+  "destinatarioContatto": zod.string(),
+  "esito": zod.enum(['in_coda', 'inviata', 'non_inviata', 'errore']),
+  "esitoEtichetta": zod.string(),
+  "dettaglioEsito": zod.string().nullable()
+})).describe('Invii per email, dal piu recente')
+})
+
+
+/**
+ * @summary Invia l'estratto in PDF al collaboratore per email
+ */
+export const InviaEstrattoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const InviaEstrattoResponse = zod.object({
+  "estratto": zod.object({
+  "estratto": zod.object({
+  "id": zod.number().int(),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string().describe('Cognome e nome'),
+  "numeroSportello": zod.string(),
+  "dataEstratto": zod.string().describe('AAAA-MM-GG'),
+  "numeroPratiche": zod.number().int(),
+  "totalePunti": zod.number().int(),
+  "totaleEuro": zod.number(),
+  "pagato": zod.boolean(),
+  "pagatoIl": zod.string().nullable().describe('Data del pagamento (AAAA-MM-GG)'),
+  "pagamentoEuro": zod.number().nullable(),
+  "pagamentoMetodo": zod.union([zod.enum(['bonifico', 'contanti', 'assegno', 'altro']),zod.null()])
+}),
+  "righe": zod.array(zod.object({
+  "praticaId": zod.number().int(),
+  "assistito": zod.string(),
+  "numeroPratica": zod.number().int(),
+  "tipoPratica": zod.string(),
+  "dataPratica": zod.string().nullable(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number()
+})),
+  "creatoIl": zod.string(),
+  "creatoDa": zod.string().nullable(),
+  "pagamentoRegistratoIl": zod.string().nullable(),
+  "pagamentoRegistratoDa": zod.string().nullable(),
+  "emailDestinatario": zod.string().nullable().describe('Indirizzo del collaboratore a cui va l\'estratto'),
+  "invii": zod.array(zod.object({
+  "id": zod.number().int(),
+  "creatoIl": zod.string(),
+  "destinatarioContatto": zod.string(),
+  "esito": zod.enum(['in_coda', 'inviata', 'non_inviata', 'errore']),
+  "esitoEtichetta": zod.string(),
+  "dettaglioEsito": zod.string().nullable()
+})).describe('Invii per email, dal piu recente')
+}),
+  "esito": zod.enum(['in_coda', 'inviata', 'non_inviata', 'errore']),
+  "esitoEtichetta": zod.string(),
+  "dettaglio": zod.string().nullable()
+})
+
+
+/**
+ * @summary Intestazione, recapiti, logo e note fisse degli stampati
+ */
+export const GetImpostazioniStampaResponse = zod.object({
+  "nome": zod.string(),
+  "motto": zod.string(),
+  "indirizzo": zod.string(),
+  "telefono": zod.string(),
+  "email": zod.string(),
+  "nota1": zod.string(),
+  "nota2": zod.string(),
+  "logo": zod.union([zod.object({
+  "nome": zod.string(),
+  "dimensione": zod.number().int()
+}),zod.null()])
+})
+
+
+/**
+ * @summary Modifica intestazione, recapiti e note fisse degli stampati
+ */
+export const updateImpostazioniStampaBodyNomeMax = 80;
+
+export const updateImpostazioniStampaBodyMottoMax = 120;
+
+export const updateImpostazioniStampaBodyIndirizzoMax = 160;
+
+export const updateImpostazioniStampaBodyTelefonoMax = 60;
+
+export const updateImpostazioniStampaBodyEmailMax = 120;
+
+export const updateImpostazioniStampaBodyNota1Max = 600;
+
+export const updateImpostazioniStampaBodyNota2Max = 600;
+
+
+
+export const UpdateImpostazioniStampaBody = zod.object({
+  "nome": zod.string().max(updateImpostazioniStampaBodyNomeMax),
+  "motto": zod.string().max(updateImpostazioniStampaBodyMottoMax),
+  "indirizzo": zod.string().max(updateImpostazioniStampaBodyIndirizzoMax),
+  "telefono": zod.string().max(updateImpostazioniStampaBodyTelefonoMax),
+  "email": zod.string().max(updateImpostazioniStampaBodyEmailMax),
+  "nota1": zod.string().max(updateImpostazioniStampaBodyNota1Max),
+  "nota2": zod.string().max(updateImpostazioniStampaBodyNota2Max)
+})
+
+export const UpdateImpostazioniStampaResponse = zod.object({
+  "nome": zod.string(),
+  "motto": zod.string(),
+  "indirizzo": zod.string(),
+  "telefono": zod.string(),
+  "email": zod.string(),
+  "nota1": zod.string(),
+  "nota2": zod.string(),
+  "logo": zod.union([zod.object({
+  "nome": zod.string(),
+  "dimensione": zod.number().int()
+}),zod.null()])
+})
+
+
+/**
+ * @summary Toglie il logo dagli stampati
+ */
+export const DeleteLogoStampaResponse = zod.object({
+  "nome": zod.string(),
+  "motto": zod.string(),
+  "indirizzo": zod.string(),
+  "telefono": zod.string(),
+  "email": zod.string(),
+  "nota1": zod.string(),
+  "nota2": zod.string(),
+  "logo": zod.union([zod.object({
+  "nome": zod.string(),
+  "dimensione": zod.number().int()
+}),zod.null()])
+})
+
+
+/**
+ * @summary Dare/avere di un collaboratore per un anno
+ */
+export const getDareAvereQueryAnnoMin = 2000;
+export const getDareAvereQueryAnnoMax = 2100;
+
+
+
+export const GetDareAvereQueryParams = zod.object({
+  "collaboratoreId": zod.coerce.number().int(),
+  "anno": zod.coerce.number().int().min(getDareAvereQueryAnnoMin).max(getDareAvereQueryAnnoMax)
+})
+
+export const GetDareAvereResponse = zod.object({
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string().describe('Cognome e nome'),
+  "numeroSportello": zod.string(),
+  "anno": zod.number().int(),
+  "sezioni": zod.array(zod.object({
+  "sezione": zod.enum(['naspi', 'pensionati', 'patronato', 'caf', 'debiti']),
+  "titolo": zod.string(),
+  "automatica": zod.boolean().describe('Vero se le righe arrivano dagli estratti e non si modificano qui'),
+  "righe": zod.array(zod.object({
+  "id": zod.number().int().nullable().describe('Vuoto per le righe del Patronato, che arrivano dagli estratti'),
+  "descrizione": zod.string(),
+  "importoEuro": zod.number(),
+  "dataPagamento": zod.string().nullable().describe('AAAA-MM-GG'),
+  "riferimento": zod.string().nullable().describe('Solo Patronato: es. Estratto 03/08/2026'),
+  "nota": zod.string(),
+  "estrattoId": zod.number().int().nullable()
+})),
+  "totaleEuro": zod.number()
+})),
+  "totaleAvereEuro": zod.number().describe('Somma degli importi delle sezioni meno i debiti')
+})
+
+
+/**
+ * @summary Aggiunge una riga a mano a una sezione del dare/avere
+ */
+export const createRigaDareAvereBodyAnnoMin = 2000;
+export const createRigaDareAvereBodyAnnoMax = 2100;
+
+export const createRigaDareAvereBodyDescrizioneMax = 120;
+
+export const createRigaDareAvereBodyImportoEuroExclusiveMin = 0;
+export const createRigaDareAvereBodyImportoEuroMax = 10000000;
+
+export const createRigaDareAvereBodyNotaMax = 300;
+
+
+
+export const CreateRigaDareAvereBody = zod.object({
+  "collaboratoreId": zod.number().int(),
+  "anno": zod.number().int().min(createRigaDareAvereBodyAnnoMin).max(createRigaDareAvereBodyAnnoMax),
+  "sezione": zod.enum(['naspi', 'pensionati', 'caf', 'debiti']),
+  "descrizione": zod.string().min(1).max(createRigaDareAvereBodyDescrizioneMax),
+  "importoEuro": zod.number().gt(createRigaDareAvereBodyImportoEuroExclusiveMin).max(createRigaDareAvereBodyImportoEuroMax),
+  "dataPagamento": zod.string().nullish(),
+  "nota": zod.string().max(createRigaDareAvereBodyNotaMax).optional()
+})
+
+export const CreateRigaDareAvereResponse = zod.object({
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string().describe('Cognome e nome'),
+  "numeroSportello": zod.string(),
+  "anno": zod.number().int(),
+  "sezioni": zod.array(zod.object({
+  "sezione": zod.enum(['naspi', 'pensionati', 'patronato', 'caf', 'debiti']),
+  "titolo": zod.string(),
+  "automatica": zod.boolean().describe('Vero se le righe arrivano dagli estratti e non si modificano qui'),
+  "righe": zod.array(zod.object({
+  "id": zod.number().int().nullable().describe('Vuoto per le righe del Patronato, che arrivano dagli estratti'),
+  "descrizione": zod.string(),
+  "importoEuro": zod.number(),
+  "dataPagamento": zod.string().nullable().describe('AAAA-MM-GG'),
+  "riferimento": zod.string().nullable().describe('Solo Patronato: es. Estratto 03/08/2026'),
+  "nota": zod.string(),
+  "estrattoId": zod.number().int().nullable()
+})),
+  "totaleEuro": zod.number()
+})),
+  "totaleAvereEuro": zod.number().describe('Somma degli importi delle sezioni meno i debiti')
+})
+
+
+/**
+ * @summary Modifica una riga inserita a mano
+ */
+export const UpdateRigaDareAvereParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const updateRigaDareAvereBodyDescrizioneMax = 120;
+
+export const updateRigaDareAvereBodyImportoEuroExclusiveMin = 0;
+export const updateRigaDareAvereBodyImportoEuroMax = 10000000;
+
+export const updateRigaDareAvereBodyNotaMax = 300;
+
+
+
+export const UpdateRigaDareAvereBody = zod.object({
+  "descrizione": zod.string().min(1).max(updateRigaDareAvereBodyDescrizioneMax),
+  "importoEuro": zod.number().gt(updateRigaDareAvereBodyImportoEuroExclusiveMin).max(updateRigaDareAvereBodyImportoEuroMax),
+  "dataPagamento": zod.string().nullish(),
+  "nota": zod.string().max(updateRigaDareAvereBodyNotaMax).optional()
+})
+
+export const UpdateRigaDareAvereResponse = zod.object({
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string().describe('Cognome e nome'),
+  "numeroSportello": zod.string(),
+  "anno": zod.number().int(),
+  "sezioni": zod.array(zod.object({
+  "sezione": zod.enum(['naspi', 'pensionati', 'patronato', 'caf', 'debiti']),
+  "titolo": zod.string(),
+  "automatica": zod.boolean().describe('Vero se le righe arrivano dagli estratti e non si modificano qui'),
+  "righe": zod.array(zod.object({
+  "id": zod.number().int().nullable().describe('Vuoto per le righe del Patronato, che arrivano dagli estratti'),
+  "descrizione": zod.string(),
+  "importoEuro": zod.number(),
+  "dataPagamento": zod.string().nullable().describe('AAAA-MM-GG'),
+  "riferimento": zod.string().nullable().describe('Solo Patronato: es. Estratto 03/08/2026'),
+  "nota": zod.string(),
+  "estrattoId": zod.number().int().nullable()
+})),
+  "totaleEuro": zod.number()
+})),
+  "totaleAvereEuro": zod.number().describe('Somma degli importi delle sezioni meno i debiti')
+})
+
+
+/**
+ * @summary Elimina una riga inserita a mano
+ */
+export const DeleteRigaDareAvereParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const DeleteRigaDareAvereResponse = zod.object({
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string().describe('Cognome e nome'),
+  "numeroSportello": zod.string(),
+  "anno": zod.number().int(),
+  "sezioni": zod.array(zod.object({
+  "sezione": zod.enum(['naspi', 'pensionati', 'patronato', 'caf', 'debiti']),
+  "titolo": zod.string(),
+  "automatica": zod.boolean().describe('Vero se le righe arrivano dagli estratti e non si modificano qui'),
+  "righe": zod.array(zod.object({
+  "id": zod.number().int().nullable().describe('Vuoto per le righe del Patronato, che arrivano dagli estratti'),
+  "descrizione": zod.string(),
+  "importoEuro": zod.number(),
+  "dataPagamento": zod.string().nullable().describe('AAAA-MM-GG'),
+  "riferimento": zod.string().nullable().describe('Solo Patronato: es. Estratto 03/08/2026'),
+  "nota": zod.string(),
+  "estrattoId": zod.number().int().nullable()
+})),
+  "totaleEuro": zod.number()
+})),
+  "totaleAvereEuro": zod.number().describe('Somma degli importi delle sezioni meno i debiti')
+})
+
+
+/**
  * @summary Elenco dei tipi di pratica con documenti e moduli
  */
 export const ListTipiPraticaResponseItem = zod.object({

@@ -42,7 +42,11 @@ import type {
   CommentoBackofficeInput,
   CommentoPraticaInput,
   ConteggioSegnalazioni,
+  CreaEstrattiInput,
+  DareAvere,
   DocumentoTipoInput,
+  EstrattoDettaglio,
+  EstrattoRiepilogo,
   EventoBackoffice,
   EventoCreazioneInput,
   EventoModificaInput,
@@ -51,13 +55,19 @@ import type {
   EventoSedeRiepilogo,
   FiltriLog,
   FiltriPraticheBackoffice,
+  GetDareAvereParams,
+  GetResocontoCompensiParams,
   HealthStatus,
+  ImpostazioniStampa,
+  ImpostazioniStampaInput,
+  InvioEstrattoEsito,
   InvioPraticaInput,
   InvioPratiche,
   InvitiEventoInput,
   ListAssegnazioniMandatoParams,
   ListAssistitiParams,
   ListCollaboratoriParams,
+  ListEstrattiParams,
   ListLogOperazioniParams,
   ListMandatiParams,
   ListNotificheParams,
@@ -77,6 +87,7 @@ import type {
   OrariCaricamentoInput,
   OrariPartecipanteInput,
   OrdineInput,
+  PagamentoEstrattoInput,
   PartecipanteEventoInput,
   PasswordProvvisoriaInput,
   PosizioneAttestatoInput,
@@ -86,6 +97,9 @@ import type {
   PraticaTipoRiepilogo,
   PratichePagina,
   PratichePaginaBackoffice,
+  ResocontoCompensi,
+  RigaDareAvereInput,
+  RigaDareAvereModificaInput,
   RimuoviAssegnazioneMandatoParams,
   SegnalazioneDuplicato,
   SessioneUtente,
@@ -4097,6 +4111,1150 @@ export const useDeletePartecipanteEvento = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeletePartecipanteEventoMutationOptions(options));
+    }
+
+export const getGetResocontoCompensiUrl = (params?: GetResocontoCompensiParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/backoffice/compensi/resoconto?${stringifiedParams}` : `/api/backoffice/compensi/resoconto`
+}
+
+/**
+ * @summary Pratiche chiuse con compenso maturato e non ancora in un estratto
+ */
+export const getResocontoCompensi = async (params?: GetResocontoCompensiParams, options?: Parameters<typeof customFetch>[1]): Promise<ResocontoCompensi> => {
+
+  return customFetch<ResocontoCompensi>(getGetResocontoCompensiUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetResocontoCompensiQueryKey = (params?: GetResocontoCompensiParams,) => {
+    return [
+    `/api/backoffice/compensi/resoconto`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetResocontoCompensiQueryOptions = <TData = Awaited<ReturnType<typeof getResocontoCompensi>>, TError = ErrorType<unknown>>(params?: GetResocontoCompensiParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getResocontoCompensi>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetResocontoCompensiQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getResocontoCompensi>>> = ({ signal }) => getResocontoCompensi(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getResocontoCompensi>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetResocontoCompensiQueryResult = NonNullable<Awaited<ReturnType<typeof getResocontoCompensi>>>
+export type GetResocontoCompensiQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Pratiche chiuse con compenso maturato e non ancora in un estratto
+ */
+
+export function useGetResocontoCompensi<TData = Awaited<ReturnType<typeof getResocontoCompensi>>, TError = ErrorType<unknown>>(
+ params?: GetResocontoCompensiParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getResocontoCompensi>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetResocontoCompensiQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListEstrattiUrl = (params?: ListEstrattiParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/backoffice/compensi/estratti?${stringifiedParams}` : `/api/backoffice/compensi/estratti`
+}
+
+/**
+ * @summary Elenco degli estratti, dal piu recente
+ */
+export const listEstratti = async (params?: ListEstrattiParams, options?: Parameters<typeof customFetch>[1]): Promise<EstrattoRiepilogo[]> => {
+
+  return customFetch<EstrattoRiepilogo[]>(getListEstrattiUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListEstrattiQueryKey = (params?: ListEstrattiParams,) => {
+    return [
+    `/api/backoffice/compensi/estratti`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListEstrattiQueryOptions = <TData = Awaited<ReturnType<typeof listEstratti>>, TError = ErrorType<unknown>>(params?: ListEstrattiParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listEstratti>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListEstrattiQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listEstratti>>> = ({ signal }) => listEstratti(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listEstratti>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListEstrattiQueryResult = NonNullable<Awaited<ReturnType<typeof listEstratti>>>
+export type ListEstrattiQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Elenco degli estratti, dal piu recente
+ */
+
+export function useListEstratti<TData = Awaited<ReturnType<typeof listEstratti>>, TError = ErrorType<unknown>>(
+ params?: ListEstrattiParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listEstratti>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListEstrattiQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateEstrattiUrl = () => {
+
+
+
+
+  return `/api/backoffice/compensi/estratti`
+}
+
+/**
+ * @summary Crea un estratto per ogni collaboratore delle pratiche confermate
+ */
+export const createEstratti = async (creaEstrattiInput: CreaEstrattiInput, options?: Parameters<typeof customFetch>[1]): Promise<EstrattoRiepilogo[]> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<EstrattoRiepilogo[]>(getCreateEstrattiUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(creaEstrattiInput)
+  }
+);}
+
+
+
+
+
+export const getCreateEstrattiMutationKey = () => ['createEstratti'] as const;
+
+export const getCreateEstrattiMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createEstratti>>, TError,CreateEstrattiMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createEstratti>>, TError,CreateEstrattiMutationVariables, TContext> => {
+
+const mutationKey = getCreateEstrattiMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createEstratti>>, CreateEstrattiMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createEstratti(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateEstrattiMutationResult = NonNullable<Awaited<ReturnType<typeof createEstratti>>>
+    export type CreateEstrattiMutationBody = BodyType<CreaEstrattiInput>
+    export type CreateEstrattiMutationError = ErrorType<unknown>
+    export type CreateEstrattiMutationVariables = {data: BodyType<CreaEstrattiInput>}
+
+    /**
+ * @summary Crea un estratto per ogni collaboratore delle pratiche confermate
+ */
+export const useCreateEstratti = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createEstratti>>, TError,CreateEstrattiMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createEstratti>>,
+        TError,
+        CreateEstrattiMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateEstrattiMutationOptions(options));
+    }
+
+export const getGetEstrattoUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/compensi/estratti/${id}`
+}
+
+/**
+ * @summary Estratto con le sue pratiche, il pagamento e gli invii per email
+ */
+export const getEstratto = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<EstrattoDettaglio> => {
+
+  return customFetch<EstrattoDettaglio>(getGetEstrattoUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetEstrattoQueryKey = (id: number,) => {
+    return [
+    `/api/backoffice/compensi/estratti/${id}`
+    ] as const;
+    }
+
+
+export const getGetEstrattoQueryOptions = <TData = Awaited<ReturnType<typeof getEstratto>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEstratto>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetEstrattoQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getEstratto>>> = ({ signal }) => getEstratto(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEstratto>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetEstrattoQueryResult = NonNullable<Awaited<ReturnType<typeof getEstratto>>>
+export type GetEstrattoQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Estratto con le sue pratiche, il pagamento e gli invii per email
+ */
+
+export function useGetEstratto<TData = Awaited<ReturnType<typeof getEstratto>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEstratto>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetEstrattoQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getDeleteEstrattoUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/compensi/estratti/${id}`
+}
+
+/**
+ * @summary Elimina un estratto non ancora pagato (le pratiche tornano disponibili)
+ */
+export const deleteEstratto = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteEstrattoUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteEstrattoMutationKey = () => ['deleteEstratto'] as const;
+
+export const getDeleteEstrattoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteEstratto>>, TError,DeleteEstrattoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteEstratto>>, TError,DeleteEstrattoMutationVariables, TContext> => {
+
+const mutationKey = getDeleteEstrattoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteEstratto>>, DeleteEstrattoMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteEstratto(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteEstrattoMutationResult = NonNullable<Awaited<ReturnType<typeof deleteEstratto>>>
+
+    export type DeleteEstrattoMutationError = ErrorType<unknown>
+    export type DeleteEstrattoMutationVariables = {id: number}
+
+    /**
+ * @summary Elimina un estratto non ancora pagato (le pratiche tornano disponibili)
+ */
+export const useDeleteEstratto = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteEstratto>>, TError,DeleteEstrattoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteEstratto>>,
+        TError,
+        DeleteEstrattoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteEstrattoMutationOptions(options));
+    }
+
+export const getRegistraPagamentoEstrattoUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/compensi/estratti/${id}/pagamento`
+}
+
+/**
+ * @summary Registra il pagamento dell'estratto; le sue pratiche passano allo stato Pagata
+ */
+export const registraPagamentoEstratto = async (id: number,
+    pagamentoEstrattoInput: PagamentoEstrattoInput, options?: Parameters<typeof customFetch>[1]): Promise<EstrattoDettaglio> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<EstrattoDettaglio>(getRegistraPagamentoEstrattoUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(pagamentoEstrattoInput)
+  }
+);}
+
+
+
+
+
+export const getRegistraPagamentoEstrattoMutationKey = () => ['registraPagamentoEstratto'] as const;
+
+export const getRegistraPagamentoEstrattoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registraPagamentoEstratto>>, TError,RegistraPagamentoEstrattoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof registraPagamentoEstratto>>, TError,RegistraPagamentoEstrattoMutationVariables, TContext> => {
+
+const mutationKey = getRegistraPagamentoEstrattoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof registraPagamentoEstratto>>, RegistraPagamentoEstrattoMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  registraPagamentoEstratto(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RegistraPagamentoEstrattoMutationResult = NonNullable<Awaited<ReturnType<typeof registraPagamentoEstratto>>>
+    export type RegistraPagamentoEstrattoMutationBody = BodyType<PagamentoEstrattoInput>
+    export type RegistraPagamentoEstrattoMutationError = ErrorType<unknown>
+    export type RegistraPagamentoEstrattoMutationVariables = {id: number;data: BodyType<PagamentoEstrattoInput>}
+
+    /**
+ * @summary Registra il pagamento dell'estratto; le sue pratiche passano allo stato Pagata
+ */
+export const useRegistraPagamentoEstratto = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registraPagamentoEstratto>>, TError,RegistraPagamentoEstrattoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof registraPagamentoEstratto>>,
+        TError,
+        RegistraPagamentoEstrattoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRegistraPagamentoEstrattoMutationOptions(options));
+    }
+
+export const getInviaEstrattoUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/compensi/estratti/${id}/invio`
+}
+
+/**
+ * @summary Invia l'estratto in PDF al collaboratore per email
+ */
+export const inviaEstratto = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<InvioEstrattoEsito> => {
+
+  return customFetch<InvioEstrattoEsito>(getInviaEstrattoUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getInviaEstrattoMutationKey = () => ['inviaEstratto'] as const;
+
+export const getInviaEstrattoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inviaEstratto>>, TError,InviaEstrattoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof inviaEstratto>>, TError,InviaEstrattoMutationVariables, TContext> => {
+
+const mutationKey = getInviaEstrattoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof inviaEstratto>>, InviaEstrattoMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  inviaEstratto(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InviaEstrattoMutationResult = NonNullable<Awaited<ReturnType<typeof inviaEstratto>>>
+
+    export type InviaEstrattoMutationError = ErrorType<unknown>
+    export type InviaEstrattoMutationVariables = {id: number}
+
+    /**
+ * @summary Invia l'estratto in PDF al collaboratore per email
+ */
+export const useInviaEstratto = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inviaEstratto>>, TError,InviaEstrattoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof inviaEstratto>>,
+        TError,
+        InviaEstrattoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getInviaEstrattoMutationOptions(options));
+    }
+
+export const getGetImpostazioniStampaUrl = () => {
+
+
+
+
+  return `/api/backoffice/compensi/impostazioni-stampa`
+}
+
+/**
+ * @summary Intestazione, recapiti, logo e note fisse degli stampati
+ */
+export const getImpostazioniStampa = async ( options?: Parameters<typeof customFetch>[1]): Promise<ImpostazioniStampa> => {
+
+  return customFetch<ImpostazioniStampa>(getGetImpostazioniStampaUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetImpostazioniStampaQueryKey = () => {
+    return [
+    `/api/backoffice/compensi/impostazioni-stampa`
+    ] as const;
+    }
+
+
+export const getGetImpostazioniStampaQueryOptions = <TData = Awaited<ReturnType<typeof getImpostazioniStampa>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getImpostazioniStampa>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetImpostazioniStampaQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getImpostazioniStampa>>> = ({ signal }) => getImpostazioniStampa({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getImpostazioniStampa>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetImpostazioniStampaQueryResult = NonNullable<Awaited<ReturnType<typeof getImpostazioniStampa>>>
+export type GetImpostazioniStampaQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Intestazione, recapiti, logo e note fisse degli stampati
+ */
+
+export function useGetImpostazioniStampa<TData = Awaited<ReturnType<typeof getImpostazioniStampa>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getImpostazioniStampa>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetImpostazioniStampaQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateImpostazioniStampaUrl = () => {
+
+
+
+
+  return `/api/backoffice/compensi/impostazioni-stampa`
+}
+
+/**
+ * @summary Modifica intestazione, recapiti e note fisse degli stampati
+ */
+export const updateImpostazioniStampa = async (impostazioniStampaInput: ImpostazioniStampaInput, options?: Parameters<typeof customFetch>[1]): Promise<ImpostazioniStampa> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ImpostazioniStampa>(getUpdateImpostazioniStampaUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(impostazioniStampaInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateImpostazioniStampaMutationKey = () => ['updateImpostazioniStampa'] as const;
+
+export const getUpdateImpostazioniStampaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateImpostazioniStampa>>, TError,UpdateImpostazioniStampaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateImpostazioniStampa>>, TError,UpdateImpostazioniStampaMutationVariables, TContext> => {
+
+const mutationKey = getUpdateImpostazioniStampaMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateImpostazioniStampa>>, UpdateImpostazioniStampaMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateImpostazioniStampa(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateImpostazioniStampaMutationResult = NonNullable<Awaited<ReturnType<typeof updateImpostazioniStampa>>>
+    export type UpdateImpostazioniStampaMutationBody = BodyType<ImpostazioniStampaInput>
+    export type UpdateImpostazioniStampaMutationError = ErrorType<unknown>
+    export type UpdateImpostazioniStampaMutationVariables = {data: BodyType<ImpostazioniStampaInput>}
+
+    /**
+ * @summary Modifica intestazione, recapiti e note fisse degli stampati
+ */
+export const useUpdateImpostazioniStampa = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateImpostazioniStampa>>, TError,UpdateImpostazioniStampaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateImpostazioniStampa>>,
+        TError,
+        UpdateImpostazioniStampaMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateImpostazioniStampaMutationOptions(options));
+    }
+
+export const getDeleteLogoStampaUrl = () => {
+
+
+
+
+  return `/api/backoffice/compensi/impostazioni-stampa/logo`
+}
+
+/**
+ * @summary Toglie il logo dagli stampati
+ */
+export const deleteLogoStampa = async ( options?: Parameters<typeof customFetch>[1]): Promise<ImpostazioniStampa> => {
+
+  return customFetch<ImpostazioniStampa>(getDeleteLogoStampaUrl(),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteLogoStampaMutationKey = () => ['deleteLogoStampa'] as const;
+
+export const getDeleteLogoStampaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteLogoStampa>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteLogoStampa>>, TError,void, TContext> => {
+
+const mutationKey = getDeleteLogoStampaMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteLogoStampa>>, void> = () => {
+
+
+          return  deleteLogoStampa(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteLogoStampaMutationResult = NonNullable<Awaited<ReturnType<typeof deleteLogoStampa>>>
+
+    export type DeleteLogoStampaMutationError = ErrorType<unknown>
+
+
+    /**
+ * @summary Toglie il logo dagli stampati
+ */
+export const useDeleteLogoStampa = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteLogoStampa>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteLogoStampa>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getDeleteLogoStampaMutationOptions(options));
+    }
+
+export const getGetDareAvereUrl = (params: GetDareAvereParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/backoffice/compensi/dare-avere?${stringifiedParams}` : `/api/backoffice/compensi/dare-avere`
+}
+
+/**
+ * @summary Dare/avere di un collaboratore per un anno
+ */
+export const getDareAvere = async (params: GetDareAvereParams, options?: Parameters<typeof customFetch>[1]): Promise<DareAvere> => {
+
+  return customFetch<DareAvere>(getGetDareAvereUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDareAvereQueryKey = (params?: GetDareAvereParams,) => {
+    return [
+    `/api/backoffice/compensi/dare-avere`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetDareAvereQueryOptions = <TData = Awaited<ReturnType<typeof getDareAvere>>, TError = ErrorType<unknown>>(params: GetDareAvereParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDareAvere>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDareAvereQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDareAvere>>> = ({ signal }) => getDareAvere(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDareAvere>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetDareAvereQueryResult = NonNullable<Awaited<ReturnType<typeof getDareAvere>>>
+export type GetDareAvereQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Dare/avere di un collaboratore per un anno
+ */
+
+export function useGetDareAvere<TData = Awaited<ReturnType<typeof getDareAvere>>, TError = ErrorType<unknown>>(
+ params: GetDareAvereParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDareAvere>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetDareAvereQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateRigaDareAvereUrl = () => {
+
+
+
+
+  return `/api/backoffice/compensi/dare-avere/righe`
+}
+
+/**
+ * @summary Aggiunge una riga a mano a una sezione del dare/avere
+ */
+export const createRigaDareAvere = async (rigaDareAvereInput: RigaDareAvereInput, options?: Parameters<typeof customFetch>[1]): Promise<DareAvere> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<DareAvere>(getCreateRigaDareAvereUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(rigaDareAvereInput)
+  }
+);}
+
+
+
+
+
+export const getCreateRigaDareAvereMutationKey = () => ['createRigaDareAvere'] as const;
+
+export const getCreateRigaDareAvereMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRigaDareAvere>>, TError,CreateRigaDareAvereMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createRigaDareAvere>>, TError,CreateRigaDareAvereMutationVariables, TContext> => {
+
+const mutationKey = getCreateRigaDareAvereMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createRigaDareAvere>>, CreateRigaDareAvereMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createRigaDareAvere(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateRigaDareAvereMutationResult = NonNullable<Awaited<ReturnType<typeof createRigaDareAvere>>>
+    export type CreateRigaDareAvereMutationBody = BodyType<RigaDareAvereInput>
+    export type CreateRigaDareAvereMutationError = ErrorType<unknown>
+    export type CreateRigaDareAvereMutationVariables = {data: BodyType<RigaDareAvereInput>}
+
+    /**
+ * @summary Aggiunge una riga a mano a una sezione del dare/avere
+ */
+export const useCreateRigaDareAvere = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRigaDareAvere>>, TError,CreateRigaDareAvereMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createRigaDareAvere>>,
+        TError,
+        CreateRigaDareAvereMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateRigaDareAvereMutationOptions(options));
+    }
+
+export const getUpdateRigaDareAvereUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/compensi/dare-avere/righe/${id}`
+}
+
+/**
+ * @summary Modifica una riga inserita a mano
+ */
+export const updateRigaDareAvere = async (id: number,
+    rigaDareAvereModificaInput: RigaDareAvereModificaInput, options?: Parameters<typeof customFetch>[1]): Promise<DareAvere> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<DareAvere>(getUpdateRigaDareAvereUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(rigaDareAvereModificaInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateRigaDareAvereMutationKey = () => ['updateRigaDareAvere'] as const;
+
+export const getUpdateRigaDareAvereMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRigaDareAvere>>, TError,UpdateRigaDareAvereMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateRigaDareAvere>>, TError,UpdateRigaDareAvereMutationVariables, TContext> => {
+
+const mutationKey = getUpdateRigaDareAvereMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateRigaDareAvere>>, UpdateRigaDareAvereMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateRigaDareAvere(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateRigaDareAvereMutationResult = NonNullable<Awaited<ReturnType<typeof updateRigaDareAvere>>>
+    export type UpdateRigaDareAvereMutationBody = BodyType<RigaDareAvereModificaInput>
+    export type UpdateRigaDareAvereMutationError = ErrorType<unknown>
+    export type UpdateRigaDareAvereMutationVariables = {id: number;data: BodyType<RigaDareAvereModificaInput>}
+
+    /**
+ * @summary Modifica una riga inserita a mano
+ */
+export const useUpdateRigaDareAvere = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRigaDareAvere>>, TError,UpdateRigaDareAvereMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateRigaDareAvere>>,
+        TError,
+        UpdateRigaDareAvereMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateRigaDareAvereMutationOptions(options));
+    }
+
+export const getDeleteRigaDareAvereUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/compensi/dare-avere/righe/${id}`
+}
+
+/**
+ * @summary Elimina una riga inserita a mano
+ */
+export const deleteRigaDareAvere = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<DareAvere> => {
+
+  return customFetch<DareAvere>(getDeleteRigaDareAvereUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteRigaDareAvereMutationKey = () => ['deleteRigaDareAvere'] as const;
+
+export const getDeleteRigaDareAvereMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRigaDareAvere>>, TError,DeleteRigaDareAvereMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteRigaDareAvere>>, TError,DeleteRigaDareAvereMutationVariables, TContext> => {
+
+const mutationKey = getDeleteRigaDareAvereMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteRigaDareAvere>>, DeleteRigaDareAvereMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteRigaDareAvere(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteRigaDareAvereMutationResult = NonNullable<Awaited<ReturnType<typeof deleteRigaDareAvere>>>
+
+    export type DeleteRigaDareAvereMutationError = ErrorType<unknown>
+    export type DeleteRigaDareAvereMutationVariables = {id: number}
+
+    /**
+ * @summary Elimina una riga inserita a mano
+ */
+export const useDeleteRigaDareAvere = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRigaDareAvere>>, TError,DeleteRigaDareAvereMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteRigaDareAvere>>,
+        TError,
+        DeleteRigaDareAvereMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteRigaDareAvereMutationOptions(options));
     }
 
 export const getListTipiPraticaUrl = () => {

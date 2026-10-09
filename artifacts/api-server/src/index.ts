@@ -1,6 +1,7 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 import { inizializzaConfigurazionePratiche } from "./lib/configurazione-iniziale";
+import { maturaPraticheGiaChiuse } from "./lib/compensi";
 import { recapitaNotificheRimaste } from "./lib/notifiche";
 
 const rawPort = process.env["PORT"];
@@ -22,6 +23,13 @@ try {
   if (creata) logger.info("Configurazione iniziale delle pratiche creata (stati e orari di caricamento)");
 } catch (err) {
   logger.error({ err }, "Impossibile inizializzare la configurazione delle pratiche");
+}
+
+try {
+  const maturate = await maturaPraticheGiaChiuse();
+  if (maturate > 0) logger.info({ maturate }, "Compensi maturati per le pratiche già chiuse");
+} catch (err) {
+  logger.error({ err }, "Impossibile calcolare i compensi delle pratiche già chiuse");
 }
 
 recapitaNotificheRimaste().catch((err) => logger.error({ err }, "Impossibile recapitare le notifiche rimaste in coda"));

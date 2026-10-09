@@ -1,3 +1,4 @@
+import { NOME_STATO_PAGATA, aggiornaMaturazione, estrattoDellaPratica } from "../lib/compensi";
 import express, { Router, type IRouter } from "express";
 import { and, asc, desc, eq, isNotNull, isNull, ne, sql, type SQL } from "drizzle-orm";
 import {
@@ -199,20 +200,39 @@ router.put("/backoffice/pratiche/:id/stato", async (req, res) => {
   if (nuovo.nome.trim().toLowerCase() === NOME_STATO_BOZZA) {
     throw new HttpError(400, "Una pratica inviata non può tornare in bozza.", "DATI_NON_VALIDI", "statoId");
   }
+  if (nuovo.nome.trim().toLowerCase() === NOME_STATO_PAGATA) {
+    throw new HttpError(409, "Lo stato Pagata si imposta registrando il pagamento di un estratto in Compensi.", "STATO_PAGATA_RISERVATO", "statoId");
+  }
   await db.transaction(async (tx) => {
-    const [corrente] = await tx.select({ statoId: praticheTable.statoId }).from(praticheTable).where(eq(praticheTable.id, id)).for("update");
+    const [corrente] = await tx
+      .select({ statoId: praticheTable.statoId, tipoPraticaId: praticheTable.tipoPraticaId, chiusaIl: praticheTable.chiusaIl })
+      .from(praticheTable)
+      .where(eq(praticheTable.id, id))
+      .for("update");
     if (!corrente) throw nonTrovato("Pratica non trovata.");
     if (corrente.statoId === nuovo.id) throw new HttpError(409, "La pratica è già in questo stato.", "STATO_INVARIATO", "statoId");
+    const estrattoId = await estrattoDellaPratica(tx, id);
+    if (estrattoId) {
+      throw new HttpError(409, `La pratica è nell'estratto n. ${estrattoId}: il suo stato non si può più cambiare. Per riaprirla elimina prima l'estratto (se non è ancora pagato).`, "PRATICA_IN_ESTRATTO");
+    }
     const [prec] = corrente.statoId ? await tx.select({ nome: statiPraticaTable.nome }).from(statiPraticaTable).where(eq(statiPraticaTable.id, corrente.statoId)) : [];
     const ora = new Date();
     await tx.update(praticheTable).set({ statoId: nuovo.id, modificataIl: ora, ultimaAttivitaBackofficeIl: ora }).where(eq(praticheTable.id, id));
+    const compenso = await aggiornaMaturazione(tx, { id, tipoPraticaId: corrente.tipoPraticaId, chiusaIl: corrente.chiusaIl }, nuovo, ora);
     await tx.insert(eventiPraticaTable).values({ praticaId: id, tipo: "cambio_stato", utenteId: req.utente!.id, da: prec?.nome ?? null, a: nuovo.nome });
     await registraLog(tx, contestoDa(req), {
       azione: "pratica.cambio_stato",
       entita: "pratica",
       entitaId: id,
-      descrizione: `Pratica ${descrizionePraticaBo(p)}: stato cambiato da "${prec?.nome ?? "—"}" a "${nuovo.nome}"`,
-      dettagli: { da: prec?.nome ?? null, a: nuovo.nome, statoId: nuovo.id },
+      descrizione: `Pratica ${descrizionePraticaBo(p)}: stato cambiato da "${prec?.nome ?? "—"}" a "${nuovo.nome}"${
+        compenso ? `; compenso maturato: ${compenso.punti} punti, € ${(compenso.valoreCentesimi / 100).toFixed(2).replace(".", ",")}` : ""
+      }`,
+      dettagli: {
+        da: prec?.nome ?? null,
+        a: nuovo.nome,
+        statoId: nuovo.id,
+        ...(compenso ? { compensoMaturato: { punti: compenso.punti, valoreCentesimi: compenso.valoreCentesimi } } : {}),
+      },
     });
   });
   res.json(await dettaglioBackoffice(req, id));
@@ -326,6 +346,8 @@ router.get("/backoffice/pratiche/:id/mandato/file", async (req, res) => {
 router.delete("/backoffice/pratiche/:id", richiediRuolo("super_admin"), async (req, res) => {
   const { id } = valida(DeletePraticaBackofficeParams, req.params);
   const p = await caricaPraticaInviata(id);
+  const inEstratto = await estrattoDellaPratica(db, id);
+  if (inEstratto) throw new HttpError(409, `La pratica è nell'estratto n. ${inEstratto} e non si può cancellare.`, "PRATICA_IN_ESTRATTO");
   const file = await db.select({ chiave: documentiPraticaTable.fileChiave }).from(documentiPraticaTable).where(eq(documentiPraticaTable.praticaId, id));
   await db.transaction(async (tx) => {
     const [commenti] = await tx.select({ n: sql<number>`count(*)::int` }).from(commentiPraticaTable).where(eq(commentiPraticaTable.praticaId, id));

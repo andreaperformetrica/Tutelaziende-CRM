@@ -17,6 +17,7 @@ import logRouter from "./log";
 import notificheRouter from "./notifiche";
 import eventiBackofficeRouter from "./eventi-backoffice";
 import eventiRouter from "./eventi";
+import compensiRouter from "./compensi";
 import { caricaUtente, controlloOrigine, richiediLogin, richiediPasswordCambiata } from "../middlewares/auth";
 
 const router: IRouter = Router();
@@ -46,5 +47,6 @@ router.use(logRouter);
 router.use(notificheRouter);
 router.use(eventiBackofficeRouter);
 router.use(eventiRouter);
+router.use(compensiRouter);
 
 export default router;

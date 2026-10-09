@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetConteggioSegnalazioniQueryKey, useGetConteggioSegnalazioni, useLogout, type SessioneUtente } from "@workspace/api-client-react";
-import { Inbox, Paperclip, UserCheck, KeyRound, LogOut, ScrollText, ShieldCheck, Users, UsersRound, Home, Landmark, UserRound, TriangleAlert, FileText, FileSignature, ListOrdered, Clock, Bell, CalendarDays } from "lucide-react";
+import { Inbox, Paperclip, UserCheck, KeyRound, LogOut, ScrollText, ShieldCheck, Users, UsersRound, Home, Landmark, UserRound, TriangleAlert, FileText, FileSignature, ListOrdered, Clock, Bell, CalendarDays, Coins } from "lucide-react";
 import { iniziali, ruoloLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +32,7 @@ const VOCI = [
   { href: "/admin/assistiti", label: "Assistiti", icon: UserRound, roles: ["super_admin", "admin", "operatore"], id: "assistiti" },
   { href: "/admin/segnalazioni", label: "Segnalazioni", icon: TriangleAlert, roles: ["super_admin", "admin"], id: "segnalazioni" },
   { href: "/admin/eventi", label: "Eventi e corsi", icon: CalendarDays, roles: ["super_admin", "admin"], id: "eventi" },
+  { href: "/admin/compensi", label: "Compensi", icon: Coins, roles: ["super_admin", "admin"], id: "compensi" },
   { href: "/admin/tipi-pratica", label: "Tipi di pratica", icon: FileText, roles: ["super_admin", "admin"], id: "tipi-pratica" },
   { href: "/admin/mandati", label: "Mandati", icon: FileSignature, roles: ["super_admin", "admin"], id: "mandati" },
   { href: "/admin/stati-pratica", label: "Stati pratica", icon: ListOrdered, roles: ["super_admin", "admin"], id: "stati-pratica" },

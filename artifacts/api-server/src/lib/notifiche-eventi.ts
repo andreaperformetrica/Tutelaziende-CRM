@@ -162,3 +162,20 @@ export async function notificaInvitoEvento(
   }
   return ids;
 }
+
+/** Estratto pratiche chiuse inviato alla sede per email, con il PDF in allegato (nessun dato degli assistiti nel testo). */
+export async function accodaEstrattoInviato(ex: Executor, estratto: { id: number; collaboratoreId: number; dataEstratto: string }): Promise<number[]> {
+  const sede = await caricaSede(ex, estratto.collaboratoreId);
+  if (!sede) return [];
+  const [a, m, g] = estratto.dataEstratto.split("-");
+  const data = `${g}/${m}/${a}`;
+  return accodaNotifiche(ex, {
+    evento: "estratto_inviato",
+    destinatari: [sede],
+    canali: ["email"],
+    estrattoId: estratto.id,
+    percorso: "/",
+    oggetto: `Estratto pratiche chiuse del ${data}`,
+    testoEmail: (d) => `Buongiorno ${d.nome},\n\nin allegato trovi l'estratto delle pratiche chiuse del ${data}.`,
+  });
+}

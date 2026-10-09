@@ -29,6 +29,7 @@ export const EVENTI_NOTIFICA = {
   risposta_sede: "Risposta della sede (all'operatore)",
   assistito_duplicato: "Anagrafica già registrata (agli admin)",
   evento_invito: "Invito a un evento (alla sede)",
+  estratto_inviato: "Estratto pratiche chiuse (alla sede)",
 } as const;
 export type EventoNotifica = keyof typeof EVENTI_NOTIFICA;
 
@@ -72,6 +73,8 @@ export interface RichiestaNotifica {
   destinatari: DestinatarioNotifica[];
   canali: CanaleNotifica[];
   pratica?: { id: number; numero: number };
+  /** Estratto pratiche chiuse: l'email porta in allegato il PDF, generato al momento dell'invio. */
+  estrattoId?: number;
   /** Invito a un evento: il WhatsApp usa il template degli eventi invece di quello delle pratiche. */
   whatsappEvento?: { titolo: string; data: string };
   /** Percorso della piattaforma a cui punta il link (es. /admin/pratiche/3). */
@@ -136,6 +139,7 @@ export async function accodaNotifiche(executor: Executor, r: RichiestaNotifica):
         destinatarioNome: d.nome,
         praticaId: r.pratica?.id ?? null,
         numeroPratica: r.pratica?.numero ?? null,
+        estrattoId: r.estrattoId ?? null,
       };
       const contatto = canale === "email" ? d.email : d.cellulare;
       if (canale === "chiamata" && !r.pratica) continue; // la chiamata parla sempre di una pratica
@@ -199,10 +203,23 @@ async function leggiErrore(risposta: Response): Promise<string> {
 async function inviaEmail(n: NotificaRow): Promise<EsitoInvio> {
   const { attivo, mancanti } = statoCanali().email;
   if (!attivo) return { esito: "non_inviata", dettaglio: `Chiavi email mancanti: ${mancanti.join(", ")}.` };
+  let allegati: { filename: string; content: string }[] | undefined;
+  if (n.estrattoId) {
+    const { pdfEstratto } = await import("./compensi-pdf");
+    const { pdf, nomeFile } = await pdfEstratto(n.estrattoId);
+    allegati = [{ filename: nomeFile, content: pdf.toString("base64") }];
+  }
   const r = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${valore("RESEND_API_KEY")}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: valore("NOTIFICHE_EMAIL_MITTENTE"), to: [n.destinatarioContatto], subject: n.oggetto ?? "Aggiornamento", text: n.testo, html: htmlDaTesto(n.testo) }),
+    body: JSON.stringify({
+      from: valore("NOTIFICHE_EMAIL_MITTENTE"),
+      to: [n.destinatarioContatto],
+      subject: n.oggetto ?? "Aggiornamento",
+      text: n.testo,
+      html: htmlDaTesto(n.testo),
+      ...(allegati ? { attachments: allegati } : {}),
+    }),
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
   if (!r.ok) return { esito: "errore", dettaglio: await leggiErrore(r) };

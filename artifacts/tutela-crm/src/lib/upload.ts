@@ -61,3 +61,7 @@ export const urlAnteprimaAttestato = (eventoId: number, x: number, y: number, di
   `${BASE}/backoffice/eventi/${eventoId}/attestato/anteprima?x=${x}&y=${y}&dim=${dim}&v=${encodeURIComponent(String(versione))}`;
 export const urlAttestatoPartecipante = (eventoId: number, partecipanteId: number) => `${BASE}/backoffice/eventi/${eventoId}/attestato/partecipanti/${partecipanteId}`;
 export const urlAttestatiPresenti = (eventoId: number) => `${BASE}/backoffice/eventi/${eventoId}/attestato/presenti`;
+
+export const urlEstrattoPdf = (id: number) => `${BASE}/backoffice/compensi/estratti/${id}/pdf`;
+export const urlDareAverePdf = (collaboratoreId: number, anno: number) => `${BASE}/backoffice/compensi/dare-avere/pdf?collaboratoreId=${collaboratoreId}&anno=${anno}`;
+export const urlLogoStampa = (versione: string = "") => `${BASE}/backoffice/compensi/impostazioni-stampa/logo?v=${encodeURIComponent(versione)}`;

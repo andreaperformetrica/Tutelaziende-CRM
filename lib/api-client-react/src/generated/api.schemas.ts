@@ -1304,6 +1304,291 @@ export interface PraticaBackoffice {
   puoEliminare: boolean;
 }
 
+export interface RigaResoconto {
+  praticaId: number;
+  numero: number;
+  /** Cognome e nome */
+  assistito: string;
+  collaboratoreId: number;
+  /** Cognome e nome */
+  collaboratoreNome: string;
+  numeroSportello: string;
+  tipoNome: string;
+  /**
+     * Data di invio della pratica (AAAA-MM-GG)
+     * @nullable
+     */
+  dataPratica: string | null;
+  /** Istante ISO 8601 in cui la pratica e' passata a uno stato chiuso */
+  chiusaIl: string;
+  giorniDallaChiusura: number;
+  punti: number;
+  valoreEuro: number;
+}
+
+export interface ResocontoCompensi {
+  righe: RigaResoconto[];
+  totalePunti: number;
+  totaleEuro: number;
+}
+
+export interface CreaEstrattiInput {
+  /**
+     * @minItems 1
+     * @maxItems 2000
+     */
+  praticaIds: number[];
+}
+
+export type MetodoPagamento = typeof MetodoPagamento[keyof typeof MetodoPagamento];
+
+
+export const MetodoPagamento = {
+  bonifico: 'bonifico',
+  contanti: 'contanti',
+  assegno: 'assegno',
+  altro: 'altro',
+} as const;
+
+export interface EstrattoRiepilogo {
+  id: number;
+  collaboratoreId: number;
+  /** Cognome e nome */
+  collaboratoreNome: string;
+  numeroSportello: string;
+  /** AAAA-MM-GG */
+  dataEstratto: string;
+  numeroPratiche: number;
+  totalePunti: number;
+  totaleEuro: number;
+  pagato: boolean;
+  /**
+     * Data del pagamento (AAAA-MM-GG)
+     * @nullable
+     */
+  pagatoIl: string | null;
+  /** @nullable */
+  pagamentoEuro: number | null;
+  pagamentoMetodo: MetodoPagamento | null;
+}
+
+export interface RigaEstratto {
+  praticaId: number;
+  assistito: string;
+  numeroPratica: number;
+  tipoPratica: string;
+  /** @nullable */
+  dataPratica: string | null;
+  punti: number;
+  valoreEuro: number;
+}
+
+export type InvioEstrattoEsitoProperty = typeof InvioEstrattoEsitoProperty[keyof typeof InvioEstrattoEsitoProperty];
+
+
+export const InvioEstrattoEsitoProperty = {
+  in_coda: 'in_coda',
+  inviata: 'inviata',
+  non_inviata: 'non_inviata',
+  errore: 'errore',
+} as const;
+
+export interface InvioEstratto {
+  id: number;
+  creatoIl: string;
+  destinatarioContatto: string;
+  esito: InvioEstrattoEsitoProperty;
+  esitoEtichetta: string;
+  /** @nullable */
+  dettaglioEsito: string | null;
+}
+
+export interface EstrattoDettaglio {
+  estratto: EstrattoRiepilogo;
+  righe: RigaEstratto[];
+  creatoIl: string;
+  /** @nullable */
+  creatoDa: string | null;
+  /** @nullable */
+  pagamentoRegistratoIl: string | null;
+  /** @nullable */
+  pagamentoRegistratoDa: string | null;
+  /**
+     * Indirizzo del collaboratore a cui va l'estratto
+     * @nullable
+     */
+  emailDestinatario: string | null;
+  /** Invii per email, dal piu recente */
+  invii: InvioEstratto[];
+}
+
+export interface PagamentoEstrattoInput {
+  /** Data del pagamento (AAAA-MM-GG) */
+  data: string;
+  /**
+     * @maximum 10000000
+     * @exclusiveMinimum 0
+     */
+  importoEuro: number;
+  metodo: MetodoPagamento;
+}
+
+export type InvioEstrattoEsitoEsito = typeof InvioEstrattoEsitoEsito[keyof typeof InvioEstrattoEsitoEsito];
+
+
+export const InvioEstrattoEsitoEsito = {
+  in_coda: 'in_coda',
+  inviata: 'inviata',
+  non_inviata: 'non_inviata',
+  errore: 'errore',
+} as const;
+
+export interface InvioEstrattoEsito {
+  estratto: EstrattoDettaglio;
+  esito: InvioEstrattoEsitoEsito;
+  esitoEtichetta: string;
+  /** @nullable */
+  dettaglio: string | null;
+}
+
+export interface LogoStampa {
+  nome: string;
+  dimensione: number;
+}
+
+export interface ImpostazioniStampa {
+  nome: string;
+  motto: string;
+  indirizzo: string;
+  telefono: string;
+  email: string;
+  nota1: string;
+  nota2: string;
+  logo: LogoStampa | null;
+}
+
+export interface ImpostazioniStampaInput {
+  /** @maxLength 80 */
+  nome: string;
+  /** @maxLength 120 */
+  motto: string;
+  /** @maxLength 160 */
+  indirizzo: string;
+  /** @maxLength 60 */
+  telefono: string;
+  /** @maxLength 120 */
+  email: string;
+  /** @maxLength 600 */
+  nota1: string;
+  /** @maxLength 600 */
+  nota2: string;
+}
+
+export type SezioneDareAvereCodice = typeof SezioneDareAvereCodice[keyof typeof SezioneDareAvereCodice];
+
+
+export const SezioneDareAvereCodice = {
+  naspi: 'naspi',
+  pensionati: 'pensionati',
+  patronato: 'patronato',
+  caf: 'caf',
+  debiti: 'debiti',
+} as const;
+
+export interface RigaDareAvere {
+  /**
+     * Vuoto per le righe del Patronato, che arrivano dagli estratti
+     * @nullable
+     */
+  id: number | null;
+  descrizione: string;
+  importoEuro: number;
+  /**
+     * AAAA-MM-GG
+     * @nullable
+     */
+  dataPagamento: string | null;
+  /**
+     * Solo Patronato: es. Estratto 03/08/2026
+     * @nullable
+     */
+  riferimento: string | null;
+  nota: string;
+  /** @nullable */
+  estrattoId: number | null;
+}
+
+export interface SezioneDareAvere {
+  sezione: SezioneDareAvereCodice;
+  titolo: string;
+  /** Vero se le righe arrivano dagli estratti e non si modificano qui */
+  automatica: boolean;
+  righe: RigaDareAvere[];
+  totaleEuro: number;
+}
+
+export interface DareAvere {
+  collaboratoreId: number;
+  /** Cognome e nome */
+  collaboratoreNome: string;
+  numeroSportello: string;
+  anno: number;
+  sezioni: SezioneDareAvere[];
+  /** Somma degli importi delle sezioni meno i debiti */
+  totaleAvereEuro: number;
+}
+
+export type RigaDareAvereInputSezione = typeof RigaDareAvereInputSezione[keyof typeof RigaDareAvereInputSezione];
+
+
+export const RigaDareAvereInputSezione = {
+  naspi: 'naspi',
+  pensionati: 'pensionati',
+  caf: 'caf',
+  debiti: 'debiti',
+} as const;
+
+export interface RigaDareAvereInput {
+  collaboratoreId: number;
+  /**
+     * @minimum 2000
+     * @maximum 2100
+     */
+  anno: number;
+  sezione: RigaDareAvereInputSezione;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  descrizione: string;
+  /**
+     * @maximum 10000000
+     * @exclusiveMinimum 0
+     */
+  importoEuro: number;
+  /** @nullable */
+  dataPagamento?: string | null;
+  /** @maxLength 300 */
+  nota?: string;
+}
+
+export interface RigaDareAvereModificaInput {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  descrizione: string;
+  /**
+     * @maximum 10000000
+     * @exclusiveMinimum 0
+     */
+  importoEuro: number;
+  /** @nullable */
+  dataPagamento?: string | null;
+  /** @maxLength 300 */
+  nota?: string;
+}
+
 export type ListCollaboratoriParams = {
 /**
  * Ricerca su nome, cognome, codice fiscale, cellulare, email, numero di sportello
@@ -1438,6 +1723,50 @@ export const ListNotificheEsito = {
   non_inviata: 'non_inviata',
   errore: 'errore',
 } as const;
+
+export type GetResocontoCompensiParams = {
+collaboratoreId?: number;
+/**
+ * Chiuse dal giorno indicato (AAAA-MM-GG, fuso Europe/Rome), incluso
+ */
+dal?: string;
+/**
+ * Chiuse fino al giorno indicato (AAAA-MM-GG, fuso Europe/Rome), incluso
+ */
+al?: string;
+/**
+ * Solo le pratiche chiuse da almeno questi giorni (il back office propone 60)
+ * @minimum 0
+ * @maximum 3650
+ */
+giorni?: number;
+};
+
+export type ListEstrattiParams = {
+collaboratoreId?: number;
+stato?: ListEstrattiStato;
+/**
+ * Anno della data dell'estratto
+ */
+anno?: number;
+};
+
+export type ListEstrattiStato = typeof ListEstrattiStato[keyof typeof ListEstrattiStato];
+
+
+export const ListEstrattiStato = {
+  da_pagare: 'da_pagare',
+  pagato: 'pagato',
+} as const;
+
+export type GetDareAvereParams = {
+collaboratoreId: number;
+/**
+ * @minimum 2000
+ * @maximum 2100
+ */
+anno: number;
+};
 
 export type ListMandatiParams = {
 tipoPraticaId?: number;
