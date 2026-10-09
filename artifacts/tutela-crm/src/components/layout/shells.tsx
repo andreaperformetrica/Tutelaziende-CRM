@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetConteggioSegnalazioniQueryKey, useGetConteggioSegnalazioni, useLogout, type SessioneUtente } from "@workspace/api-client-react";
-import { Inbox, Paperclip, UserCheck, KeyRound, LogOut, ScrollText, ShieldCheck, Users, UsersRound, Home, Landmark, UserRound, TriangleAlert, FileText, FileSignature, ListOrdered, Clock, Bell } from "lucide-react";
+import { Inbox, Paperclip, UserCheck, KeyRound, LogOut, ScrollText, ShieldCheck, Users, UsersRound, Home, Landmark, UserRound, TriangleAlert, FileText, FileSignature, ListOrdered, Clock, Bell, CalendarDays } from "lucide-react";
 import { iniziali, ruoloLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -31,6 +31,7 @@ const VOCI = [
   { href: "/admin/collaboratori", label: "Collaboratori", icon: UsersRound, roles: ["super_admin", "admin", "operatore"], id: "collaboratori" },
   { href: "/admin/assistiti", label: "Assistiti", icon: UserRound, roles: ["super_admin", "admin", "operatore"], id: "assistiti" },
   { href: "/admin/segnalazioni", label: "Segnalazioni", icon: TriangleAlert, roles: ["super_admin", "admin"], id: "segnalazioni" },
+  { href: "/admin/eventi", label: "Eventi e corsi", icon: CalendarDays, roles: ["super_admin", "admin"], id: "eventi" },
   { href: "/admin/tipi-pratica", label: "Tipi di pratica", icon: FileText, roles: ["super_admin", "admin"], id: "tipi-pratica" },
   { href: "/admin/mandati", label: "Mandati", icon: FileSignature, roles: ["super_admin", "admin"], id: "mandati" },
   { href: "/admin/stati-pratica", label: "Stati pratica", icon: ListOrdered, roles: ["super_admin", "admin"], id: "stati-pratica" },
@@ -93,7 +94,7 @@ export function BackofficeShell({ s, children }: { s: SessioneUtente; children: 
 export function CollaboratoreShell({ s, children }: { s: SessioneUtente; children: ReactNode }) {
   const [loc] = useLocation();
   const esci = useEsci();
-  const voci = [{ href: "/collaboratore", label: "Home", icon: Home }, { href: "/collaboratore/assistiti", label: "Assistiti", icon: UserRound }, { href: "/collaboratore/pratiche", label: "Le mie pratiche", icon: FileText }, { href: "/cambia-password", label: "Cambia password", icon: KeyRound }];
+  const voci = [{ href: "/collaboratore", label: "Home", icon: Home }, { href: "/collaboratore/assistiti", label: "Assistiti", icon: UserRound }, { href: "/collaboratore/pratiche", label: "Le mie pratiche", icon: FileText }, { href: "/collaboratore/eventi", label: "Eventi", icon: CalendarDays }, { href: "/cambia-password", label: "Cambia password", icon: KeyRound }];
   return (
     <div className="min-h-[100dvh] bg-secondary/40 paper">
       <header className="bg-primary text-primary-foreground border-b-4 border-accent">

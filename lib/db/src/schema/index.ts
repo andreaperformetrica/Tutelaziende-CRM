@@ -7,3 +7,4 @@ export * from "./segnalazioni";
 export * from "./configurazione-pratiche";
 export * from "./pratiche";
 export * from "./notifiche";
+export * from "./eventi";

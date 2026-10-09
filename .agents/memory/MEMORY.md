@@ -5,3 +5,4 @@
 - [Phase 4 pratiche opening decisions](tutela-crm-phase4-decisions.md) — ownership, mandato via assignment, initial stato, post-send locks, orari check order
 - [Phase 5 back-office pratiche decisions](tutela-crm-phase5-decisions.md) — aggiornata/lavorate meaning, città, takeover, canale only saved, who deletes
 - [Phase 6 notifications decisions](tutela-crm-phase6-decisions.md) — Resend + Twilio template, secret names, recipients, privacy rule, outbox-style delivery
+- [Phase 7 eventi decisions](tutela-crm-phase7-decisions.md) — eventi/QR/check-in/attestati: permissions, locks, presenti meaning, extra WhatsApp template secret

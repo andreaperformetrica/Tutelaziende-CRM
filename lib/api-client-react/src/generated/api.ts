@@ -33,6 +33,8 @@ import type {
   CategoriaAllegato,
   CategoriaAllegatoInput,
   CercaLuoghiParams,
+  CheckInEsito,
+  CheckInInput,
   Collaboratore,
   CollaboratoreDettaglio,
   CollaboratoreInput,
@@ -41,11 +43,18 @@ import type {
   CommentoPraticaInput,
   ConteggioSegnalazioni,
   DocumentoTipoInput,
+  EventoBackoffice,
+  EventoCreazioneInput,
+  EventoModificaInput,
+  EventoRiepilogo,
+  EventoSede,
+  EventoSedeRiepilogo,
   FiltriLog,
   FiltriPraticheBackoffice,
   HealthStatus,
   InvioPraticaInput,
   InvioPratiche,
+  InvitiEventoInput,
   ListAssegnazioniMandatoParams,
   ListAssistitiParams,
   ListCollaboratoriParams,
@@ -66,8 +75,11 @@ import type {
   NotifichePagina,
   OrariCaricamento,
   OrariCaricamentoInput,
+  OrariPartecipanteInput,
   OrdineInput,
+  PartecipanteEventoInput,
   PasswordProvvisoriaInput,
+  PosizioneAttestatoInput,
   PraticaBackoffice,
   PraticaDettaglio,
   PraticaInput,
@@ -2615,6 +2627,1477 @@ export function useGetStatoNotifiche<TData = Awaited<ReturnType<typeof getStatoN
 
 
 
+
+export const getListEventiBackofficeUrl = () => {
+
+
+
+
+  return `/api/backoffice/eventi`
+}
+
+/**
+ * @summary Elenco eventi con i conteggi di inviti, conferme, iscritti e presenti
+ */
+export const listEventiBackoffice = async ( options?: Parameters<typeof customFetch>[1]): Promise<EventoRiepilogo[]> => {
+
+  return customFetch<EventoRiepilogo[]>(getListEventiBackofficeUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListEventiBackofficeQueryKey = () => {
+    return [
+    `/api/backoffice/eventi`
+    ] as const;
+    }
+
+
+export const getListEventiBackofficeQueryOptions = <TData = Awaited<ReturnType<typeof listEventiBackoffice>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listEventiBackoffice>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListEventiBackofficeQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listEventiBackoffice>>> = ({ signal }) => listEventiBackoffice({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listEventiBackoffice>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListEventiBackofficeQueryResult = NonNullable<Awaited<ReturnType<typeof listEventiBackoffice>>>
+export type ListEventiBackofficeQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Elenco eventi con i conteggi di inviti, conferme, iscritti e presenti
+ */
+
+export function useListEventiBackoffice<TData = Awaited<ReturnType<typeof listEventiBackoffice>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listEventiBackoffice>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListEventiBackofficeQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateEventoUrl = () => {
+
+
+
+
+  return `/api/backoffice/eventi`
+}
+
+/**
+ * @summary Crea un evento e invita le sedi scelte (che ricevono la notifica)
+ */
+export const createEvento = async (eventoCreazioneInput: EventoCreazioneInput, options?: Parameters<typeof customFetch>[1]): Promise<EventoBackoffice> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<EventoBackoffice>(getCreateEventoUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(eventoCreazioneInput)
+  }
+);}
+
+
+
+
+
+export const getCreateEventoMutationKey = () => ['createEvento'] as const;
+
+export const getCreateEventoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createEvento>>, TError,CreateEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createEvento>>, TError,CreateEventoMutationVariables, TContext> => {
+
+const mutationKey = getCreateEventoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createEvento>>, CreateEventoMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createEvento(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateEventoMutationResult = NonNullable<Awaited<ReturnType<typeof createEvento>>>
+    export type CreateEventoMutationBody = BodyType<EventoCreazioneInput>
+    export type CreateEventoMutationError = ErrorType<unknown>
+    export type CreateEventoMutationVariables = {data: BodyType<EventoCreazioneInput>}
+
+    /**
+ * @summary Crea un evento e invita le sedi scelte (che ricevono la notifica)
+ */
+export const useCreateEvento = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createEvento>>, TError,CreateEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createEvento>>,
+        TError,
+        CreateEventoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateEventoMutationOptions(options));
+    }
+
+export const getGetEventoBackofficeUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/eventi/${id}`
+}
+
+/**
+ * @summary Scheda dell'evento con inviti, iscritti, orari, questionario e attestato
+ */
+export const getEventoBackoffice = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<EventoBackoffice> => {
+
+  return customFetch<EventoBackoffice>(getGetEventoBackofficeUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetEventoBackofficeQueryKey = (id: number,) => {
+    return [
+    `/api/backoffice/eventi/${id}`
+    ] as const;
+    }
+
+
+export const getGetEventoBackofficeQueryOptions = <TData = Awaited<ReturnType<typeof getEventoBackoffice>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEventoBackoffice>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetEventoBackofficeQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getEventoBackoffice>>> = ({ signal }) => getEventoBackoffice(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEventoBackoffice>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetEventoBackofficeQueryResult = NonNullable<Awaited<ReturnType<typeof getEventoBackoffice>>>
+export type GetEventoBackofficeQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Scheda dell'evento con inviti, iscritti, orari, questionario e attestato
+ */
+
+export function useGetEventoBackoffice<TData = Awaited<ReturnType<typeof getEventoBackoffice>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEventoBackoffice>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetEventoBackofficeQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateEventoUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/eventi/${id}`
+}
+
+/**
+ * @summary Modifica i dati dell'evento
+ */
+export const updateEvento = async (id: number,
+    eventoModificaInput: EventoModificaInput, options?: Parameters<typeof customFetch>[1]): Promise<EventoBackoffice> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<EventoBackoffice>(getUpdateEventoUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(eventoModificaInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateEventoMutationKey = () => ['updateEvento'] as const;
+
+export const getUpdateEventoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateEvento>>, TError,UpdateEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateEvento>>, TError,UpdateEventoMutationVariables, TContext> => {
+
+const mutationKey = getUpdateEventoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateEvento>>, UpdateEventoMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateEvento(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateEventoMutationResult = NonNullable<Awaited<ReturnType<typeof updateEvento>>>
+    export type UpdateEventoMutationBody = BodyType<EventoModificaInput>
+    export type UpdateEventoMutationError = ErrorType<unknown>
+    export type UpdateEventoMutationVariables = {id: number;data: BodyType<EventoModificaInput>}
+
+    /**
+ * @summary Modifica i dati dell'evento
+ */
+export const useUpdateEvento = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateEvento>>, TError,UpdateEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateEvento>>,
+        TError,
+        UpdateEventoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateEventoMutationOptions(options));
+    }
+
+export const getDeleteEventoUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/eventi/${id}`
+}
+
+/**
+ * @summary Elimina un evento in cui non e' stato registrato nessun orario
+ */
+export const deleteEvento = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteEventoUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteEventoMutationKey = () => ['deleteEvento'] as const;
+
+export const getDeleteEventoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteEvento>>, TError,DeleteEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteEvento>>, TError,DeleteEventoMutationVariables, TContext> => {
+
+const mutationKey = getDeleteEventoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteEvento>>, DeleteEventoMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteEvento(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteEventoMutationResult = NonNullable<Awaited<ReturnType<typeof deleteEvento>>>
+
+    export type DeleteEventoMutationError = ErrorType<unknown>
+    export type DeleteEventoMutationVariables = {id: number}
+
+    /**
+ * @summary Elimina un evento in cui non e' stato registrato nessun orario
+ */
+export const useDeleteEvento = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteEvento>>, TError,DeleteEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteEvento>>,
+        TError,
+        DeleteEventoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteEventoMutationOptions(options));
+    }
+
+export const getAddInvitiEventoUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/eventi/${id}/inviti`
+}
+
+/**
+ * @summary Invita altre sedi (le sedi gia invitate restano com'e)
+ */
+export const addInvitiEvento = async (id: number,
+    invitiEventoInput: InvitiEventoInput, options?: Parameters<typeof customFetch>[1]): Promise<EventoBackoffice> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<EventoBackoffice>(getAddInvitiEventoUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(invitiEventoInput)
+  }
+);}
+
+
+
+
+
+export const getAddInvitiEventoMutationKey = () => ['addInvitiEvento'] as const;
+
+export const getAddInvitiEventoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addInvitiEvento>>, TError,AddInvitiEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addInvitiEvento>>, TError,AddInvitiEventoMutationVariables, TContext> => {
+
+const mutationKey = getAddInvitiEventoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addInvitiEvento>>, AddInvitiEventoMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  addInvitiEvento(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddInvitiEventoMutationResult = NonNullable<Awaited<ReturnType<typeof addInvitiEvento>>>
+    export type AddInvitiEventoMutationBody = BodyType<InvitiEventoInput>
+    export type AddInvitiEventoMutationError = ErrorType<unknown>
+    export type AddInvitiEventoMutationVariables = {id: number;data: BodyType<InvitiEventoInput>}
+
+    /**
+ * @summary Invita altre sedi (le sedi gia invitate restano com'e)
+ */
+export const useAddInvitiEvento = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addInvitiEvento>>, TError,AddInvitiEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof addInvitiEvento>>,
+        TError,
+        AddInvitiEventoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAddInvitiEventoMutationOptions(options));
+    }
+
+export const getRemoveInvitoEventoUrl = (id: number,
+    collaboratoreId: number,) => {
+
+
+
+
+  return `/api/backoffice/eventi/${id}/inviti/${collaboratoreId}`
+}
+
+/**
+ * @summary Toglie l'invito a una sede senza partecipanti
+ */
+export const removeInvitoEvento = async (id: number,
+    collaboratoreId: number, options?: Parameters<typeof customFetch>[1]): Promise<EventoBackoffice> => {
+
+  return customFetch<EventoBackoffice>(getRemoveInvitoEventoUrl(id,collaboratoreId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getRemoveInvitoEventoMutationKey = () => ['removeInvitoEvento'] as const;
+
+export const getRemoveInvitoEventoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeInvitoEvento>>, TError,RemoveInvitoEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof removeInvitoEvento>>, TError,RemoveInvitoEventoMutationVariables, TContext> => {
+
+const mutationKey = getRemoveInvitoEventoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeInvitoEvento>>, RemoveInvitoEventoMutationVariables> = (props) => {
+          const {id,collaboratoreId} = props ?? {};
+
+          return  removeInvitoEvento(id,collaboratoreId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveInvitoEventoMutationResult = NonNullable<Awaited<ReturnType<typeof removeInvitoEvento>>>
+
+    export type RemoveInvitoEventoMutationError = ErrorType<unknown>
+    export type RemoveInvitoEventoMutationVariables = {id: number;collaboratoreId: number}
+
+    /**
+ * @summary Toglie l'invito a una sede senza partecipanti
+ */
+export const useRemoveInvitoEvento = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeInvitoEvento>>, TError,RemoveInvitoEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof removeInvitoEvento>>,
+        TError,
+        RemoveInvitoEventoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRemoveInvitoEventoMutationOptions(options));
+    }
+
+export const getUpdateOrariPartecipanteUrl = (id: number,
+    partecipanteId: number,) => {
+
+
+
+
+  return `/api/backoffice/eventi/${id}/partecipanti/${partecipanteId}/orari`
+}
+
+/**
+ * @summary Inserisce o corregge a mano gli orari di entrata e uscita (nel giorno dell'evento)
+ */
+export const updateOrariPartecipante = async (id: number,
+    partecipanteId: number,
+    orariPartecipanteInput: OrariPartecipanteInput, options?: Parameters<typeof customFetch>[1]): Promise<EventoBackoffice> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<EventoBackoffice>(getUpdateOrariPartecipanteUrl(id,partecipanteId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(orariPartecipanteInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateOrariPartecipanteMutationKey = () => ['updateOrariPartecipante'] as const;
+
+export const getUpdateOrariPartecipanteMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrariPartecipante>>, TError,UpdateOrariPartecipanteMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateOrariPartecipante>>, TError,UpdateOrariPartecipanteMutationVariables, TContext> => {
+
+const mutationKey = getUpdateOrariPartecipanteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateOrariPartecipante>>, UpdateOrariPartecipanteMutationVariables> = (props) => {
+          const {id,partecipanteId,data} = props ?? {};
+
+          return  updateOrariPartecipante(id,partecipanteId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateOrariPartecipanteMutationResult = NonNullable<Awaited<ReturnType<typeof updateOrariPartecipante>>>
+    export type UpdateOrariPartecipanteMutationBody = BodyType<OrariPartecipanteInput>
+    export type UpdateOrariPartecipanteMutationError = ErrorType<unknown>
+    export type UpdateOrariPartecipanteMutationVariables = {id: number;partecipanteId: number;data: BodyType<OrariPartecipanteInput>}
+
+    /**
+ * @summary Inserisce o corregge a mano gli orari di entrata e uscita (nel giorno dell'evento)
+ */
+export const useUpdateOrariPartecipante = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOrariPartecipante>>, TError,UpdateOrariPartecipanteMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateOrariPartecipante>>,
+        TError,
+        UpdateOrariPartecipanteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateOrariPartecipanteMutationOptions(options));
+    }
+
+export const getRegistraCheckInEventoUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/eventi/${id}/check-in`
+}
+
+/**
+ * @summary Registra l'entrata o l'uscita leggendo il QR code di un partecipante
+ */
+export const registraCheckInEvento = async (id: number,
+    checkInInput: CheckInInput, options?: Parameters<typeof customFetch>[1]): Promise<CheckInEsito> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<CheckInEsito>(getRegistraCheckInEventoUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(checkInInput)
+  }
+);}
+
+
+
+
+
+export const getRegistraCheckInEventoMutationKey = () => ['registraCheckInEvento'] as const;
+
+export const getRegistraCheckInEventoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registraCheckInEvento>>, TError,RegistraCheckInEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof registraCheckInEvento>>, TError,RegistraCheckInEventoMutationVariables, TContext> => {
+
+const mutationKey = getRegistraCheckInEventoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof registraCheckInEvento>>, RegistraCheckInEventoMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  registraCheckInEvento(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RegistraCheckInEventoMutationResult = NonNullable<Awaited<ReturnType<typeof registraCheckInEvento>>>
+    export type RegistraCheckInEventoMutationBody = BodyType<CheckInInput>
+    export type RegistraCheckInEventoMutationError = ErrorType<unknown>
+    export type RegistraCheckInEventoMutationVariables = {id: number;data: BodyType<CheckInInput>}
+
+    /**
+ * @summary Registra l'entrata o l'uscita leggendo il QR code di un partecipante
+ */
+export const useRegistraCheckInEvento = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registraCheckInEvento>>, TError,RegistraCheckInEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof registraCheckInEvento>>,
+        TError,
+        RegistraCheckInEventoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRegistraCheckInEventoMutationOptions(options));
+    }
+
+export const getUpdatePosizioneAttestatoUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/eventi/${id}/attestato/posizione`
+}
+
+/**
+ * @summary Imposta dove va scritto il nome del partecipante sul layout dell'attestato
+ */
+export const updatePosizioneAttestato = async (id: number,
+    posizioneAttestatoInput: PosizioneAttestatoInput, options?: Parameters<typeof customFetch>[1]): Promise<EventoBackoffice> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<EventoBackoffice>(getUpdatePosizioneAttestatoUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(posizioneAttestatoInput)
+  }
+);}
+
+
+
+
+
+export const getUpdatePosizioneAttestatoMutationKey = () => ['updatePosizioneAttestato'] as const;
+
+export const getUpdatePosizioneAttestatoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePosizioneAttestato>>, TError,UpdatePosizioneAttestatoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updatePosizioneAttestato>>, TError,UpdatePosizioneAttestatoMutationVariables, TContext> => {
+
+const mutationKey = getUpdatePosizioneAttestatoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updatePosizioneAttestato>>, UpdatePosizioneAttestatoMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updatePosizioneAttestato(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdatePosizioneAttestatoMutationResult = NonNullable<Awaited<ReturnType<typeof updatePosizioneAttestato>>>
+    export type UpdatePosizioneAttestatoMutationBody = BodyType<PosizioneAttestatoInput>
+    export type UpdatePosizioneAttestatoMutationError = ErrorType<unknown>
+    export type UpdatePosizioneAttestatoMutationVariables = {id: number;data: BodyType<PosizioneAttestatoInput>}
+
+    /**
+ * @summary Imposta dove va scritto il nome del partecipante sul layout dell'attestato
+ */
+export const useUpdatePosizioneAttestato = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePosizioneAttestato>>, TError,UpdatePosizioneAttestatoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updatePosizioneAttestato>>,
+        TError,
+        UpdatePosizioneAttestatoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdatePosizioneAttestatoMutationOptions(options));
+    }
+
+export const getDeleteLayoutAttestatoUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/eventi/${id}/attestato/layout`
+}
+
+/**
+ * @summary Elimina il layout dell'attestato
+ */
+export const deleteLayoutAttestato = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<EventoBackoffice> => {
+
+  return customFetch<EventoBackoffice>(getDeleteLayoutAttestatoUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteLayoutAttestatoMutationKey = () => ['deleteLayoutAttestato'] as const;
+
+export const getDeleteLayoutAttestatoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteLayoutAttestato>>, TError,DeleteLayoutAttestatoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteLayoutAttestato>>, TError,DeleteLayoutAttestatoMutationVariables, TContext> => {
+
+const mutationKey = getDeleteLayoutAttestatoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteLayoutAttestato>>, DeleteLayoutAttestatoMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteLayoutAttestato(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteLayoutAttestatoMutationResult = NonNullable<Awaited<ReturnType<typeof deleteLayoutAttestato>>>
+
+    export type DeleteLayoutAttestatoMutationError = ErrorType<unknown>
+    export type DeleteLayoutAttestatoMutationVariables = {id: number}
+
+    /**
+ * @summary Elimina il layout dell'attestato
+ */
+export const useDeleteLayoutAttestato = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteLayoutAttestato>>, TError,DeleteLayoutAttestatoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteLayoutAttestato>>,
+        TError,
+        DeleteLayoutAttestatoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteLayoutAttestatoMutationOptions(options));
+    }
+
+export const getDeleteQuestionarioEventoUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/eventi/${id}/questionario`
+}
+
+/**
+ * @summary Elimina il questionario dell'evento
+ */
+export const deleteQuestionarioEvento = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<EventoBackoffice> => {
+
+  return customFetch<EventoBackoffice>(getDeleteQuestionarioEventoUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteQuestionarioEventoMutationKey = () => ['deleteQuestionarioEvento'] as const;
+
+export const getDeleteQuestionarioEventoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteQuestionarioEvento>>, TError,DeleteQuestionarioEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteQuestionarioEvento>>, TError,DeleteQuestionarioEventoMutationVariables, TContext> => {
+
+const mutationKey = getDeleteQuestionarioEventoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteQuestionarioEvento>>, DeleteQuestionarioEventoMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteQuestionarioEvento(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteQuestionarioEventoMutationResult = NonNullable<Awaited<ReturnType<typeof deleteQuestionarioEvento>>>
+
+    export type DeleteQuestionarioEventoMutationError = ErrorType<unknown>
+    export type DeleteQuestionarioEventoMutationVariables = {id: number}
+
+    /**
+ * @summary Elimina il questionario dell'evento
+ */
+export const useDeleteQuestionarioEvento = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteQuestionarioEvento>>, TError,DeleteQuestionarioEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteQuestionarioEvento>>,
+        TError,
+        DeleteQuestionarioEventoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteQuestionarioEventoMutationOptions(options));
+    }
+
+export const getListEventiUrl = () => {
+
+
+
+
+  return `/api/eventi`
+}
+
+/**
+ * @summary Eventi a cui la sede e' invitata
+ */
+export const listEventi = async ( options?: Parameters<typeof customFetch>[1]): Promise<EventoSedeRiepilogo[]> => {
+
+  return customFetch<EventoSedeRiepilogo[]>(getListEventiUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListEventiQueryKey = () => {
+    return [
+    `/api/eventi`
+    ] as const;
+    }
+
+
+export const getListEventiQueryOptions = <TData = Awaited<ReturnType<typeof listEventi>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listEventi>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListEventiQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listEventi>>> = ({ signal }) => listEventi({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listEventi>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListEventiQueryResult = NonNullable<Awaited<ReturnType<typeof listEventi>>>
+export type ListEventiQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Eventi a cui la sede e' invitata
+ */
+
+export function useListEventi<TData = Awaited<ReturnType<typeof listEventi>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listEventi>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListEventiQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetEventoUrl = (id: number,) => {
+
+
+
+
+  return `/api/eventi/${id}`
+}
+
+/**
+ * @summary Evento, conferma della sede e suoi partecipanti con i QR code
+ */
+export const getEvento = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<EventoSede> => {
+
+  return customFetch<EventoSede>(getGetEventoUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetEventoQueryKey = (id: number,) => {
+    return [
+    `/api/eventi/${id}`
+    ] as const;
+    }
+
+
+export const getGetEventoQueryOptions = <TData = Awaited<ReturnType<typeof getEvento>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEvento>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetEventoQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getEvento>>> = ({ signal }) => getEvento(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEvento>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetEventoQueryResult = NonNullable<Awaited<ReturnType<typeof getEvento>>>
+export type GetEventoQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Evento, conferma della sede e suoi partecipanti con i QR code
+ */
+
+export function useGetEvento<TData = Awaited<ReturnType<typeof getEvento>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEvento>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetEventoQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getConfermaPartecipazioneEventoUrl = (id: number,) => {
+
+
+
+
+  return `/api/eventi/${id}/conferma`
+}
+
+/**
+ * @summary Conferma la partecipazione della sede all'evento
+ */
+export const confermaPartecipazioneEvento = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<EventoSede> => {
+
+  return customFetch<EventoSede>(getConfermaPartecipazioneEventoUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getConfermaPartecipazioneEventoMutationKey = () => ['confermaPartecipazioneEvento'] as const;
+
+export const getConfermaPartecipazioneEventoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confermaPartecipazioneEvento>>, TError,ConfermaPartecipazioneEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof confermaPartecipazioneEvento>>, TError,ConfermaPartecipazioneEventoMutationVariables, TContext> => {
+
+const mutationKey = getConfermaPartecipazioneEventoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof confermaPartecipazioneEvento>>, ConfermaPartecipazioneEventoMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  confermaPartecipazioneEvento(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConfermaPartecipazioneEventoMutationResult = NonNullable<Awaited<ReturnType<typeof confermaPartecipazioneEvento>>>
+
+    export type ConfermaPartecipazioneEventoMutationError = ErrorType<unknown>
+    export type ConfermaPartecipazioneEventoMutationVariables = {id: number}
+
+    /**
+ * @summary Conferma la partecipazione della sede all'evento
+ */
+export const useConfermaPartecipazioneEvento = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confermaPartecipazioneEvento>>, TError,ConfermaPartecipazioneEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof confermaPartecipazioneEvento>>,
+        TError,
+        ConfermaPartecipazioneEventoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getConfermaPartecipazioneEventoMutationOptions(options));
+    }
+
+export const getAddPartecipanteEventoUrl = (id: number,) => {
+
+
+
+
+  return `/api/eventi/${id}/partecipanti`
+}
+
+/**
+ * @summary Inserisce un partecipante (nome e cognome); riceve il suo QR code personale
+ */
+export const addPartecipanteEvento = async (id: number,
+    partecipanteEventoInput: PartecipanteEventoInput, options?: Parameters<typeof customFetch>[1]): Promise<EventoSede> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<EventoSede>(getAddPartecipanteEventoUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(partecipanteEventoInput)
+  }
+);}
+
+
+
+
+
+export const getAddPartecipanteEventoMutationKey = () => ['addPartecipanteEvento'] as const;
+
+export const getAddPartecipanteEventoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addPartecipanteEvento>>, TError,AddPartecipanteEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addPartecipanteEvento>>, TError,AddPartecipanteEventoMutationVariables, TContext> => {
+
+const mutationKey = getAddPartecipanteEventoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addPartecipanteEvento>>, AddPartecipanteEventoMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  addPartecipanteEvento(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddPartecipanteEventoMutationResult = NonNullable<Awaited<ReturnType<typeof addPartecipanteEvento>>>
+    export type AddPartecipanteEventoMutationBody = BodyType<PartecipanteEventoInput>
+    export type AddPartecipanteEventoMutationError = ErrorType<unknown>
+    export type AddPartecipanteEventoMutationVariables = {id: number;data: BodyType<PartecipanteEventoInput>}
+
+    /**
+ * @summary Inserisce un partecipante (nome e cognome); riceve il suo QR code personale
+ */
+export const useAddPartecipanteEvento = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addPartecipanteEvento>>, TError,AddPartecipanteEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof addPartecipanteEvento>>,
+        TError,
+        AddPartecipanteEventoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAddPartecipanteEventoMutationOptions(options));
+    }
+
+export const getUpdatePartecipanteEventoUrl = (id: number,
+    partecipanteId: number,) => {
+
+
+
+
+  return `/api/eventi/${id}/partecipanti/${partecipanteId}`
+}
+
+/**
+ * @summary Corregge nome e cognome di un partecipante senza orari registrati
+ */
+export const updatePartecipanteEvento = async (id: number,
+    partecipanteId: number,
+    partecipanteEventoInput: PartecipanteEventoInput, options?: Parameters<typeof customFetch>[1]): Promise<EventoSede> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<EventoSede>(getUpdatePartecipanteEventoUrl(id,partecipanteId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(partecipanteEventoInput)
+  }
+);}
+
+
+
+
+
+export const getUpdatePartecipanteEventoMutationKey = () => ['updatePartecipanteEvento'] as const;
+
+export const getUpdatePartecipanteEventoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePartecipanteEvento>>, TError,UpdatePartecipanteEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updatePartecipanteEvento>>, TError,UpdatePartecipanteEventoMutationVariables, TContext> => {
+
+const mutationKey = getUpdatePartecipanteEventoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updatePartecipanteEvento>>, UpdatePartecipanteEventoMutationVariables> = (props) => {
+          const {id,partecipanteId,data} = props ?? {};
+
+          return  updatePartecipanteEvento(id,partecipanteId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdatePartecipanteEventoMutationResult = NonNullable<Awaited<ReturnType<typeof updatePartecipanteEvento>>>
+    export type UpdatePartecipanteEventoMutationBody = BodyType<PartecipanteEventoInput>
+    export type UpdatePartecipanteEventoMutationError = ErrorType<unknown>
+    export type UpdatePartecipanteEventoMutationVariables = {id: number;partecipanteId: number;data: BodyType<PartecipanteEventoInput>}
+
+    /**
+ * @summary Corregge nome e cognome di un partecipante senza orari registrati
+ */
+export const useUpdatePartecipanteEvento = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePartecipanteEvento>>, TError,UpdatePartecipanteEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updatePartecipanteEvento>>,
+        TError,
+        UpdatePartecipanteEventoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdatePartecipanteEventoMutationOptions(options));
+    }
+
+export const getDeletePartecipanteEventoUrl = (id: number,
+    partecipanteId: number,) => {
+
+
+
+
+  return `/api/eventi/${id}/partecipanti/${partecipanteId}`
+}
+
+/**
+ * @summary Toglie un partecipante senza orari registrati
+ */
+export const deletePartecipanteEvento = async (id: number,
+    partecipanteId: number, options?: Parameters<typeof customFetch>[1]): Promise<EventoSede> => {
+
+  return customFetch<EventoSede>(getDeletePartecipanteEventoUrl(id,partecipanteId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeletePartecipanteEventoMutationKey = () => ['deletePartecipanteEvento'] as const;
+
+export const getDeletePartecipanteEventoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePartecipanteEvento>>, TError,DeletePartecipanteEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deletePartecipanteEvento>>, TError,DeletePartecipanteEventoMutationVariables, TContext> => {
+
+const mutationKey = getDeletePartecipanteEventoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deletePartecipanteEvento>>, DeletePartecipanteEventoMutationVariables> = (props) => {
+          const {id,partecipanteId} = props ?? {};
+
+          return  deletePartecipanteEvento(id,partecipanteId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeletePartecipanteEventoMutationResult = NonNullable<Awaited<ReturnType<typeof deletePartecipanteEvento>>>
+
+    export type DeletePartecipanteEventoMutationError = ErrorType<unknown>
+    export type DeletePartecipanteEventoMutationVariables = {id: number;partecipanteId: number}
+
+    /**
+ * @summary Toglie un partecipante senza orari registrati
+ */
+export const useDeletePartecipanteEvento = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePartecipanteEvento>>, TError,DeletePartecipanteEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deletePartecipanteEvento>>,
+        TError,
+        DeletePartecipanteEventoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeletePartecipanteEventoMutationOptions(options));
+    }
 
 export const getListTipiPraticaUrl = () => {
 

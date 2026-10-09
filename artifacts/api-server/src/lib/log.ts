@@ -64,6 +64,22 @@ export const AZIONI_LOG = {
   "categoria_allegato.modifica": "Modifica categoria allegato",
   "categoria_allegato.elimina": "Eliminazione categoria allegato",
   "orari.modifica": "Modifica orari di caricamento",
+  "evento.crea": "Creazione evento",
+  "evento.modifica": "Modifica evento",
+  "evento.elimina": "Eliminazione evento",
+  "evento.invita": "Invito di sedi a un evento",
+  "evento.invito_rimuovi": "Invito a un evento tolto a una sede",
+  "evento.conferma": "Conferma di partecipazione a un evento",
+  "evento.partecipante_aggiungi": "Aggiunta partecipante a un evento",
+  "evento.partecipante_modifica": "Modifica partecipante di un evento",
+  "evento.partecipante_elimina": "Eliminazione partecipante di un evento",
+  "evento.check_in": "Check-in di un partecipante",
+  "evento.orari_modifica": "Modifica manuale degli orari di un partecipante",
+  "evento.questionario_carica": "Caricamento questionario di un evento",
+  "evento.questionario_elimina": "Eliminazione questionario di un evento",
+  "evento.attestato_carica": "Caricamento layout dell'attestato",
+  "evento.attestato_elimina": "Eliminazione layout dell'attestato",
+  "evento.attestato_posizione": "Modifica posizione del nome sull'attestato",
 } as const;
 
 export type AzioneLog = keyof typeof AZIONI_LOG;

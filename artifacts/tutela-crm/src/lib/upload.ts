@@ -54,3 +54,10 @@ export function formatoDimensione(byte: number): string {
   if (byte < 1024 * 1024) return `${(byte / 1024).toFixed(0)} KB`;
   return `${(byte / 1024 / 1024).toFixed(1).replace(".", ",")} MB`;
 }
+
+export const urlQuestionarioBackoffice = (eventoId: number) => `${BASE}/backoffice/eventi/${eventoId}/questionario/file`;
+export const urlQuestionarioSede = (eventoId: number) => `${BASE}/eventi/${eventoId}/questionario/file`;
+export const urlAnteprimaAttestato = (eventoId: number, x: number, y: number, dim: number, versione: string | number = "") =>
+  `${BASE}/backoffice/eventi/${eventoId}/attestato/anteprima?x=${x}&y=${y}&dim=${dim}&v=${encodeURIComponent(String(versione))}`;
+export const urlAttestatoPartecipante = (eventoId: number, partecipanteId: number) => `${BASE}/backoffice/eventi/${eventoId}/attestato/partecipanti/${partecipanteId}`;
+export const urlAttestatiPresenti = (eventoId: number) => `${BASE}/backoffice/eventi/${eventoId}/attestato/presenti`;

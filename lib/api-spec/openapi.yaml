@@ -30,6 +30,10 @@ tags:
     description: Gestione delle pratiche nel back office (elenco, scheda, presa in carico, stati, commenti)
   - name: log
     description: Log delle operazioni
+  - name: eventi-backoffice
+    description: Eventi e corsi di formazione nel back office (solo admin e super admin)
+  - name: eventi
+    description: Eventi e corsi di formazione nel Web Collaboratore
   - name: notifiche
     description: Registro delle notifiche email e WhatsApp. Solo admin e super admin
 paths:
@@ -648,6 +652,306 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/StatoNotifiche"
+  /backoffice/eventi:
+    get:
+      operationId: listEventiBackoffice
+      tags: [eventi-backoffice]
+      summary: Elenco eventi con i conteggi di inviti, conferme, iscritti e presenti
+      responses:
+        "200":
+          description: Eventi
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EventoRiepilogo"
+    post:
+      operationId: createEvento
+      tags: [eventi-backoffice]
+      summary: Crea un evento e invita le sedi scelte (che ricevono la notifica)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventoCreazioneInput"
+      responses:
+        "201":
+          description: Evento creato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventoBackoffice"
+  /backoffice/eventi/{id}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    get:
+      operationId: getEventoBackoffice
+      tags: [eventi-backoffice]
+      summary: Scheda dell'evento con inviti, iscritti, orari, questionario e attestato
+      responses:
+        "200":
+          description: Evento
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventoBackoffice"
+    patch:
+      operationId: updateEvento
+      tags: [eventi-backoffice]
+      summary: Modifica i dati dell'evento
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventoModificaInput"
+      responses:
+        "200":
+          description: Evento aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventoBackoffice"
+    delete:
+      operationId: deleteEvento
+      tags: [eventi-backoffice]
+      summary: Elimina un evento in cui non e' stato registrato nessun orario
+      responses:
+        "204":
+          description: Eseguito
+  /backoffice/eventi/{id}/inviti:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    post:
+      operationId: addInvitiEvento
+      tags: [eventi-backoffice]
+      summary: Invita altre sedi (le sedi gia invitate restano com'e)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvitiEventoInput"
+      responses:
+        "200":
+          description: Evento aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventoBackoffice"
+  /backoffice/eventi/{id}/inviti/{collaboratoreId}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+      - name: collaboratoreId
+        in: path
+        required: true
+        schema:
+          type: integer
+    delete:
+      operationId: removeInvitoEvento
+      tags: [eventi-backoffice]
+      summary: Toglie l'invito a una sede senza partecipanti
+      responses:
+        "200":
+          description: Evento aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventoBackoffice"
+  /backoffice/eventi/{id}/partecipanti/{partecipanteId}/orari:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+      - name: partecipanteId
+        in: path
+        required: true
+        schema:
+          type: integer
+    patch:
+      operationId: updateOrariPartecipante
+      tags: [eventi-backoffice]
+      summary: Inserisce o corregge a mano gli orari di entrata e uscita (nel giorno dell'evento)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrariPartecipanteInput"
+      responses:
+        "200":
+          description: Evento aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventoBackoffice"
+  /backoffice/eventi/{id}/check-in:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    post:
+      operationId: registraCheckInEvento
+      tags: [eventi-backoffice]
+      summary: Registra l'entrata o l'uscita leggendo il QR code di un partecipante
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckInInput"
+      responses:
+        "200":
+          description: Esito del check-in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckInEsito"
+  /backoffice/eventi/{id}/attestato/posizione:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    put:
+      operationId: updatePosizioneAttestato
+      tags: [eventi-backoffice]
+      summary: Imposta dove va scritto il nome del partecipante sul layout dell'attestato
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PosizioneAttestatoInput"
+      responses:
+        "200":
+          description: Evento aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventoBackoffice"
+  /backoffice/eventi/{id}/attestato/layout:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    delete:
+      operationId: deleteLayoutAttestato
+      tags: [eventi-backoffice]
+      summary: Elimina il layout dell'attestato
+      responses:
+        "200":
+          description: Evento aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventoBackoffice"
+  /backoffice/eventi/{id}/questionario:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    delete:
+      operationId: deleteQuestionarioEvento
+      tags: [eventi-backoffice]
+      summary: Elimina il questionario dell'evento
+      responses:
+        "200":
+          description: Evento aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventoBackoffice"
+  /eventi:
+    get:
+      operationId: listEventi
+      tags: [eventi]
+      summary: Eventi a cui la sede e' invitata
+      responses:
+        "200":
+          description: Eventi
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EventoSedeRiepilogo"
+  /eventi/{id}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    get:
+      operationId: getEvento
+      tags: [eventi]
+      summary: Evento, conferma della sede e suoi partecipanti con i QR code
+      responses:
+        "200":
+          description: Evento
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventoSede"
+  /eventi/{id}/conferma:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    post:
+      operationId: confermaPartecipazioneEvento
+      tags: [eventi]
+      summary: Conferma la partecipazione della sede all'evento
+      responses:
+        "200":
+          description: Evento aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventoSede"
+  /eventi/{id}/partecipanti:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    post:
+      operationId: addPartecipanteEvento
+      tags: [eventi]
+      summary: Inserisce un partecipante (nome e cognome); riceve il suo QR code personale
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PartecipanteEventoInput"
+      responses:
+        "201":
+          description: Evento aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventoSede"
+  /eventi/{id}/partecipanti/{partecipanteId}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+      - name: partecipanteId
+        in: path
+        required: true
+        schema:
+          type: integer
+    patch:
+      operationId: updatePartecipanteEvento
+      tags: [eventi]
+      summary: Corregge nome e cognome di un partecipante senza orari registrati
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PartecipanteEventoInput"
+      responses:
+        "200":
+          description: Evento aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventoSede"
+    delete:
+      operationId: deletePartecipanteEvento
+      tags: [eventi]
+      summary: Toglie un partecipante senza orari registrati
+      responses:
+        "200":
+          description: Evento aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventoSede"
+  # I file degli eventi (PUT /backoffice/eventi/{id}/questionario/file e /attestato/file, GET dei file e dei PDF) sono fuori specifica.
   # I caricamenti di file non sono nella specifica (corpo binario): POST /mandati/file, PUT /mandati/{id}/file, POST /tipi-pratica/{id}/moduli/file,
   # PUT /moduli-tipo/{id}/file, e i download GET /moduli-tipo/{id}/file e GET /mandati/{id}/file.
   /tipi-pratica:
@@ -2175,6 +2479,183 @@ components:
         esiti:
           type: array
           items: { $ref: "#/components/schemas/EtichettaFiltroNotifiche" }
+    FileEvento:
+      type: object
+      required: [nome, tipo, dimensione, caricatoIl]
+      properties:
+        nome: { type: string }
+        tipo: { type: string }
+        dimensione: { type: integer }
+        caricatoIl: { type: string }
+    EventoDati:
+      type: object
+      required: [id, titolo, data, oraInizio, oraFine, luogo, descrizione, passato]
+      properties:
+        id: { type: integer }
+        titolo: { type: string }
+        data: { type: string, description: "AAAA-MM-GG" }
+        oraInizio: { type: string, description: "HH:MM" }
+        oraFine: { type: [string, "null"] }
+        luogo: { type: string }
+        descrizione: { type: string }
+        passato: { type: boolean, description: "Vero se la data e' prima di oggi" }
+    EventoRiepilogo:
+      type: object
+      required: [evento, invitati, confermati, partecipanti, presenti, questionario]
+      properties:
+        evento: { $ref: "#/components/schemas/EventoDati" }
+        invitati: { type: integer }
+        confermati: { type: integer }
+        partecipanti: { type: integer }
+        presenti: { type: integer, description: "Partecipanti con l'entrata registrata" }
+        questionario: { type: boolean }
+    InvitoEvento:
+      type: object
+      required: [collaboratoreId, nome, numeroSportello, tipologia, attivo, invitatoIl, confermatoIl, partecipanti]
+      properties:
+        collaboratoreId: { type: integer }
+        nome: { type: string, description: "Cognome e nome" }
+        numeroSportello: { type: string }
+        tipologia: { type: string }
+        attivo: { type: boolean }
+        invitatoIl: { type: string }
+        confermatoIl: { type: [string, "null"] }
+        partecipanti: { type: integer }
+    PartecipanteEventoBackoffice:
+      type: object
+      required: [id, nome, cognome, collaboratoreId, sedeNome, numeroSportello, entrataIl, uscitaIl]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        cognome: { type: string }
+        collaboratoreId: { type: integer }
+        sedeNome: { type: string }
+        numeroSportello: { type: string }
+        entrataIl: { type: [string, "null"] }
+        uscitaIl: { type: [string, "null"] }
+    AttestatoEvento:
+      type: object
+      required: [layout, nomeX, nomeY, nomeDimensione]
+      properties:
+        layout:
+          oneOf:
+            - $ref: "#/components/schemas/FileEvento"
+            - type: "null"
+        nomeX: { type: number, description: "Centro del nome, percentuale da sinistra" }
+        nomeY: { type: number, description: "Centro del nome, percentuale dall'alto" }
+        nomeDimensione: { type: integer, description: "Dimensione del carattere in punti" }
+    EventoBackoffice:
+      type: object
+      required: [evento, questionario, attestato, inviti, partecipanti]
+      properties:
+        evento: { $ref: "#/components/schemas/EventoDati" }
+        questionario:
+          oneOf:
+            - $ref: "#/components/schemas/FileEvento"
+            - type: "null"
+        attestato: { $ref: "#/components/schemas/AttestatoEvento" }
+        inviti:
+          type: array
+          items: { $ref: "#/components/schemas/InvitoEvento" }
+        partecipanti:
+          type: array
+          items: { $ref: "#/components/schemas/PartecipanteEventoBackoffice" }
+    EventoCreazioneInput:
+      type: object
+      required: [titolo, data, oraInizio, luogo, collaboratoriIds]
+      properties:
+        titolo: { type: string, minLength: 1, maxLength: 150 }
+        data: { type: string, pattern: "^\\d{4}-\\d{2}-\\d{2}$" }
+        oraInizio: { type: string, pattern: "^([01]\\d|2[0-3]):[0-5]\\d$" }
+        oraFine: { type: [string, "null"], pattern: "^([01]\\d|2[0-3]):[0-5]\\d$" }
+        luogo: { type: string, minLength: 1, maxLength: 200 }
+        descrizione: { type: string, maxLength: 4000 }
+        collaboratoriIds:
+          type: array
+          items: { type: integer }
+    EventoModificaInput:
+      type: object
+      required: [titolo, data, oraInizio, luogo]
+      properties:
+        titolo: { type: string, minLength: 1, maxLength: 150 }
+        data: { type: string, pattern: "^\\d{4}-\\d{2}-\\d{2}$" }
+        oraInizio: { type: string, pattern: "^([01]\\d|2[0-3]):[0-5]\\d$" }
+        oraFine: { type: [string, "null"], pattern: "^([01]\\d|2[0-3]):[0-5]\\d$" }
+        luogo: { type: string, minLength: 1, maxLength: 200 }
+        descrizione: { type: string, maxLength: 4000 }
+    InvitiEventoInput:
+      type: object
+      required: [collaboratoriIds]
+      properties:
+        collaboratoriIds:
+          type: array
+          minItems: 1
+          items: { type: integer }
+    OrariPartecipanteInput:
+      type: object
+      required: [entrata, uscita]
+      properties:
+        entrata: { type: [string, "null"], pattern: "^([01]\\d|2[0-3]):[0-5]\\d$", description: "HH:MM nel giorno dell'evento; null per cancellare" }
+        uscita: { type: [string, "null"], pattern: "^([01]\\d|2[0-3]):[0-5]\\d$", description: "HH:MM nel giorno dell'evento; null per cancellare" }
+    CheckInInput:
+      type: object
+      required: [codice, tipo]
+      properties:
+        codice: { type: string, minLength: 1, maxLength: 100 }
+        tipo: { type: string, enum: [entrata, uscita] }
+    CheckInEsito:
+      type: object
+      required: [esito, tipo, avviso, partecipante]
+      properties:
+        esito: { type: string, enum: [registrato, gia_registrato] }
+        tipo: { type: string, enum: [entrata, uscita] }
+        avviso: { type: [string, "null"] }
+        partecipante: { $ref: "#/components/schemas/PartecipanteEventoBackoffice" }
+    PosizioneAttestatoInput:
+      type: object
+      required: [nomeX, nomeY, nomeDimensione]
+      properties:
+        nomeX: { type: number, minimum: 0, maximum: 100 }
+        nomeY: { type: number, minimum: 0, maximum: 100 }
+        nomeDimensione: { type: integer, minimum: 8, maximum: 120 }
+    EventoSedeRiepilogo:
+      type: object
+      required: [evento, confermatoIl, partecipanti, questionario]
+      properties:
+        evento: { $ref: "#/components/schemas/EventoDati" }
+        confermatoIl: { type: [string, "null"] }
+        partecipanti: { type: integer }
+        questionario: { type: boolean }
+    PartecipanteEventoSede:
+      type: object
+      required: [id, nome, cognome, codiceQr, entrataIl, uscitaIl, modificabile]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        cognome: { type: string }
+        codiceQr: { type: string, description: "Contenuto del QR code personale" }
+        entrataIl: { type: [string, "null"] }
+        uscitaIl: { type: [string, "null"] }
+        modificabile: { type: boolean, description: "Falso se e' gia stato registrato un orario" }
+    EventoSede:
+      type: object
+      required: [evento, confermatoIl, questionario, partecipanti]
+      properties:
+        evento: { $ref: "#/components/schemas/EventoDati" }
+        confermatoIl: { type: [string, "null"] }
+        questionario:
+          oneOf:
+            - $ref: "#/components/schemas/FileEvento"
+            - type: "null"
+        partecipanti:
+          type: array
+          items: { $ref: "#/components/schemas/PartecipanteEventoSede" }
+    PartecipanteEventoInput:
+      type: object
+      required: [nome, cognome]
+      properties:
+        nome: { type: string, minLength: 1, maxLength: 80 }
+        cognome: { type: string, minLength: 1, maxLength: 80 }
     FiltroUtenteLog:
       type: object
       required: [id, nome, ruolo]

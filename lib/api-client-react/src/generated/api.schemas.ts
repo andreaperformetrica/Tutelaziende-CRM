@@ -562,6 +562,253 @@ export interface StatoNotifiche {
   esiti: EtichettaFiltroNotifiche[];
 }
 
+export interface FileEvento {
+  nome: string;
+  tipo: string;
+  dimensione: number;
+  caricatoIl: string;
+}
+
+export interface EventoDati {
+  id: number;
+  titolo: string;
+  /** AAAA-MM-GG */
+  data: string;
+  /** HH:MM */
+  oraInizio: string;
+  /** @nullable */
+  oraFine: string | null;
+  luogo: string;
+  descrizione: string;
+  /** Vero se la data e' prima di oggi */
+  passato: boolean;
+}
+
+export interface EventoRiepilogo {
+  evento: EventoDati;
+  invitati: number;
+  confermati: number;
+  partecipanti: number;
+  /** Partecipanti con l'entrata registrata */
+  presenti: number;
+  questionario: boolean;
+}
+
+export interface InvitoEvento {
+  collaboratoreId: number;
+  /** Cognome e nome */
+  nome: string;
+  numeroSportello: string;
+  tipologia: string;
+  attivo: boolean;
+  invitatoIl: string;
+  /** @nullable */
+  confermatoIl: string | null;
+  partecipanti: number;
+}
+
+export interface PartecipanteEventoBackoffice {
+  id: number;
+  nome: string;
+  cognome: string;
+  collaboratoreId: number;
+  sedeNome: string;
+  numeroSportello: string;
+  /** @nullable */
+  entrataIl: string | null;
+  /** @nullable */
+  uscitaIl: string | null;
+}
+
+export interface AttestatoEvento {
+  layout: FileEvento | null;
+  /** Centro del nome, percentuale da sinistra */
+  nomeX: number;
+  /** Centro del nome, percentuale dall'alto */
+  nomeY: number;
+  /** Dimensione del carattere in punti */
+  nomeDimensione: number;
+}
+
+export interface EventoBackoffice {
+  evento: EventoDati;
+  questionario: FileEvento | null;
+  attestato: AttestatoEvento;
+  inviti: InvitoEvento[];
+  partecipanti: PartecipanteEventoBackoffice[];
+}
+
+export interface EventoCreazioneInput {
+  /**
+     * @minLength 1
+     * @maxLength 150
+     */
+  titolo: string;
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  data: string;
+  /** @pattern ^([01]\d|2[0-3]):[0-5]\d$ */
+  oraInizio: string;
+  /**
+     * @nullable
+     * @pattern ^([01]\d|2[0-3]):[0-5]\d$
+     */
+  oraFine?: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  luogo: string;
+  /** @maxLength 4000 */
+  descrizione?: string;
+  collaboratoriIds: number[];
+}
+
+export interface EventoModificaInput {
+  /**
+     * @minLength 1
+     * @maxLength 150
+     */
+  titolo: string;
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  data: string;
+  /** @pattern ^([01]\d|2[0-3]):[0-5]\d$ */
+  oraInizio: string;
+  /**
+     * @nullable
+     * @pattern ^([01]\d|2[0-3]):[0-5]\d$
+     */
+  oraFine?: string | null;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  luogo: string;
+  /** @maxLength 4000 */
+  descrizione?: string;
+}
+
+export interface InvitiEventoInput {
+  /** @minItems 1 */
+  collaboratoriIds: number[];
+}
+
+export interface OrariPartecipanteInput {
+  /**
+     * HH:MM nel giorno dell'evento; null per cancellare
+     * @nullable
+     * @pattern ^([01]\d|2[0-3]):[0-5]\d$
+     */
+  entrata: string | null;
+  /**
+     * HH:MM nel giorno dell'evento; null per cancellare
+     * @nullable
+     * @pattern ^([01]\d|2[0-3]):[0-5]\d$
+     */
+  uscita: string | null;
+}
+
+export type CheckInInputTipo = typeof CheckInInputTipo[keyof typeof CheckInInputTipo];
+
+
+export const CheckInInputTipo = {
+  entrata: 'entrata',
+  uscita: 'uscita',
+} as const;
+
+export interface CheckInInput {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  codice: string;
+  tipo: CheckInInputTipo;
+}
+
+export type CheckInEsitoEsito = typeof CheckInEsitoEsito[keyof typeof CheckInEsitoEsito];
+
+
+export const CheckInEsitoEsito = {
+  registrato: 'registrato',
+  gia_registrato: 'gia_registrato',
+} as const;
+
+export type CheckInEsitoTipo = typeof CheckInEsitoTipo[keyof typeof CheckInEsitoTipo];
+
+
+export const CheckInEsitoTipo = {
+  entrata: 'entrata',
+  uscita: 'uscita',
+} as const;
+
+export interface CheckInEsito {
+  esito: CheckInEsitoEsito;
+  tipo: CheckInEsitoTipo;
+  /** @nullable */
+  avviso: string | null;
+  partecipante: PartecipanteEventoBackoffice;
+}
+
+export interface PosizioneAttestatoInput {
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  nomeX: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  nomeY: number;
+  /**
+     * @minimum 8
+     * @maximum 120
+     */
+  nomeDimensione: number;
+}
+
+export interface EventoSedeRiepilogo {
+  evento: EventoDati;
+  /** @nullable */
+  confermatoIl: string | null;
+  partecipanti: number;
+  questionario: boolean;
+}
+
+export interface PartecipanteEventoSede {
+  id: number;
+  nome: string;
+  cognome: string;
+  /** Contenuto del QR code personale */
+  codiceQr: string;
+  /** @nullable */
+  entrataIl: string | null;
+  /** @nullable */
+  uscitaIl: string | null;
+  /** Falso se e' gia stato registrato un orario */
+  modificabile: boolean;
+}
+
+export interface EventoSede {
+  evento: EventoDati;
+  /** @nullable */
+  confermatoIl: string | null;
+  questionario: FileEvento | null;
+  partecipanti: PartecipanteEventoSede[];
+}
+
+export interface PartecipanteEventoInput {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  nome: string;
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  cognome: string;
+}
+
 export interface FiltroUtenteLog {
   id: number;
   nome: string;

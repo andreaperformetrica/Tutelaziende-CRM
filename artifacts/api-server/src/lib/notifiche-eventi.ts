@@ -8,6 +8,7 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { collaboratoriTable, personeTable, utentiTable } from "@workspace/db";
 import type { Executor } from "./log";
+import { formattaData } from "./eventi";
 import { accodaNotifiche, type CanaleNotifica, type DestinatarioNotifica } from "./notifiche";
 
 export type CanaleAvviso = "email" | "whatsapp" | "chiamata" | "entrambi" | "tutti";
@@ -133,4 +134,31 @@ export async function notificaAnagraficaDuplicata(ex: Executor, collaboratoreId:
     testoEmail: (d, link) =>
       `Buongiorno ${d.nome},\n\n${sede ? `la sede ${sede.sportello}` : "una sede"} ha tentato di registrare un'anagrafica già presente in piattaforma. È stata aperta una segnalazione.\n\nApri le segnalazioni: ${link}`,
   });
+}
+
+/** 5. Invito a un evento: alle sedi invitate (email e WhatsApp). Solo titolo, data, orario e luogo, nessun dato sensibile. */
+export async function notificaInvitoEvento(
+  ex: Executor,
+  evento: { id: number; titolo: string; data: string; oraInizio: string; luogo: string },
+  collaboratoriIds: number[],
+): Promise<number[]> {
+  const ids: number[] = [];
+  const data = formattaData(evento.data);
+  for (const cid of collaboratoriIds) {
+    const sede = await caricaSede(ex, cid);
+    if (!sede) continue;
+    ids.push(
+      ...(await accodaNotifiche(ex, {
+        evento: "evento_invito",
+        destinatari: [sede],
+        canali: ["email", "whatsapp"],
+        whatsappEvento: { titolo: evento.titolo, data },
+        percorso: `/collaboratore/eventi/${evento.id}`,
+        oggetto: `Invito: ${evento.titolo}`,
+        testoEmail: (d, link) =>
+          `Buongiorno ${d.nome},\n\nsei invitato all'evento "${evento.titolo}" del ${data} alle ${evento.oraInizio}, presso ${evento.luogo}.\n\nConferma la partecipazione e inserisci i partecipanti qui: ${link}`,
+      })),
+    );
+  }
+  return ids;
 }

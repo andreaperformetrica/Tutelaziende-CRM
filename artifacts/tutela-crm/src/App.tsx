@@ -34,6 +34,11 @@ import PraticaDettaglioCollaboratore from '@/pages/collaboratore/pratica-dettagl
 import AssistitiCollaboratore from '@/pages/collaboratore/assistiti';
 import AssistitoNuovo from '@/pages/collaboratore/assistito-nuovo';
 import AssistitoDettaglioCollaboratore from '@/pages/collaboratore/assistito-dettaglio';
+import EventiBackoffice from '@/pages/admin/eventi';
+import EventoDettaglioBackoffice from '@/pages/admin/evento-dettaglio';
+import EventoCheckIn from '@/pages/admin/evento-check-in';
+import EventiCollaboratore from '@/pages/collaboratore/eventi';
+import EventoDettaglioCollaboratore from '@/pages/collaboratore/evento-dettaglio';
 import HomeCollaboratore from '@/pages/home-collaboratore';
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { refetchOnWindowFocus: false } } });
@@ -90,6 +95,11 @@ function Router() {
         <Route path="/admin/utenti" component={g(<UtentiPage />, 'backoffice', ADMIN)} />
         <Route path="/admin/log" component={g(<LogPage />, 'backoffice', ADMIN)} />
         <Route path="/admin/notifiche" component={g(<NotifichePage />, 'backoffice', ADMIN)} />
+        <Route path="/admin/eventi" component={g(<EventiBackoffice />, 'backoffice', ADMIN)} />
+        <Route path="/admin/eventi/:id/check-in" component={g(<EventoCheckIn />, 'backoffice', ADMIN)} />
+        <Route path="/admin/eventi/:id" component={g(<EventoDettaglioBackoffice />, 'backoffice', ADMIN)} />
+        <Route path="/collaboratore/eventi" component={g(<EventiCollaboratore />, 'collaboratore', ['collaboratore'])} />
+        <Route path="/collaboratore/eventi/:id" component={g(<EventoDettaglioCollaboratore />, 'collaboratore', ['collaboratore'])} />
         <Route path="/collaboratore/assistiti" component={g(<AssistitiCollaboratore />, 'collaboratore', ['collaboratore'])} />
         <Route path="/collaboratore/assistiti/nuovo" component={g(<AssistitoNuovo />, 'collaboratore', ['collaboratore'])} />
         <Route path="/collaboratore/assistiti/:id" component={g(<AssistitoDettaglioCollaboratore />, 'collaboratore', ['collaboratore'])} />

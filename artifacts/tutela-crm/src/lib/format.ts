@@ -67,3 +67,14 @@ export function fmtDataIstante(iso?: string | null): string {
   const s = fmtIstante(iso);
   return s.includes(" ") ? s.split(" ")[0]! : s;
 }
+
+/** Ora HH:MM (fuso italiano) di un istante ISO; stringa vuota se assente. */
+export function oraDaIstante(iso?: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  return new Intl.DateTimeFormat("it-IT", { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(d);
+}
+
+/** "09:30 – 13:00" oppure "09:30". */
+export const fmtOrarioEvento = (inizio: string, fine?: string | null) => (fine ? `${inizio} – ${fine}` : inizio);

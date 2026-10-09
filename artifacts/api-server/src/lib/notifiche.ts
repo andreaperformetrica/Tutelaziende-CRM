@@ -10,7 +10,8 @@
  * Variabili d'ambiente (Secrets):
  *  - email:    RESEND_API_KEY, NOTIFICHE_EMAIL_MITTENTE (es. "Tutela <notifiche@tuodominio.it>")
  *  - WhatsApp: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_DA (numero mittente),
- *              TWILIO_WHATSAPP_TEMPLATE_SID (Content SID del template approvato)
+ *              TWILIO_WHATSAPP_TEMPLATE_SID (Content SID del template approvato per le pratiche)
+ *              TWILIO_WHATSAPP_TEMPLATE_EVENTO_SID (Content SID del template per gli inviti agli eventi)
  *  - chiamata: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN (gli stessi di WhatsApp), TWILIO_CHIAMATA_DA (numero mittente)
  *  - link:     URL_PIATTAFORMA (indirizzo pubblico della piattaforma; in sviluppo si usa il dominio dell'ambiente)
  */
@@ -27,6 +28,7 @@ export const EVENTI_NOTIFICA = {
   commento_ufficio: "Commento dell'ufficio (alla sede)",
   risposta_sede: "Risposta della sede (all'operatore)",
   assistito_duplicato: "Anagrafica già registrata (agli admin)",
+  evento_invito: "Invito a un evento (alla sede)",
 } as const;
 export type EventoNotifica = keyof typeof EVENTI_NOTIFICA;
 
@@ -43,6 +45,12 @@ export const ESITI_NOTIFICA = {
  * Mai tipo di pratica ne' dati dell'assistito.
  */
 export const TESTO_TEMPLATE_WHATSAPP = "Buongiorno {{nome}}, c'è un aggiornamento sulla pratica n. {{numero}}. Accedi alla piattaforma: {{link}}";
+
+/**
+ * Template WhatsApp per gli inviti agli eventi (separato da quello delle pratiche, serve un secondo template approvato).
+ * Variabili: {{1}} nome, {{2}} titolo, {{3}} data, {{4}} link.
+ */
+export const TESTO_TEMPLATE_WHATSAPP_EVENTO = "Buongiorno {{nome}}, sei invitato all'evento \"{{titolo}}\" del {{data}}. Conferma la partecipazione: {{link}}";
 
 /**
  * Testo letto dalla chiamata automatica. Come per WhatsApp: mai tipo di pratica ne' dati dell'assistito,
@@ -64,6 +72,8 @@ export interface RichiestaNotifica {
   destinatari: DestinatarioNotifica[];
   canali: CanaleNotifica[];
   pratica?: { id: number; numero: number };
+  /** Invito a un evento: il WhatsApp usa il template degli eventi invece di quello delle pratiche. */
+  whatsappEvento?: { titolo: string; data: string };
   /** Percorso della piattaforma a cui punta il link (es. /admin/pratiche/3). */
   percorso: string;
   oggetto: string;
@@ -128,12 +138,15 @@ export async function accodaNotifiche(executor: Executor, r: RichiestaNotifica):
         numeroPratica: r.pratica?.numero ?? null,
       };
       const contatto = canale === "email" ? d.email : d.cellulare;
-      if (canale !== "email" && !r.pratica) continue; // WhatsApp e chiamata parlano sempre di una pratica
+      if (canale === "chiamata" && !r.pratica) continue; // la chiamata parla sempre di una pratica
+      if (canale === "whatsapp" && !r.pratica && !r.whatsappEvento) continue;
       const variabili: Record<string, string> | null =
-        canale === "whatsapp" ? { nome: d.nome, numero: String(r.pratica!.numero), link }
+        canale === "whatsapp" && r.whatsappEvento ? { modello: "evento", nome: d.nome, titolo: r.whatsappEvento.titolo, data: r.whatsappEvento.data, link }
+        : canale === "whatsapp" ? { nome: d.nome, numero: String(r.pratica!.numero), link }
         : canale === "chiamata" ? { nome: d.nome, numero: String(r.pratica!.numero) }
         : null;
-      const testo = canale === "email" ? r.testoEmail(d, link) : riempiTemplate(canale === "whatsapp" ? TESTO_TEMPLATE_WHATSAPP : TESTO_CHIAMATA, variabili!);
+      const modelloTesto = canale === "whatsapp" ? (r.whatsappEvento ? TESTO_TEMPLATE_WHATSAPP_EVENTO : TESTO_TEMPLATE_WHATSAPP) : TESTO_CHIAMATA;
+      const testo = canale === "email" ? r.testoEmail(d, link) : riempiTemplate(modelloTesto, variabili!);
       righe.push({
         ...base,
         destinatarioContatto: contatto ?? "—",
@@ -203,13 +216,20 @@ async function inviaWhatsapp(n: NotificaRow): Promise<EsitoInvio> {
   const { attivo, mancanti } = statoCanali().whatsapp;
   if (!attivo) return { esito: "non_inviata", dettaglio: `Chiavi WhatsApp mancanti: ${mancanti.join(", ")}.` };
   const v = n.variabili ?? {};
+  const evento = v["modello"] === "evento";
+  const contentSid = evento ? valore("TWILIO_WHATSAPP_TEMPLATE_EVENTO_SID") : valore("TWILIO_WHATSAPP_TEMPLATE_SID");
+  if (!contentSid) return { esito: "non_inviata", dettaglio: "Chiave WhatsApp mancante: TWILIO_WHATSAPP_TEMPLATE_EVENTO_SID." };
   const sid = valore("TWILIO_ACCOUNT_SID")!;
   const corpo = new URLSearchParams({
     From: comeWhatsapp(valore("TWILIO_WHATSAPP_DA")!),
     To: comeWhatsapp(n.destinatarioContatto),
-    ContentSid: valore("TWILIO_WHATSAPP_TEMPLATE_SID")!,
-    // Variabili del template approvato: 1 = nome, 2 = numero pratica, 3 = link alla piattaforma.
-    ContentVariables: JSON.stringify({ "1": v["nome"] ?? "", "2": v["numero"] ?? "", "3": v["link"] ?? "" }),
+    ContentSid: contentSid,
+    // Pratiche: 1 = nome, 2 = numero pratica, 3 = link. Eventi: 1 = nome, 2 = titolo, 3 = data, 4 = link.
+    ContentVariables: JSON.stringify(
+      evento
+        ? { "1": v["nome"] ?? "", "2": v["titolo"] ?? "", "3": v["data"] ?? "", "4": v["link"] ?? "" }
+        : { "1": v["nome"] ?? "", "2": v["numero"] ?? "", "3": v["link"] ?? "" },
+    ),
   });
   const r = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
     method: "POST",

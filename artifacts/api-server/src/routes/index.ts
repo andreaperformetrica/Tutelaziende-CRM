@@ -15,6 +15,8 @@ import orariRouter from "./orari";
 import luoghiRouter from "./luoghi";
 import logRouter from "./log";
 import notificheRouter from "./notifiche";
+import eventiBackofficeRouter from "./eventi-backoffice";
+import eventiRouter from "./eventi";
 import { caricaUtente, controlloOrigine, richiediLogin, richiediPasswordCambiata } from "../middlewares/auth";
 
 const router: IRouter = Router();
@@ -42,5 +44,7 @@ router.use(orariRouter);
 router.use(luoghiRouter);
 router.use(logRouter);
 router.use(notificheRouter);
+router.use(eventiBackofficeRouter);
+router.use(eventiRouter);
 
 export default router;

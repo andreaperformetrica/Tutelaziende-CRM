@@ -1097,6 +1097,896 @@ export const GetStatoNotificheResponse = zod.object({
 
 
 /**
+ * @summary Elenco eventi con i conteggi di inviti, conferme, iscritti e presenti
+ */
+export const ListEventiBackofficeResponseItem = zod.object({
+  "evento": zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "data": zod.string().describe('AAAA-MM-GG'),
+  "oraInizio": zod.string().describe('HH:MM'),
+  "oraFine": zod.string().nullable(),
+  "luogo": zod.string(),
+  "descrizione": zod.string(),
+  "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
+}),
+  "invitati": zod.number().int(),
+  "confermati": zod.number().int(),
+  "partecipanti": zod.number().int(),
+  "presenti": zod.number().int().describe('Partecipanti con l\'entrata registrata'),
+  "questionario": zod.boolean()
+})
+export const ListEventiBackofficeResponse = zod.array(ListEventiBackofficeResponseItem)
+
+
+/**
+ * @summary Crea un evento e invita le sedi scelte (che ricevono la notifica)
+ */
+export const createEventoBodyTitoloMax = 150;
+
+export const createEventoBodyDataRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const createEventoBodyOraInizioRegExp = new RegExp('^([01]\\d|2[0-3]):[0-5]\\d$');
+export const createEventoBodyOraFineRegExp = new RegExp('^([01]\\d|2[0-3]):[0-5]\\d$');
+export const createEventoBodyLuogoMax = 200;
+
+export const createEventoBodyDescrizioneMax = 4000;
+
+
+
+export const CreateEventoBody = zod.object({
+  "titolo": zod.string().min(1).max(createEventoBodyTitoloMax),
+  "data": zod.string().regex(createEventoBodyDataRegExp),
+  "oraInizio": zod.string().regex(createEventoBodyOraInizioRegExp),
+  "oraFine": zod.string().regex(createEventoBodyOraFineRegExp).nullish(),
+  "luogo": zod.string().min(1).max(createEventoBodyLuogoMax),
+  "descrizione": zod.string().max(createEventoBodyDescrizioneMax).optional(),
+  "collaboratoriIds": zod.array(zod.number().int())
+})
+
+export const CreateEventoResponse = zod.object({
+  "evento": zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "data": zod.string().describe('AAAA-MM-GG'),
+  "oraInizio": zod.string().describe('HH:MM'),
+  "oraFine": zod.string().nullable(),
+  "luogo": zod.string(),
+  "descrizione": zod.string(),
+  "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
+}),
+  "questionario": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "attestato": zod.object({
+  "layout": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "nomeX": zod.number().describe('Centro del nome, percentuale da sinistra'),
+  "nomeY": zod.number().describe('Centro del nome, percentuale dall\'alto'),
+  "nomeDimensione": zod.number().int().describe('Dimensione del carattere in punti')
+}),
+  "inviti": zod.array(zod.object({
+  "collaboratoreId": zod.number().int(),
+  "nome": zod.string().describe('Cognome e nome'),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.string(),
+  "attivo": zod.boolean(),
+  "invitatoIl": zod.string(),
+  "confermatoIl": zod.string().nullable(),
+  "partecipanti": zod.number().int()
+})),
+  "partecipanti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "collaboratoreId": zod.number().int(),
+  "sedeNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "entrataIl": zod.string().nullable(),
+  "uscitaIl": zod.string().nullable()
+}))
+})
+
+
+/**
+ * @summary Scheda dell'evento con inviti, iscritti, orari, questionario e attestato
+ */
+export const GetEventoBackofficeParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const GetEventoBackofficeResponse = zod.object({
+  "evento": zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "data": zod.string().describe('AAAA-MM-GG'),
+  "oraInizio": zod.string().describe('HH:MM'),
+  "oraFine": zod.string().nullable(),
+  "luogo": zod.string(),
+  "descrizione": zod.string(),
+  "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
+}),
+  "questionario": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "attestato": zod.object({
+  "layout": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "nomeX": zod.number().describe('Centro del nome, percentuale da sinistra'),
+  "nomeY": zod.number().describe('Centro del nome, percentuale dall\'alto'),
+  "nomeDimensione": zod.number().int().describe('Dimensione del carattere in punti')
+}),
+  "inviti": zod.array(zod.object({
+  "collaboratoreId": zod.number().int(),
+  "nome": zod.string().describe('Cognome e nome'),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.string(),
+  "attivo": zod.boolean(),
+  "invitatoIl": zod.string(),
+  "confermatoIl": zod.string().nullable(),
+  "partecipanti": zod.number().int()
+})),
+  "partecipanti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "collaboratoreId": zod.number().int(),
+  "sedeNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "entrataIl": zod.string().nullable(),
+  "uscitaIl": zod.string().nullable()
+}))
+})
+
+
+/**
+ * @summary Modifica i dati dell'evento
+ */
+export const UpdateEventoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const updateEventoBodyTitoloMax = 150;
+
+export const updateEventoBodyDataRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const updateEventoBodyOraInizioRegExp = new RegExp('^([01]\\d|2[0-3]):[0-5]\\d$');
+export const updateEventoBodyOraFineRegExp = new RegExp('^([01]\\d|2[0-3]):[0-5]\\d$');
+export const updateEventoBodyLuogoMax = 200;
+
+export const updateEventoBodyDescrizioneMax = 4000;
+
+
+
+export const UpdateEventoBody = zod.object({
+  "titolo": zod.string().min(1).max(updateEventoBodyTitoloMax),
+  "data": zod.string().regex(updateEventoBodyDataRegExp),
+  "oraInizio": zod.string().regex(updateEventoBodyOraInizioRegExp),
+  "oraFine": zod.string().regex(updateEventoBodyOraFineRegExp).nullish(),
+  "luogo": zod.string().min(1).max(updateEventoBodyLuogoMax),
+  "descrizione": zod.string().max(updateEventoBodyDescrizioneMax).optional()
+})
+
+export const UpdateEventoResponse = zod.object({
+  "evento": zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "data": zod.string().describe('AAAA-MM-GG'),
+  "oraInizio": zod.string().describe('HH:MM'),
+  "oraFine": zod.string().nullable(),
+  "luogo": zod.string(),
+  "descrizione": zod.string(),
+  "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
+}),
+  "questionario": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "attestato": zod.object({
+  "layout": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "nomeX": zod.number().describe('Centro del nome, percentuale da sinistra'),
+  "nomeY": zod.number().describe('Centro del nome, percentuale dall\'alto'),
+  "nomeDimensione": zod.number().int().describe('Dimensione del carattere in punti')
+}),
+  "inviti": zod.array(zod.object({
+  "collaboratoreId": zod.number().int(),
+  "nome": zod.string().describe('Cognome e nome'),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.string(),
+  "attivo": zod.boolean(),
+  "invitatoIl": zod.string(),
+  "confermatoIl": zod.string().nullable(),
+  "partecipanti": zod.number().int()
+})),
+  "partecipanti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "collaboratoreId": zod.number().int(),
+  "sedeNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "entrataIl": zod.string().nullable(),
+  "uscitaIl": zod.string().nullable()
+}))
+})
+
+
+/**
+ * @summary Elimina un evento in cui non e' stato registrato nessun orario
+ */
+export const DeleteEventoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const DeleteEventoResponse = zod.void()
+
+
+/**
+ * @summary Invita altre sedi (le sedi gia invitate restano com'e)
+ */
+export const AddInvitiEventoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+
+
+
+export const AddInvitiEventoBody = zod.object({
+  "collaboratoriIds": zod.array(zod.number().int()).min(1)
+})
+
+export const AddInvitiEventoResponse = zod.object({
+  "evento": zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "data": zod.string().describe('AAAA-MM-GG'),
+  "oraInizio": zod.string().describe('HH:MM'),
+  "oraFine": zod.string().nullable(),
+  "luogo": zod.string(),
+  "descrizione": zod.string(),
+  "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
+}),
+  "questionario": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "attestato": zod.object({
+  "layout": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "nomeX": zod.number().describe('Centro del nome, percentuale da sinistra'),
+  "nomeY": zod.number().describe('Centro del nome, percentuale dall\'alto'),
+  "nomeDimensione": zod.number().int().describe('Dimensione del carattere in punti')
+}),
+  "inviti": zod.array(zod.object({
+  "collaboratoreId": zod.number().int(),
+  "nome": zod.string().describe('Cognome e nome'),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.string(),
+  "attivo": zod.boolean(),
+  "invitatoIl": zod.string(),
+  "confermatoIl": zod.string().nullable(),
+  "partecipanti": zod.number().int()
+})),
+  "partecipanti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "collaboratoreId": zod.number().int(),
+  "sedeNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "entrataIl": zod.string().nullable(),
+  "uscitaIl": zod.string().nullable()
+}))
+})
+
+
+/**
+ * @summary Toglie l'invito a una sede senza partecipanti
+ */
+export const RemoveInvitoEventoParams = zod.object({
+  "id": zod.coerce.number().int(),
+  "collaboratoreId": zod.coerce.number().int()
+})
+
+export const RemoveInvitoEventoResponse = zod.object({
+  "evento": zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "data": zod.string().describe('AAAA-MM-GG'),
+  "oraInizio": zod.string().describe('HH:MM'),
+  "oraFine": zod.string().nullable(),
+  "luogo": zod.string(),
+  "descrizione": zod.string(),
+  "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
+}),
+  "questionario": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "attestato": zod.object({
+  "layout": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "nomeX": zod.number().describe('Centro del nome, percentuale da sinistra'),
+  "nomeY": zod.number().describe('Centro del nome, percentuale dall\'alto'),
+  "nomeDimensione": zod.number().int().describe('Dimensione del carattere in punti')
+}),
+  "inviti": zod.array(zod.object({
+  "collaboratoreId": zod.number().int(),
+  "nome": zod.string().describe('Cognome e nome'),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.string(),
+  "attivo": zod.boolean(),
+  "invitatoIl": zod.string(),
+  "confermatoIl": zod.string().nullable(),
+  "partecipanti": zod.number().int()
+})),
+  "partecipanti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "collaboratoreId": zod.number().int(),
+  "sedeNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "entrataIl": zod.string().nullable(),
+  "uscitaIl": zod.string().nullable()
+}))
+})
+
+
+/**
+ * @summary Inserisce o corregge a mano gli orari di entrata e uscita (nel giorno dell'evento)
+ */
+export const UpdateOrariPartecipanteParams = zod.object({
+  "id": zod.coerce.number().int(),
+  "partecipanteId": zod.coerce.number().int()
+})
+
+export const updateOrariPartecipanteBodyEntrataRegExp = new RegExp('^([01]\\d|2[0-3]):[0-5]\\d$');
+export const updateOrariPartecipanteBodyUscitaRegExp = new RegExp('^([01]\\d|2[0-3]):[0-5]\\d$');
+
+
+export const UpdateOrariPartecipanteBody = zod.object({
+  "entrata": zod.string().regex(updateOrariPartecipanteBodyEntrataRegExp).nullable().describe('HH:MM nel giorno dell\'evento; null per cancellare'),
+  "uscita": zod.string().regex(updateOrariPartecipanteBodyUscitaRegExp).nullable().describe('HH:MM nel giorno dell\'evento; null per cancellare')
+})
+
+export const UpdateOrariPartecipanteResponse = zod.object({
+  "evento": zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "data": zod.string().describe('AAAA-MM-GG'),
+  "oraInizio": zod.string().describe('HH:MM'),
+  "oraFine": zod.string().nullable(),
+  "luogo": zod.string(),
+  "descrizione": zod.string(),
+  "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
+}),
+  "questionario": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "attestato": zod.object({
+  "layout": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "nomeX": zod.number().describe('Centro del nome, percentuale da sinistra'),
+  "nomeY": zod.number().describe('Centro del nome, percentuale dall\'alto'),
+  "nomeDimensione": zod.number().int().describe('Dimensione del carattere in punti')
+}),
+  "inviti": zod.array(zod.object({
+  "collaboratoreId": zod.number().int(),
+  "nome": zod.string().describe('Cognome e nome'),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.string(),
+  "attivo": zod.boolean(),
+  "invitatoIl": zod.string(),
+  "confermatoIl": zod.string().nullable(),
+  "partecipanti": zod.number().int()
+})),
+  "partecipanti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "collaboratoreId": zod.number().int(),
+  "sedeNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "entrataIl": zod.string().nullable(),
+  "uscitaIl": zod.string().nullable()
+}))
+})
+
+
+/**
+ * @summary Registra l'entrata o l'uscita leggendo il QR code di un partecipante
+ */
+export const RegistraCheckInEventoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const registraCheckInEventoBodyCodiceMax = 100;
+
+
+
+export const RegistraCheckInEventoBody = zod.object({
+  "codice": zod.string().min(1).max(registraCheckInEventoBodyCodiceMax),
+  "tipo": zod.enum(['entrata', 'uscita'])
+})
+
+export const RegistraCheckInEventoResponse = zod.object({
+  "esito": zod.enum(['registrato', 'gia_registrato']),
+  "tipo": zod.enum(['entrata', 'uscita']),
+  "avviso": zod.string().nullable(),
+  "partecipante": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "collaboratoreId": zod.number().int(),
+  "sedeNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "entrataIl": zod.string().nullable(),
+  "uscitaIl": zod.string().nullable()
+})
+})
+
+
+/**
+ * @summary Imposta dove va scritto il nome del partecipante sul layout dell'attestato
+ */
+export const UpdatePosizioneAttestatoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const updatePosizioneAttestatoBodyNomeXMin = 0;
+export const updatePosizioneAttestatoBodyNomeXMax = 100;
+
+export const updatePosizioneAttestatoBodyNomeYMin = 0;
+export const updatePosizioneAttestatoBodyNomeYMax = 100;
+
+export const updatePosizioneAttestatoBodyNomeDimensioneMin = 8;
+export const updatePosizioneAttestatoBodyNomeDimensioneMax = 120;
+
+
+
+export const UpdatePosizioneAttestatoBody = zod.object({
+  "nomeX": zod.number().min(updatePosizioneAttestatoBodyNomeXMin).max(updatePosizioneAttestatoBodyNomeXMax),
+  "nomeY": zod.number().min(updatePosizioneAttestatoBodyNomeYMin).max(updatePosizioneAttestatoBodyNomeYMax),
+  "nomeDimensione": zod.number().int().min(updatePosizioneAttestatoBodyNomeDimensioneMin).max(updatePosizioneAttestatoBodyNomeDimensioneMax)
+})
+
+export const UpdatePosizioneAttestatoResponse = zod.object({
+  "evento": zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "data": zod.string().describe('AAAA-MM-GG'),
+  "oraInizio": zod.string().describe('HH:MM'),
+  "oraFine": zod.string().nullable(),
+  "luogo": zod.string(),
+  "descrizione": zod.string(),
+  "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
+}),
+  "questionario": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "attestato": zod.object({
+  "layout": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "nomeX": zod.number().describe('Centro del nome, percentuale da sinistra'),
+  "nomeY": zod.number().describe('Centro del nome, percentuale dall\'alto'),
+  "nomeDimensione": zod.number().int().describe('Dimensione del carattere in punti')
+}),
+  "inviti": zod.array(zod.object({
+  "collaboratoreId": zod.number().int(),
+  "nome": zod.string().describe('Cognome e nome'),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.string(),
+  "attivo": zod.boolean(),
+  "invitatoIl": zod.string(),
+  "confermatoIl": zod.string().nullable(),
+  "partecipanti": zod.number().int()
+})),
+  "partecipanti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "collaboratoreId": zod.number().int(),
+  "sedeNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "entrataIl": zod.string().nullable(),
+  "uscitaIl": zod.string().nullable()
+}))
+})
+
+
+/**
+ * @summary Elimina il layout dell'attestato
+ */
+export const DeleteLayoutAttestatoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const DeleteLayoutAttestatoResponse = zod.object({
+  "evento": zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "data": zod.string().describe('AAAA-MM-GG'),
+  "oraInizio": zod.string().describe('HH:MM'),
+  "oraFine": zod.string().nullable(),
+  "luogo": zod.string(),
+  "descrizione": zod.string(),
+  "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
+}),
+  "questionario": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "attestato": zod.object({
+  "layout": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "nomeX": zod.number().describe('Centro del nome, percentuale da sinistra'),
+  "nomeY": zod.number().describe('Centro del nome, percentuale dall\'alto'),
+  "nomeDimensione": zod.number().int().describe('Dimensione del carattere in punti')
+}),
+  "inviti": zod.array(zod.object({
+  "collaboratoreId": zod.number().int(),
+  "nome": zod.string().describe('Cognome e nome'),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.string(),
+  "attivo": zod.boolean(),
+  "invitatoIl": zod.string(),
+  "confermatoIl": zod.string().nullable(),
+  "partecipanti": zod.number().int()
+})),
+  "partecipanti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "collaboratoreId": zod.number().int(),
+  "sedeNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "entrataIl": zod.string().nullable(),
+  "uscitaIl": zod.string().nullable()
+}))
+})
+
+
+/**
+ * @summary Elimina il questionario dell'evento
+ */
+export const DeleteQuestionarioEventoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const DeleteQuestionarioEventoResponse = zod.object({
+  "evento": zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "data": zod.string().describe('AAAA-MM-GG'),
+  "oraInizio": zod.string().describe('HH:MM'),
+  "oraFine": zod.string().nullable(),
+  "luogo": zod.string(),
+  "descrizione": zod.string(),
+  "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
+}),
+  "questionario": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "attestato": zod.object({
+  "layout": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "nomeX": zod.number().describe('Centro del nome, percentuale da sinistra'),
+  "nomeY": zod.number().describe('Centro del nome, percentuale dall\'alto'),
+  "nomeDimensione": zod.number().int().describe('Dimensione del carattere in punti')
+}),
+  "inviti": zod.array(zod.object({
+  "collaboratoreId": zod.number().int(),
+  "nome": zod.string().describe('Cognome e nome'),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.string(),
+  "attivo": zod.boolean(),
+  "invitatoIl": zod.string(),
+  "confermatoIl": zod.string().nullable(),
+  "partecipanti": zod.number().int()
+})),
+  "partecipanti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "collaboratoreId": zod.number().int(),
+  "sedeNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "entrataIl": zod.string().nullable(),
+  "uscitaIl": zod.string().nullable()
+}))
+})
+
+
+/**
+ * @summary Eventi a cui la sede e' invitata
+ */
+export const ListEventiResponseItem = zod.object({
+  "evento": zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "data": zod.string().describe('AAAA-MM-GG'),
+  "oraInizio": zod.string().describe('HH:MM'),
+  "oraFine": zod.string().nullable(),
+  "luogo": zod.string(),
+  "descrizione": zod.string(),
+  "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
+}),
+  "confermatoIl": zod.string().nullable(),
+  "partecipanti": zod.number().int(),
+  "questionario": zod.boolean()
+})
+export const ListEventiResponse = zod.array(ListEventiResponseItem)
+
+
+/**
+ * @summary Evento, conferma della sede e suoi partecipanti con i QR code
+ */
+export const GetEventoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const GetEventoResponse = zod.object({
+  "evento": zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "data": zod.string().describe('AAAA-MM-GG'),
+  "oraInizio": zod.string().describe('HH:MM'),
+  "oraFine": zod.string().nullable(),
+  "luogo": zod.string(),
+  "descrizione": zod.string(),
+  "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
+}),
+  "confermatoIl": zod.string().nullable(),
+  "questionario": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "partecipanti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "codiceQr": zod.string().describe('Contenuto del QR code personale'),
+  "entrataIl": zod.string().nullable(),
+  "uscitaIl": zod.string().nullable(),
+  "modificabile": zod.boolean().describe('Falso se e\' gia stato registrato un orario')
+}))
+})
+
+
+/**
+ * @summary Conferma la partecipazione della sede all'evento
+ */
+export const ConfermaPartecipazioneEventoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const ConfermaPartecipazioneEventoResponse = zod.object({
+  "evento": zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "data": zod.string().describe('AAAA-MM-GG'),
+  "oraInizio": zod.string().describe('HH:MM'),
+  "oraFine": zod.string().nullable(),
+  "luogo": zod.string(),
+  "descrizione": zod.string(),
+  "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
+}),
+  "confermatoIl": zod.string().nullable(),
+  "questionario": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "partecipanti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "codiceQr": zod.string().describe('Contenuto del QR code personale'),
+  "entrataIl": zod.string().nullable(),
+  "uscitaIl": zod.string().nullable(),
+  "modificabile": zod.boolean().describe('Falso se e\' gia stato registrato un orario')
+}))
+})
+
+
+/**
+ * @summary Inserisce un partecipante (nome e cognome); riceve il suo QR code personale
+ */
+export const AddPartecipanteEventoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const addPartecipanteEventoBodyNomeMax = 80;
+
+export const addPartecipanteEventoBodyCognomeMax = 80;
+
+
+
+export const AddPartecipanteEventoBody = zod.object({
+  "nome": zod.string().min(1).max(addPartecipanteEventoBodyNomeMax),
+  "cognome": zod.string().min(1).max(addPartecipanteEventoBodyCognomeMax)
+})
+
+export const AddPartecipanteEventoResponse = zod.object({
+  "evento": zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "data": zod.string().describe('AAAA-MM-GG'),
+  "oraInizio": zod.string().describe('HH:MM'),
+  "oraFine": zod.string().nullable(),
+  "luogo": zod.string(),
+  "descrizione": zod.string(),
+  "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
+}),
+  "confermatoIl": zod.string().nullable(),
+  "questionario": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "partecipanti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "codiceQr": zod.string().describe('Contenuto del QR code personale'),
+  "entrataIl": zod.string().nullable(),
+  "uscitaIl": zod.string().nullable(),
+  "modificabile": zod.boolean().describe('Falso se e\' gia stato registrato un orario')
+}))
+})
+
+
+/**
+ * @summary Corregge nome e cognome di un partecipante senza orari registrati
+ */
+export const UpdatePartecipanteEventoParams = zod.object({
+  "id": zod.coerce.number().int(),
+  "partecipanteId": zod.coerce.number().int()
+})
+
+export const updatePartecipanteEventoBodyNomeMax = 80;
+
+export const updatePartecipanteEventoBodyCognomeMax = 80;
+
+
+
+export const UpdatePartecipanteEventoBody = zod.object({
+  "nome": zod.string().min(1).max(updatePartecipanteEventoBodyNomeMax),
+  "cognome": zod.string().min(1).max(updatePartecipanteEventoBodyCognomeMax)
+})
+
+export const UpdatePartecipanteEventoResponse = zod.object({
+  "evento": zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "data": zod.string().describe('AAAA-MM-GG'),
+  "oraInizio": zod.string().describe('HH:MM'),
+  "oraFine": zod.string().nullable(),
+  "luogo": zod.string(),
+  "descrizione": zod.string(),
+  "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
+}),
+  "confermatoIl": zod.string().nullable(),
+  "questionario": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "partecipanti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "codiceQr": zod.string().describe('Contenuto del QR code personale'),
+  "entrataIl": zod.string().nullable(),
+  "uscitaIl": zod.string().nullable(),
+  "modificabile": zod.boolean().describe('Falso se e\' gia stato registrato un orario')
+}))
+})
+
+
+/**
+ * @summary Toglie un partecipante senza orari registrati
+ */
+export const DeletePartecipanteEventoParams = zod.object({
+  "id": zod.coerce.number().int(),
+  "partecipanteId": zod.coerce.number().int()
+})
+
+export const DeletePartecipanteEventoResponse = zod.object({
+  "evento": zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "data": zod.string().describe('AAAA-MM-GG'),
+  "oraInizio": zod.string().describe('HH:MM'),
+  "oraFine": zod.string().nullable(),
+  "luogo": zod.string(),
+  "descrizione": zod.string(),
+  "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
+}),
+  "confermatoIl": zod.string().nullable(),
+  "questionario": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "partecipanti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "codiceQr": zod.string().describe('Contenuto del QR code personale'),
+  "entrataIl": zod.string().nullable(),
+  "uscitaIl": zod.string().nullable(),
+  "modificabile": zod.boolean().describe('Falso se e\' gia stato registrato un orario')
+}))
+})
+
+
+/**
  * @summary Elenco dei tipi di pratica con documenti e moduli
  */
 export const ListTipiPraticaResponseItem = zod.object({
