@@ -1,0 +1,57 @@
+Cosa fa: ogni notte controlla 119 fonti:
+- portale UE
+- 15 enti nazionali (Invitalia, MIMIT, SIMEST, GSE, INAIL…)
+- le 20 Regioni
+- tutte le 62 Camere di Commercio, compresi i voucher PID
+- tutti i 20 fondi interprofessionali
+
+Trova da solo le pagine dei bandi e con l'AI scrive le schede, tiene solo quelli per imprese e li classifica per i filtri. I bandi scaduti spariscono da soli.
+
+1) SCARICA E CARICA LO SCRIPT (2 min)
+Scarica raccogli_bandi.py dal link sopra e trascinalo nella cartella principale del progetto Replit del sito.
+
+
+2) DUE SECRETS (2 min)
+Tools > Secrets, aggiungi:
+ANTHROPIC_API_KEY = te la mando io su WhatsApp
+ADMIN_PASSWORD = una password a tua scelta (poi mandamela)
+
+
+3) INCOLLA QUESTO ALL'AGENT DI REPLIT (circa 15 min, lavora lui)
+
+---------- INIZIO ----------
+Nella cartella principale c'è raccogli_bandi.py: script Python funzionante che salva bandi per imprese in bandi.db (SQLite, tabella "bandi") ed esporta bandi.json con la chiave "bandi" (elenco) e la chiave "filtri" (valori dei menu). Non cambiare la sua logica. Fai queste cose:
+
+1. Installa: requests, feedparser, beautifulsoup4, python-dateutil, anthropic.
+
+2. Crea uno Scheduled Deployment ogni notte alle 02:00 (ora italiana): python raccogli_bandi.py
+Lo script visita 119 siti e può durare a lungo. Se il deployment ha un limite di tempo, crea più esecuzioni separate con --solo ue, --solo nazionali, --solo regioni, --solo camere, --solo fondi. I dati devono restare leggibili dal sito; se i file non sono condivisi col sito, salvali nel database del sito con gli stessi campi.
+
+3. Rifai /bandi mostrando solo i bandi con stato "pubblicato". Ogni card mostra: titolo, ente, badge categoria (Bando pubblico / Camera di Commercio / Fondo interprofessionale / Unione Europea), scheda_ai, importo, scadenza con giorni_alla_scadenza, badge stato_bando e pulsante verso il campo link.
+
+4. Filtri combinabili sopra l'elenco, nel pannello laterale su desktop e in un pannello a scomparsa su telefono. I valori dei menu sono in bandi.json > "filtri":
+- Ricerca testuale (titolo, scheda, ente)
+- Categoria; Ente; Camera di Commercio; Fondo interprofessionale
+- Stato (aperto / in arrivo / in scadenza); scadenza entro una data
+- Regione (regioni_ammesse, "Tutta Italia" vale per tutte); provincia (province_ammesse); ambito
+- Tipo di agevolazione; regime di aiuti (de minimis, GBER…); modalità (sportello, graduatoria, click day)
+- Dimensione impresa; tipo impresa (startup, femminile, giovanile, da costituire…); settore
+- Codice ATECO: l'utente scrive il suo codice e passano i bandi con codici_ateco vuoto oppure con un codice che è prefisso del suo
+- Finalità; spese ammissibili
+- Contributo massimo (importo_min/importo_max), percentuale minima, investimento minimo (spesa_minima), dotazione totale
+- Requisiti azienda: fatturato, numero dipendenti, anni di attività (confronta con fatturato_max, dipendenti_min/max, anni_attivita_max; campo vuoto = nessun limite)
+- Impresa già costituita sì/no; cumulabile
+- Solo fondi interprofessionali: canale (avviso / conto formazione / voucher), temi della formazione, destinatari, richiede iscrizione al fondo
+- Ordinamento: scadenza più vicina (default), contributo più alto, percentuale più alta, più recenti
+Regole: i campi lista passano se contengono almeno un valore selezionato. I filtri vanno nell'URL, per condividere una ricerca. Mostra il numero di risultati e un pulsante "Azzera filtri".
+
+5. "Trova i bandi per la mia azienda": un box in cima a /bandi dove l'utente descrive la sua azienda o il suo progetto (oppure compila regione, ATECO, dimensione, dipendenti, fatturato e cosa vuole finanziare). Con l'API Anthropic (Secret ANTHROPIC_API_KEY, modello claude-haiku-5-5) confronta il profilo con i bandi pubblicati e restituisci i più adatti, ordinati con una percentuale di compatibilità e una riga sul perché. Sotto i risultati metti il pulsante "Richiedi una consulenza a FIPA" che porta al nostro modulo contatti.
+
+6. Avvisi via email: l'utente può salvare una ricerca (filtri attuali + email) e ricevere un'email quando escono nuovi bandi che corrispondono. Invio dopo l'esecuzione notturna. Usa il servizio email già presente nel sito, altrimenti dimmi cosa serve.
+
+7. Pagina /admin/bandi protetta con il Secret ADMIN_PASSWORD. Elenco dei bandi in stato "da_approvare" con filtro per categoria ed ente. Per ognuno mostra titolo, ente, scheda e link, più i pulsanti "Pubblica" (stato = "pubblicato") e "Scarta" (stato = "scartato"), anche con selezione multipla.
+
+8. SEO: /bandi e una pagina per ogni bando (/bandi/<id>-<slug-del-titolo>) generate lato server, con title, meta description e dati strutturati propri. Aggiungi /sitemap.xml aggiornata in automatico con tutti i bandi pubblicati.
+
+9. Esegui una volta: python raccogli_bandi.py --solo camere --max-per-fonte 5 e dimmi quanti bandi ha trovato e quali fonti hanno dato errore.
+---------- FINE ----------
