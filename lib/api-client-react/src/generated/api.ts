@@ -41,6 +41,7 @@ import type {
   CollaboratoreUpdate,
   CommentoBackofficeInput,
   CommentoPraticaInput,
+  ConfermaImportazioneInput,
   ConteggioSegnalazioni,
   CreaEstrattiInput,
   DareAvere,
@@ -58,6 +59,8 @@ import type {
   GetDareAvereParams,
   GetResocontoCompensiParams,
   HealthStatus,
+  Importazione,
+  ImportazioneDettaglio,
   ImpostazioniStampa,
   ImpostazioniStampaInput,
   InvioEstrattoEsito,
@@ -68,6 +71,7 @@ import type {
   ListAssistitiParams,
   ListCollaboratoriParams,
   ListEstrattiParams,
+  ListImportazioniParams,
   ListLogOperazioniParams,
   ListMandatiParams,
   ListNotificheParams,
@@ -102,6 +106,9 @@ import type {
   RigaDareAvereModificaInput,
   RimuoviAssegnazioneMandatoParams,
   SegnalazioneDuplicato,
+  ServizioImport,
+  ServizioImportCodice,
+  ServizioImportInput,
   SessioneUtente,
   StatoNotifiche,
   StatoPratica,
@@ -4920,6 +4927,496 @@ export const useDeleteLogoStampa = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteLogoStampaMutationOptions(options));
+    }
+
+export const getListServiziImportUrl = () => {
+
+
+
+
+  return `/api/backoffice/compensi/importazioni/servizi`
+}
+
+/**
+ * @summary Regole di calcolo e colonne dei servizi importabili (730, ISEE, NASPI, Pensionati)
+ */
+export const listServiziImport = async ( options?: Parameters<typeof customFetch>[1]): Promise<ServizioImport[]> => {
+
+  return customFetch<ServizioImport[]>(getListServiziImportUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListServiziImportQueryKey = () => {
+    return [
+    `/api/backoffice/compensi/importazioni/servizi`
+    ] as const;
+    }
+
+
+export const getListServiziImportQueryOptions = <TData = Awaited<ReturnType<typeof listServiziImport>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listServiziImport>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListServiziImportQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listServiziImport>>> = ({ signal }) => listServiziImport({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listServiziImport>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListServiziImportQueryResult = NonNullable<Awaited<ReturnType<typeof listServiziImport>>>
+export type ListServiziImportQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Regole di calcolo e colonne dei servizi importabili (730, ISEE, NASPI, Pensionati)
+ */
+
+export function useListServiziImport<TData = Awaited<ReturnType<typeof listServiziImport>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listServiziImport>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListServiziImportQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateServizioImportUrl = (servizio: ServizioImportCodice,) => {
+
+
+
+
+  return `/api/backoffice/compensi/importazioni/servizi/${servizio}`
+}
+
+/**
+ * @summary Imposta regola di calcolo (fissa o percentuale) e colonne del file di un servizio
+ */
+export const updateServizioImport = async (servizio: ServizioImportCodice,
+    servizioImportInput: ServizioImportInput, options?: Parameters<typeof customFetch>[1]): Promise<ServizioImport> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ServizioImport>(getUpdateServizioImportUrl(servizio),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(servizioImportInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateServizioImportMutationKey = () => ['updateServizioImport'] as const;
+
+export const getUpdateServizioImportMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateServizioImport>>, TError,UpdateServizioImportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateServizioImport>>, TError,UpdateServizioImportMutationVariables, TContext> => {
+
+const mutationKey = getUpdateServizioImportMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateServizioImport>>, UpdateServizioImportMutationVariables> = (props) => {
+          const {servizio,data} = props ?? {};
+
+          return  updateServizioImport(servizio,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateServizioImportMutationResult = NonNullable<Awaited<ReturnType<typeof updateServizioImport>>>
+    export type UpdateServizioImportMutationBody = BodyType<ServizioImportInput>
+    export type UpdateServizioImportMutationError = ErrorType<unknown>
+    export type UpdateServizioImportMutationVariables = {servizio: ServizioImportCodice;data: BodyType<ServizioImportInput>}
+
+    /**
+ * @summary Imposta regola di calcolo (fissa o percentuale) e colonne del file di un servizio
+ */
+export const useUpdateServizioImport = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateServizioImport>>, TError,UpdateServizioImportMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateServizioImport>>,
+        TError,
+        UpdateServizioImportMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateServizioImportMutationOptions(options));
+    }
+
+export const getListImportazioniUrl = (params?: ListImportazioniParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/backoffice/compensi/importazioni?${stringifiedParams}` : `/api/backoffice/compensi/importazioni`
+}
+
+/**
+ * @summary Importazioni (anteprime e confermate), dalla piu' recente
+ */
+export const listImportazioni = async (params?: ListImportazioniParams, options?: Parameters<typeof customFetch>[1]): Promise<Importazione[]> => {
+
+  return customFetch<Importazione[]>(getListImportazioniUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListImportazioniQueryKey = (params?: ListImportazioniParams,) => {
+    return [
+    `/api/backoffice/compensi/importazioni`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListImportazioniQueryOptions = <TData = Awaited<ReturnType<typeof listImportazioni>>, TError = ErrorType<unknown>>(params?: ListImportazioniParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listImportazioni>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListImportazioniQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listImportazioni>>> = ({ signal }) => listImportazioni(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listImportazioni>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListImportazioniQueryResult = NonNullable<Awaited<ReturnType<typeof listImportazioni>>>
+export type ListImportazioniQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Importazioni (anteprime e confermate), dalla piu' recente
+ */
+
+export function useListImportazioni<TData = Awaited<ReturnType<typeof listImportazioni>>, TError = ErrorType<unknown>>(
+ params?: ListImportazioniParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listImportazioni>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListImportazioniQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetImportazioneUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/compensi/importazioni/${id}`
+}
+
+/**
+ * @summary Dettaglio; per un'anteprima rilegge il file con la regola attuale
+ */
+export const getImportazione = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<ImportazioneDettaglio> => {
+
+  return customFetch<ImportazioneDettaglio>(getGetImportazioneUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetImportazioneQueryKey = (id: number,) => {
+    return [
+    `/api/backoffice/compensi/importazioni/${id}`
+    ] as const;
+    }
+
+
+export const getGetImportazioneQueryOptions = <TData = Awaited<ReturnType<typeof getImportazione>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getImportazione>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetImportazioneQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getImportazione>>> = ({ signal }) => getImportazione(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getImportazione>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetImportazioneQueryResult = NonNullable<Awaited<ReturnType<typeof getImportazione>>>
+export type GetImportazioneQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Dettaglio; per un'anteprima rilegge il file con la regola attuale
+ */
+
+export function useGetImportazione<TData = Awaited<ReturnType<typeof getImportazione>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getImportazione>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetImportazioneQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getDeleteImportazioneUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/compensi/importazioni/${id}`
+}
+
+/**
+ * @summary Scarta un'anteprima oppure annulla un'importazione confermata (toglie le righe dal dare/avere)
+ */
+export const deleteImportazione = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteImportazioneUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteImportazioneMutationKey = () => ['deleteImportazione'] as const;
+
+export const getDeleteImportazioneMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteImportazione>>, TError,DeleteImportazioneMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteImportazione>>, TError,DeleteImportazioneMutationVariables, TContext> => {
+
+const mutationKey = getDeleteImportazioneMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteImportazione>>, DeleteImportazioneMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteImportazione(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteImportazioneMutationResult = NonNullable<Awaited<ReturnType<typeof deleteImportazione>>>
+
+    export type DeleteImportazioneMutationError = ErrorType<unknown>
+    export type DeleteImportazioneMutationVariables = {id: number}
+
+    /**
+ * @summary Scarta un'anteprima oppure annulla un'importazione confermata (toglie le righe dal dare/avere)
+ */
+export const useDeleteImportazione = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteImportazione>>, TError,DeleteImportazioneMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteImportazione>>,
+        TError,
+        DeleteImportazioneMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteImportazioneMutationOptions(options));
+    }
+
+export const getConfermaImportazioneUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/compensi/importazioni/${id}/conferma`
+}
+
+/**
+ * @summary Salva le righe valide dell'anteprima e le riporta nel dare/avere
+ */
+export const confermaImportazione = async (id: number,
+    confermaImportazioneInput: ConfermaImportazioneInput, options?: Parameters<typeof customFetch>[1]): Promise<ImportazioneDettaglio> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ImportazioneDettaglio>(getConfermaImportazioneUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(confermaImportazioneInput)
+  }
+);}
+
+
+
+
+
+export const getConfermaImportazioneMutationKey = () => ['confermaImportazione'] as const;
+
+export const getConfermaImportazioneMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confermaImportazione>>, TError,ConfermaImportazioneMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof confermaImportazione>>, TError,ConfermaImportazioneMutationVariables, TContext> => {
+
+const mutationKey = getConfermaImportazioneMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof confermaImportazione>>, ConfermaImportazioneMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  confermaImportazione(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConfermaImportazioneMutationResult = NonNullable<Awaited<ReturnType<typeof confermaImportazione>>>
+    export type ConfermaImportazioneMutationBody = BodyType<ConfermaImportazioneInput>
+    export type ConfermaImportazioneMutationError = ErrorType<unknown>
+    export type ConfermaImportazioneMutationVariables = {id: number;data: BodyType<ConfermaImportazioneInput>}
+
+    /**
+ * @summary Salva le righe valide dell'anteprima e le riporta nel dare/avere
+ */
+export const useConfermaImportazione = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confermaImportazione>>, TError,ConfermaImportazioneMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof confermaImportazione>>,
+        TError,
+        ConfermaImportazioneMutationVariables,
+        TContext
+      > => {
+      return useMutation(getConfermaImportazioneMutationOptions(options));
     }
 
 export const getGetDareAvereUrl = (params: GetDareAvereParams,) => {

@@ -1484,6 +1484,37 @@ export interface ImpostazioniStampaInput {
   nota2: string;
 }
 
+export type ServizioImportCodice = typeof ServizioImportCodice[keyof typeof ServizioImportCodice];
+
+
+export const ServizioImportCodice = {
+  mod730: 'mod730',
+  isee: 'isee',
+  naspi: 'naspi',
+  pensionati: 'pensionati',
+} as const;
+
+/**
+ * fisso = importo in euro per ogni riga valida; percentuale = percentuale della colonna importo
+ * @nullable
+ */
+export type ServizioImportRegola = typeof ServizioImportRegola[keyof typeof ServizioImportRegola] | null;
+
+
+export const ServizioImportRegola = {
+  fisso: 'fisso',
+  percentuale: 'percentuale',
+} as const;
+
+export type ServizioImportTipoChiave = typeof ServizioImportTipoChiave[keyof typeof ServizioImportTipoChiave];
+
+
+export const ServizioImportTipoChiave = {
+  sportello: 'sportello',
+  email: 'email',
+  nome: 'nome',
+} as const;
+
 export type SezioneDareAvereCodice = typeof SezioneDareAvereCodice[keyof typeof SezioneDareAvereCodice];
 
 
@@ -1494,6 +1525,143 @@ export const SezioneDareAvereCodice = {
   caf: 'caf',
   debiti: 'debiti',
 } as const;
+
+export interface ServizioImport {
+  servizio: ServizioImportCodice;
+  etichetta: string;
+  sezione: SezioneDareAvereCodice;
+  /**
+     * fisso = importo in euro per ogni riga valida; percentuale = percentuale della colonna importo
+     * @nullable
+     */
+  regola: ServizioImportRegola;
+  /**
+     * Euro per riga (regola fisso) oppure percentuale, es. 12,5 (regola percentuale)
+     * @nullable
+     */
+  valore: number | null;
+  /**
+     * Intestazione della colonna che identifica il collaboratore
+     * @nullable
+     */
+  colonnaChiave: string | null;
+  tipoChiave: ServizioImportTipoChiave;
+  /**
+     * Intestazione della colonna dell'importo (solo regola percentuale)
+     * @nullable
+     */
+  colonnaImporto: string | null;
+  configurato: boolean;
+}
+
+export type ServizioImportInputRegola = typeof ServizioImportInputRegola[keyof typeof ServizioImportInputRegola];
+
+
+export const ServizioImportInputRegola = {
+  fisso: 'fisso',
+  percentuale: 'percentuale',
+} as const;
+
+export type ServizioImportInputTipoChiave = typeof ServizioImportInputTipoChiave[keyof typeof ServizioImportInputTipoChiave];
+
+
+export const ServizioImportInputTipoChiave = {
+  sportello: 'sportello',
+  email: 'email',
+  nome: 'nome',
+} as const;
+
+export interface ServizioImportInput {
+  regola: ServizioImportInputRegola;
+  /**
+     * @minimum 0
+     * @maximum 1000000
+     */
+  valore: number;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  colonnaChiave: string;
+  tipoChiave: ServizioImportInputTipoChiave;
+  /**
+     * @maxLength 120
+     * @nullable
+     */
+  colonnaImporto?: string | null;
+}
+
+export type ImportazioneStato = typeof ImportazioneStato[keyof typeof ImportazioneStato];
+
+
+export const ImportazioneStato = {
+  anteprima: 'anteprima',
+  confermata: 'confermata',
+} as const;
+
+export interface Importazione {
+  id: number;
+  servizio: ServizioImportCodice;
+  servizioEtichetta: string;
+  anno: number;
+  nomeFile: string;
+  stato: ImportazioneStato;
+  righeLette: number;
+  righeImportate: number;
+  totaleEuro: number;
+  creatoIl: string;
+  /** @nullable */
+  creatoDa: string | null;
+  /** @nullable */
+  confermatoIl: string | null;
+}
+
+export interface RigaImportazione {
+  /** Numero di riga nel foglio Excel */
+  numeroRiga: number;
+  /** @nullable */
+  riferimento: string | null;
+  /** @nullable */
+  collaboratoreId: number | null;
+  /** @nullable */
+  collaboratoreNome: string | null;
+  /** @nullable */
+  baseEuro: number | null;
+  /** @nullable */
+  compensoEuro: number | null;
+  errori: string[];
+}
+
+export interface TotaleCollaboratoreImport {
+  collaboratoreId: number;
+  collaboratoreNome: string;
+  numeroSportello: string;
+  righe: number;
+  compensoEuro: number;
+}
+
+export interface ImportazioneDettaglio {
+  importazione: Importazione;
+  configurazione: ServizioImport;
+  configurazioneCompleta: boolean;
+  /**
+     * Cosa manca o non corrisponde al file
+     * @nullable
+     */
+  messaggioConfigurazione: string | null;
+  /** Colonne trovate nel file (vuoto per le importazioni confermate) */
+  intestazioni: string[];
+  righe: RigaImportazione[];
+  righeValide: number;
+  righeConErrori: number;
+  totaleEuro: number;
+  perCollaboratore: TotaleCollaboratoreImport[];
+}
+
+export interface ConfermaImportazioneInput {
+  /** Vero per salvare solo le righe senza errori quando ce ne sono con errori */
+  soloValide: boolean;
+}
 
 export interface RigaDareAvere {
   /**
@@ -1516,6 +1684,11 @@ export interface RigaDareAvere {
   nota: string;
   /** @nullable */
   estrattoId: number | null;
+  /**
+     * Riga riportata da un'importazione Excel (non modificabile qui)
+     * @nullable
+     */
+  importazioneId: number | null;
 }
 
 export interface SezioneDareAvere {
@@ -1758,6 +1931,11 @@ export const ListEstrattiStato = {
   da_pagare: 'da_pagare',
   pagato: 'pagato',
 } as const;
+
+export type ListImportazioniParams = {
+servizio?: ServizioImportCodice;
+anno?: number;
+};
 
 export type GetDareAvereParams = {
 collaboratoreId: number;

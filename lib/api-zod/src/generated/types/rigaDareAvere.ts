@@ -27,4 +27,9 @@ export interface RigaDareAvere {
   nota: string;
   /** @nullable */
   estrattoId: number | null;
+  /**
+     * Riga riportata da un'importazione Excel (non modificabile qui)
+     * @nullable
+     */
+  importazioneId: number | null;
 }

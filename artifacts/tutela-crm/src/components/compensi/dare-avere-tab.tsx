@@ -79,6 +79,7 @@ export function DareAvereTab() {
                       <Button size="icon" variant="ghost" aria-label="Elimina la riga" onClick={() => setDaEliminare(r)} data-testid={`button-elimina-riga-${r.id}`}><Trash2 className="size-4" /></Button>
                     </>}
                     {s.automatica && r.estrattoId && <Link className="text-sm underline" href={`/admin/compensi/estratti/${r.estrattoId}`}>Apri estratto</Link>}
+                    {r.importazioneId && <Link className="text-sm underline" href={`/admin/compensi/importazioni/${r.importazioneId}`}>Apri importazione</Link>}
                   </TableCell>
                 </TableRow>
               ))}

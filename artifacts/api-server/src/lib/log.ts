@@ -90,6 +90,11 @@ export const AZIONI_LOG = {
   "dare_avere.riga_aggiungi": "Aggiunta riga al dare/avere",
   "dare_avere.riga_modifica": "Modifica riga del dare/avere",
   "dare_avere.riga_elimina": "Eliminazione riga del dare/avere",
+  "importazione.config": "Modifica regola di calcolo di un servizio importato",
+  "importazione.anteprima": "Caricamento file Excel per anteprima",
+  "importazione.scarta": "Anteprima di importazione scartata",
+  "importazione.conferma": "Conferma importazione da Excel",
+  "importazione.annulla": "Annullamento importazione da Excel",
 } as const;
 
 export type AzioneLog = keyof typeof AZIONI_LOG;

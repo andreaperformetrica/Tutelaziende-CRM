@@ -20,6 +20,7 @@ import {
   tipiPraticaTable,
   utentiTable,
 } from "@workspace/db";
+import { righeImportateDareAvere } from "./importazioni";
 import { HttpError, nonTrovato } from "./errori";
 import { dataValida, formattaData, oggiRoma } from "./eventi";
 import type { Executor } from "./log";
@@ -381,6 +382,7 @@ export async function dareAvere(collaboratoreId: number, anno: number) {
     .where(and(eq(estrattiTable.collaboratoreId, collaboratoreId), sql`extract(year from ${estrattiTable.dataEstratto})::int = ${anno}`))
     .orderBy(asc(estrattiTable.dataEstratto), asc(estrattiTable.id));
 
+  const importate = await righeImportateDareAvere(collaboratoreId, anno);
   const sezioni = ORDINE_SEZIONI.map((sezione) => {
     const righe =
       sezione === "patronato"
@@ -392,6 +394,7 @@ export async function dareAvere(collaboratoreId: number, anno: number) {
             riferimento: `Estratto ${formattaData(e.dataEstratto)}`,
             nota: e.pagatoIl ? `Pagato il ${formattaData(e.pagatoIl)}` : "Non ancora pagato",
             estrattoId: e.id as number | null,
+            importazioneId: null as number | null,
             centesimi: e.totaleCentesimi,
           }))
         : manuali
@@ -404,8 +407,24 @@ export async function dareAvere(collaboratoreId: number, anno: number) {
               riferimento: null as string | null,
               nota: r.nota,
               estrattoId: null as number | null,
+              importazioneId: null as number | null,
               centesimi: r.importoCentesimi,
-            }));
+            }))
+            .concat(
+              importate
+                .filter((r) => r.sezione === sezione)
+                .map((r) => ({
+                  id: null as number | null,
+                  descrizione: r.descrizione,
+                  importoEuro: euro(r.centesimi),
+                  dataPagamento: null as string | null,
+                  riferimento: r.riferimento,
+                  nota: r.nota,
+                  estrattoId: null as number | null,
+                  importazioneId: r.importazioneId as number | null,
+                  centesimi: r.centesimi,
+                })),
+            );
     const totale = righe.reduce((t, r) => t + r.centesimi, 0);
     return {
       sezione,

@@ -1141,6 +1141,108 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ImpostazioniStampa"
+  /backoffice/compensi/importazioni/servizi:
+    get:
+      operationId: listServiziImport
+      tags: [compensi]
+      summary: Regole di calcolo e colonne dei servizi importabili (730, ISEE, NASPI, Pensionati)
+      responses:
+        "200":
+          description: Servizi
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ServizioImport"
+  /backoffice/compensi/importazioni/servizi/{servizio}:
+    parameters:
+      - name: servizio
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/ServizioImportCodice"
+    put:
+      operationId: updateServizioImport
+      tags: [compensi]
+      summary: Imposta regola di calcolo (fissa o percentuale) e colonne del file di un servizio
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServizioImportInput"
+      responses:
+        "200":
+          description: Servizio aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServizioImport"
+  /backoffice/compensi/importazioni:
+    get:
+      operationId: listImportazioni
+      tags: [compensi]
+      summary: Importazioni (anteprime e confermate), dalla piu' recente
+      parameters:
+        - name: servizio
+          in: query
+          schema:
+            $ref: "#/components/schemas/ServizioImportCodice"
+        - name: anno
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Elenco
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Importazione"
+  /backoffice/compensi/importazioni/{id}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    get:
+      operationId: getImportazione
+      tags: [compensi]
+      summary: Dettaglio; per un'anteprima rilegge il file con la regola attuale
+      responses:
+        "200":
+          description: Dettaglio
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportazioneDettaglio"
+    delete:
+      operationId: deleteImportazione
+      tags: [compensi]
+      summary: Scarta un'anteprima oppure annulla un'importazione confermata (toglie le righe dal dare/avere)
+      responses:
+        "204":
+          description: Eseguito
+  /backoffice/compensi/importazioni/{id}/conferma:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    post:
+      operationId: confermaImportazione
+      tags: [compensi]
+      summary: Salva le righe valide dell'anteprima e le riporta nel dare/avere
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfermaImportazioneInput"
+      responses:
+        "200":
+          description: Importazione confermata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportazioneDettaglio"
   /backoffice/compensi/dare-avere:
     get:
       operationId: getDareAvere
@@ -3627,12 +3729,92 @@ components:
         email: { type: string, maxLength: 120 }
         nota1: { type: string, maxLength: 600 }
         nota2: { type: string, maxLength: 600 }
+    ServizioImportCodice:
+      type: string
+      enum: [mod730, isee, naspi, pensionati]
+    ServizioImport:
+      type: object
+      required: [servizio, etichetta, sezione, regola, valore, colonnaChiave, tipoChiave, colonnaImporto, configurato]
+      properties:
+        servizio: { $ref: "#/components/schemas/ServizioImportCodice" }
+        etichetta: { type: string }
+        sezione: { $ref: "#/components/schemas/SezioneDareAvereCodice" }
+        regola: { type: [string, "null"], enum: [fisso, percentuale, null], description: "fisso = importo in euro per ogni riga valida; percentuale = percentuale della colonna importo" }
+        valore: { type: [number, "null"], description: "Euro per riga (regola fisso) oppure percentuale, es. 12,5 (regola percentuale)" }
+        colonnaChiave: { type: [string, "null"], description: Intestazione della colonna che identifica il collaboratore }
+        tipoChiave: { type: string, enum: [sportello, email, nome] }
+        colonnaImporto: { type: [string, "null"], description: Intestazione della colonna dell'importo (solo regola percentuale) }
+        configurato: { type: boolean }
+    ServizioImportInput:
+      type: object
+      required: [regola, valore, colonnaChiave, tipoChiave]
+      properties:
+        regola: { type: string, enum: [fisso, percentuale] }
+        valore: { type: number, minimum: 0, maximum: 1000000 }
+        colonnaChiave: { type: string, minLength: 1, maxLength: 120 }
+        tipoChiave: { type: string, enum: [sportello, email, nome] }
+        colonnaImporto: { type: [string, "null"], maxLength: 120 }
+    Importazione:
+      type: object
+      required: [id, servizio, servizioEtichetta, anno, nomeFile, stato, righeLette, righeImportate, totaleEuro, creatoIl, creatoDa, confermatoIl]
+      properties:
+        id: { type: integer }
+        servizio: { $ref: "#/components/schemas/ServizioImportCodice" }
+        servizioEtichetta: { type: string }
+        anno: { type: integer }
+        nomeFile: { type: string }
+        stato: { type: string, enum: [anteprima, confermata] }
+        righeLette: { type: integer }
+        righeImportate: { type: integer }
+        totaleEuro: { type: number }
+        creatoIl: { type: string, format: date-time }
+        creatoDa: { type: [string, "null"] }
+        confermatoIl: { type: [string, "null"], format: date-time }
+    RigaImportazione:
+      type: object
+      required: [numeroRiga, riferimento, collaboratoreId, collaboratoreNome, baseEuro, compensoEuro, errori]
+      properties:
+        numeroRiga: { type: integer, description: Numero di riga nel foglio Excel }
+        riferimento: { type: [string, "null"] }
+        collaboratoreId: { type: [integer, "null"] }
+        collaboratoreNome: { type: [string, "null"] }
+        baseEuro: { type: [number, "null"] }
+        compensoEuro: { type: [number, "null"] }
+        errori: { type: array, items: { type: string } }
+    TotaleCollaboratoreImport:
+      type: object
+      required: [collaboratoreId, collaboratoreNome, numeroSportello, righe, compensoEuro]
+      properties:
+        collaboratoreId: { type: integer }
+        collaboratoreNome: { type: string }
+        numeroSportello: { type: string }
+        righe: { type: integer }
+        compensoEuro: { type: number }
+    ImportazioneDettaglio:
+      type: object
+      required: [importazione, configurazione, configurazioneCompleta, messaggioConfigurazione, intestazioni, righe, righeValide, righeConErrori, totaleEuro, perCollaboratore]
+      properties:
+        importazione: { $ref: "#/components/schemas/Importazione" }
+        configurazione: { $ref: "#/components/schemas/ServizioImport" }
+        configurazioneCompleta: { type: boolean }
+        messaggioConfigurazione: { type: [string, "null"], description: Cosa manca o non corrisponde al file }
+        intestazioni: { type: array, items: { type: string }, description: Colonne trovate nel file (vuoto per le importazioni confermate) }
+        righe: { type: array, items: { $ref: "#/components/schemas/RigaImportazione" } }
+        righeValide: { type: integer }
+        righeConErrori: { type: integer }
+        totaleEuro: { type: number }
+        perCollaboratore: { type: array, items: { $ref: "#/components/schemas/TotaleCollaboratoreImport" } }
+    ConfermaImportazioneInput:
+      type: object
+      required: [soloValide]
+      properties:
+        soloValide: { type: boolean, description: Vero per salvare solo le righe senza errori quando ce ne sono con errori }
     SezioneDareAvereCodice:
       type: string
       enum: [naspi, pensionati, patronato, caf, debiti]
     RigaDareAvere:
       type: object
-      required: [id, descrizione, importoEuro, dataPagamento, riferimento, nota, estrattoId]
+      required: [id, descrizione, importoEuro, dataPagamento, riferimento, nota, estrattoId, importazioneId]
       properties:
         id: { type: [integer, "null"], description: "Vuoto per le righe del Patronato, che arrivano dagli estratti" }
         descrizione: { type: string }
@@ -3641,6 +3823,7 @@ components:
         riferimento: { type: [string, "null"], description: "Solo Patronato: es. Estratto 03/08/2026" }
         nota: { type: string }
         estrattoId: { type: [integer, "null"] }
+        importazioneId: { type: [integer, "null"], description: "Riga riportata da un'importazione Excel (non modificabile qui)" }
     SezioneDareAvere:
       type: object
       required: [sezione, titolo, automatica, righe, totaleEuro]

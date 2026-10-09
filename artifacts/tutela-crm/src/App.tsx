@@ -36,6 +36,7 @@ import AssistitoNuovo from '@/pages/collaboratore/assistito-nuovo';
 import AssistitoDettaglioCollaboratore from '@/pages/collaboratore/assistito-dettaglio';
 import EventiBackoffice from '@/pages/admin/eventi';
 import CompensiPage from '@/pages/admin/compensi';
+import ImportazioneDettaglioPage from '@/pages/admin/importazione-dettaglio';
 import EstrattoDettaglioPage from '@/pages/admin/estratto-dettaglio';
 import EventoDettaglioBackoffice from '@/pages/admin/evento-dettaglio';
 import EventoCheckIn from '@/pages/admin/evento-check-in';
@@ -99,6 +100,7 @@ function Router() {
         <Route path="/admin/notifiche" component={g(<NotifichePage />, 'backoffice', ADMIN)} />
         <Route path="/admin/compensi" component={g(<CompensiPage />, 'backoffice', ADMIN)} />
         <Route path="/admin/compensi/estratti/:id" component={g(<EstrattoDettaglioPage />, 'backoffice', ADMIN)} />
+        <Route path="/admin/compensi/importazioni/:id" component={g(<ImportazioneDettaglioPage />, 'backoffice', ADMIN)} />
         <Route path="/admin/eventi" component={g(<EventiBackoffice />, 'backoffice', ADMIN)} />
         <Route path="/admin/eventi/:id/check-in" component={g(<EventoCheckIn />, 'backoffice', ADMIN)} />
         <Route path="/admin/eventi/:id" component={g(<EventoDettaglioBackoffice />, 'backoffice', ADMIN)} />
