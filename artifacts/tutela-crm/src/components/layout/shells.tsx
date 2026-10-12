@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetConteggioSegnalazioniQueryKey, useGetConteggioSegnalazioni, useLogout, type SessioneUtente } from "@workspace/api-client-react";
-import { Inbox, Paperclip, UserCheck, KeyRound, LogOut, ScrollText, ShieldCheck, Users, UsersRound, Home, Landmark, UserRound, TriangleAlert, FileText, FileSignature, ListOrdered, Clock, Bell, CalendarDays, Coins } from "lucide-react";
+import { Inbox, Paperclip, UserCheck, KeyRound, LogOut, ScrollText, ShieldCheck, Users, UsersRound, Home, UserRound, TriangleAlert, FileText, FileSignature, ListOrdered, Clock, Bell, CalendarDays, Coins } from "lucide-react";
 import { iniziali, ruoloLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -15,12 +15,9 @@ function useEsci() {
 
 function Marchio({ chiaro }: { chiaro?: boolean }) {
   return (
-    <div className="flex items-center gap-2.5">
-      <div className="size-9 rounded-md bg-accent text-accent-foreground grid place-items-center shadow-[inset_0_-3px_0_rgba(0,0,0,.18)]"><Landmark className="size-5" /></div>
-      <div className="leading-none">
-        <div className={cn("font-serif text-xl font-bold", chiaro ? "text-primary-foreground" : "text-sidebar-accent-foreground")}>Tutela</div>
-        <div className={cn("text-[10px] uppercase tracking-[0.2em] mt-1", chiaro ? "text-primary-foreground/70" : "text-sidebar-foreground/60")}>Patronato e CAF</div>
-      </div>
+    <div className="space-y-1.5">
+      <img src={`${import.meta.env.BASE_URL}logo-bianco.png`} alt="Tutelaziende" className="h-7 w-auto" data-testid="logo" />
+      <div className={cn("text-[10px] uppercase tracking-[0.2em]", chiaro ? "text-primary-foreground/70" : "text-sidebar-foreground/60")}>Patronato e CAF</div>
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Redirect, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetSessioneQueryKey, useLogin } from "@workspace/api-client-react";
-import { Landmark, Loader2, LockKeyhole } from "lucide-react";
+import { Loader2, LockKeyhole } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -42,8 +42,7 @@ export default function LoginPage() {
         <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: "repeating-linear-gradient(0deg, currentColor 0 1px, transparent 1px 34px)" }} />
         <div className="absolute -right-24 -bottom-24 size-96 rounded-full border-[40px] border-accent/25" />
         <div className="relative flex items-center gap-3">
-          <div className="size-11 rounded-md bg-accent text-accent-foreground grid place-items-center"><Landmark className="size-6" /></div>
-          <span className="font-serif text-3xl font-bold text-sidebar-accent-foreground">Tutela</span>
+          <img src={`${import.meta.env.BASE_URL}logo-bianco.png`} alt="Tutelaziende" className="h-10 w-auto" data-testid="logo" />
         </div>
         <div className="relative max-w-md rise">
           <h1 className="font-serif text-5xl leading-[1.05] text-sidebar-accent-foreground">Ogni pratica,<br />un fascicolo in ordine.</h1>
@@ -53,7 +52,7 @@ export default function LoginPage() {
       </div>
       <div className="flex items-center justify-center p-6 paper">
         <form onSubmit={invia} className="w-full max-w-sm rise" data-testid="form-login">
-          <div className="lg:hidden flex items-center gap-2 mb-8"><Landmark className="size-6 text-primary" /><span className="font-serif text-2xl font-bold">Tutela</span></div>
+          <div className="lg:hidden mb-8"><img src={`${import.meta.env.BASE_URL}logo.png`} alt="Tutelaziende" className="h-8 w-auto" /></div>
           <div className="size-11 rounded-full bg-secondary grid place-items-center mb-4"><LockKeyhole className="size-5 text-secondary-foreground" /></div>
           <h2 className="text-3xl font-bold">Accedi</h2>
           <p className="text-sm text-muted-foreground mt-1 mb-6">Inserisci le credenziali che ti ha fornito l'ufficio.</p>
