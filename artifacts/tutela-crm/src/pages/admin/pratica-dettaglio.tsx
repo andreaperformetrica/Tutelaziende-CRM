@@ -19,6 +19,7 @@ import { ErrorState, PageHeader } from "@/components/common";
 import { ConfermaElimina } from "@/components/pratiche/conferma-elimina";
 import { SelettoreFile } from "@/components/pratiche/selettore-file";
 import { useToast } from "@/hooks/use-toast";
+import { UtenteChip } from "@/components/utenti/colore-utente";
 import { fmtCellulare, fmtData, fmtIstante, parseApiError, ruoloLabel } from "@/lib/format";
 import {
   ErroreUpload, FORMATI_DOCUMENTI, formatoDimensione, inviaFile, urlDocumentoBackoffice, urlMandatoBackoffice,
@@ -151,7 +152,7 @@ export default function PraticaDettaglioBackoffice() {
         <div className="flex flex-wrap items-end gap-x-8 gap-y-4">
           <div>
             <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Gestita da</div>
-            <div className="mt-1 text-sm font-semibold" data-testid="text-gestita-da">{p.gestitaDa ? `${p.gestitaDa.cognome} ${p.gestitaDa.nome}` : "Non assegnata"}{p.mieInCarico && <Badge variant="secondary" className="ml-2">Tu</Badge>}</div>
+            <div className="mt-1 text-sm font-semibold" data-testid="text-gestita-da">{p.gestitaDa ? <UtenteChip id={p.gestitaDa.id} colore={p.gestitaDa.colore}>{p.gestitaDa.cognome} {p.gestitaDa.nome}</UtenteChip> : "Non assegnata"}{p.mieInCarico && <Badge variant="secondary" className="ml-2">Tu</Badge>}</div>
           </div>
           {!p.mieInCarico && (
             <Button onClick={() => (p.gestitaDa ? setConfermaPresa(true) : prendi())} disabled={presa.isPending} data-testid="button-prendi-in-carico">

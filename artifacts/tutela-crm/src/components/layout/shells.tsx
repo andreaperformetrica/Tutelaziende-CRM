@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetConteggioSegnalazioniQueryKey, useGetConteggioSegnalazioni, useLogout, type SessioneUtente } from "@workspace/api-client-react";
 import { Inbox, Paperclip, UserCheck, KeyRound, LogOut, ScrollText, ShieldCheck, Users, UsersRound, Home, UserRound, TriangleAlert, FileText, FileSignature, ListOrdered, Clock, Bell, CalendarDays, Coins, Settings, ChevronDown } from "lucide-react";
+import { UtenteAvatar } from "@/components/utenti/colore-utente";
 import { iniziali, ruoloLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -90,7 +91,9 @@ export function BackofficeShell({ s, children }: { s: SessioneUtente; children: 
         </nav>
         <div className="hidden md:block border-t border-sidebar-border pt-4 space-y-3">
           <div className="flex items-center gap-3 px-1">
-            <div className="size-9 rounded-full bg-sidebar-primary text-sidebar-primary-foreground grid place-items-center text-sm font-bold">{iniziali(s.nome, s.cognome)}</div>
+            {s.ruolo === "collaboratore"
+              ? <div className="size-9 rounded-full bg-sidebar-primary text-sidebar-primary-foreground grid place-items-center text-sm font-bold">{iniziali(s.nome, s.cognome)}</div>
+              : <UtenteAvatar id={s.id} colore={s.colore} nome={s.nome} cognome={s.cognome} />}
             <div className="min-w-0">
               <div className="text-sm font-semibold text-sidebar-accent-foreground truncate" data-testid="text-utente-nome">{s.nome} {s.cognome}</div>
               <div className="flex items-center gap-1 text-xs text-sidebar-foreground/70" data-testid="text-utente-ruolo"><ShieldCheck className="size-3" /> {ruoloLabel(s.ruolo)}</div>

@@ -14,6 +14,8 @@ export const utentiTable = pgTable(
     passwordHash: text("password_hash").notNull(),
     deveCambiarePassword: boolean("deve_cambiare_password").notNull().default(true),
     attivo: boolean("attivo").notNull().default(true),
+    /** Colore scelto per gli utenti interni (esadecimale #rrggbb); vuoto = colore automatico. */
+    colore: text("colore"),
     ultimoAccesso: timestamp("ultimo_accesso", { withTimezone: true }),
     creatoIl: timestamp("creato_il", { withTimezone: true }).notNull().defaultNow(),
     modificatoIl: timestamp("modificato_il", { withTimezone: true }).notNull().defaultNow(),

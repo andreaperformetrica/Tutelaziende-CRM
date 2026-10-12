@@ -15,4 +15,10 @@ export interface UtenteUpdate {
   cognome: string;
   ruolo: RuoloInterno;
   attivo: boolean;
+  /**
+     * Se omesso resta invariato; null riporta al colore automatico
+     * @nullable
+     * @pattern ^#[0-9a-fA-F]{6}$
+     */
+  colore?: string | null;
 }

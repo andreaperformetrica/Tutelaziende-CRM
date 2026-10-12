@@ -30,6 +30,7 @@ export const LoginResponse = zod.object({
   "email": zod.string(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "colore": zod.string().nullable().describe('Colore scelto per l\'utente interno (#rrggbb); null se non scelto'),
   "ruolo": zod.enum(['super_admin', 'admin', 'operatore', 'collaboratore']),
   "area": zod.enum(['backoffice', 'collaboratore']).describe('Area in cui l\'utente deve essere portato dopo il login'),
   "deveCambiarePassword": zod.boolean().describe('Se vero, finche\' non cambia la password ogni altra chiamata risponde 403 con code PASSWORD_DA_CAMBIARE'),
@@ -56,6 +57,7 @@ export const GetSessioneResponse = zod.object({
   "email": zod.string(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "colore": zod.string().nullable().describe('Colore scelto per l\'utente interno (#rrggbb); null se non scelto'),
   "ruolo": zod.enum(['super_admin', 'admin', 'operatore', 'collaboratore']),
   "area": zod.enum(['backoffice', 'collaboratore']).describe('Area in cui l\'utente deve essere portato dopo il login'),
   "deveCambiarePassword": zod.boolean().describe('Se vero, finche\' non cambia la password ogni altra chiamata risponde 403 con code PASSWORD_DA_CAMBIARE'),
@@ -85,6 +87,7 @@ export const CambiaPasswordResponse = zod.object({
   "email": zod.string(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "colore": zod.string().nullable().describe('Colore scelto per l\'utente interno (#rrggbb); null se non scelto'),
   "ruolo": zod.enum(['super_admin', 'admin', 'operatore', 'collaboratore']),
   "area": zod.enum(['backoffice', 'collaboratore']).describe('Area in cui l\'utente deve essere portato dopo il login'),
   "deveCambiarePassword": zod.boolean().describe('Se vero, finche\' non cambia la password ogni altra chiamata risponde 403 con code PASSWORD_DA_CAMBIARE'),
@@ -105,6 +108,7 @@ export const ListUtentiResponseItem = zod.object({
   "email": zod.string(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "colore": zod.string().nullable().describe('Colore scelto (#rrggbb); null = colore automatico'),
   "ruolo": zod.enum(['super_admin', 'admin', 'operatore']),
   "attivo": zod.boolean(),
   "deveCambiarePassword": zod.boolean(),
@@ -119,6 +123,7 @@ export const ListUtentiResponse = zod.array(ListUtentiResponseItem)
  */
 
 
+export const createUtenteBodyColoreRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 export const createUtenteBodyPasswordProvvisoriaMin = 8;
 
 
@@ -128,6 +133,7 @@ export const CreateUtenteBody = zod.object({
   "nome": zod.string().min(1),
   "cognome": zod.string().min(1),
   "ruolo": zod.enum(['super_admin', 'admin', 'operatore']),
+  "colore": zod.string().regex(createUtenteBodyColoreRegExp).nullish(),
   "passwordProvvisoria": zod.string().min(createUtenteBodyPasswordProvvisoriaMin)
 })
 
@@ -136,6 +142,7 @@ export const CreateUtenteResponse = zod.object({
   "email": zod.string(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "colore": zod.string().nullable().describe('Colore scelto (#rrggbb); null = colore automatico'),
   "ruolo": zod.enum(['super_admin', 'admin', 'operatore']),
   "attivo": zod.boolean(),
   "deveCambiarePassword": zod.boolean(),
@@ -156,6 +163,7 @@ export const GetUtenteResponse = zod.object({
   "email": zod.string(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "colore": zod.string().nullable().describe('Colore scelto (#rrggbb); null = colore automatico'),
   "ruolo": zod.enum(['super_admin', 'admin', 'operatore']),
   "attivo": zod.boolean(),
   "deveCambiarePassword": zod.boolean(),
@@ -173,6 +181,7 @@ export const UpdateUtenteParams = zod.object({
 
 
 
+export const updateUtenteBodyColoreRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
 
 
 export const UpdateUtenteBody = zod.object({
@@ -180,7 +189,8 @@ export const UpdateUtenteBody = zod.object({
   "nome": zod.string().min(1),
   "cognome": zod.string().min(1),
   "ruolo": zod.enum(['super_admin', 'admin', 'operatore']),
-  "attivo": zod.boolean()
+  "attivo": zod.boolean(),
+  "colore": zod.string().regex(updateUtenteBodyColoreRegExp).nullish().describe('Se omesso resta invariato; null riporta al colore automatico')
 })
 
 export const UpdateUtenteResponse = zod.object({
@@ -188,6 +198,7 @@ export const UpdateUtenteResponse = zod.object({
   "email": zod.string(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "colore": zod.string().nullable().describe('Colore scelto (#rrggbb); null = colore automatico'),
   "ruolo": zod.enum(['super_admin', 'admin', 'operatore']),
   "attivo": zod.boolean(),
   "deveCambiarePassword": zod.boolean(),
@@ -216,6 +227,7 @@ export const ImpostaPasswordProvvisoriaUtenteResponse = zod.object({
   "email": zod.string(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "colore": zod.string().nullable().describe('Colore scelto (#rrggbb); null = colore automatico'),
   "ruolo": zod.enum(['super_admin', 'admin', 'operatore']),
   "attivo": zod.boolean(),
   "deveCambiarePassword": zod.boolean(),
@@ -1011,6 +1023,7 @@ export const ListLogOperazioniResponse = zod.object({
   "creatoIl": zod.string().describe('Istante ISO 8601'),
   "utenteId": zod.number().int().nullable(),
   "utenteNome": zod.string().nullable(),
+  "utenteColore": zod.string().nullish().describe('Colore scelto dall\'utente interno che ha eseguito l\'operazione'),
   "ruolo": zod.string().nullable(),
   "azione": zod.string().describe('Codice dell\'azione, es. collaboratore.crea'),
   "azioneEtichetta": zod.string(),
@@ -4108,7 +4121,8 @@ export const ListPraticheBackofficeResponse = zod.object({
   "gestitaDa": zod.union([zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "cognome": zod.string()
+  "cognome": zod.string(),
+  "colore": zod.string().nullable()
 }),zod.null()]),
   "aggiornata": zod.boolean().describe('Il collaboratore ha scritto o allegato qualcosa e il back office non ha ancora risposto')
 })),
@@ -4141,7 +4155,8 @@ export const GetFiltriPraticheBackofficeResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
-  "ruolo": zod.string()
+  "ruolo": zod.string(),
+  "colore": zod.string().nullable()
 })),
   "mesi": zod.array(zod.string()).describe('Mesi (AAAA-MM) in cui sono state richieste pratiche, dal piu\' recente')
 })
@@ -4258,7 +4273,8 @@ export const GetPraticaBackofficeResponse = zod.object({
   "gestitaDa": zod.union([zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "cognome": zod.string()
+  "cognome": zod.string(),
+  "colore": zod.string().nullable()
 }),zod.null()]),
   "aggiornata": zod.boolean(),
   "mieInCarico": zod.boolean().describe('La pratica e\' gia\' in carico all\'utente che la sta guardando'),
@@ -4387,7 +4403,8 @@ export const PrendiInCaricoPraticaResponse = zod.object({
   "gestitaDa": zod.union([zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "cognome": zod.string()
+  "cognome": zod.string(),
+  "colore": zod.string().nullable()
 }),zod.null()]),
   "aggiornata": zod.boolean(),
   "mieInCarico": zod.boolean().describe('La pratica e\' gia\' in carico all\'utente che la sta guardando'),
@@ -4510,7 +4527,8 @@ export const CambiaStatoPraticaResponse = zod.object({
   "gestitaDa": zod.union([zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "cognome": zod.string()
+  "cognome": zod.string(),
+  "colore": zod.string().nullable()
 }),zod.null()]),
   "aggiornata": zod.boolean(),
   "mieInCarico": zod.boolean().describe('La pratica e\' gia\' in carico all\'utente che la sta guardando'),
@@ -4634,7 +4652,8 @@ export const CreateCommentoPraticaBackofficeResponse = zod.object({
   "gestitaDa": zod.union([zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "cognome": zod.string()
+  "cognome": zod.string(),
+  "colore": zod.string().nullable()
 }),zod.null()]),
   "aggiornata": zod.boolean(),
   "mieInCarico": zod.boolean().describe('La pratica e\' gia\' in carico all\'utente che la sta guardando'),

@@ -134,7 +134,7 @@ router.get("/backoffice/pratiche/filtri", async (_req, res) => {
       .where(sql`lower(trim(${statiPraticaTable.nome})) <> ${NOME_STATO_BOZZA}`)
       .orderBy(asc(statiPraticaTable.ordine), asc(statiPraticaTable.id)),
     db
-      .select({ id: utentiTable.id, nome: utentiTable.nome, cognome: utentiTable.cognome, ruolo: utentiTable.ruolo })
+      .select({ id: utentiTable.id, nome: utentiTable.nome, cognome: utentiTable.cognome, ruolo: utentiTable.ruolo, colore: utentiTable.colore })
       .from(utentiTable)
       .where(ne(utentiTable.ruolo, "collaboratore"))
       .orderBy(asc(utentiTable.cognome), asc(utentiTable.nome)),

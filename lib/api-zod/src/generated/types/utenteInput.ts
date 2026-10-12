@@ -14,6 +14,11 @@ export interface UtenteInput {
   /** @minLength 1 */
   cognome: string;
   ruolo: RuoloInterno;
+  /**
+     * @nullable
+     * @pattern ^#[0-9a-fA-F]{6}$
+     */
+  colore?: string | null;
   /** @minLength 8 */
   passwordProvvisoria: string;
 }

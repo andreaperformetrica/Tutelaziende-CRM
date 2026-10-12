@@ -12,6 +12,11 @@ export interface Utente {
   email: string;
   nome: string;
   cognome: string;
+  /**
+     * Colore scelto (#rrggbb); null = colore automatico
+     * @nullable
+     */
+  colore: string | null;
   ruolo: RuoloInterno;
   attivo: boolean;
   deveCambiarePassword: boolean;

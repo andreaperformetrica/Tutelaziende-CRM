@@ -10,4 +10,6 @@ export interface OperatorePratica {
   id: number;
   nome: string;
   cognome: string;
+  /** @nullable */
+  colore: string | null;
 }

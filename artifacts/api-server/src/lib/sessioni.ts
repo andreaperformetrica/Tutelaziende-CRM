@@ -65,6 +65,7 @@ export interface UtenteAutenticato {
   cognome: string;
   ruolo: "super_admin" | "admin" | "operatore" | "collaboratore";
   deveCambiarePassword: boolean;
+  colore: string | null;
   collaboratoreId: number | null;
 }
 
@@ -102,6 +103,7 @@ export async function utenteDaToken(token: string): Promise<UtenteAutenticato | 
     cognome: utente.cognome,
     ruolo: utente.ruolo,
     deveCambiarePassword: utente.deveCambiarePassword,
+    colore: utente.colore,
     collaboratoreId: riga.collaboratoreId,
   };
 }

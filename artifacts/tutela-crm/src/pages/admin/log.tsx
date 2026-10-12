@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState, ErrorState, PageHeader } from "@/components/common";
+import { UtenteChip } from "@/components/utenti/colore-utente";
 import { fmtIstante, parseApiError, ruoloLabel } from "@/lib/format";
 
 const PER_PAGINA = 50;
@@ -62,7 +63,7 @@ export default function LogPage() {
                 {q.data.righe.map((r) => (
                   <TableRow key={r.id} className="hover:bg-secondary/50 transition-colors align-top" data-testid={`row-log-${r.id}`}>
                     <TableCell className="font-mono text-xs whitespace-nowrap">{fmtIstante(r.creatoIl, true)}</TableCell>
-                    <TableCell className="text-sm font-medium whitespace-nowrap">{r.utenteNome ?? <span className="text-muted-foreground">Sistema</span>}</TableCell>
+                    <TableCell className="text-sm font-medium whitespace-nowrap">{r.utenteNome ? (r.utenteId !== null && r.ruolo && r.ruolo !== "collaboratore" ? <UtenteChip id={r.utenteId} colore={r.utenteColore}>{r.utenteNome}</UtenteChip> : r.utenteNome) : <span className="text-muted-foreground">Sistema</span>}</TableCell>
                     <TableCell className="text-xs whitespace-nowrap">{r.ruolo ? ruoloLabel(r.ruolo) : "—"}</TableCell>
                     <TableCell className="text-sm"><span className="inline-block rounded bg-secondary px-1.5 py-0.5 text-xs font-semibold text-secondary-foreground whitespace-nowrap">{r.azioneEtichetta}</span></TableCell>
                     <TableCell className="text-sm min-w-64">{r.descrizione}</TableCell>

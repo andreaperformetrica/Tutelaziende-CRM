@@ -36,19 +36,21 @@ router.get("/log-operazioni", async (req, res) => {
 
   const [totale] = await db.select({ n: count() }).from(logOperazioniTable).where(where);
   const righe = await db
-    .select()
+    .select({ riga: logOperazioniTable, colore: utentiTable.colore })
     .from(logOperazioniTable)
+    .leftJoin(utentiTable, eq(utentiTable.id, logOperazioniTable.utenteId))
     .where(where)
     .orderBy(desc(logOperazioniTable.creatoIl), desc(logOperazioniTable.id))
     .limit(perPagina)
     .offset((pagina - 1) * perPagina);
 
   res.json({
-    righe: righe.map((r) => ({
+    righe: righe.map(({ riga: r, colore }) => ({
       id: r.id,
       creatoIl: r.creatoIl.toISOString(),
       utenteId: r.utenteId,
       utenteNome: r.utenteNome,
+      utenteColore: colore,
       ruolo: r.ruolo,
       azione: r.azione,
       azioneEtichetta: etichettaAzione(r.azione),

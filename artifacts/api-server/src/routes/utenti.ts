@@ -36,9 +36,14 @@ function mappa(u: Utente) {
     ruolo: u.ruolo as (typeof RUOLI_INTERNI)[number],
     attivo: u.attivo,
     deveCambiarePassword: u.deveCambiarePassword,
+    colore: u.colore,
     ultimoAccesso: u.ultimoAccesso ? u.ultimoAccesso.toISOString() : null,
     creatoIl: u.creatoIl.toISOString(),
   };
+}
+
+function coloreNormalizzato(c: string | null | undefined): string | null {
+  return c ? c.toLowerCase() : null;
 }
 
 function normalizzaEmail(email: string): string {
@@ -102,6 +107,7 @@ router.post("/utenti", async (req, res) => {
           nome: dati.nome.trim(),
           cognome: dati.cognome.trim(),
           ruolo: dati.ruolo,
+          colore: coloreNormalizzato(dati.colore),
           passwordHash,
           deveCambiarePassword: true,
         })
@@ -148,6 +154,7 @@ router.put("/utenti/:id", async (req, res) => {
     cognome: dati.cognome.trim(),
     ruolo: dati.ruolo,
     attivo: dati.attivo,
+    ...(dati.colore !== undefined ? { colore: coloreNormalizzato(dati.colore) } : {}),
   };
   try {
     const aggiornato = await db.transaction(async (tx) => {
@@ -163,6 +170,7 @@ router.put("/utenti/:id", async (req, res) => {
         cognome: "cognome",
         ruolo: "ruolo",
         attivo: "stato attivo",
+        colore: "colore",
       });
       await registraLog(tx, contestoDa(req), {
         azione: "utente.modifica",

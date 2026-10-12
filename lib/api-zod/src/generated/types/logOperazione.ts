@@ -14,6 +14,11 @@ export interface LogOperazione {
   utenteId: number | null;
   /** @nullable */
   utenteNome: string | null;
+  /**
+     * Colore scelto dall'utente interno che ha eseguito l'operazione
+     * @nullable
+     */
+  utenteColore?: string | null;
   /** @nullable */
   ruolo: string | null;
   /** Codice dell'azione, es. collaboratore.crea */

@@ -97,6 +97,11 @@ export interface SessioneUtente {
   email: string;
   nome: string;
   cognome: string;
+  /**
+     * Colore scelto per l'utente interno (#rrggbb); null se non scelto
+     * @nullable
+     */
+  colore: string | null;
   ruolo: Ruolo;
   /** Area in cui l'utente deve essere portato dopo il login */
   area: SessioneUtenteArea;
@@ -110,6 +115,11 @@ export interface Utente {
   email: string;
   nome: string;
   cognome: string;
+  /**
+     * Colore scelto (#rrggbb); null = colore automatico
+     * @nullable
+     */
+  colore: string | null;
   ruolo: RuoloInterno;
   attivo: boolean;
   deveCambiarePassword: boolean;
@@ -129,6 +139,11 @@ export interface UtenteInput {
   /** @minLength 1 */
   cognome: string;
   ruolo: RuoloInterno;
+  /**
+     * @nullable
+     * @pattern ^#[0-9a-fA-F]{6}$
+     */
+  colore?: string | null;
   /** @minLength 8 */
   passwordProvvisoria: string;
 }
@@ -141,6 +156,12 @@ export interface UtenteUpdate {
   cognome: string;
   ruolo: RuoloInterno;
   attivo: boolean;
+  /**
+     * Se omesso resta invariato; null riporta al colore automatico
+     * @nullable
+     * @pattern ^#[0-9a-fA-F]{6}$
+     */
+  colore?: string | null;
 }
 
 export type LuogoTipo = typeof LuogoTipo[keyof typeof LuogoTipo];
@@ -490,6 +511,11 @@ export interface LogOperazione {
   utenteId: number | null;
   /** @nullable */
   utenteNome: string | null;
+  /**
+     * Colore scelto dall'utente interno che ha eseguito l'operazione
+     * @nullable
+     */
+  utenteColore?: string | null;
   /** @nullable */
   ruolo: string | null;
   /** Codice dell'azione, es. collaboratore.crea */
@@ -1192,6 +1218,8 @@ export interface OperatorePratica {
   id: number;
   nome: string;
   cognome: string;
+  /** @nullable */
+  colore: string | null;
 }
 
 export interface StatoPraticaRiepilogo {
@@ -1227,6 +1255,8 @@ export interface OperatoreFiltro {
   nome: string;
   cognome: string;
   ruolo: string;
+  /** @nullable */
+  colore: string | null;
 }
 
 export interface FiltriPraticheBackoffice {

@@ -14,6 +14,11 @@ export interface SessioneUtente {
   email: string;
   nome: string;
   cognome: string;
+  /**
+     * Colore scelto per l'utente interno (#rrggbb); null se non scelto
+     * @nullable
+     */
+  colore: string | null;
   ruolo: Ruolo;
   /** Area in cui l'utente deve essere portato dopo il login */
   area: SessioneUtenteArea;

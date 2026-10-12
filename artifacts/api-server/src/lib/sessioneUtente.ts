@@ -26,6 +26,7 @@ export async function costruisciSessione(utente: UtenteAutenticato) {
     ruolo: utente.ruolo,
     area: utente.ruolo === "collaboratore" ? ("collaboratore" as const) : ("backoffice" as const),
     deveCambiarePassword: utente.deveCambiarePassword,
+    colore: utente.colore,
     collaboratore,
   };
 }
@@ -40,6 +41,7 @@ export async function utenteAutenticatoDaId(id: number): Promise<UtenteAutentica
       cognome: utentiRef.cognome,
       ruolo: utentiRef.ruolo,
       deveCambiarePassword: utentiRef.deveCambiarePassword,
+      colore: utentiRef.colore,
       collaboratoreId: collaboratoriTable.id,
     })
     .from(utentiRef)

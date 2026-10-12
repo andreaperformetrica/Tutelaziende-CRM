@@ -11,4 +11,6 @@ export interface OperatoreFiltro {
   nome: string;
   cognome: string;
   ruolo: string;
+  /** @nullable */
+  colore: string | null;
 }

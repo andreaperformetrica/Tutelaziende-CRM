@@ -9,3 +9,4 @@
 - [Phase 8 compensi decisions](tutela-crm-phase8-decisions.md) — maturation snapshot, Pagata reserved, one estratto per pratica, dare/avere derivation, email attachment
 - [Phase 9 import decisions](tutela-crm-phase9-decisions.md) — generic admin-configured Excel import, duplicate rule, section mapping assumptions awaiting user confirmation
 - [Tutela CRM branding](tutela-crm-branding.md) — Tutelaziende logo files, blue palette, PDF logo is a setting
+- [Colori utenti interni](tutela-crm-colori-utenti.md) — chosen color per internal user, automatic fallback computed in frontend, where it is shown

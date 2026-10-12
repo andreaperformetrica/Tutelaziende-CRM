@@ -33,7 +33,7 @@ export function eAggiornata(r: Pick<RigaPratica, "ultimaAttivitaCollaboratoreIl"
 }
 
 function gestore(r: RigaPratica) {
-  return r.gestitaDaUtenteId && r.gestoreCognome ? { id: r.gestitaDaUtenteId, nome: r.gestoreNome ?? "", cognome: r.gestoreCognome } : null;
+  return r.gestitaDaUtenteId && r.gestoreCognome ? { id: r.gestitaDaUtenteId, nome: r.gestoreNome ?? "", cognome: r.gestoreCognome, colore: r.gestoreColore ?? null } : null;
 }
 
 export function mappaRiepilogoBackoffice(r: RigaPratica) {

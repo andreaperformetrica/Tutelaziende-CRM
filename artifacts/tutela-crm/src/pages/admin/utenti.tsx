@@ -19,6 +19,7 @@ import { PasswordDialog } from "@/components/password-dialog";
 import { EmptyState, ErrorState, FieldError, PageHeader, StatoBadge } from "@/components/common";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@/lib/auth";
+import { SelettoreColore, UtenteAvatar } from "@/components/utenti/colore-utente";
 import { fmtIstante, parseApiError, ruoloLabel } from "@/lib/format";
 
 function UtenteDialog({ open, onClose, utenteId, ruoliOfferti }: { open: boolean; onClose: () => void; utenteId: number | null; ruoliOfferti: RuoloInterno[] }) {
@@ -27,7 +28,7 @@ function UtenteDialog({ open, onClose, utenteId, ruoliOfferti }: { open: boolean
   const create = useCreateUtente();
   const update = useUpdateUtente();
   const det = useGetUtente(utenteId ?? 0, { query: { enabled: open && utenteId !== null, queryKey: getGetUtenteQueryKey(utenteId ?? 0) } });
-  const [f, setF] = useState({ nome: "", cognome: "", email: "", ruolo: ruoliOfferti[0] as RuoloInterno, attivo: true, pw: "" });
+  const [f, setF] = useState({ nome: "", cognome: "", email: "", ruolo: ruoliOfferti[0] as RuoloInterno, attivo: true, colore: null as string | null, pw: "" });
   const [errs, setErrs] = useState<Record<string, string>>({});
   const [srv, setSrv] = useState<string | null>(null);
   const modifica = utenteId !== null;
@@ -35,10 +36,10 @@ function UtenteDialog({ open, onClose, utenteId, ruoliOfferti }: { open: boolean
   useEffect(() => {
     if (!open) return;
     setErrs({}); setSrv(null);
-    if (!modifica) setF({ nome: "", cognome: "", email: "", ruolo: ruoliOfferti[0]!, attivo: true, pw: "" });
+    if (!modifica) setF({ nome: "", cognome: "", email: "", ruolo: ruoliOfferti[0]!, attivo: true, colore: null, pw: "" });
   }, [open, modifica, ruoliOfferti]);
   useEffect(() => {
-    if (open && modifica && det.data) setF({ nome: det.data.nome, cognome: det.data.cognome, email: det.data.email, ruolo: det.data.ruolo, attivo: det.data.attivo, pw: "" });
+    if (open && modifica && det.data) setF({ nome: det.data.nome, cognome: det.data.cognome, email: det.data.email, ruolo: det.data.ruolo, attivo: det.data.attivo, colore: det.data.colore, pw: "" });
   }, [open, modifica, det.data]);
 
   const invia = () => {
@@ -61,7 +62,7 @@ function UtenteDialog({ open, onClose, utenteId, ruoliOfferti }: { open: boolean
       toast({ title: modifica ? "Utente aggiornato" : "Utente creato" });
       onClose();
     };
-    const base = { nome: f.nome.trim(), cognome: f.cognome.trim(), email: f.email.trim(), ruolo: f.ruolo };
+    const base = { nome: f.nome.trim(), cognome: f.cognome.trim(), email: f.email.trim(), ruolo: f.ruolo, colore: f.colore };
     if (modifica) update.mutate({ id: utenteId, data: { ...base, attivo: f.attivo } }, { onSuccess, onError });
     else create.mutate({ data: { ...base, passwordProvvisoria: f.pw } }, { onSuccess, onError });
   };
@@ -92,6 +93,7 @@ function UtenteDialog({ open, onClose, utenteId, ruoliOfferti }: { open: boolean
                 <SelectContent>{ruoliOfferti.map((r) => <SelectItem key={r} value={r}>{ruoloLabel(r)}</SelectItem>)}</SelectContent>
               </Select>
             </div>
+            <div className="space-y-1.5"><Label>Colore</Label><SelettoreColore value={f.colore} onChange={(c) => setF({ ...f, colore: c })} idUtente={utenteId} /></div>
             {modifica ? (
               <label className="flex items-center gap-3 text-sm font-medium"><Switch checked={f.attivo} onCheckedChange={(v) => setF({ ...f, attivo: v })} data-testid="switch-utente-attivo" /> Utente attivo</label>
             ) : (
@@ -140,7 +142,7 @@ export default function UtentiPage() {
               <TableBody>
                 {lista.data.map((u) => (
                   <TableRow key={u.id} className="hover:bg-secondary/50 transition-colors" data-testid={`row-utente-${u.id}`}>
-                    <TableCell className="font-semibold">{u.cognome} {u.nome}</TableCell>
+                    <TableCell className="font-semibold"><span className="inline-flex items-center gap-3"><UtenteAvatar id={u.id} colore={u.colore} nome={u.nome} cognome={u.cognome} className="size-8 text-xs" />{u.cognome} {u.nome}</span></TableCell>
                     <TableCell className="text-sm">{u.email}</TableCell>
                     <TableCell><Badge variant="outline">{ruoloLabel(u.ruolo)}</Badge></TableCell>
                     <TableCell><div className="flex flex-col gap-1 items-start"><StatoBadge attivo={u.attivo} />{u.deveCambiarePassword && <span className="text-[11px] text-accent-foreground font-semibold">Cambio password in attesa</span>}</div></TableCell>

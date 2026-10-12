@@ -8,6 +8,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, FileText, S
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { UtenteChip } from "@/components/utenti/colore-utente";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -129,7 +130,7 @@ export function ElencoPraticheBackoffice({ soloMie }: { soloMie?: boolean }) {
                 <SelectContent>
                   <SelectItem value={TUTTI}>Tutti</SelectItem>
                   <SelectItem value="none">Non assegnate</SelectItem>
-                  {(f?.operatori ?? []).map((o) => <SelectItem key={o.id} value={String(o.id)}>{o.cognome} {o.nome} ({ruoloLabel(o.ruolo)})</SelectItem>)}
+                  {(f?.operatori ?? []).map((o) => <SelectItem key={o.id} value={String(o.id)}><UtenteChip id={o.id} colore={o.colore}>{o.cognome} {o.nome} ({ruoloLabel(o.ruolo)})</UtenteChip></SelectItem>)}
                 </SelectContent>
               </Select>
             </Campo>
@@ -195,7 +196,7 @@ export function ElencoPraticheBackoffice({ soloMie }: { soloMie?: boolean }) {
                     <TableCell className="text-sm tabular-nums whitespace-nowrap">{fmtDataIstante(p.dataRichiesta)}</TableCell>
                     <TableCell><Badge variant={p.stato.chiuso ? "secondary" : "outline"}>{p.stato.nome}</Badge></TableCell>
                     <TableCell className="text-sm">{p.tipo.nome}</TableCell>
-                    <TableCell className="text-sm whitespace-nowrap">{p.gestitaDa ? `${p.gestitaDa.cognome} ${p.gestitaDa.nome}` : <span className="text-muted-foreground">Non assegnata</span>}</TableCell>
+                    <TableCell className="text-sm whitespace-nowrap">{p.gestitaDa ? <UtenteChip id={p.gestitaDa.id} colore={p.gestitaDa.colore}>{p.gestitaDa.cognome} {p.gestitaDa.nome}</UtenteChip> : <span className="text-muted-foreground">Non assegnata</span>}</TableCell>
                     <TableCell><Button size="sm" className="bg-green-700 hover:bg-green-800 text-white" onClick={() => nav(`/admin/pratiche/${p.id}`)} data-testid={`button-apri-${p.id}`}>Apri</Button></TableCell>
                   </TableRow>
                 ))}

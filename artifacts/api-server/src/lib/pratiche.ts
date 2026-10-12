@@ -78,6 +78,7 @@ export function selezionaPratiche(where: SQL | undefined, ordine?: SQL[]) {
       collCapogruppoId: collaboratoriTable.capogruppoId,
       gestoreNome: utenteGestore.nome,
       gestoreCognome: utenteGestore.cognome,
+      gestoreColore: utenteGestore.colore,
     })
     .from(praticheTable)
     .innerJoin(assistitiTable, eq(assistitiTable.id, praticheTable.assistitoId))
