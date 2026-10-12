@@ -39,7 +39,6 @@ export default function LoginPage() {
   return (
     <div className="min-h-[100dvh] grid lg:grid-cols-[1.1fr_1fr]">
       <div className="hidden lg:flex relative flex-col justify-between bg-sidebar text-sidebar-foreground p-12 overflow-hidden">
-        <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: "repeating-linear-gradient(0deg, currentColor 0 1px, transparent 1px 34px)" }} />
         <div className="absolute -right-24 -bottom-24 size-96 rounded-full border-[40px] border-accent/25" />
         <div className="relative flex items-center gap-3">
           <img src={`${import.meta.env.BASE_URL}logo-bianco.png`} alt="Tutelaziende" className="h-10 w-auto" data-testid="logo" />
@@ -50,7 +49,7 @@ export default function LoginPage() {
         </div>
         <div className="relative text-xs uppercase tracking-[0.2em] text-sidebar-foreground/50">Patronato · CAF · Collaboratori territoriali</div>
       </div>
-      <div className="flex items-center justify-center p-6 paper">
+      <div className="flex items-center justify-center p-6">
         <form onSubmit={invia} className="w-full max-w-sm rise" data-testid="form-login">
           <div className="lg:hidden mb-8"><img src={`${import.meta.env.BASE_URL}logo.png`} alt="Tutelaziende" className="h-8 w-auto" /></div>
           <div className="size-11 rounded-full bg-secondary grid place-items-center mb-4"><LockKeyhole className="size-5 text-secondary-foreground" /></div>
