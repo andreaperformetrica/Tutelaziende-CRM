@@ -23,6 +23,11 @@ export interface Assistito {
   nazionalitaNome: string;
   straniero: boolean;
   codiceFiscale: string;
+  /**
+     * Facoltativa, 11 cifre
+     * @nullable
+     */
+  partitaIva?: string | null;
   cellulare: string;
   /** @nullable */
   email?: string | null;

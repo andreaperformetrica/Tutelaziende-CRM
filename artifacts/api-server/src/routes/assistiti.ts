@@ -49,6 +49,7 @@ const ETICHETTE_CAMPI: Record<string, string> = {
   codiceFiscale: "codice fiscale",
   cellulare: "cellulare",
   email: "email",
+  partitaIva: "partita IVA",
   citta: "citta",
   indirizzo: "indirizzo",
 };

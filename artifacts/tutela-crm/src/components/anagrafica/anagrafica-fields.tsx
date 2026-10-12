@@ -3,7 +3,7 @@ import { Controller, useFormContext, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { Check, ChevronsUpDown, Globe2, Info, RotateCcw, TriangleAlert } from "lucide-react";
 import {
-  calcolaCodiceFiscale, codiceFiscaleValido, equivalentiOmocodia, normalizzaCodiceFiscale, normalizzaTelefono,
+  calcolaCodiceFiscale, codiceFiscaleValido, equivalentiOmocodia, normalizzaCodiceFiscale, normalizzaTelefono, partitaIvaValida,
 } from "@workspace/anagrafica";
 import { getCercaLuoghiQueryKey, useCercaLuoghi, useListNazionalita } from "@workspace/api-client-react";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,7 @@ export const anagraficaSchema = z.object({
   luogoNascitaEtichetta: z.string().optional(),
   nazionalita: z.string().min(1, "Seleziona la nazionalità"),
   codiceFiscale: z.string().refine((v) => codiceFiscaleValido(v), "Codice fiscale non valido (formato o carattere di controllo)"),
+  partitaIva: z.string().optional().refine((v) => !v || !v.trim() || partitaIvaValida(v), "Partita IVA non valida (11 cifre, controllo errato)"),
   email: z.string().trim().email("Indirizzo email non valido"),
   telefono: z.string().optional(),
   cellulare: z.string().trim().min(1, "Il cellulare è obbligatorio").refine((v) => normalizzaTelefono(v) !== null, "Numero di cellulare non valido"),
@@ -213,32 +214,38 @@ export function AnagraficaFields({ emailObbligatoria = true, mostraTelefono = tr
 
       {naz && naz !== "IT" && <BannerStraniero nazionalita={nazNome} />}
 
-      <Campo label="Codice fiscale" name="codiceFiscale" required err={e.codiceFiscale?.message}
-        hint={
-          <>
-            {!calcolato && !cf && <p className="text-xs text-muted-foreground">Verrà calcolato in automatico quando nome, cognome, sesso, data e luogo di nascita sono compilati.</p>}
-            {omocodico && (
-              <p className="flex items-center gap-1.5 text-xs text-muted-foreground" data-testid="note-omocodia"><Info className="size-3.5" /> Codice omocodico, coerente con i dati inseriti</p>
-            )}
-            {differente && !omocodico && (
-              <div className="flex flex-wrap items-center gap-2 rounded-md border border-accent bg-accent/15 px-3 py-2 text-xs" data-testid="warning-cf-diverso">
-                <TriangleAlert className="size-4 shrink-0" />
-                <span className="flex-1 min-w-48">Il codice fiscale non corrisponde ai dati inseriti (possibile omocodia). Calcolato: <span className="font-mono font-semibold">{calcolato}</span></span>
-                <Button type="button" size="sm" variant="outline" className="h-7" data-testid="button-ripristina-cf"
-                  onClick={() => { manuale.current = false; setValue("codiceFiscale", calcolato!, { shouldValidate: true, shouldDirty: true }); }}>
-                  <RotateCcw className="size-3 mr-1.5" /> Ripristina calcolato
-                </Button>
-              </div>
-            )}
-          </>
-        }>
-        <Controller control={control} name="codiceFiscale" render={({ field }) => (
-          <Input id="input-codiceFiscale" autoComplete="off" value={field.value} maxLength={16} spellCheck={false} data-testid="input-codice-fiscale"
-            className={cn("font-mono tracking-[0.18em] uppercase", e.codiceFiscale && "border-destructive")}
-            onBlur={field.onBlur}
-            onChange={(ev) => { const v = normalizzaCodiceFiscale(ev.target.value); manuale.current = v.length > 0; field.onChange(v); }} />
-        )} />
-      </Campo>
+      <div className="grid gap-4 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] items-start">
+        <Campo label="Codice fiscale" name="codiceFiscale" required err={e.codiceFiscale?.message}
+          hint={
+            <>
+              {!calcolato && !cf && <p className="text-xs text-muted-foreground">Verrà calcolato in automatico quando nome, cognome, sesso, data e luogo di nascita sono compilati.</p>}
+              {omocodico && (
+                <p className="flex items-center gap-1.5 text-xs text-muted-foreground" data-testid="note-omocodia"><Info className="size-3.5" /> Codice omocodico, coerente con i dati inseriti</p>
+              )}
+              {differente && !omocodico && (
+                <div className="flex flex-wrap items-center gap-2 rounded-md border border-accent bg-accent/15 px-3 py-2 text-xs" data-testid="warning-cf-diverso">
+                  <TriangleAlert className="size-4 shrink-0" />
+                  <span className="flex-1 min-w-48">Il codice fiscale non corrisponde ai dati inseriti (possibile omocodia). Calcolato: <span className="font-mono font-semibold">{calcolato}</span></span>
+                  <Button type="button" size="sm" variant="outline" className="h-7" data-testid="button-ripristina-cf"
+                    onClick={() => { manuale.current = false; setValue("codiceFiscale", calcolato!, { shouldValidate: true, shouldDirty: true }); }}>
+                    <RotateCcw className="size-3 mr-1.5" /> Ripristina calcolato
+                  </Button>
+                </div>
+              )}
+            </>
+          }>
+          <Controller control={control} name="codiceFiscale" render={({ field }) => (
+            <Input id="input-codiceFiscale" autoComplete="off" value={field.value} maxLength={16} spellCheck={false} data-testid="input-codice-fiscale"
+              className={cn("font-mono tracking-[0.18em] uppercase", e.codiceFiscale && "border-destructive")}
+              onBlur={field.onBlur}
+              onChange={(ev) => { const v = normalizzaCodiceFiscale(ev.target.value); manuale.current = v.length > 0; field.onChange(v); }} />
+          )} />
+        </Campo>
+        <Campo label="Partita IVA (facoltativa)" name="partitaIva" err={e.partitaIva?.message}>
+          <Input id="input-partitaIva" autoComplete="off" inputMode="numeric" maxLength={14} spellCheck={false} data-testid="input-partita-iva" {...register("partitaIva")}
+            className={cn("font-mono tracking-[0.12em]", e.partitaIva && "border-destructive")} />
+        </Campo>
+      </div>
 
       <div className={cn("grid gap-4", mostraTelefono ? "sm:grid-cols-3" : "sm:grid-cols-2")}>
         <Campo label={emailObbligatoria ? "Email" : "Email (facoltativa)"} name="email" required={emailObbligatoria} err={e.email?.message}>

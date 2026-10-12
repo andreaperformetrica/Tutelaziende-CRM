@@ -25,6 +25,11 @@ export interface CollaboratoreInput {
      * @maxLength 16
      */
   codiceFiscale: string;
+  /**
+     * Facoltativa, 11 cifre
+     * @nullable
+     */
+  partitaIva?: string | null;
   email: string;
   /** @nullable */
   telefono?: string | null;

@@ -1,5 +1,5 @@
 import { and, eq, ne } from "drizzle-orm";
-import { calcolaCodiceFiscale, codiceFiscaleValido, normalizzaCodiceFiscale, normalizzaTelefono } from "@workspace/anagrafica";
+import { calcolaCodiceFiscale, codiceFiscaleValido, normalizzaCodiceFiscale, normalizzaPartitaIva, normalizzaTelefono, partitaIvaValida } from "@workspace/anagrafica";
 import { collaboratoriTable, db, personeTable, type NuovaPersona } from "@workspace/db";
 import { HttpError } from "./errori";
 import { CODICE_ITALIA, trovaLuogo, trovaNazionalita } from "./luoghi";
@@ -15,6 +15,7 @@ export interface DatiAnagrafica {
   codiceFiscale: string;
   email?: string | null;
   telefono?: string | null;
+  partitaIva?: string | null;
   cellulare: string;
 }
 
@@ -62,6 +63,13 @@ export function normalizzaAnagrafica(
     telefono = normalizzaTelefono(dati.telefono);
     if (!telefono) throw new HttpError(400, "Il numero di telefono non e' valido.", "TELEFONO_NON_VALIDO", "telefono");
   }
+  let partitaIva: string | null = null;
+  if (dati.partitaIva && dati.partitaIva.trim()) {
+    partitaIva = normalizzaPartitaIva(dati.partitaIva);
+    if (!partitaIvaValida(partitaIva)) {
+      throw new HttpError(400, "La partita IVA non e' valida (11 cifre con carattere di controllo corretto).", "PARTITA_IVA_NON_VALIDA", "partitaIva");
+    }
+  }
   const emailGrezza = (dati.email ?? "").trim().toLowerCase();
   if (!emailGrezza && emailObbligatoria) {
     throw new HttpError(400, "L'indirizzo email e' obbligatorio.", "EMAIL_NON_VALIDA", "email");
@@ -85,6 +93,7 @@ export function normalizzaAnagrafica(
     codiceFiscale,
     email,
     telefono,
+    partitaIva,
     cellulare,
   };
 }

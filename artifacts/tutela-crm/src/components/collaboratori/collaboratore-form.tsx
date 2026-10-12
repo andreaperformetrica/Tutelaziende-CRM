@@ -41,12 +41,12 @@ export function CollaboratoreForm({ initial, onSaved, onCancel }: { initial?: Co
       nome: initial.nome, cognome: initial.cognome, sesso: initial.sesso, dataNascita: initial.dataNascita,
       luogoNascitaCodice: initial.luogoNascitaCodice,
       luogoNascitaEtichetta: initial.luogoNascitaProvincia ? `${initial.luogoNascitaNome} (${initial.luogoNascitaProvincia})` : initial.luogoNascitaNome,
-      nazionalita: initial.nazionalita, codiceFiscale: initial.codiceFiscale, email: initial.email, telefono: initial.telefono ?? "",
+      nazionalita: initial.nazionalita, codiceFiscale: initial.codiceFiscale, email: initial.email, telefono: initial.telefono ?? "", partitaIva: initial.partitaIva ?? "",
       cellulare: initial.cellulare, numeroSportello: initial.numeroSportello, tipologia: initial.tipologia,
       capogruppoId: initial.capogruppoId ? String(initial.capogruppoId) : "none", attivo: initial.attivo, passwordProvvisoria: "",
     } : {
       nome: "", cognome: "", sesso: undefined as unknown as "M", dataNascita: "", luogoNascitaCodice: "", luogoNascitaEtichetta: "",
-      nazionalita: "IT", codiceFiscale: "", email: "", telefono: "", cellulare: "", numeroSportello: "",
+      nazionalita: "IT", codiceFiscale: "", email: "", telefono: "", partitaIva: "", cellulare: "", numeroSportello: "",
       tipologia: undefined as unknown as "CAF", capogruppoId: "none", attivo: true, passwordProvvisoria: "",
     },
   });
@@ -69,7 +69,7 @@ export function CollaboratoreForm({ initial, onSaved, onCancel }: { initial?: Co
     const base = {
       nome: v.nome.trim(), cognome: v.cognome.trim(), sesso: v.sesso, dataNascita: v.dataNascita,
       luogoNascitaCodice: v.luogoNascitaCodice, nazionalita: v.nazionalita, codiceFiscale: normalizzaCodiceFiscale(v.codiceFiscale),
-      email: v.email.trim(), telefono: v.telefono?.trim() || null, cellulare: v.cellulare.trim(),
+      email: v.email.trim(), telefono: v.telefono?.trim() || null, partitaIva: v.partitaIva?.trim() || null, cellulare: v.cellulare.trim(),
       numeroSportello: v.numeroSportello.trim(), tipologia: v.tipologia,
       capogruppoId: v.capogruppoId === "none" ? null : Number(v.capogruppoId),
     };

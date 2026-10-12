@@ -80,6 +80,7 @@ export function AssistitoScheda({ base, etichettaIndietro }: { base: string; eti
             <Dato k="Luogo di nascita">{a.luogoNascitaNome}{a.luogoNascitaProvincia ? ` (${a.luogoNascitaProvincia})` : a.luogoNascitaEstero ? " · Stato estero" : ""}</Dato>
             <Dato k="Nazionalità">{a.nazionalitaNome}</Dato>
             <Dato k="Codice fiscale" mono>{a.codiceFiscale}</Dato>
+            <Dato k="Partita IVA" mono>{a.partitaIva ?? "—"}</Dato>
           </dl>
         </section>
         <div className="grid gap-5 lg:grid-cols-2">

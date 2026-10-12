@@ -38,6 +38,7 @@ export const colonneAssistito = {
   nazionalitaNome: personeTable.nazionalitaNome,
   codiceFiscale: personeTable.codiceFiscale,
   email: personeTable.email,
+  partitaIva: personeTable.partitaIva,
   cellulare: personeTable.cellulare,
   collNome: personaCollaboratore.nome,
   collCognome: personaCollaboratore.cognome,
@@ -108,6 +109,7 @@ export function mappaAssistito(r: RigaAssistito, req: Request) {
     codiceFiscale: r.codiceFiscale,
     cellulare: r.cellulare,
     email: r.email,
+    partitaIva: r.partitaIva,
     citta: r.citta,
     indirizzo: r.indirizzo,
     collaboratore: {

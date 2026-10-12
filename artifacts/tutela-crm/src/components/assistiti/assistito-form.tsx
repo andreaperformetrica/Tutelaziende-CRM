@@ -42,11 +42,11 @@ export function AssistitoForm({ initial, base, onSaved, onCancel }: { initial?: 
       nome: initial.nome, cognome: initial.cognome, sesso: initial.sesso, dataNascita: initial.dataNascita,
       luogoNascitaCodice: initial.luogoNascitaCodice,
       luogoNascitaEtichetta: initial.luogoNascitaProvincia ? `${initial.luogoNascitaNome} (${initial.luogoNascitaProvincia})` : initial.luogoNascitaNome,
-      nazionalita: initial.nazionalita, codiceFiscale: initial.codiceFiscale, email: initial.email ?? "", telefono: "",
+      nazionalita: initial.nazionalita, codiceFiscale: initial.codiceFiscale, email: initial.email ?? "", telefono: "", partitaIva: initial.partitaIva ?? "",
       cellulare: initial.cellulare, citta: initial.citta, indirizzo: initial.indirizzo ?? "",
     } : {
       nome: "", cognome: "", sesso: undefined as unknown as "M", dataNascita: "", luogoNascitaCodice: "", luogoNascitaEtichetta: "",
-      nazionalita: "IT", codiceFiscale: "", email: "", telefono: "", cellulare: "", citta: "", indirizzo: "",
+      nazionalita: "IT", codiceFiscale: "", email: "", telefono: "", partitaIva: "", cellulare: "", citta: "", indirizzo: "",
     },
   });
   const { errors } = form.formState;
@@ -57,7 +57,7 @@ export function AssistitoForm({ initial, base, onSaved, onCancel }: { initial?: 
       nome: v.nome.trim(), cognome: v.cognome.trim(), sesso: v.sesso, dataNascita: v.dataNascita,
       luogoNascitaCodice: v.luogoNascitaCodice, nazionalita: v.nazionalita, codiceFiscale: normalizzaCodiceFiscale(v.codiceFiscale),
       cellulare: v.cellulare.trim(), citta: v.citta.trim(),
-      indirizzo: v.indirizzo?.trim() || null, email: v.email.trim() || null,
+      indirizzo: v.indirizzo?.trim() || null, email: v.email.trim() || null, partitaIva: v.partitaIva?.trim() || null,
     };
     const onError = (err: unknown) => {
       const p = parseApiError(err);

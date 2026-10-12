@@ -24,6 +24,11 @@ export interface AssistitoInput {
      * @maxLength 16
      */
   codiceFiscale: string;
+  /**
+     * Facoltativa, 11 cifre
+     * @nullable
+     */
+  partitaIva?: string | null;
   cellulare: string;
   /** @minLength 1 */
   citta: string;

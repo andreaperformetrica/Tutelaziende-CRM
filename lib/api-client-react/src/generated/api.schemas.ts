@@ -199,6 +199,11 @@ export interface Collaboratore {
   /** Vero se la nazionalita non e' italiana */
   straniero: boolean;
   codiceFiscale: string;
+  /**
+     * Facoltativa, 11 cifre
+     * @nullable
+     */
+  partitaIva?: string | null;
   email: string;
   /** @nullable */
   telefono: string | null;
@@ -244,6 +249,11 @@ export interface CollaboratoreInput {
      * @maxLength 16
      */
   codiceFiscale: string;
+  /**
+     * Facoltativa, 11 cifre
+     * @nullable
+     */
+  partitaIva?: string | null;
   email: string;
   /** @nullable */
   telefono?: string | null;
@@ -272,6 +282,11 @@ export interface CollaboratoreUpdate {
      * @maxLength 16
      */
   codiceFiscale: string;
+  /**
+     * Facoltativa, 11 cifre
+     * @nullable
+     */
+  partitaIva?: string | null;
   email: string;
   /** @nullable */
   telefono?: string | null;
@@ -301,6 +316,11 @@ export interface AssistitoInput {
      * @maxLength 16
      */
   codiceFiscale: string;
+  /**
+     * Facoltativa, 11 cifre
+     * @nullable
+     */
+  partitaIva?: string | null;
   cellulare: string;
   /** @minLength 1 */
   citta: string;
@@ -336,6 +356,11 @@ export interface Assistito {
   nazionalitaNome: string;
   straniero: boolean;
   codiceFiscale: string;
+  /**
+     * Facoltativa, 11 cifre
+     * @nullable
+     */
+  partitaIva?: string | null;
   cellulare: string;
   /** @nullable */
   email?: string | null;

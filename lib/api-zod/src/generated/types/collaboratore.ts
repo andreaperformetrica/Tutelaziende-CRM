@@ -27,6 +27,11 @@ export interface Collaboratore {
   /** Vero se la nazionalita non e' italiana */
   straniero: boolean;
   codiceFiscale: string;
+  /**
+     * Facoltativa, 11 cifre
+     * @nullable
+     */
+  partitaIva?: string | null;
   email: string;
   /** @nullable */
   telefono: string | null;

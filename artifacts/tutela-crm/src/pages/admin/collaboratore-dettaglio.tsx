@@ -49,7 +49,7 @@ export default function CollaboratoreDettaglioPage() {
     update.mutate({
       id: c.id, data: {
         nome: c.nome, cognome: c.cognome, sesso: c.sesso, dataNascita: c.dataNascita, luogoNascitaCodice: c.luogoNascitaCodice, nazionalita: c.nazionalita,
-        codiceFiscale: c.codiceFiscale, email: c.email, telefono: c.telefono, cellulare: c.cellulare, numeroSportello: c.numeroSportello,
+        codiceFiscale: c.codiceFiscale, email: c.email, telefono: c.telefono, partitaIva: c.partitaIva, cellulare: c.cellulare, numeroSportello: c.numeroSportello,
         tipologia: c.tipologia, capogruppoId: c.capogruppoId, attivo: !c.attivo,
       },
     }, {
@@ -119,6 +119,7 @@ export default function CollaboratoreDettaglioPage() {
             <Dato k="Luogo di nascita">{c.luogoNascitaNome}{c.luogoNascitaProvincia ? ` (${c.luogoNascitaProvincia})` : c.luogoNascitaEstero ? " · Stato estero" : ""}</Dato>
             <Dato k="Nazionalità">{c.nazionalitaNome}</Dato>
             <Dato k="Codice fiscale" mono>{c.codiceFiscale}</Dato>
+            <Dato k="Partita IVA" mono>{c.partitaIva ?? "—"}</Dato>
             <Dato k="Email">{c.email}</Dato>
             <Dato k="Cellulare" mono>{fmtCellulare(c.cellulare)}</Dato>
             <Dato k="Telefono" mono>{c.telefono ?? "—"}</Dato>

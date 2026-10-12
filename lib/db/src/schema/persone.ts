@@ -21,6 +21,7 @@ export const personeTable = pgTable("persone", {
   /** Obbligatoria per i collaboratori, facoltativa per gli assistiti. */
   email: text("email"),
   telefono: text("telefono"),
+  partitaIva: text("partita_iva"),
   cellulare: text("cellulare").notNull().unique(),
   creatoIl: timestamp("creato_il", { withTimezone: true }).notNull().defaultNow(),
   modificatoIl: timestamp("modificato_il", { withTimezone: true }).notNull().defaultNow(),

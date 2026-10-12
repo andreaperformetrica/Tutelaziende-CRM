@@ -2328,6 +2328,9 @@ components:
           description: Vero se la nazionalita non e' italiana
         codiceFiscale:
           type: string
+        partitaIva:
+          type: ["string", "null"]
+          description: Facoltativa, 11 cifre
         email:
           type: string
         telefono:
@@ -2403,6 +2406,9 @@ components:
           type: string
           minLength: 16
           maxLength: 16
+        partitaIva:
+          type: ["string", "null"]
+          description: Facoltativa, 11 cifre
         email:
           type: string
         telefono:
@@ -2454,6 +2460,9 @@ components:
           type: string
           minLength: 16
           maxLength: 16
+        partitaIva:
+          type: ["string", "null"]
+          description: Facoltativa, 11 cifre
         email:
           type: string
         telefono:
@@ -2504,6 +2513,9 @@ components:
           type: string
           minLength: 16
           maxLength: 16
+        partitaIva:
+          type: ["string", "null"]
+          description: Facoltativa, 11 cifre
         cellulare:
           type: string
         citta:
@@ -2576,6 +2588,9 @@ components:
           type: boolean
         codiceFiscale:
           type: string
+        partitaIva:
+          type: ["string", "null"]
+          description: Facoltativa, 11 cifre
         cellulare:
           type: string
         email:
