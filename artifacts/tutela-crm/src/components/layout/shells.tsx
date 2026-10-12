@@ -1,8 +1,8 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetConteggioSegnalazioniQueryKey, useGetConteggioSegnalazioni, useLogout, type SessioneUtente } from "@workspace/api-client-react";
-import { Inbox, Paperclip, UserCheck, KeyRound, LogOut, ScrollText, ShieldCheck, Users, UsersRound, Home, UserRound, TriangleAlert, FileText, FileSignature, ListOrdered, Clock, Bell, CalendarDays, Coins } from "lucide-react";
+import { Inbox, Paperclip, UserCheck, KeyRound, LogOut, ScrollText, ShieldCheck, Users, UsersRound, Home, UserRound, TriangleAlert, FileText, FileSignature, ListOrdered, Clock, Bell, CalendarDays, Coins, Settings, ChevronDown } from "lucide-react";
 import { iniziali, ruoloLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -22,7 +22,9 @@ function Marchio({ chiaro }: { chiaro?: boolean }) {
   );
 }
 
-const VOCI = [
+type Voce = { href: string; label: string; icon: typeof Inbox; roles: string[]; id: string; gruppo?: string };
+
+const VOCI: Voce[] = [
   { href: "/admin/pratiche", label: "Pratiche", icon: Inbox, roles: ["super_admin", "admin", "operatore"], id: "pratiche" },
   { href: "/admin/le-mie-pratiche", label: "Le mie pratiche", icon: UserCheck, roles: ["super_admin", "admin", "operatore"], id: "le-mie-pratiche" },
   { href: "/admin/collaboratori", label: "Collaboratori", icon: UsersRound, roles: ["super_admin", "admin", "operatore"], id: "collaboratori" },
@@ -30,21 +32,39 @@ const VOCI = [
   { href: "/admin/segnalazioni", label: "Segnalazioni", icon: TriangleAlert, roles: ["super_admin", "admin"], id: "segnalazioni" },
   { href: "/admin/eventi", label: "Eventi e corsi", icon: CalendarDays, roles: ["super_admin", "admin"], id: "eventi" },
   { href: "/admin/compensi", label: "Compensi", icon: Coins, roles: ["super_admin", "admin"], id: "compensi" },
-  { href: "/admin/tipi-pratica", label: "Tipi di pratica", icon: FileText, roles: ["super_admin", "admin"], id: "tipi-pratica" },
-  { href: "/admin/mandati", label: "Mandati", icon: FileSignature, roles: ["super_admin", "admin"], id: "mandati" },
-  { href: "/admin/stati-pratica", label: "Stati pratica", icon: ListOrdered, roles: ["super_admin", "admin"], id: "stati-pratica" },
   { href: "/admin/categorie-allegato", label: "Categorie allegati", icon: Paperclip, roles: ["super_admin", "admin"], id: "categorie-allegato" },
-  { href: "/admin/orari", label: "Orari di caricamento", icon: Clock, roles: ["super_admin", "admin"], id: "orari" },
-  { href: "/admin/utenti", label: "Utenti interni", icon: Users, roles: ["super_admin", "admin"], id: "utenti" },
-  { href: "/admin/notifiche", label: "Registro notifiche", icon: Bell, roles: ["super_admin", "admin"], id: "notifiche" },
-  { href: "/admin/log", label: "Log operazioni", icon: ScrollText, roles: ["super_admin", "admin"], id: "log" },
+  { href: "/admin/tipi-pratica", label: "Tipi di pratica", icon: FileText, roles: ["super_admin", "admin"], id: "tipi-pratica", gruppo: "settaggi" },
+  { href: "/admin/mandati", label: "Mandati", icon: FileSignature, roles: ["super_admin", "admin"], id: "mandati", gruppo: "settaggi" },
+  { href: "/admin/stati-pratica", label: "Stati pratica", icon: ListOrdered, roles: ["super_admin", "admin"], id: "stati-pratica", gruppo: "settaggi" },
+  { href: "/admin/orari", label: "Orari di caricamento", icon: Clock, roles: ["super_admin", "admin"], id: "orari", gruppo: "settaggi" },
+  { href: "/admin/utenti", label: "Utenti interni", icon: Users, roles: ["super_admin", "admin"], id: "utenti", gruppo: "settaggi" },
+  { href: "/admin/notifiche", label: "Registro notifiche", icon: Bell, roles: ["super_admin", "admin"], id: "notifiche", gruppo: "settaggi" },
+  { href: "/admin/log", label: "Log operazioni", icon: ScrollText, roles: ["super_admin", "admin"], id: "log", gruppo: "settaggi" },
 ];
+
+function VoceMenu({ v, attiva, aperte }: { v: Voce; attiva: boolean; aperte: number }) {
+  return (
+    <Link href={v.href} data-testid={`link-menu-${v.id}`}
+      className={cn("group relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors",
+        attiva ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground")}>
+      <span className={cn("absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded bg-sidebar-primary transition-transform origin-center", attiva ? "scale-y-100" : "scale-y-0")} />
+      <v.icon className="size-4 opacity-80" /> {v.label}
+      {v.id === "segnalazioni" && aperte > 0 && (
+        <span className="ml-auto min-w-5 rounded-full bg-sidebar-primary px-1.5 text-center text-[11px] font-bold text-sidebar-primary-foreground" data-testid="badge-segnalazioni" aria-label={`${aperte} segnalazioni aperte`}>{aperte}</span>
+      )}
+    </Link>
+  );
+}
 
 export function BackofficeShell({ s, children }: { s: SessioneUtente; children: ReactNode }) {
   const [loc] = useLocation();
   const esci = useEsci();
   const voci = VOCI.filter((v) => v.roles.includes(s.ruolo));
   const attivo = (h: string) => loc === h || loc.startsWith(h + "/");
+  const principali = voci.filter((v) => !v.gruppo);
+  const settaggi = voci.filter((v) => v.gruppo === "settaggi");
+  const settaggiAttivo = settaggi.some((v) => attivo(v.href));
+  const [settaggiAperto, setSettaggiAperto] = useState(false);
   const vedeSegnalazioni = s.ruolo === "super_admin" || s.ruolo === "admin";
   const conteggio = useGetConteggioSegnalazioni({ query: { enabled: vedeSegnalazioni, refetchInterval: 30000, queryKey: getGetConteggioSegnalazioniQueryKey() } });
   const aperte = conteggio.data?.aperte ?? 0;
@@ -54,17 +74,19 @@ export function BackofficeShell({ s, children }: { s: SessioneUtente; children: 
         <div className="md:mb-8 shrink-0"><Marchio /></div>
         <div className="hidden md:block text-[10px] uppercase tracking-[0.2em] text-sidebar-foreground/50 mb-2 px-2">Area gestionale</div>
         <nav className="flex md:flex-col gap-1 md:flex-1" data-testid="nav-backoffice">
-          {voci.map((v) => (
-            <Link key={v.href} href={v.href} data-testid={`link-menu-${v.id}`}
-              className={cn("group relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors",
-                attivo(v.href) ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground")}>
-              <span className={cn("absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded bg-sidebar-primary transition-transform origin-center", attivo(v.href) ? "scale-y-100" : "scale-y-0")} />
-              <v.icon className="size-4 opacity-80" /> {v.label}
-              {v.id === "segnalazioni" && aperte > 0 && (
-                <span className="ml-auto min-w-5 rounded-full bg-sidebar-primary px-1.5 text-center text-[11px] font-bold text-sidebar-primary-foreground" data-testid="badge-segnalazioni" aria-label={`${aperte} segnalazioni aperte`}>{aperte}</span>
-              )}
-            </Link>
-          ))}
+          {principali.map((v) => <VoceMenu key={v.href} v={v} attiva={attivo(v.href)} aperte={aperte} />)}
+          {settaggi.length > 0 && (
+            <div className="contents md:flex md:flex-col md:gap-1">
+              <button type="button" onClick={() => setSettaggiAperto((a) => !a)} aria-expanded={settaggiAperto || settaggiAttivo} data-testid="button-menu-settaggi"
+                className={cn("hidden md:flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground", settaggiAttivo && "text-sidebar-accent-foreground")}>
+                <Settings className="size-4 opacity-80" /> Settaggi
+                <ChevronDown className={cn("ml-auto size-4 opacity-70 transition-transform", (settaggiAperto || settaggiAttivo) && "rotate-180")} />
+              </button>
+              <div className={cn("contents md:flex md:flex-col md:gap-1 md:ml-4 md:pl-2 md:border-l md:border-sidebar-border", !(settaggiAperto || settaggiAttivo) && "md:hidden")} data-testid="gruppo-settaggi">
+                {settaggi.map((v) => <VoceMenu key={v.href} v={v} attiva={attivo(v.href)} aperte={aperte} />)}
+              </div>
+            </div>
+          )}
         </nav>
         <div className="hidden md:block border-t border-sidebar-border pt-4 space-y-3">
           <div className="flex items-center gap-3 px-1">
