@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -32,6 +33,7 @@ export function leggiTipo(v: ValoriTipo): { errori: Record<string, string> } | {
 
 export function CampiTipo({ v, onChange, errs, mostraAttivo }: { v: ValoriTipo; onChange: (v: ValoriTipo) => void; errs: Record<string, string>; mostraAttivo?: boolean }) {
   const set = (p: Partial<ValoriTipo>) => onChange({ ...v, ...p });
+  const valorePrecedente = useRef(v.valore);
   return (
     <div className="space-y-4">
       <div>
@@ -55,7 +57,9 @@ export function CampiTipo({ v, onChange, errs, mostraAttivo }: { v: ValoriTipo; 
           </div>
           <div>
             <Label htmlFor="tipo-valore">Valore in euro</Label>
-            <Input id="tipo-valore" inputMode="decimal" value={v.valore} onChange={(e) => set({ valore: e.target.value })} data-testid="input-tipo-valore" aria-invalid={!!errs.valoreEuro} />
+            <Input id="tipo-valore" inputMode="decimal" value={v.valore} onChange={(e) => set({ valore: e.target.value })}
+              onFocus={(e) => { valorePrecedente.current = v.valore; if (v.valore !== "") set({ valore: "" }); e.target.select(); }}
+              onBlur={() => { if (v.valore.trim() === "") set({ valore: valorePrecedente.current }); }} data-testid="input-tipo-valore" aria-invalid={!!errs.valoreEuro} />
             <FieldError id="errore-tipo-valore">{errs.valoreEuro}</FieldError>
           </div>
         </div>
