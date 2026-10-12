@@ -69,13 +69,13 @@ export default function ImportazioneDettaglioPage() {
         subtitle={<>{i.nomeFile} · caricato il {fmtDataIstante(i.creatoIl)}{i.creatoDa ? ` da ${i.creatoDa}` : ""}{i.confermatoIl ? ` · confermato il ${fmtDataIstante(i.confermatoIl)}` : ""}</>}
         actions={<Button variant="outline" onClick={() => setAnnulla(true)} data-testid="button-rimuovi-import"><Trash2 className="size-4 mr-2" />{anteprima ? "Scarta anteprima" : "Annulla importazione"}</Button>} />
 
-      <div className="grid gap-3 sm:grid-cols-3 mb-6 max-w-4xl">
+      <div className="grid gap-3 sm:grid-cols-3 mb-6">
         <div className="rounded-lg border border-border bg-card p-4"><div className="text-xs uppercase tracking-wider text-muted-foreground">Righe valide</div><div className="text-2xl font-semibold tabular-nums" data-testid="righe-valide">{d.righeValide}</div></div>
         <div className="rounded-lg border border-border bg-card p-4"><div className="text-xs uppercase tracking-wider text-muted-foreground">Righe con errori</div><div className={`text-2xl font-semibold tabular-nums ${d.righeConErrori ? "text-destructive" : ""}`} data-testid="righe-errori">{d.righeConErrori}</div></div>
         <div className="rounded-lg border border-border bg-card p-4"><div className="text-xs uppercase tracking-wider text-muted-foreground">Totale compensi</div><div className="text-2xl font-semibold tabular-nums" data-testid="totale-import">{fmtEuro(d.totaleEuro)}</div></div>
       </div>
 
-      <div className="rounded-lg border border-border bg-card p-4 mb-6 max-w-4xl flex items-start justify-between gap-3">
+      <div className="rounded-lg border border-border bg-card p-4 mb-6 flex items-start justify-between gap-3">
         <div className="space-y-1">
           <div className="text-xs uppercase tracking-wider text-muted-foreground">Regola di calcolo</div>
           <div className="text-sm font-medium" data-testid="testo-regola">{TESTO_REGOLA(d.configurazione)}</div>
@@ -85,11 +85,11 @@ export default function ImportazioneDettaglioPage() {
       </div>
 
       {anteprima && !d.configurazioneCompleta && (
-        <div role="alert" className="mb-6 max-w-4xl rounded-md border border-amber-500/50 bg-amber-50 text-amber-900 px-4 py-3 text-sm flex gap-2" data-testid="avviso-configurazione"><AlertTriangle className="size-4 mt-0.5 shrink-0" /><span>{d.messaggioConfigurazione} Colonne trovate nel file: {d.intestazioni.join(", ")}.</span></div>
+        <div role="alert" className="mb-6 rounded-md border border-amber-500/50 bg-amber-50 text-amber-900 px-4 py-3 text-sm flex gap-2" data-testid="avviso-configurazione"><AlertTriangle className="size-4 mt-0.5 shrink-0" /><span>{d.messaggioConfigurazione} Colonne trovate nel file: {d.intestazioni.join(", ")}.</span></div>
       )}
 
       {d.perCollaboratore.length > 0 && (
-        <section className="mb-6 max-w-4xl">
+        <section className="mb-6">
           <h2 className="font-serif text-lg font-semibold mb-2">Totali per collaboratore</h2>
           <div className="rounded-lg border border-border bg-card overflow-x-auto">
             <Table>
@@ -133,7 +133,7 @@ export default function ImportazioneDettaglioPage() {
       )}
 
       {anteprima && (
-        <div className="max-w-4xl space-y-3">
+        <div className="space-y-3">
           {d.righeConErrori > 0 && d.righeValide > 0 && (
             <div className="flex items-center gap-2"><Checkbox id="solo-valide" checked={soloValide} onCheckedChange={(v) => setSoloValide(v === true)} data-testid="checkbox-solo-valide" /><Label htmlFor="solo-valide">Importa solo le {d.righeValide} righe valide e scarta le {d.righeConErrori} con errori</Label></div>
           )}
@@ -142,7 +142,7 @@ export default function ImportazioneDettaglioPage() {
           {d.righeConErrori > 0 && !soloValide && <p className="text-xs text-muted-foreground">Ci sono righe con errori: correggi il file e caricalo di nuovo, oppure scegli di importare solo le righe valide.</p>}
         </div>
       )}
-      {!anteprima && err && <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/5 text-destructive px-3 py-2 text-sm max-w-4xl">{err}</div>}
+      {!anteprima && err && <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/5 text-destructive px-3 py-2 text-sm">{err}</div>}
 
       <RegolaImportForm servizio={d.configurazione} intestazioni={d.intestazioni} aperto={regola} onChiudi={() => setRegola(false)} importazioneId={id} />
       <ConfermaElimina aperto={annulla} azione={anteprima ? "Scarta" : "Annulla importazione"}

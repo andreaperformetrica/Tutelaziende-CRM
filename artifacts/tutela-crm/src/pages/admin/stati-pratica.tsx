@@ -58,7 +58,7 @@ export default function StatiPraticaPage() {
       {q.isLoading ? <Skeleton className="h-64 w-full" />
         : q.isError ? <ErrorState message="Impossibile caricare gli stati." onRetry={() => q.refetch()} />
         : (
-          <div className="space-y-5 max-w-3xl">
+          <div className="space-y-5">
             {!stati.length ? <EmptyState icon={<ListOrdered className="size-6" />} title="Nessuno stato" text="Aggiungi il primo stato qui sotto." /> : (
               <ol className="divide-y divide-border rounded-lg border border-border bg-card rise" data-testid="elenco-stati">
                 {stati.map((s, i) => (

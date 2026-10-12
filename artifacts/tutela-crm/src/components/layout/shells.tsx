@@ -84,7 +84,7 @@ export function BackofficeShell({ s, children }: { s: SessioneUtente; children: 
           <button onClick={esci} aria-label="Esci" className="p-2 rounded-md hover:bg-sidebar-accent" data-testid="button-esci-mobile"><LogOut className="size-4" /></button>
         </div>
       </aside>
-      <main className="min-w-0 px-4 py-6 md:px-8 md:py-8 max-w-[1400px] w-full">{children}</main>
+      <main className="min-w-0 px-4 py-6 md:px-8 md:py-8 w-full">{children}</main>
     </div>
   );
 }

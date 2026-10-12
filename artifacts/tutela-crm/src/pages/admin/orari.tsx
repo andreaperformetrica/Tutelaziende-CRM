@@ -63,7 +63,7 @@ export default function OrariPage() {
       {q.isLoading ? <Skeleton className="h-64 w-full" />
         : q.isError || !q.data ? <ErrorState message="Impossibile caricare gli orari." onRetry={() => q.refetch()} />
         : (
-          <div className="space-y-5 max-w-4xl">
+          <div className="space-y-5">
             <div className={`rounded-lg border p-4 flex items-start gap-3 rise ${stato?.consentito ? "border-primary/30 bg-primary/5" : "border-destructive/30 bg-destructive/5"}`} data-testid="stato-invio">
               {stato?.consentito ? <CircleCheck className="size-5 text-primary mt-0.5" /> : <Lock className="size-5 text-destructive mt-0.5" />}
               <div>

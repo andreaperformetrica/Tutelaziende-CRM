@@ -45,7 +45,7 @@ export default function CategorieAllegatoPage() {
       <PageHeader kicker="Configurazione" title="Categorie degli allegati"
         subtitle="Le categorie tra cui l'operatore sceglie quando allega un documento a una pratica (ad esempio Estratto contributivo)." />
       {q.isLoading ? <Skeleton className="h-40 w-full" /> : q.isError ? <ErrorState message={parseApiError(q.error).message} onRetry={() => q.refetch()} /> : (
-        <div className="space-y-4 max-w-2xl">
+        <div className="space-y-4">
           {categorie.length === 0 ? (
             <EmptyState icon={<Paperclip className="size-6" />} title="Nessuna categoria" text="Aggiungi la prima categoria: serve agli operatori per allegare documenti alle pratiche." />
           ) : (
