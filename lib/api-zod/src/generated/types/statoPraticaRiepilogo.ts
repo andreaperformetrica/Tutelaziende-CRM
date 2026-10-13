@@ -10,4 +10,6 @@ export interface StatoPraticaRiepilogo {
   id: number;
   nome: string;
   chiuso: boolean;
+  /** @nullable */
+  colore: string | null;
 }

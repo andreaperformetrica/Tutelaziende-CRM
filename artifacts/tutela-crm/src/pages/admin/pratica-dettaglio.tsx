@@ -1,3 +1,4 @@
+import { StatoBadge } from "@/components/pratiche/stato-badge";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useLocation, useParams } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
@@ -145,7 +146,7 @@ export default function PraticaDettaglioBackoffice() {
           subtitle={<span>{p.tipo.nome} · {a.cognome} {a.nome} · richiesta il {fmtIstante(p.inviataIl)}</span>}
           actions={<>
             {p.aggiornata && <Badge className="bg-primary text-primary-foreground" data-testid="badge-aggiornata">Aggiornata</Badge>}
-            <Badge variant={p.stato.chiuso ? "secondary" : "outline"} data-testid="badge-stato-pratica">{p.stato.nome}</Badge>
+            <StatoBadge stato={p.stato} className="text-sm px-3 py-1" testId="badge-stato-pratica" />
           </>} />
       </div>
 

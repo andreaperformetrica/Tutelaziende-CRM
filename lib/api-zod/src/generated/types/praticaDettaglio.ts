@@ -21,6 +21,11 @@ export interface PraticaDettaglio {
   numero: number | null;
   bozza: boolean;
   stato: string;
+  statoChiuso: boolean;
+  /** @nullable */
+  statoId: number | null;
+  /** @nullable */
+  statoColore: string | null;
   assistito: Assistito;
   collaboratore: PraticaCollaboratoreRiepilogo;
   tipo: PraticaTipoRiepilogo;

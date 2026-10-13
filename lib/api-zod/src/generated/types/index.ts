@@ -42,6 +42,7 @@ export * from './commentoPraticaInput';
 export * from './commentoPraticaRuolo';
 export * from './confermaImportazioneInput';
 export * from './conteggiGruppiPratiche';
+export * from './conteggiGruppiPratichePerStatoItem';
 export * from './conteggioSegnalazioni';
 export * from './creaEstrattiInput';
 export * from './dareAvere';

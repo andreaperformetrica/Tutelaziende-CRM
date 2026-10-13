@@ -11,3 +11,4 @@
 - [Tutela CRM branding](tutela-crm-branding.md) — Tutelaziende logo files, blue palette, PDF logo is a setting
 - [Colori utenti interni](tutela-crm-colori-utenti.md) — chosen color per internal user, automatic fallback computed in frontend, where it is shown
 - [Mandati per sede](tutela-crm-mandati-per-sede.md) — mandato is a per-sede docx template, one per collaboratore, compiled to PDF in the pratica (supersedes per-tipo notes)
+- [Colori stati pratica](tutela-crm-colori-stati.md) — optional chosen color + frontend fallback, StatoBadge, riepilogo per stato in collaboratore pratiche

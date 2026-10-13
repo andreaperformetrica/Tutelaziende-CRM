@@ -1,3 +1,4 @@
+import { StatoBadge } from "@/components/pratiche/stato-badge";
 import { useState } from "react";
 import { useLocation } from "wouter";
 import {
@@ -194,7 +195,7 @@ export function ElencoPraticheBackoffice({ soloMie }: { soloMie?: boolean }) {
                     <TableCell className="text-sm whitespace-nowrap">{p.collaboratore.cognome} {p.collaboratore.nome}</TableCell>
                     <TableCell className="text-sm">{p.citta}</TableCell>
                     <TableCell className="text-sm tabular-nums whitespace-nowrap">{fmtDataIstante(p.dataRichiesta)}</TableCell>
-                    <TableCell><Badge variant={p.stato.chiuso ? "secondary" : "outline"}>{p.stato.nome}</Badge></TableCell>
+                    <TableCell><StatoBadge stato={p.stato} /></TableCell>
                     <TableCell className="text-sm">{p.tipo.nome}</TableCell>
                     <TableCell className="text-sm whitespace-nowrap">{p.gestitaDa ? <UtenteChip id={p.gestitaDa.id} colore={p.gestitaDa.colore}>{p.gestitaDa.cognome} {p.gestitaDa.nome}</UtenteChip> : <span className="text-muted-foreground">Non assegnata</span>}</TableCell>
                     <TableCell><Button size="sm" className="bg-green-700 hover:bg-green-800 text-white" onClick={() => nav(`/admin/pratiche/${p.id}`)} data-testid={`button-apri-${p.id}`}>Apri</Button></TableCell>

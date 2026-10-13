@@ -9,4 +9,9 @@
 export interface StatoPraticaInput {
   nome: string;
   chiuso: boolean;
+  /**
+     * @nullable
+     * @pattern ^#[0-9a-fA-F]{6}$
+     */
+  colore?: string | null;
 }

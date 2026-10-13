@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState, ErrorState, PageHeader } from "@/components/common";
+import { StatoBadge, coloreStato } from "@/components/pratiche/stato-badge";
 import { DialogNuovaPratica } from "@/components/pratiche/dialog-nuova-pratica";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/lib/auth";
@@ -34,11 +35,12 @@ export default function PraticheCollaboratore() {
   const [pagina, setPagina] = useState(1);
   const [gruppo, setGruppo] = useState<Gruppo>("tutte");
   const [nuova, setNuova] = useState(false);
+  const [statoSel, setStatoSel] = useState<number | null>(null);
   useEffect(() => { const t = setTimeout(() => { setDq(q.trim()); setPagina(1); }, 250); return () => clearTimeout(t); }, [q]);
 
-  const lista = useListPratiche({ ...(dq ? { q: dq } : {}), ...(coll !== "all" ? { collaboratoreId: Number(coll) } : {}), ...(gruppo !== "tutte" ? { gruppo } : {}), pagina, perPagina: PER_PAGINA });
+  const lista = useListPratiche({ ...(dq ? { q: dq } : {}), ...(coll !== "all" ? { collaboratoreId: Number(coll) } : {}), ...(gruppo !== "tutte" ? { gruppo } : {}), ...(statoSel ? { statoId: statoSel } : {}), pagina, perPagina: PER_PAGINA });
   const collaboratori = useListCollaboratori({ stato: "tutti" }, { query: { enabled: capogruppo, queryKey: ["collaboratori-filtro-pratiche"] } });
-  const filtrato = dq !== "" || coll !== "all" || gruppo !== "tutte";
+  const filtrato = dq !== "" || coll !== "all" || gruppo !== "tutte" || statoSel !== null;
   const totale = lista.data?.totale ?? 0;
   const pagine = Math.max(1, Math.ceil(totale / PER_PAGINA));
   const intestazioni = ["N.", "Assistito", "Tipo", "Data richiesta", "Stato", "Gestita da", ...(capogruppo ? ["Collaboratore"] : [])];
@@ -48,12 +50,12 @@ export default function PraticheCollaboratore() {
       <PageHeader kicker="Pratiche" title="Le mie pratiche"
         subtitle={lista.data ? `${totale} ${totale === 1 ? "pratica" : "pratiche"}${capogruppo ? " tue e del tuo gruppo" : ""}` : "Caricamento elenco"}
         actions={<Button onClick={() => setNuova(true)} data-testid="button-nuova-pratica"><FilePlus2 className="size-4 mr-1.5" /> Nuova pratica</Button>} />
-      <div className="-mx-4 px-4 mb-4 overflow-x-auto rise" role="tablist" aria-label="Stato delle pratiche" data-testid="tabs-gruppi-pratiche">
+      <div className="-mx-4 px-4 mb-4 overflow-x-auto rise [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" role="tablist" aria-label="Stato delle pratiche" data-testid="tabs-gruppi-pratiche">
         <div className="flex gap-1.5 w-max">
           {GRUPPI.map((g) => {
             const attivo = gruppo === g.valore;
             return (
-              <button key={g.valore} role="tab" aria-selected={attivo} onClick={() => { setGruppo(g.valore); setPagina(1); }} data-testid={`tab-gruppo-${g.valore}`}
+              <button key={g.valore} role="tab" aria-selected={attivo} onClick={() => { setGruppo(g.valore); setStatoSel(null); setPagina(1); }} data-testid={`tab-gruppo-${g.valore}`}
                 className={cn("flex items-center gap-2 rounded-full border px-3 min-h-10 text-sm font-semibold whitespace-nowrap transition-colors",
                   attivo ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border text-foreground hover:bg-secondary/60")}>
                 {g.etichetta}
@@ -63,6 +65,29 @@ export default function PraticheCollaboratore() {
           })}
         </div>
       </div>
+      {lista.data && (
+        <section className="mb-4 rounded-lg border border-border bg-card px-4 py-3 rise" aria-label="Riepilogo pratiche" data-testid="riepilogo-stati">
+          <h2 className="text-sm font-bold flex items-center gap-2 mb-2"><FileText className="size-4 text-muted-foreground" /> Riepilogo pratiche</h2>
+          <ul className="grid grid-cols-2 gap-x-4 gap-y-3 sm:flex sm:flex-wrap sm:gap-0 sm:divide-x sm:divide-border">
+            {[
+              ...(lista.data.conteggi.bozze > 0 ? [{ chiave: "bozze", nome: "Bozze", totale: lista.data.conteggi.bozze, colore: coloreStato({ nome: "Bozza" }), statoId: null as number | null }] : []),
+              ...lista.data.conteggi.perStato.map((s) => ({ chiave: `s${s.statoId}`, nome: s.nome, totale: s.totale, colore: coloreStato({ id: s.statoId, nome: s.nome, chiuso: s.chiuso, colore: s.colore }), statoId: s.statoId as number | null })),
+            ].map((x) => {
+              const attivo = x.statoId === null ? gruppo === "bozze" : statoSel === x.statoId;
+              return (
+                <li key={x.chiave} className="sm:px-5 sm:first:pl-0 sm:last:pr-0">
+                  <button type="button" onClick={() => { setPagina(1); if (attivo) { setGruppo("tutte"); setStatoSel(null); } else if (x.statoId === null) { setGruppo("bozze"); setStatoSel(null); } else { setGruppo("tutte"); setStatoSel(x.statoId); } }}
+                    aria-pressed={attivo} data-testid={`riepilogo-${x.chiave}`}
+                    className={cn("flex items-baseline gap-2 rounded-md px-1 min-h-9 text-left transition-colors hover:bg-secondary/60", attivo && "bg-secondary")}>
+                    <span className="text-xl font-bold tabular-nums">{x.totale}</span>
+                    <span className="text-sm font-semibold" style={{ color: x.colore }}>{x.nome}</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
       <div className="flex flex-wrap gap-2 mb-4 rise">
         <div className="relative flex-1 min-w-full sm:min-w-56">
           <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -87,7 +112,7 @@ export default function PraticheCollaboratore() {
       ) : !lista.data?.elementi.length ? (
         <EmptyState icon={<FileText className="size-6" />} title={filtrato ? "Nessuna pratica corrisponde alla ricerca" : "Nessuna pratica"}
           text={filtrato ? "Prova con meno parole o cambia il filtro." : "Apri la tua prima pratica: comparirà qui."}
-          action={filtrato ? <Button variant="outline" onClick={() => { setQ(""); setColl("all"); setGruppo("tutte"); }}>Azzera ricerca</Button> : <Button onClick={() => setNuova(true)}>Nuova pratica</Button>} />
+          action={filtrato ? <Button variant="outline" onClick={() => { setQ(""); setColl("all"); setGruppo("tutte"); setStatoSel(null); }}>Azzera ricerca</Button> : <Button onClick={() => setNuova(true)}>Nuova pratica</Button>} />
       ) : (
         <>
           <ul className="md:hidden space-y-2.5 rise" data-testid="lista-pratiche-mobile">
@@ -100,7 +125,7 @@ export default function PraticheCollaboratore() {
                       <div className="font-bold text-base leading-tight">{p.assistito.cognome} {p.assistito.nome}</div>
                       <div className="text-sm text-muted-foreground mt-0.5">{p.tipo.nome}</div>
                     </div>
-                    {p.bozza ? <Badge variant="outline">Bozza</Badge> : <Badge className="bg-primary text-primary-foreground shrink-0">{p.stato}</Badge>}
+                    <StatoBadge stato={{ id: p.statoId, nome: p.stato, chiuso: p.statoChiuso, colore: p.statoColore }} />
                   </div>
                   <div className="mt-3 flex items-center justify-between gap-2 text-xs text-muted-foreground">
                     <span className="font-mono font-semibold text-foreground">{p.numero ? `N. ${p.numero}` : "Senza numero"}</span>
@@ -126,7 +151,7 @@ export default function PraticheCollaboratore() {
                     <TableCell className="font-semibold whitespace-nowrap">{p.assistito.cognome} {p.assistito.nome}</TableCell>
                     <TableCell className="text-sm">{p.tipo.nome}</TableCell>
                     <TableCell className="text-sm tabular-nums whitespace-nowrap">{p.dataRichiesta ? fmtDataIstante(p.dataRichiesta) : <span className="text-muted-foreground">Non inviata</span>}</TableCell>
-                    <TableCell>{p.bozza ? <Badge variant="outline">Bozza</Badge> : <Badge className="bg-primary text-primary-foreground">{p.stato}</Badge>}</TableCell>
+                    <TableCell><StatoBadge stato={{ id: p.statoId, nome: p.stato, chiuso: p.statoChiuso, colore: p.statoColore }} /></TableCell>
                     <TableCell className="text-sm whitespace-nowrap">{p.gestitaDa ?? <span className="text-muted-foreground">{p.bozza ? "—" : "Non ancora assegnata"}</span>}</TableCell>
                     {capogruppo && (
                       <TableCell className="text-sm whitespace-nowrap">

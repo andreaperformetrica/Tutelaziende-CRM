@@ -1011,11 +1011,21 @@ export interface StatoPratica {
   nome: string;
   ordine: number;
   chiuso: boolean;
+  /**
+     * Colore scelto (#rrggbb); vuoto = automatico
+     * @nullable
+     */
+  colore: string | null;
 }
 
 export interface StatoPraticaInput {
   nome: string;
   chiuso: boolean;
+  /**
+     * @nullable
+     * @pattern ^#[0-9a-fA-F]{6}$
+     */
+  colore?: string | null;
 }
 
 export interface FasciaBlocco {
@@ -1088,6 +1098,16 @@ export interface PraticaRiepilogo {
   stato: string;
   /** Vero se lo stato conta come chiuso */
   statoChiuso: boolean;
+  /**
+     * Vuoto per le bozze
+     * @nullable
+     */
+  statoId: number | null;
+  /**
+     * Colore scelto per lo stato; vuoto = automatico
+     * @nullable
+     */
+  statoColore: string | null;
   assistito: PraticaAssistitoRiepilogo;
   collaboratore: PraticaCollaboratoreRiepilogo;
   tipo: PraticaTipoRiepilogo;
@@ -1106,7 +1126,18 @@ export interface PraticaRiepilogo {
   propria: boolean;
 }
 
+export type ConteggiGruppiPratichePerStatoItem = {
+  statoId: number;
+  nome: string;
+  chiuso: boolean;
+  /** @nullable */
+  colore: string | null;
+  totale: number;
+};
+
 export interface ConteggiGruppiPratiche {
+  /** Pratiche inviate per stato, nell'ordine degli stati */
+  perStato: ConteggiGruppiPratichePerStatoItem[];
   tutte: number;
   bozze: number;
   inLavorazione: number;
@@ -1221,6 +1252,11 @@ export interface PraticaDettaglio {
   numero: number | null;
   bozza: boolean;
   stato: string;
+  statoChiuso: boolean;
+  /** @nullable */
+  statoId: number | null;
+  /** @nullable */
+  statoColore: string | null;
   assistito: Assistito;
   collaboratore: PraticaCollaboratoreRiepilogo;
   tipo: PraticaTipoRiepilogo;
@@ -1293,6 +1329,8 @@ export interface StatoPraticaRiepilogo {
   id: number;
   nome: string;
   chiuso: boolean;
+  /** @nullable */
+  colore: string | null;
 }
 
 export interface PraticaBackofficeRiepilogo {
@@ -2085,6 +2123,10 @@ q?: string;
  * Solo le pratiche di questo collaboratore del gruppo
  */
 collaboratoreId?: number;
+/**
+ * Solo le pratiche in questo stato
+ */
+statoId?: number;
 /**
  * Solo le bozze (non inviate), le pratiche in lavorazione (inviate, stato non chiuso) o le chiuse
  */

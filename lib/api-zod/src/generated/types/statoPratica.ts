@@ -11,4 +11,9 @@ export interface StatoPratica {
   nome: string;
   ordine: number;
   chiuso: boolean;
+  /**
+     * Colore scelto (#rrggbb); vuoto = automatico
+     * @nullable
+     */
+  colore: string | null;
 }

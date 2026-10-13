@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { SelettoreColore } from "@/components/utenti/colore-utente";
+import { coloreStato } from "@/components/pratiche/stato-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState, ErrorState, FieldError, PageHeader } from "@/components/common";
 import { ConfermaElimina } from "@/components/pratiche/conferma-elimina";
@@ -68,6 +71,16 @@ export default function StatiPraticaPage() {
                       <Button size="icon" variant="ghost" className="size-8" disabled={i === 0 || ordina.isPending} onClick={() => sposta(i, -1)} aria-label={`Sposta in alto ${s.nome}`} data-testid={`button-su-stato-${s.id}`}><ArrowUp className="size-4" /></Button>
                       <Button size="icon" variant="ghost" className="size-8" disabled={i === stati.length - 1 || ordina.isPending} onClick={() => sposta(i, 1)} aria-label={`Sposta in basso ${s.nome}`} data-testid={`button-giu-stato-${s.id}`}><ArrowDown className="size-4" /></Button>
                     </div>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <button type="button" className="size-7 shrink-0 rounded-full border-2 border-card ring-1 ring-border" style={{ backgroundColor: coloreStato(s) }} aria-label={`Colore di ${s.nome}`} title="Cambia colore" data-testid={`button-colore-stato-${s.id}`} />
+                      </PopoverTrigger>
+                      <PopoverContent className="w-72" align="start">
+                        <div className="text-sm font-semibold mb-2">Colore di "{s.nome}"</div>
+                        <SelettoreColore value={s.colore} idUtente={null}
+                          onChange={(c) => update.mutate({ id: s.id, data: { nome: s.nome, chiuso: s.chiuso, colore: c } }, { onSuccess: ricarica, onError })} />
+                      </PopoverContent>
+                    </Popover>
                     {modId === s.id ? (
                       <div className="flex items-center gap-1">
                         <Input className="h-8 w-56" value={modNome} onChange={(e) => setModNome(e.target.value)} maxLength={60} autoFocus data-testid={`input-nome-stato-${s.id}`} onKeyDown={(e) => { if (e.key === "Enter") rinomina(s); }} />

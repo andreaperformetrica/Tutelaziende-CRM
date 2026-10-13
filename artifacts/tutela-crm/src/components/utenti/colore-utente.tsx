@@ -49,7 +49,7 @@ export function SelettoreColore({ value, onChange, idUtente }: { value: string |
   const effettivo = idUtente !== null ? coloreUtente(value, idUtente) : value;
   return (
     <div className="space-y-2" data-testid="selettore-colore">
-      <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Colore dell'utente">
+      <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Colore">
         {COLORI_UTENTI.map((c) => {
           const scelto = value?.toLowerCase() === c.valore;
           return (

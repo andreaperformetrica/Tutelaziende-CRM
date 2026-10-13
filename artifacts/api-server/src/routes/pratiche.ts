@@ -89,14 +89,14 @@ router.get("/pratiche", async (req, res) => {
     p.collaboratoreId ? eq(praticheTable.collaboratoreId, p.collaboratoreId) : undefined,
     ricerca,
   );
-  const where = and(baseWhere, condizioneGruppoPratiche(p.gruppo));
+  const where = and(baseWhere, condizioneGruppoPratiche(p.gruppo), p.statoId ? eq(praticheTable.statoId, p.statoId) : undefined);
   const [conteggi, righe] = await Promise.all([
     contaGruppiPratiche(baseWhere),
     selezionaPratiche(where)
       .limit(perPagina)
       .offset((pagina - 1) * perPagina),
   ]);
-  const totale = p.gruppo === "bozze" ? conteggi.bozze : p.gruppo === "in_lavorazione" ? conteggi.inLavorazione : p.gruppo === "chiuse" ? conteggi.chiuse : conteggi.tutte;
+  const totale = p.statoId ? (conteggi.perStato.find((x) => x.statoId === p.statoId)?.totale ?? 0) : p.gruppo === "bozze" ? conteggi.bozze : p.gruppo === "in_lavorazione" ? conteggi.inLavorazione : p.gruppo === "chiuse" ? conteggi.chiuse : conteggi.tutte;
   res.json({ elementi: righe.map((r) => mappaRiepilogo(r, mio)), totale, pagina, perPagina, conteggi });
 });
 

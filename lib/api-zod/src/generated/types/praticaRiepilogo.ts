@@ -21,6 +21,16 @@ export interface PraticaRiepilogo {
   stato: string;
   /** Vero se lo stato conta come chiuso */
   statoChiuso: boolean;
+  /**
+     * Vuoto per le bozze
+     * @nullable
+     */
+  statoId: number | null;
+  /**
+     * Colore scelto per lo stato; vuoto = automatico
+     * @nullable
+     */
+  statoColore: string | null;
   assistito: PraticaAssistitoRiepilogo;
   collaboratore: PraticaCollaboratoreRiepilogo;
   tipo: PraticaTipoRiepilogo;

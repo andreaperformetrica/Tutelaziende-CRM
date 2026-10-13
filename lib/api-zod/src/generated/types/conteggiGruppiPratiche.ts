@@ -5,8 +5,11 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ConteggiGruppiPratichePerStatoItem } from './conteggiGruppiPratichePerStatoItem';
 
 export interface ConteggiGruppiPratiche {
+  /** Pratiche inviate per stato, nell'ordine degli stati */
+  perStato: ConteggiGruppiPratichePerStatoItem[];
   tutte: number;
   bozze: number;
   inLavorazione: number;

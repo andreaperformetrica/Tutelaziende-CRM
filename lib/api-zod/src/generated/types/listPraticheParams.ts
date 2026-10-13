@@ -17,6 +17,10 @@ q?: string;
  */
 collaboratoreId?: number;
 /**
+ * Solo le pratiche in questo stato
+ */
+statoId?: number;
+/**
  * Solo le bozze (non inviate), le pratiche in lavorazione (inviate, stato non chiuso) o le chiuse
  */
 gruppo?: ListPraticheGruppo;

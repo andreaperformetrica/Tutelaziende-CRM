@@ -63,6 +63,7 @@ export function selezionaPratiche(where: SQL | undefined, ordine?: SQL[]) {
       inviataIl: praticheTable.inviataIl,
       statoNome: stato,
       statoChiuso: sql<boolean>`coalesce(${statiPraticaTable.chiuso}, false)`,
+      statoColore: statiPraticaTable.colore,
       statoOrdine: statiPraticaTable.ordine,
       gestitaDaUtenteId: praticheTable.gestitaDaUtenteId,
       ultimaAttivitaCollaboratoreIl: praticheTable.ultimaAttivitaCollaboratoreIl,
@@ -130,7 +131,22 @@ export async function contaGruppiPratiche(where: SQL | undefined) {
     .innerJoin(collaboratoriTable, eq(collaboratoriTable.id, praticheTable.collaboratoreId))
     .leftJoin(statiPraticaTable, eq(statiPraticaTable.id, praticheTable.statoId))
     .where(where);
-  return r ?? { tutte: 0, bozze: 0, inLavorazione: 0, chiuse: 0 };
+  const conPratiche = await db
+    .select({ statoId: statiPraticaTable.id, nome: statiPraticaTable.nome, chiuso: statiPraticaTable.chiuso, colore: statiPraticaTable.colore, totale: sql<number>`count(${praticheTable.id})::int` })
+    .from(praticheTable)
+    .innerJoin(assistitiTable, eq(assistitiTable.id, praticheTable.assistitoId))
+    .innerJoin(personeTable, eq(personeTable.id, assistitiTable.personaId))
+    .innerJoin(collaboratoriTable, eq(collaboratoriTable.id, praticheTable.collaboratoreId))
+    .innerJoin(statiPraticaTable, eq(statiPraticaTable.id, praticheTable.statoId))
+    .where(and(where, sql`${praticheTable.inviataIl} is not null`))
+    .groupBy(statiPraticaTable.id)
+    .orderBy(asc(statiPraticaTable.ordine), asc(statiPraticaTable.id));
+  // Tutti gli stati, anche quelli senza pratiche (totale 0); lo stato "Bozza" e' gia' contato a parte.
+  const stati = await db.select().from(statiPraticaTable).orderBy(asc(statiPraticaTable.ordine), asc(statiPraticaTable.id));
+  const perStato = stati
+    .filter((s) => s.nome.trim().toLowerCase() !== "bozza")
+    .map((s) => ({ statoId: s.id, nome: s.nome, chiuso: s.chiuso, colore: s.colore, totale: conPratiche.find((x) => x.statoId === s.id)?.totale ?? 0 }));
+  return { ...(r ?? { tutte: 0, bozze: 0, inLavorazione: 0, chiuse: 0 }), perStato };
 }
 
 export function mappaRiepilogo(r: RigaPratica, mio: number) {
@@ -140,6 +156,8 @@ export function mappaRiepilogo(r: RigaPratica, mio: number) {
     bozza: r.inviataIl === null,
     stato: r.statoNome,
     statoChiuso: r.statoChiuso,
+    statoId: r.statoId,
+    statoColore: r.statoColore,
     assistito: { id: r.assistitoId, nome: r.assNome, cognome: r.assCognome, codiceFiscale: r.assCf },
     collaboratore: { id: r.collaboratoreId, nome: r.collNome, cognome: r.collCognome, numeroSportello: r.collSportello },
     tipo: { id: r.tipoPraticaId, nome: r.tipoNome },

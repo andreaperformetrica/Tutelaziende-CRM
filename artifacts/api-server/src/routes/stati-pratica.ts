@@ -19,7 +19,7 @@ const router: IRouter = Router();
 router.use(["/stati-pratica", "/stati-pratica-ordine"], richiediRuolo("super_admin", "admin"));
 
 const DUPLICATO = new HttpError(409, "Esiste già uno stato con questo nome.", "NOME_DUPLICATO", "nome");
-const mappa = (s: typeof statiPraticaTable.$inferSelect) => ({ id: s.id, nome: s.nome, ordine: s.ordine, chiuso: s.chiuso });
+const mappa = (s: typeof statiPraticaTable.$inferSelect) => ({ id: s.id, nome: s.nome, ordine: s.ordine, chiuso: s.chiuso, colore: s.colore });
 const elenco = () => db.select().from(statiPraticaTable).orderBy(asc(statiPraticaTable.ordine), asc(statiPraticaTable.id));
 
 async function carica(id: number) {
@@ -40,7 +40,7 @@ router.post("/stati-pratica", async (req, res) => {
       const [m] = await tx.select({ max: sql<number>`coalesce(max(${statiPraticaTable.ordine}), 0)::int` }).from(statiPraticaTable);
       const [s] = await tx
         .insert(statiPraticaTable)
-        .values({ nome, chiuso: b.chiuso, ordine: (m?.max ?? 0) + 1 })
+        .values({ nome, chiuso: b.chiuso, colore: b.colore ?? null, ordine: (m?.max ?? 0) + 1 })
         .returning({ id: statiPraticaTable.id });
       await registraLog(tx, contestoDa(req), {
         azione: "stato_pratica.crea",
@@ -81,9 +81,10 @@ router.put("/stati-pratica/:id", async (req, res) => {
   const s = await carica(id);
   try {
     await db.transaction(async (tx) => {
-      await tx.update(statiPraticaTable).set({ nome, chiuso: b.chiuso }).where(eq(statiPraticaTable.id, id));
+      await tx.update(statiPraticaTable).set({ nome, chiuso: b.chiuso, ...(b.colore !== undefined ? { colore: b.colore } : {}) }).where(eq(statiPraticaTable.id, id));
       const modifiche = [
         ...(s.nome !== nome ? [`rinominato in "${nome}"`] : []),
+        ...(b.colore !== undefined && (s.colore ?? null) !== b.colore ? [b.colore ? `colore impostato a ${b.colore}` : "colore automatico"] : []),
         ...(s.chiuso !== b.chiuso ? [b.chiuso ? "ora conta come chiusa" : "non conta più come chiusa"] : []),
       ];
       await registraLog(tx, contestoDa(req), {

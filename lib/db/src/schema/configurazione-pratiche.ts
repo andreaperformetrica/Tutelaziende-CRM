@@ -90,6 +90,8 @@ export const statiPraticaTable = pgTable(
     nome: text("nome").notNull(),
     ordine: integer("ordine").notNull().default(0),
     chiuso: boolean("chiuso").notNull().default(false),
+    /** Colore dell'etichetta (#rrggbb); null = colore automatico scelto dal frontend. */
+    colore: text("colore"),
     creatoIl: timestamp("creato_il", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex("stati_pratica_nome_uq").on(sql`lower(${t.nome})`)],

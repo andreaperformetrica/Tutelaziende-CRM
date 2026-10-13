@@ -3444,6 +3444,7 @@ export const listPraticheQueryPerPaginaMax = 200;
 export const ListPraticheQueryParams = zod.object({
   "q": zod.coerce.string().optional().describe('Ricerca su nome, cognome e codice fiscale dell\'assistito o sul numero pratica'),
   "collaboratoreId": zod.coerce.number().int().optional().describe('Solo le pratiche di questo collaboratore del gruppo'),
+  "statoId": zod.coerce.number().int().optional().describe('Solo le pratiche in questo stato'),
   "gruppo": zod.enum(['bozze', 'in_lavorazione', 'chiuse']).optional().describe('Solo le bozze (non inviate), le pratiche in lavorazione (inviate, stato non chiuso) o le chiuse'),
   "pagina": zod.coerce.number().int().min(1).optional(),
   "perPagina": zod.coerce.number().int().min(1).max(listPraticheQueryPerPaginaMax).optional()
@@ -3451,6 +3452,13 @@ export const ListPraticheQueryParams = zod.object({
 
 export const ListPraticheResponse = zod.object({
   "conteggi": zod.object({
+  "perStato": zod.array(zod.object({
+  "statoId": zod.number().int(),
+  "nome": zod.string(),
+  "chiuso": zod.boolean(),
+  "colore": zod.string().nullable(),
+  "totale": zod.number().int()
+})).describe('Pratiche inviate per stato, nell\'ordine degli stati'),
   "tutte": zod.number().int(),
   "bozze": zod.number().int(),
   "inLavorazione": zod.number().int(),
@@ -3462,6 +3470,8 @@ export const ListPraticheResponse = zod.object({
   "bozza": zod.boolean(),
   "stato": zod.string().describe('Nome dello stato; Bozza finche\' non e\' inviata'),
   "statoChiuso": zod.boolean().describe('Vero se lo stato conta come chiuso'),
+  "statoId": zod.number().int().nullable().describe('Vuoto per le bozze'),
+  "statoColore": zod.string().nullable().describe('Colore scelto per lo stato; vuoto = automatico'),
   "assistito": zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
@@ -3502,6 +3512,9 @@ export const CreatePraticaResponse = zod.object({
   "numero": zod.number().int().nullable(),
   "bozza": zod.boolean(),
   "stato": zod.string(),
+  "statoChiuso": zod.boolean(),
+  "statoId": zod.number().int().nullable(),
+  "statoColore": zod.string().nullable(),
   "assistito": zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
@@ -3627,6 +3640,9 @@ export const GetPraticaResponse = zod.object({
   "numero": zod.number().int().nullable(),
   "bozza": zod.boolean(),
   "stato": zod.string(),
+  "statoChiuso": zod.boolean(),
+  "statoId": zod.number().int().nullable(),
+  "statoColore": zod.string().nullable(),
   "assistito": zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
@@ -3750,6 +3766,9 @@ export const SalvaMessaggioPraticaResponse = zod.object({
   "numero": zod.number().int().nullable(),
   "bozza": zod.boolean(),
   "stato": zod.string(),
+  "statoChiuso": zod.boolean(),
+  "statoId": zod.number().int().nullable(),
+  "statoColore": zod.string().nullable(),
   "assistito": zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
@@ -3856,6 +3875,9 @@ export const DeleteDocumentoPraticaResponse = zod.object({
   "numero": zod.number().int().nullable(),
   "bozza": zod.boolean(),
   "stato": zod.string(),
+  "statoChiuso": zod.boolean(),
+  "statoId": zod.number().int().nullable(),
+  "statoColore": zod.string().nullable(),
   "assistito": zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
@@ -3969,6 +3991,9 @@ export const InviaPraticaResponse = zod.object({
   "numero": zod.number().int().nullable(),
   "bozza": zod.boolean(),
   "stato": zod.string(),
+  "statoChiuso": zod.boolean(),
+  "statoId": zod.number().int().nullable(),
+  "statoColore": zod.string().nullable(),
   "assistito": zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
@@ -4082,6 +4107,9 @@ export const CreateCommentoPraticaResponse = zod.object({
   "numero": zod.number().int().nullable(),
   "bozza": zod.boolean(),
   "stato": zod.string(),
+  "statoChiuso": zod.boolean(),
+  "statoId": zod.number().int().nullable(),
+  "statoColore": zod.string().nullable(),
   "assistito": zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
@@ -4182,7 +4210,8 @@ export const ListStatiPraticaResponseItem = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "ordine": zod.number().int(),
-  "chiuso": zod.boolean()
+  "chiuso": zod.boolean(),
+  "colore": zod.string().nullable().describe('Colore scelto (#rrggbb); vuoto = automatico')
 })
 export const ListStatiPraticaResponse = zod.array(ListStatiPraticaResponseItem)
 
@@ -4190,16 +4219,21 @@ export const ListStatiPraticaResponse = zod.array(ListStatiPraticaResponseItem)
 /**
  * @summary Crea uno stato (in fondo all'elenco)
  */
+export const createStatoPraticaBodyColoreRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
+
 export const CreateStatoPraticaBody = zod.object({
   "nome": zod.string(),
-  "chiuso": zod.boolean()
+  "chiuso": zod.boolean(),
+  "colore": zod.string().regex(createStatoPraticaBodyColoreRegExp).nullish()
 })
 
 export const CreateStatoPraticaResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "ordine": zod.number().int(),
-  "chiuso": zod.boolean()
+  "chiuso": zod.boolean(),
+  "colore": zod.string().nullable().describe('Colore scelto (#rrggbb); vuoto = automatico')
 })
 
 
@@ -4214,7 +4248,8 @@ export const OrdinaStatiPraticaResponseItem = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "ordine": zod.number().int(),
-  "chiuso": zod.boolean()
+  "chiuso": zod.boolean(),
+  "colore": zod.string().nullable().describe('Colore scelto (#rrggbb); vuoto = automatico')
 })
 export const OrdinaStatiPraticaResponse = zod.array(OrdinaStatiPraticaResponseItem)
 
@@ -4226,16 +4261,21 @@ export const UpdateStatoPraticaParams = zod.object({
   "id": zod.coerce.number().int()
 })
 
+export const updateStatoPraticaBodyColoreRegExp = new RegExp('^#[0-9a-fA-F]{6}$');
+
+
 export const UpdateStatoPraticaBody = zod.object({
   "nome": zod.string(),
-  "chiuso": zod.boolean()
+  "chiuso": zod.boolean(),
+  "colore": zod.string().regex(updateStatoPraticaBodyColoreRegExp).nullish()
 })
 
 export const UpdateStatoPraticaResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "ordine": zod.number().int(),
-  "chiuso": zod.boolean()
+  "chiuso": zod.boolean(),
+  "colore": zod.string().nullable().describe('Colore scelto (#rrggbb); vuoto = automatico')
 })
 
 
@@ -4365,7 +4405,8 @@ export const ListPraticheBackofficeResponse = zod.object({
   "stato": zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "chiuso": zod.boolean()
+  "chiuso": zod.boolean(),
+  "colore": zod.string().nullable()
 }),
   "tipo": zod.object({
   "id": zod.number().int(),
@@ -4402,7 +4443,8 @@ export const GetFiltriPraticheBackofficeResponse = zod.object({
   "stati": zod.array(zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "chiuso": zod.boolean()
+  "chiuso": zod.boolean(),
+  "colore": zod.string().nullable()
 })),
   "operatori": zod.array(zod.object({
   "id": zod.number().int(),
@@ -4428,7 +4470,8 @@ export const GetPraticaBackofficeResponse = zod.object({
   "stato": zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "chiuso": zod.boolean()
+  "chiuso": zod.boolean(),
+  "colore": zod.string().nullable()
 }),
   "tipo": zod.object({
   "id": zod.number().int(),
@@ -4557,7 +4600,8 @@ export const PrendiInCaricoPraticaResponse = zod.object({
   "stato": zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "chiuso": zod.boolean()
+  "chiuso": zod.boolean(),
+  "colore": zod.string().nullable()
 }),
   "tipo": zod.object({
   "id": zod.number().int(),
@@ -4680,7 +4724,8 @@ export const CambiaStatoPraticaResponse = zod.object({
   "stato": zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "chiuso": zod.boolean()
+  "chiuso": zod.boolean(),
+  "colore": zod.string().nullable()
 }),
   "tipo": zod.object({
   "id": zod.number().int(),
@@ -4804,7 +4849,8 @@ export const CreateCommentoPraticaBackofficeResponse = zod.object({
   "stato": zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "chiuso": zod.boolean()
+  "chiuso": zod.boolean(),
+  "colore": zod.string().nullable()
 }),
   "tipo": zod.object({
   "id": zod.number().int(),

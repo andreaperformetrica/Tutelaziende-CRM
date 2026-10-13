@@ -45,7 +45,7 @@ export function mappaRiepilogoBackoffice(r: RigaPratica) {
     collaboratore: { id: r.collaboratoreId, nome: r.collNome, cognome: r.collCognome, numeroSportello: r.collSportello },
     citta: r.assCitta,
     dataRichiesta: r.inviataIl!.toISOString(),
-    stato: { id: r.statoId!, nome: r.statoNome, chiuso: r.statoChiuso },
+    stato: { id: r.statoId!, nome: r.statoNome, chiuso: r.statoChiuso, colore: r.statoColore },
     tipo: { id: r.tipoPraticaId, nome: r.tipoNome },
     gestitaDa: gestore(r),
     aggiornata: eAggiornata(r),
@@ -143,7 +143,7 @@ export async function dettaglioBackoffice(req: Request, id: number) {
   return {
     id: p.id,
     numero: p.numero!,
-    stato: { id: p.statoId!, nome: p.statoNome, chiuso: p.statoChiuso },
+    stato: { id: p.statoId!, nome: p.statoNome, chiuso: p.statoChiuso, colore: p.statoColore },
     tipo: { id: p.tipoPraticaId, nome: p.tipoNome },
     assistito: mappaAssistito(ass!, req),
     collaboratore: {

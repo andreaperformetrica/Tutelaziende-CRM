@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { ErrorState, FieldError, PageHeader } from "@/components/common";
 import { ConfermaElimina } from "@/components/pratiche/conferma-elimina";
+import { StatoBadge } from "@/components/pratiche/stato-badge";
 import { SelettoreFile } from "@/components/pratiche/selettore-file";
 import { useToast } from "@/hooks/use-toast";
 import { fmtCellulare, fmtData, fmtIstante, parseApiError } from "@/lib/format";
@@ -105,7 +106,7 @@ export default function PraticaDettaglioCollaboratore() {
         <Link href="/collaboratore/pratiche" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-3 transition-colors" data-testid="link-indietro-pratiche"><ArrowLeft className="size-4" /> Le mie pratiche</Link>
         <PageHeader kicker={p.bozza ? "Pratica in bozza" : "Pratica inviata"} title={p.numero ? `Pratica n. ${p.numero}` : p.tipo.nome}
           subtitle={<span>{p.numero ? `${p.tipo.nome} · ` : ""}{a.cognome} {a.nome} · {p.inviataIl ? `inviata il ${fmtIstante(p.inviataIl)}` : `creata il ${fmtIstante(p.creataIl)}`}</span>}
-          actions={<Badge className={p.bozza ? "" : "bg-primary text-primary-foreground"} variant={p.bozza ? "outline" : "default"} data-testid="badge-stato-pratica">{p.stato}</Badge>} />
+          actions={<StatoBadge stato={{ id: p.statoId, nome: p.stato, chiuso: p.statoChiuso, colore: p.statoColore }} className="text-sm px-3 py-1" testId="badge-stato-pratica" />} />
       </div>
 
       {!p.bozza && (

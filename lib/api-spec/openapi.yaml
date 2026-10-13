@@ -1633,6 +1633,12 @@ paths:
           description: Solo le pratiche di questo collaboratore del gruppo
           schema:
             type: integer
+        - name: statoId
+          in: query
+          required: false
+          description: Solo le pratiche in questo stato
+          schema:
+            type: integer
         - name: gruppo
           in: query
           required: false
@@ -3237,18 +3243,20 @@ components:
         mandatoId: { type: integer }
     StatoPratica:
       type: object
-      required: [id, nome, ordine, chiuso]
+      required: [id, nome, ordine, chiuso, colore]
       properties:
         id: { type: integer }
         nome: { type: string }
         ordine: { type: integer }
         chiuso: { type: boolean }
+        colore: { type: [string, "null"], description: "Colore scelto (#rrggbb); vuoto = automatico" }
     StatoPraticaInput:
       type: object
       required: [nome, chiuso]
       properties:
         nome: { type: string }
         chiuso: { type: boolean }
+        colore: { type: [string, "null"], pattern: "^#[0-9a-fA-F]{6}$" }
     FasciaBlocco:
       type: object
       required: [giornoInizio, oraInizio, giornoFine, oraFine, attiva]
@@ -3308,13 +3316,15 @@ components:
         nome: { type: string }
     PraticaRiepilogo:
       type: object
-      required: [id, numero, bozza, stato, statoChiuso, assistito, collaboratore, tipo, dataRichiesta, creataIl, gestitaDa, propria]
+      required: [id, numero, bozza, stato, statoChiuso, statoId, statoColore, assistito, collaboratore, tipo, dataRichiesta, creataIl, gestitaDa, propria]
       properties:
         id: { type: integer }
         numero: { type: [integer, "null"], description: "Numero progressivo, assegnato all'invio" }
         bozza: { type: boolean }
         stato: { type: string, description: "Nome dello stato; Bozza finche' non e' inviata" }
         statoChiuso: { type: boolean, description: "Vero se lo stato conta come chiuso" }
+        statoId: { type: [integer, "null"], description: "Vuoto per le bozze" }
+        statoColore: { type: [string, "null"], description: "Colore scelto per lo stato; vuoto = automatico" }
         assistito:
           $ref: "#/components/schemas/PraticaAssistitoRiepilogo"
         collaboratore:
@@ -3327,8 +3337,20 @@ components:
         propria: { type: boolean, description: "Vero se la pratica e' del collaboratore che la guarda (non di un collaboratore del gruppo)" }
     ConteggiGruppiPratiche:
       type: object
-      required: [tutte, bozze, inLavorazione, chiuse]
+      required: [tutte, bozze, inLavorazione, chiuse, perStato]
       properties:
+        perStato:
+          type: array
+          description: "Pratiche inviate per stato, nell'ordine degli stati"
+          items:
+            type: object
+            required: [statoId, nome, chiuso, colore, totale]
+            properties:
+              statoId: { type: integer }
+              nome: { type: string }
+              chiuso: { type: boolean }
+              colore: { type: [string, "null"] }
+              totale: { type: integer }
         tutte: { type: integer }
         bozze: { type: integer }
         inLavorazione: { type: integer }
@@ -3426,6 +3448,9 @@ components:
         - numero
         - bozza
         - stato
+        - statoChiuso
+        - statoId
+        - statoColore
         - assistito
         - collaboratore
         - tipo
@@ -3449,6 +3474,9 @@ components:
         numero: { type: [integer, "null"] }
         bozza: { type: boolean }
         stato: { type: string }
+        statoChiuso: { type: boolean }
+        statoId: { type: [integer, "null"] }
+        statoColore: { type: [string, "null"] }
         assistito:
           $ref: "#/components/schemas/Assistito"
         collaboratore:
@@ -3522,11 +3550,12 @@ components:
         colore: { type: [string, "null"] }
     StatoPraticaRiepilogo:
       type: object
-      required: [id, nome, chiuso]
+      required: [id, nome, chiuso, colore]
       properties:
         id: { type: integer }
         nome: { type: string }
         chiuso: { type: boolean }
+        colore: { type: [string, "null"] }
     PraticaBackofficeRiepilogo:
       type: object
       required: [id, numero, assistito, collaboratore, citta, dataRichiesta, stato, tipo, gestitaDa, aggiornata]
