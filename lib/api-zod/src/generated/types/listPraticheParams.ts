@@ -21,6 +21,14 @@ collaboratoreId?: number;
  */
 statoId?: number;
 /**
+ * Data richiesta iniziale (AAAA-MM-GG), inclusa
+ */
+dal?: string;
+/**
+ * Data richiesta finale (AAAA-MM-GG), inclusa
+ */
+al?: string;
+/**
  * Solo le bozze (non inviate), le pratiche in lavorazione (inviate, stato non chiuso) o le chiuse
  */
 gruppo?: ListPraticheGruppo;

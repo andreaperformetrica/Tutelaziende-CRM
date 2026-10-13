@@ -67,6 +67,14 @@ const intero = (v: unknown, nome: string): number => {
   return n;
 };
 
+function controllaData(valore: string | undefined, campo: string): string | undefined {
+  if (!valore) return undefined;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(valore) || Number.isNaN(Date.parse(valore))) {
+    throw new HttpError(400, "Data non valida (formato AAAA-MM-GG).", "DATA_NON_VALIDA", campo);
+  }
+  return valore;
+}
+
 function pulisciMessaggio(v: string): string {
   return v.replace(/\r\n/g, "\n").trim();
 }
@@ -84,10 +92,16 @@ router.get("/pratiche", async (req, res) => {
       ? sql`(${condizioneRicerca(q)} or ${praticheTable.numero} = ${Number(q)})`
       : condizioneRicerca(q)
     : undefined;
+  const dal = controllaData(p.dal, "dal");
+  const al = controllaData(p.al, "al");
+  if (dal && al && dal > al) throw new HttpError(400, "La data iniziale è successiva a quella finale.", "DATA_NON_VALIDA", "dal");
+  const giornoRoma = sql`((${praticheTable.inviataIl} at time zone 'Europe/Rome')::date)`;
   const baseWhere = and(
     condizioneVisibilitaPratiche(req),
     p.collaboratoreId ? eq(praticheTable.collaboratoreId, p.collaboratoreId) : undefined,
     ricerca,
+    dal ? sql`${giornoRoma} >= ${dal}::date` : undefined,
+    al ? sql`${giornoRoma} <= ${al}::date` : undefined,
   );
   const where = and(baseWhere, condizioneGruppoPratiche(p.gruppo), p.statoId ? eq(praticheTable.statoId, p.statoId) : undefined);
   const [conteggi, righe] = await Promise.all([

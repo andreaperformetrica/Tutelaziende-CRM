@@ -3574,6 +3574,8 @@ export const ListPraticheQueryParams = zod.object({
   "q": zod.coerce.string().optional().describe('Ricerca su nome, cognome e codice fiscale dell\'assistito o sul numero pratica'),
   "collaboratoreId": zod.coerce.number().int().optional().describe('Solo le pratiche di questo collaboratore del gruppo'),
   "statoId": zod.coerce.number().int().optional().describe('Solo le pratiche in questo stato'),
+  "dal": zod.coerce.string().optional().describe('Data richiesta iniziale (AAAA-MM-GG), inclusa'),
+  "al": zod.coerce.string().optional().describe('Data richiesta finale (AAAA-MM-GG), inclusa'),
   "gruppo": zod.enum(['bozze', 'in_lavorazione', 'chiuse']).optional().describe('Solo le bozze (non inviate), le pratiche in lavorazione (inviate, stato non chiuso) o le chiuse'),
   "pagina": zod.coerce.number().int().min(1).optional(),
   "perPagina": zod.coerce.number().int().min(1).max(listPraticheQueryPerPaginaMax).optional()

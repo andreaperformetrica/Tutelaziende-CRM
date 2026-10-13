@@ -32,15 +32,17 @@ export default function PraticheCollaboratore() {
   const [q, setQ] = useState("");
   const [dq, setDq] = useState("");
   const [coll, setColl] = useState("all");
+  const [dal, setDal] = useState("");
+  const [al, setAl] = useState("");
   const [pagina, setPagina] = useState(1);
   const [gruppo, setGruppo] = useState<Gruppo>("tutte");
   const [nuova, setNuova] = useState(false);
   const [statoSel, setStatoSel] = useState<number | null>(null);
   useEffect(() => { const t = setTimeout(() => { setDq(q.trim()); setPagina(1); }, 250); return () => clearTimeout(t); }, [q]);
 
-  const lista = useListPratiche({ ...(dq ? { q: dq } : {}), ...(coll !== "all" ? { collaboratoreId: Number(coll) } : {}), ...(gruppo !== "tutte" ? { gruppo } : {}), ...(statoSel ? { statoId: statoSel } : {}), pagina, perPagina: PER_PAGINA });
+  const lista = useListPratiche({ ...(dq ? { q: dq } : {}), ...(coll !== "all" ? { collaboratoreId: Number(coll) } : {}), ...(gruppo !== "tutte" ? { gruppo } : {}), ...(statoSel ? { statoId: statoSel } : {}), ...(dal ? { dal } : {}), ...(al ? { al } : {}), pagina, perPagina: PER_PAGINA });
   const collaboratori = useListCollaboratori({ stato: "tutti" }, { query: { enabled: capogruppo, queryKey: ["collaboratori-filtro-pratiche"] } });
-  const filtrato = dq !== "" || coll !== "all" || gruppo !== "tutte" || statoSel !== null;
+  const filtrato = dq !== "" || coll !== "all" || gruppo !== "tutte" || statoSel !== null || dal !== "" || al !== "";
   const totale = lista.data?.totale ?? 0;
   const pagine = Math.max(1, Math.ceil(totale / PER_PAGINA));
   const intestazioni = ["N.", "Assistito", "Tipo", "Data richiesta", "Stato", "Gestita da", ...(capogruppo ? ["Collaboratore"] : [])];
@@ -93,6 +95,12 @@ export default function PraticheCollaboratore() {
           <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input autoComplete="off" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Cerca assistito, codice fiscale o numero" className="pl-9 bg-card" data-testid="input-ricerca-pratiche" />
         </div>
+        <div className="flex items-center gap-2">
+          <label htmlFor="f-dal" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dal</label>
+          <Input id="f-dal" type="date" value={dal} max={al || undefined} onChange={(e) => { setDal(e.target.value); setPagina(1); }} className="w-40 bg-card" data-testid="filtro-dal-pratiche" />
+          <label htmlFor="f-al" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Al</label>
+          <Input id="f-al" type="date" value={al} min={dal || undefined} onChange={(e) => { setAl(e.target.value); setPagina(1); }} className="w-40 bg-card" data-testid="filtro-al-pratiche" />
+        </div>
         {capogruppo && (
           <Select value={coll} onValueChange={(v) => { setColl(v); setPagina(1); }}>
             <SelectTrigger className="w-full sm:w-60 bg-card" data-testid="filtro-collaboratore-pratiche"><SelectValue /></SelectTrigger>
@@ -112,7 +120,7 @@ export default function PraticheCollaboratore() {
       ) : !lista.data?.elementi.length ? (
         <EmptyState icon={<FileText className="size-6" />} title={filtrato ? "Nessuna pratica corrisponde alla ricerca" : "Nessuna pratica"}
           text={filtrato ? "Prova con meno parole o cambia il filtro." : "Apri la tua prima pratica: comparirà qui."}
-          action={filtrato ? <Button variant="outline" onClick={() => { setQ(""); setColl("all"); setGruppo("tutte"); setStatoSel(null); }}>Azzera ricerca</Button> : <Button onClick={() => setNuova(true)}>Nuova pratica</Button>} />
+          action={filtrato ? <Button variant="outline" onClick={() => { setQ(""); setColl("all"); setGruppo("tutte"); setStatoSel(null); setDal(""); setAl(""); }}>Azzera ricerca</Button> : <Button onClick={() => setNuova(true)}>Nuova pratica</Button>} />
       ) : (
         <>
           <ul className="md:hidden space-y-2.5 rise" data-testid="lista-pratiche-mobile">
