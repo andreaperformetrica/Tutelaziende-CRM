@@ -246,7 +246,7 @@ export async function elencoEstratti(filtri: { collaboratoreId?: number; stato?:
       cognome: personeTable.cognome,
       nome: personeTable.nome,
       sportello: collaboratoriTable.numeroSportello,
-      numeroPratiche: sql<number>`(select count(*)::int from ${estrattiRigheTable} er where er.estratto_id = ${estrattiTable.id})`,
+      numeroPratiche: sql<number>`(select count(*)::int from ${estrattiRigheTable} er where er.estratto_id = "estratti"."id")`,
     })
     .from(estrattiTable)
     .innerJoin(collaboratoriTable, eq(collaboratoriTable.id, estrattiTable.collaboratoreId))

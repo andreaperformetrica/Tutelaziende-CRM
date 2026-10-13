@@ -103,14 +103,18 @@ function inviaPdf(res: Response, pdf: Buffer, nome: string) {
 // Elenco, creazione, scheda
 // ---------------------------------------------------------------------------------------------
 
+// Nelle select su una sola tabella drizzle scrive la colonna senza il nome della tabella ("id"): dentro la sottoquery
+// verrebbe letta come colonna della tabella interna. Qui il riferimento va quindi qualificato a mano.
+const EVENTO_ID = sql.raw('"eventi"."id"');
+
 router.get("/backoffice/eventi", async (_req, res) => {
   const righe = await db
     .select({
       e: eventiTable,
-      invitati: sql<number>`(select count(*)::int from ${eventiInvitiTable} i where i.evento_id = ${eventiTable.id})`,
-      confermati: sql<number>`(select count(*)::int from ${eventiInvitiTable} i where i.evento_id = ${eventiTable.id} and i.confermato_il is not null)`,
-      partecipanti: sql<number>`(select count(*)::int from ${eventiPartecipantiTable} p where p.evento_id = ${eventiTable.id})`,
-      presenti: sql<number>`(select count(*)::int from ${eventiPartecipantiTable} p where p.evento_id = ${eventiTable.id} and p.entrata_il is not null)`,
+      invitati: sql<number>`(select count(*)::int from ${eventiInvitiTable} i where i.evento_id = ${EVENTO_ID})`,
+      confermati: sql<number>`(select count(*)::int from ${eventiInvitiTable} i where i.evento_id = ${EVENTO_ID} and i.confermato_il is not null)`,
+      partecipanti: sql<number>`(select count(*)::int from ${eventiPartecipantiTable} p where p.evento_id = ${EVENTO_ID})`,
+      presenti: sql<number>`(select count(*)::int from ${eventiPartecipantiTable} p where p.evento_id = ${EVENTO_ID} and p.entrata_il is not null)`,
     })
     .from(eventiTable)
     .orderBy(sql`${eventiTable.data} desc`, sql`${eventiTable.oraInizio} desc`, sql`${eventiTable.id} desc`);

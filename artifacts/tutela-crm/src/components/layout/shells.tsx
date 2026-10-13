@@ -1,7 +1,7 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { getGetConteggioSegnalazioniQueryKey, useGetConteggioSegnalazioni, useLogout, type SessioneUtente } from "@workspace/api-client-react";
+import { getGetAvvisiQueryKey, getGetConteggioSegnalazioniQueryKey, useGetAvvisi, useGetConteggioSegnalazioni, useLogout, type SessioneUtente } from "@workspace/api-client-react";
 import { Inbox, Paperclip, UserCheck, KeyRound, LogOut, ScrollText, ShieldCheck, Users, UsersRound, Home, UserRound, TriangleAlert, FileText, FileSignature, ListOrdered, Clock, Bell, CalendarDays, Coins, Settings, ChevronDown, Newspaper } from "lucide-react";
 import { UtenteAvatar } from "@/components/utenti/colore-utente";
 import { iniziali, ruoloLabel } from "@/lib/format";
@@ -115,9 +115,24 @@ export function BackofficeShell({ s, children }: { s: SessioneUtente; children: 
   );
 }
 
+function Contatore({ n, className, id }: { n: number; className?: string; id: string }) {
+  if (n <= 0) return null;
+  return (
+    <span className={cn("min-w-5 rounded-full bg-accent px-1.5 text-center text-[11px] font-bold leading-5 text-accent-foreground", className)} data-testid={id} aria-label={`${n} novità`}>{n > 99 ? "99+" : n}</span>
+  );
+}
+
 export function CollaboratoreShell({ s, children }: { s: SessioneUtente; children: ReactNode }) {
   const [loc] = useLocation();
   const esci = useEsci();
+  const qc = useQueryClient();
+  const avvisi = useGetAvvisi({ query: { queryKey: getGetAvvisiQueryKey(), refetchInterval: 60_000 } });
+  // Ad ogni cambio di pagina i contatori si riallineano (per esempio dopo aver aperto una pratica o confermato un evento).
+  useEffect(() => { qc.invalidateQueries({ queryKey: getGetAvvisiQueryKey() }); }, [loc, qc]);
+  const novita: Record<string, number> = {
+    "/collaboratore/pratiche": avvisi.data?.pratiche.length ?? 0,
+    "/collaboratore/eventi": avvisi.data?.eventi.length ?? 0,
+  };
   const voci = [
     { href: "/collaboratore", label: "Home", corto: "Home", icon: Home },
     { href: "/collaboratore/assistiti", label: "Assistiti", corto: "Assistiti", icon: UserRound },
@@ -135,7 +150,8 @@ export function CollaboratoreShell({ s, children }: { s: SessioneUtente; childre
             {voci.map((v) => (
               <Link key={v.href} href={v.href} data-testid={`link-menu-${v.label.toLowerCase().replace(" ", "-")}`}
                 className={cn("flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors", attiva(v.href) ? "bg-accent text-accent-foreground" : "hover:bg-primary-foreground/10")}>
-                <v.icon className="size-4" /><span>{v.label}</span>
+                <v.icon className="size-4 shrink-0" /><span>{v.label}</span>
+                <Contatore n={novita[v.href] ?? 0} id={`contatore-${v.corto.toLowerCase()}`} />
               </Link>
             ))}
           </nav>
@@ -155,7 +171,10 @@ export function CollaboratoreShell({ s, children }: { s: SessioneUtente; childre
             <li key={v.href}>
               <Link href={v.href} data-testid={`tab-${v.corto.toLowerCase()}`} aria-current={attiva(v.href) ? "page" : undefined}
                 className={cn("flex flex-col items-center justify-center gap-0.5 min-h-16 px-1 text-[11px] font-semibold transition-colors", attiva(v.href) ? "text-primary" : "text-muted-foreground")}>
-                <span className={cn("grid place-items-center h-7 w-12 rounded-full transition-colors", attiva(v.href) && "bg-accent")}><v.icon className="size-5" /></span>
+                <span className={cn("relative grid place-items-center h-7 w-12 rounded-full transition-colors", attiva(v.href) && "bg-accent")}>
+                  <v.icon className="size-5" />
+                  <Contatore n={novita[v.href] ?? 0} id={`contatore-mobile-${v.corto.toLowerCase()}`} className="absolute -top-1 right-0 min-w-4 px-1 text-[10px] leading-4 bg-destructive text-destructive-foreground" />
+                </span>
                 <span className="truncate max-w-full">{v.corto}</span>
               </Link>
             </li>

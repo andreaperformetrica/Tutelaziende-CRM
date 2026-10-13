@@ -36,7 +36,7 @@ async function controllaNomeLibero(tx: Pick<typeof db, "execute" | "select">, no
   if (esiste) throw DUPLICATO;
 }
 
-const assegnati = sql<number>`(select count(*)::int from ${assegnazioniMandatoTable} where ${assegnazioniMandatoTable.mandatoId} = ${mandatiTable.id})`;
+const assegnati = sql<number>`(select count(*)::int from ${assegnazioniMandatoTable} where "assegnazioni_mandato"."mandato_id" = "mandati"."id")`;
 
 function selezione() {
   return db
