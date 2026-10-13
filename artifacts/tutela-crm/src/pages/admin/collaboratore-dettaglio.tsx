@@ -5,7 +5,7 @@ import {
   getGetCollaboratoreQueryKey, getListCollaboratoriQueryKey, useAggiungiMembriGruppo, useDeleteCollaboratore, useImpostaRuoloCapogruppo, useListCollaboratori, useGetCollaboratore, useImpostaPasswordProvvisoriaCollaboratore, useReinviaCredenzialiCollaboratore, useUpdateCollaboratore,
   type CollaboratoreDettaglio,
 } from "@workspace/api-client-react";
-import { ArrowLeft, ChevronRight, KeyRound, Mail, Pencil, Plus, Power, ShieldAlert, Trash2, Users } from "lucide-react";
+import { ArrowLeft, KeyRound, Mail, Pencil, Plus, Power, ShieldAlert, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -130,7 +130,7 @@ export default function CollaboratoreDettaglioPage() {
     <div>
       <Link href="/admin/collaboratori" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-3 transition-colors" data-testid="link-indietro"><ArrowLeft className="size-4" /> Collaboratori</Link>
       <PageHeader title={`${c.cognome} ${c.nome}`}
-        subtitle={<span className="flex flex-wrap items-center gap-2"><StatoBadge attivo={c.attivo} /><Badge variant="outline">{tipologiaLabel(c.tipologia)}</Badge>{c.capogruppo && <Badge className="bg-accent text-accent-foreground" data-testid="badge-capogruppo">Capogruppo</Badge>}<span className="font-mono">Sportello {c.numeroSportello}</span></span>}
+        subtitle={<span className="flex flex-wrap items-center gap-2"><StatoBadge attivo={c.attivo} /><Badge variant="outline">{tipologiaLabel(c.tipologia)}</Badge><span className="font-mono">Sportello {c.numeroSportello}</span></span>}
         actions={puoModificare ? (
           <>
             <Button variant="outline" onClick={() => setModifica(true)} data-testid="button-modifica"><Pencil className="size-4 mr-1.5" /> Modifica</Button>
@@ -149,45 +149,6 @@ export default function CollaboratoreDettaglioPage() {
 
       <div className="space-y-5">
         {c.straniero && <BannerStraniero nazionalita={c.nazionalitaNome} />}
-
-        {(c.capogruppo || (puoModificare && c.capogruppoId === null)) && (
-          <section className="rounded-lg border-2 border-accent bg-accent/15 p-5 rise" data-testid="sezione-gruppo">
-            <div className="flex flex-wrap items-center gap-2 mb-3">
-              <h2 className="flex items-center gap-2 text-xl font-bold"><Users className="size-5" /> Gruppo di {c.cognome} {c.nome}
-                {c.capogruppo && <Badge className="bg-accent-foreground text-accent">{c.numeroCollaboratori}</Badge>}</h2>
-              {puoModificare && (
-                <div className="ml-auto flex gap-2">
-                  {c.capogruppo ? (
-                    <>
-                      <Button size="sm" onClick={() => setAggiungiAperto(true)} disabled={!c.attivo} data-testid="button-aggiungi-membri"><Plus className="size-4 mr-1" /> Aggiungi collaboratori</Button>
-                      {c.numeroCollaboratori === 0 && (
-                        <Button size="sm" variant="outline" disabled={ruolo.isPending} onClick={() => cambiaRuolo(false)} data-testid="button-rimuovi-capogruppo">Togli il ruolo</Button>
-                      )}
-                    </>
-                  ) : (
-                    <Button size="sm" disabled={!c.attivo || ruolo.isPending} onClick={() => cambiaRuolo(true)} data-testid="button-rendi-capogruppo">Rendi capogruppo</Button>
-                  )}
-                </div>
-              )}
-            </div>
-            {!c.capogruppo && <p className="text-sm text-muted-foreground">Non è capogruppo. Rendilo capogruppo per poi inserire i collaboratori del suo gruppo.</p>}
-            {c.capogruppo && c.membri.length === 0 && <p className="text-sm text-muted-foreground" data-testid="gruppo-vuoto">Il gruppo è ancora vuoto.</p>}
-            <ul className="grid gap-2 sm:grid-cols-2">
-              {c.membri.map((m) => (
-                <li key={m.id}>
-                  <Link href={`/admin/collaboratori/${m.id}`} data-testid={`link-membro-${m.id}`}
-                    className="group flex items-center justify-between rounded-md bg-card border border-border px-3 py-2.5 hover:border-primary hover:shadow-sm transition-all">
-                    <div>
-                      <div className="font-semibold text-sm">{m.cognome} {m.nome}</div>
-                      <div className="text-xs text-muted-foreground font-mono">Sportello {m.numeroSportello} · {tipologiaLabel(m.tipologia)}{!m.attivo && " · disattivato"}</div>
-                    </div>
-                    <ChevronRight className="size-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
 
         <section className="bg-card border border-border rounded-lg p-5 rise">
           <h2 className="text-lg font-bold mb-4 pb-2 border-b border-border">Dati anagrafici</h2>
@@ -211,9 +172,42 @@ export default function CollaboratoreDettaglioPage() {
             <dl className="grid gap-4 sm:grid-cols-2">
               <Dato k="Numero di sportello" mono>{c.numeroSportello}</Dato>
               <Dato k="Tipologia">{tipologiaLabel(c.tipologia)}</Dato>
-              <Dato k="Capogruppo">{c.capogruppoId ? <Link href={`/admin/collaboratori/${c.capogruppoId}`} className="text-primary underline underline-offset-2" data-testid="link-capogruppo">{c.capogruppoNome}</Link> : "Nessuno"}</Dato>
-              <Dato k="Collaboratori nel gruppo">{c.numeroCollaboratori}</Dato>
+              <Dato k="Ruolo">
+                {c.capogruppo ? <span data-testid="ruolo-capogruppo">Capogruppo</span>
+                  : c.capogruppoId ? <span>Nel gruppo di <Link href={`/admin/collaboratori/${c.capogruppoId}`} className="text-primary underline underline-offset-2" data-testid="link-capogruppo">{c.capogruppoNome}</Link></span>
+                  : "Collaboratore"}
+                {puoModificare && !c.capogruppo && c.capogruppoId === null && c.attivo && (
+                  <button type="button" disabled={ruolo.isPending} onClick={() => cambiaRuolo(true)} data-testid="button-rendi-capogruppo"
+                    className="ml-2 text-xs font-normal text-primary underline underline-offset-2 hover:no-underline">Rendi capogruppo</button>
+                )}
+                {puoModificare && c.capogruppo && c.numeroCollaboratori === 0 && (
+                  <button type="button" disabled={ruolo.isPending} onClick={() => cambiaRuolo(false)} data-testid="button-rimuovi-capogruppo"
+                    className="ml-2 text-xs font-normal text-muted-foreground underline underline-offset-2 hover:no-underline">Togli il ruolo</button>
+                )}
+              </Dato>
             </dl>
+            {c.capogruppo && (
+              <div className="mt-4 pt-3 border-t border-border" data-testid="sezione-gruppo">
+                <div className="flex items-center gap-2 mb-2">
+                  <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Collaboratori nel gruppo ({c.numeroCollaboratori})</h3>
+                  {puoModificare && c.attivo && (
+                    <Button size="sm" variant="outline" className="ml-auto h-7 px-2 text-xs" onClick={() => setAggiungiAperto(true)} data-testid="button-aggiungi-membri"><Plus className="size-3.5 mr-1" /> Aggiungi</Button>
+                  )}
+                </div>
+                {c.membri.length === 0 ? <p className="text-sm text-muted-foreground" data-testid="gruppo-vuoto">Nessun collaboratore nel gruppo.</p> : (
+                  <ul className="divide-y divide-border rounded-md border border-border">
+                    {c.membri.map((m) => (
+                      <li key={m.id}>
+                        <Link href={`/admin/collaboratori/${m.id}`} data-testid={`link-membro-${m.id}`} className="flex items-center justify-between px-3 py-1.5 text-sm hover:bg-muted/50 transition-colors">
+                          <span className="font-medium">{m.cognome} {m.nome}</span>
+                          <span className="text-xs text-muted-foreground font-mono">Sportello {m.numeroSportello} · {tipologiaLabel(m.tipologia)}{!m.attivo && " · disattivato"}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
           </section>
           <section className="bg-card border border-border rounded-lg p-5 rise">
             <h2 className="text-lg font-bold mb-4 pb-2 border-b border-border">Accesso</h2>
