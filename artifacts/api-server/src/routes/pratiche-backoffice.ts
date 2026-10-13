@@ -29,7 +29,7 @@ import {
 } from "@workspace/db";
 import { HttpError, nonTrovato } from "../lib/errori";
 import { contestoDa, registraLog } from "../lib/log";
-import { contaPratiche, mandatoDellaPratica, selezionaPratiche, MAX_MESSAGGIO } from "../lib/pratiche";
+import { contaPerStato, contaPratiche, mandatoDellaPratica, selezionaPratiche, MAX_MESSAGGIO } from "../lib/pratiche";
 import {
   aggiornataSql,
   caricaPraticaInviata,
@@ -81,11 +81,11 @@ router.get("/backoffice/pratiche", async (req, res) => {
   const pagina = p.pagina ?? 1;
   const perPagina = p.perPagina ?? PER_PAGINA_DEFAULT;
 
-  const where = and(
+  // Il riepilogo per stato rispetta tutti i filtri tranne lo stato, cosi' resta completo quando se ne sceglie uno.
+  const senzaStato = and(
     isNotNull(praticheTable.inviataIl),
     p.collaboratoreId ? eq(praticheTable.collaboratoreId, p.collaboratoreId) : undefined,
     p.tipoPraticaId ? eq(praticheTable.tipoPraticaId, p.tipoPraticaId) : undefined,
-    p.statoId ? eq(praticheTable.statoId, p.statoId) : undefined,
     p.gestitaDaUtenteId ? eq(praticheTable.gestitaDaUtenteId, p.gestitaDaUtenteId) : undefined,
     p.nonAssegnate === true ? isNull(praticheTable.gestitaDaUtenteId) : undefined,
     p.soloLavorate === true ? isNotNull(praticheTable.gestitaDaUtenteId) : undefined,
@@ -94,6 +94,7 @@ router.get("/backoffice/pratiche", async (req, res) => {
     al ? sql`${giornoRoma} <= ${al}::date` : undefined,
     p.soloAggiornate === true ? aggiornataSql : undefined,
   );
+  const where = and(senzaStato, p.statoId ? eq(praticheTable.statoId, p.statoId) : undefined);
 
   const ordina = p.ordina ?? "data";
   const direzione = p.direzione ?? (ordina === "data" || ordina === "numero" ? "desc" : "asc");
@@ -113,13 +114,14 @@ router.get("/backoffice/pratiche", async (req, res) => {
     desc(praticheTable.id),
   ];
 
-  const [totale, righe] = await Promise.all([
+  const [totale, riepilogoStati, righe] = await Promise.all([
     contaPratiche(where),
+    contaPerStato(senzaStato),
     selezionaPratiche(where, ordine)
       .limit(perPagina)
       .offset((pagina - 1) * perPagina),
   ]);
-  res.json({ elementi: righe.map(mappaRiepilogoBackoffice), totale, pagina, perPagina });
+  res.json({ elementi: righe.map(mappaRiepilogoBackoffice), totale, riepilogoStati, pagina, perPagina });
 });
 
 router.get("/backoffice/pratiche/filtri", async (_req, res) => {

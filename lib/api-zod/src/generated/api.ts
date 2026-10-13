@@ -4420,6 +4420,13 @@ export const ListPraticheBackofficeResponse = zod.object({
 }),zod.null()]),
   "aggiornata": zod.boolean().describe('Il collaboratore ha scritto o allegato qualcosa e il back office non ha ancora risposto')
 })),
+  "riepilogoStati": zod.array(zod.object({
+  "statoId": zod.number().int(),
+  "nome": zod.string(),
+  "chiuso": zod.boolean(),
+  "colore": zod.string().nullable(),
+  "totale": zod.number().int()
+})).describe('Pratiche per stato con gli stessi filtri dell\'elenco, escluso il filtro per stato'),
   "totale": zod.number().int(),
   "pagina": zod.number().int(),
   "perPagina": zod.number().int()
@@ -5010,6 +5017,12 @@ export const DeleteCategoriaAllegatoResponse = zod.void()
  * @summary Notizie pubblicate per la home del collaboratore
  */
 export const ListNewsResponseItem = zod.object({
+  "allegati": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int().describe('Byte')
+})),
   "id": zod.number().int(),
   "titolo": zod.string(),
   "testo": zod.string(),
@@ -5023,6 +5036,12 @@ export const ListNewsResponse = zod.array(ListNewsResponseItem)
  * @summary Tutte le notizie, anche le bozze (back office)
  */
 export const ListNewsBackofficeResponseItem = zod.object({
+  "allegati": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int().describe('Byte')
+})),
   "id": zod.number().int(),
   "titolo": zod.string(),
   "testo": zod.string(),
@@ -5046,6 +5065,12 @@ export const CreateNewsBody = zod.object({
 })
 
 export const CreateNewsResponse = zod.object({
+  "allegati": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int().describe('Byte')
+})),
   "id": zod.number().int(),
   "titolo": zod.string(),
   "testo": zod.string(),
@@ -5072,6 +5097,12 @@ export const UpdateNewsBody = zod.object({
 })
 
 export const UpdateNewsResponse = zod.object({
+  "allegati": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int().describe('Byte')
+})),
   "id": zod.number().int(),
   "titolo": zod.string(),
   "testo": zod.string(),

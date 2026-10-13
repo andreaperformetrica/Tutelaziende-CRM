@@ -47,6 +47,8 @@ export const AZIONI_LOG = {
   "news.crea": "Creazione notizia",
   "news.modifica": "Modifica notizia",
   "news.elimina": "Eliminazione notizia",
+  "news.allegato_aggiungi": "Allegato aggiunto a notizia",
+  "news.allegato_elimina": "Allegato eliminato da notizia",
   "stato_pratica.crea": "Creazione stato pratica",
   "stato_pratica.modifica": "Modifica stato pratica",
   "stato_pratica.elimina": "Eliminazione stato pratica",

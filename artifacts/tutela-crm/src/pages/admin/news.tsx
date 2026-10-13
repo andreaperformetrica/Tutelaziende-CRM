@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   getListNewsBackofficeQueryKey, getListNewsQueryKey, useCreateNews, useDeleteNews, useListNewsBackoffice, useUpdateNews, type NewsBackoffice,
 } from "@workspace/api-client-react";
-import { Newspaper, Pencil, Pin, Plus, Trash2 } from "lucide-react";
+import { Newspaper, Paperclip, Pencil, Pin, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -13,14 +13,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmptyState, ErrorState, FieldError, PageHeader } from "@/components/common";
+import { SelettoreFile } from "@/components/pratiche/selettore-file";
 import { ConfermaElimina } from "@/components/pratiche/conferma-elimina";
 import { useToast } from "@/hooks/use-toast";
 import { fmtIstante, parseApiError } from "@/lib/format";
+import { formatoDimensione, inviaFile, messaggioErrore, urlAllegatoNewsBackoffice } from "@/lib/upload";
 
 const MAX_TITOLO = 120;
 const MAX_TESTO = 5000;
 
 interface Modulo { titolo: string; testo: string; pubblicata: boolean; inEvidenza: boolean }
+const MAX_ALLEGATI = 10;
 const VUOTO: Modulo = { titolo: "", testo: "", pubblicata: true, inEvidenza: false };
 
 function DialogNews({ aperto, notizia, onClose, onSalvata }: { aperto: boolean; notizia: NewsBackoffice | null; onClose: () => void; onSalvata: () => void }) {
@@ -33,13 +36,50 @@ function DialogNews({ aperto, notizia, onClose, onSalvata }: { aperto: boolean; 
   useEffect(() => {
     if (aperto) { setM(notizia ? { titolo: notizia.titolo, testo: notizia.testo, pubblicata: notizia.pubblicata, inEvidenza: notizia.inEvidenza } : VUOTO); setErr(null); }
   }, [aperto, notizia]);
-  const occupato = create.isPending || update.isPending;
+  const [nuovi, setNuovi] = useState<File[]>([]);
+  const [daTogliere, setDaTogliere] = useState<number[]>([]);
+  const [invio, setInvio] = useState(false);
+  useEffect(() => { if (aperto) { setNuovi([]); setDaTogliere([]); } }, [aperto, notizia]);
+  const occupato = create.isPending || update.isPending || invio;
+  const esistenti = (notizia?.allegati ?? []).filter((a) => !daTogliere.includes(a.id));
+  const posti = MAX_ALLEGATI - esistenti.length - nuovi.length;
+
+  const aggiungi = (f: File) => {
+    if (posti <= 0) return setErr(`Una notizia può avere al massimo ${MAX_ALLEGATI} allegati.`);
+    setErr(null);
+    setNuovi((l) => [...l, f]);
+  };
+
+  /** Dopo aver salvato la notizia: toglie gli allegati rimossi e carica i nuovi. */
+  const sistemaAllegati = async (id: number) => {
+    let problemi = 0;
+    setInvio(true);
+    try {
+      for (const aId of daTogliere) {
+        try { await fetch(`${import.meta.env.BASE_URL}api/backoffice/news/${id}/allegati/${aId}`, { method: "DELETE", credentials: "include" }).then((r) => { if (!r.ok) throw new Error(); }); }
+        catch { problemi++; }
+      }
+      for (const f of nuovi) {
+        try { await inviaFile("POST", `/backoffice/news/${id}/allegati`, {}, f); }
+        catch (e) { problemi++; toast({ title: `"${f.name}" non caricato`, description: messaggioErrore(e), variant: "destructive" }); }
+      }
+    } finally { setInvio(false); }
+    return problemi;
+  };
 
   const salva = () => {
     if (!m.titolo.trim()) return setErr("Inserisci il titolo");
     if (!m.testo.trim()) return setErr("Inserisci il testo");
     setErr(null);
-    const opzioni = { onSuccess: () => { toast({ title: notizia ? "Notizia aggiornata" : "Notizia creata" }); onSalvata(); onClose(); }, onError: (e: unknown) => setErr(parseApiError(e).message) };
+    const opzioni = {
+      onSuccess: async (n: NewsBackoffice) => {
+        const problemi = await sistemaAllegati(n.id);
+        toast({ title: notizia ? "Notizia aggiornata" : "Notizia creata", description: problemi ? "Alcuni allegati non sono stati aggiornati: riaprila per riprovare." : undefined });
+        onSalvata();
+        onClose();
+      },
+      onError: (e: unknown) => setErr(parseApiError(e).message),
+    };
     if (notizia) update.mutate({ id: notizia.id, data: m }, opzioni);
     else create.mutate({ data: m }, opzioni);
   };
@@ -69,6 +109,35 @@ function DialogNews({ aperto, notizia, onClose, onSalvata }: { aperto: boolean; 
             <span><span className="font-semibold block">In evidenza</span><span className="text-muted-foreground">Compare in cima alla home, prima delle altre.</span></span>
             <Switch checked={m.inEvidenza} onCheckedChange={(c) => setM({ ...m, inEvidenza: c })} data-testid="switch-news-evidenza" />
           </label>
+          <div>
+            <div className="flex items-center justify-between gap-3">
+              <Label>Documenti da scaricare</Label>
+              <SelettoreFile onFile={aggiungi} disabled={occupato || posti <= 0} testId="button-aggiungi-allegato-news"><Paperclip className="size-4 mr-1.5" /> Aggiungi documento</SelettoreFile>
+            </div>
+            {esistenti.length + nuovi.length === 0
+              ? <p className="text-xs text-muted-foreground mt-1">Nessun documento allegato. PDF, Word, Excel o immagini, fino a 15 MB ciascuno.</p>
+              : (
+                <ul className="mt-2 divide-y divide-border rounded-md border border-border" data-testid="elenco-allegati-news">
+                  {esistenti.map((a) => (
+                    <li key={`e${a.id}`} className="flex items-center gap-2 px-3 py-2 text-sm">
+                      <Paperclip className="size-4 shrink-0 text-muted-foreground" />
+                      <a href={urlAllegatoNewsBackoffice(notizia!.id, a.id)} className="min-w-0 flex-1 truncate text-primary hover:underline" data-testid={`link-allegato-news-${a.id}`}>{a.nome}</a>
+                      <span className="text-xs text-muted-foreground tabular-nums">{formatoDimensione(a.dimensione)}</span>
+                      <Button type="button" size="icon" variant="ghost" className="size-8" onClick={() => setDaTogliere((l) => [...l, a.id])} aria-label={`Rimuovi ${a.nome}`} data-testid={`button-rimuovi-allegato-news-${a.id}`}><X className="size-4" /></Button>
+                    </li>
+                  ))}
+                  {nuovi.map((f, i) => (
+                    <li key={`n${i}`} className="flex items-center gap-2 px-3 py-2 text-sm">
+                      <Paperclip className="size-4 shrink-0 text-muted-foreground" />
+                      <span className="min-w-0 flex-1 truncate">{f.name}</span>
+                      <Badge variant="outline">Da caricare</Badge>
+                      <span className="text-xs text-muted-foreground tabular-nums">{formatoDimensione(f.size)}</span>
+                      <Button type="button" size="icon" variant="ghost" className="size-8" onClick={() => setNuovi((l) => l.filter((_, j) => j !== i))} aria-label={`Togli ${f.name}`}><X className="size-4" /></Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+          </div>
           <FieldError id="errore-news">{err ?? undefined}</FieldError>
         </div>
         <DialogFooter className="gap-2">
@@ -113,6 +182,7 @@ export default function NewsPage() {
                       {fmtIstante(n.creataIl)}{n.autore ? ` · ${n.autore}` : ""}{n.modificataIl !== n.creataIl && fmtIstante(n.modificataIl) !== fmtIstante(n.creataIl) ? ` · modificata il ${fmtIstante(n.modificataIl)}` : ""}
                     </div>
                     <p className="text-sm mt-2 whitespace-pre-line line-clamp-3">{n.testo}</p>
+                    {n.allegati.length > 0 && <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground"><Paperclip className="size-3.5" /> {n.allegati.length} {n.allegati.length === 1 ? "documento allegato" : "documenti allegati"}</div>}
                   </div>
                   <div className="flex gap-1 shrink-0">
                     <Button size="icon" variant="ghost" className="size-9" onClick={() => setDialogo({ notizia: n })} aria-label={`Modifica ${n.titolo}`} data-testid={`button-modifica-news-${n.id}`}><Pencil className="size-4" /></Button>

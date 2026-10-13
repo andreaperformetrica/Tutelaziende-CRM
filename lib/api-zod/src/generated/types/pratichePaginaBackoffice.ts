@@ -6,9 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { PraticaBackofficeRiepilogo } from './praticaBackofficeRiepilogo';
+import type { PratichePaginaBackofficeRiepilogoStatiItem } from './pratichePaginaBackofficeRiepilogoStatiItem';
 
 export interface PratichePaginaBackoffice {
   elementi: PraticaBackofficeRiepilogo[];
+  /** Pratiche per stato con gli stessi filtri dell'elenco, escluso il filtro per stato */
+  riepilogoStati: PratichePaginaBackofficeRiepilogoStatiItem[];
   totale: number;
   pagina: number;
   perPagina: number;

@@ -1,10 +1,11 @@
 import { getGetCollaboratoreQueryKey, useGetCollaboratore, useListNews } from "@workspace/api-client-react";
-import { Newspaper, Pin, Users } from "lucide-react";
+import { Download, Newspaper, Pin, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { ErrorState } from "@/components/common";
 import { useSession } from "@/lib/auth";
 import { fmtIstante, parseApiError, tipologiaLabel } from "@/lib/format";
+import { formatoDimensione, urlAllegatoNews } from "@/lib/upload";
 
 export default function HomeCollaboratore() {
   const { session } = useSession();
@@ -44,6 +45,20 @@ export default function HomeCollaboratore() {
                   </div>
                   <div className="text-xs text-muted-foreground mt-0.5">{fmtIstante(n.pubblicataIl).slice(0, 10)}</div>
                   <p className="text-sm mt-2 whitespace-pre-line">{n.testo}</p>
+                  {n.allegati.length > 0 && (
+                    <ul className="mt-3 flex flex-wrap gap-2" aria-label="Documenti da scaricare">
+                      {n.allegati.map((a) => (
+                        <li key={a.id}>
+                          <a href={urlAllegatoNews(n.id, a.id)} download data-testid={`allegato-news-${a.id}`}
+                            className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 min-h-10 text-sm font-medium hover:bg-secondary/60 transition-colors">
+                            <Download className="size-4 shrink-0 text-primary" />
+                            <span className="max-w-[16rem] truncate">{a.nome}</span>
+                            <span className="text-xs text-muted-foreground tabular-nums">{formatoDimensione(a.dimensione)}</span>
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </li>
               ))}
             </ul>

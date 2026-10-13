@@ -3592,10 +3592,22 @@ components:
           items: { type: string }
         invio:
           $ref: "#/components/schemas/InvioPratiche"
+    NewsAllegato:
+      type: object
+      required: [id, nome, tipo, dimensione]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        tipo: { type: string }
+        dimensione: { type: integer, description: "Byte" }
     News:
       type: object
-      required: [id, titolo, testo, inEvidenza, pubblicataIl]
+      required: [id, titolo, testo, inEvidenza, pubblicataIl, allegati]
       properties:
+        allegati:
+          type: array
+          items:
+            $ref: "#/components/schemas/NewsAllegato"
         id: { type: integer }
         titolo: { type: string }
         testo: { type: string }
@@ -3603,8 +3615,12 @@ components:
         pubblicataIl: { type: string, format: date-time }
     NewsBackoffice:
       type: object
-      required: [id, titolo, testo, pubblicata, inEvidenza, creataIl, modificataIl, autore]
+      required: [id, titolo, testo, pubblicata, inEvidenza, creataIl, modificataIl, autore, allegati]
       properties:
+        allegati:
+          type: array
+          items:
+            $ref: "#/components/schemas/NewsAllegato"
         id: { type: integer }
         titolo: { type: string }
         testo: { type: string }
@@ -3682,12 +3698,24 @@ components:
         aggiornata: { type: boolean, description: "Il collaboratore ha scritto o allegato qualcosa e il back office non ha ancora risposto" }
     PratichePaginaBackoffice:
       type: object
-      required: [elementi, totale, pagina, perPagina]
+      required: [elementi, totale, riepilogoStati, pagina, perPagina]
       properties:
         elementi:
           type: array
           items:
             $ref: "#/components/schemas/PraticaBackofficeRiepilogo"
+        riepilogoStati:
+          type: array
+          description: "Pratiche per stato con gli stessi filtri dell'elenco, escluso il filtro per stato"
+          items:
+            type: object
+            required: [statoId, nome, chiuso, colore, totale]
+            properties:
+              statoId: { type: integer }
+              nome: { type: string }
+              chiuso: { type: boolean }
+              colore: { type: [string, "null"] }
+              totale: { type: integer }
         totale: { type: integer }
         pagina: { type: integer }
         perPagina: { type: integer }

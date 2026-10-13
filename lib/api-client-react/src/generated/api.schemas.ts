@@ -1284,7 +1284,16 @@ export interface PraticaDettaglio {
   invio: InvioPratiche;
 }
 
+export interface NewsAllegato {
+  id: number;
+  nome: string;
+  tipo: string;
+  /** Byte */
+  dimensione: number;
+}
+
 export interface News {
+  allegati: NewsAllegato[];
   id: number;
   titolo: string;
   testo: string;
@@ -1293,6 +1302,7 @@ export interface News {
 }
 
 export interface NewsBackoffice {
+  allegati: NewsAllegato[];
   id: number;
   titolo: string;
   testo: string;
@@ -1375,8 +1385,19 @@ export interface PraticaBackofficeRiepilogo {
   aggiornata: boolean;
 }
 
+export type PratichePaginaBackofficeRiepilogoStatiItem = {
+  statoId: number;
+  nome: string;
+  chiuso: boolean;
+  /** @nullable */
+  colore: string | null;
+  totale: number;
+};
+
 export interface PratichePaginaBackoffice {
   elementi: PraticaBackofficeRiepilogo[];
+  /** Pratiche per stato con gli stessi filtri dell'elenco, escluso il filtro per stato */
+  riepilogoStati: PratichePaginaBackofficeRiepilogoStatiItem[];
   totale: number;
   pagina: number;
   perPagina: number;

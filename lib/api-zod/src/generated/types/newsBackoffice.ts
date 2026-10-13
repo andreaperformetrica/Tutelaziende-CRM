@@ -5,8 +5,10 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { NewsAllegato } from './newsAllegato';
 
 export interface NewsBackoffice {
+  allegati: NewsAllegato[];
   id: number;
   titolo: string;
   testo: string;

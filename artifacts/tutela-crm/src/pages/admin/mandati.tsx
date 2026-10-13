@@ -4,13 +4,14 @@ import {
   getListAssegnazioniMandatoQueryKey, getListMandatiQueryKey, useAssegnaMandato, useDeleteMandato, useListAssegnazioniMandato, useListCollaboratori,
   useListMandati, useRimuoviAssegnazioneMandato, useRinominaMandato, type Mandato,
 } from "@workspace/api-client-react";
-import { Check, Download, FileSignature, Loader2, Pencil, RefreshCw, Search, Trash2, Upload, X } from "lucide-react";
+import { Check, ChevronsUpDown, Download, FileSignature, Loader2, Pencil, RefreshCw, Search, Trash2, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState, ErrorState, FieldError, PageHeader } from "@/components/common";
@@ -21,6 +22,44 @@ import { fmtIstante, parseApiError } from "@/lib/format";
 import { formatoDimensione, inviaFile, messaggioErrore, urlMandato } from "@/lib/upload";
 
 const NESSUNO = "nessuno";
+
+/** Menu con ricerca per scegliere il mandato da assegnare a un collaboratore. */
+function SelettoreMandato({ valore, mandati, onChange, disabled, etichetta, testId }: {
+  valore: string; mandati: Mandato[]; onChange: (v: string) => void; disabled: boolean; etichetta: string; testId: string;
+}) {
+  const [aperto, setAperto] = useState(false);
+  const scelto = mandati.find((m) => String(m.id) === valore);
+  const scegli = (v: string) => { setAperto(false); if (v !== valore) onChange(v); };
+  return (
+    <Popover open={aperto} onOpenChange={setAperto}>
+      <PopoverTrigger asChild>
+        <Button type="button" variant="outline" role="combobox" aria-expanded={aperto} aria-label={etichetta} disabled={disabled} data-testid={testId}
+          className="w-64 justify-between font-normal">
+          <span className="truncate">{scelto ? scelto.nome : "Nessun mandato"}</span>
+          <ChevronsUpDown className="size-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="p-0 w-72" align="start">
+        <Command>
+          <CommandInput autoComplete="off" placeholder="Cerca mandato" data-testid={`${testId}-cerca`} />
+          <CommandList>
+            <CommandEmpty>Nessun mandato trovato</CommandEmpty>
+            <CommandGroup>
+              <CommandItem value="nessun mandato" onSelect={() => scegli(NESSUNO)}>
+                <Check className={`size-4 mr-2 ${valore === NESSUNO ? "opacity-100" : "opacity-0"}`} /> Nessun mandato
+              </CommandItem>
+              {mandati.map((m) => (
+                <CommandItem key={m.id} value={`${m.nome} ${m.id}`} onSelect={() => scegli(String(m.id))} data-testid={`opzione-mandato-${m.id}`}>
+                  <Check className={`size-4 mr-2 ${valore === String(m.id) ? "opacity-100" : "opacity-0"}`} /> {m.nome}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 function useRicarica() {
   const qc = useQueryClient();
@@ -190,13 +229,8 @@ function Assegnazioni({ mandati }: { mandati: Mandato[] }) {
                     <TableCell className="tabular-nums">{c.numeroSportello}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Select value={mId ? String(mId) : NESSUNO} onValueChange={(v) => scegli(c.id, v)} disabled={occupato !== null}>
-                          <SelectTrigger className="w-64" aria-label={`Mandato di ${c.cognome} ${c.nome}`} data-testid={`select-mandato-${c.id}`}><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value={NESSUNO}>Nessun mandato</SelectItem>
-                            {mandati.map((m) => <SelectItem key={m.id} value={String(m.id)} data-testid={`opzione-mandato-${m.id}`}>{m.nome}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
+                        <SelettoreMandato valore={mId ? String(mId) : NESSUNO} mandati={mandati} onChange={(v) => scegli(c.id, v)} disabled={occupato !== null}
+                          etichetta={`Mandato di ${c.cognome} ${c.nome}`} testId={`select-mandato-${c.id}`} />
                         {occupato === c.id ? <Loader2 className="size-4 animate-spin text-muted-foreground" /> : !mId && <Badge variant="outline" className="text-muted-foreground">Non assegnato</Badge>}
                       </div>
                     </TableCell>

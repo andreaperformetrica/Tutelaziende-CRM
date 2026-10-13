@@ -1,4 +1,4 @@
-import { StatoBadge } from "@/components/pratiche/stato-badge";
+import { StatoBadge, coloreStato } from "@/components/pratiche/stato-badge";
 import { useState } from "react";
 import { useLocation } from "wouter";
 import {
@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState, ErrorState, FieldError, PageHeader } from "@/components/common";
+import { cn } from "@/lib/utils";
 import { useSession } from "@/lib/auth";
 import { fmtDataIstante, parseApiError, ruoloLabel } from "@/lib/format";
 
@@ -111,6 +112,27 @@ export function ElencoPraticheBackoffice({ soloMie }: { soloMie?: boolean }) {
     <div>
       <PageHeader kicker="Back office" title={soloMie ? "Le mie pratiche" : "Elenco pratiche"}
         subtitle={soloMie ? "Le pratiche che hai preso in carico." : "Tutte le pratiche inviate dai collaboratori."} />
+
+      {lista.data && (
+        <section className="mb-4 rounded-lg border border-border bg-card px-4 py-3 rise" aria-label="Riepilogo pratiche" data-testid="riepilogo-stati">
+          <h2 className="text-sm font-bold flex items-center gap-2 mb-2"><FileText className="size-4 text-muted-foreground" /> Riepilogo pratiche</h2>
+          <ul className="grid grid-cols-2 gap-x-4 gap-y-3 sm:flex sm:flex-wrap sm:gap-0 sm:divide-x sm:divide-border">
+            {lista.data.riepilogoStati.map((s) => {
+              const attivo = applicati.stato === String(s.statoId);
+              return (
+                <li key={s.statoId} className="sm:px-5 sm:first:pl-0 sm:last:pr-0">
+                  <button type="button" aria-pressed={attivo} data-testid={`riepilogo-s${s.statoId}`}
+                    onClick={() => { const v = attivo ? TUTTI : String(s.statoId); setBozza((b) => ({ ...b, stato: v })); setApplicati((a) => ({ ...a, stato: v })); setPagina(1); }}
+                    className={cn("flex items-baseline gap-2 rounded-md px-1 min-h-9 text-left transition-colors hover:bg-secondary/60", attivo && "bg-secondary")}>
+                    <span className="text-xl font-bold tabular-nums">{s.totale}</span>
+                    <span className="text-sm font-semibold" style={{ color: coloreStato({ id: s.statoId, nome: s.nome, chiuso: s.chiuso, colore: s.colore }) }}>{s.nome}</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
       <form className="rounded-lg border border-border bg-card p-4 mb-4 space-y-4 rise" onSubmit={(e) => { e.preventDefault(); cerca(); }} data-testid="filtri-pratiche">
         <div className="flex flex-wrap gap-3">
