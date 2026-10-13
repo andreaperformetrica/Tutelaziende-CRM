@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useLocation, useParams } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -6,7 +6,7 @@ import {
   useGetFiltriPraticheBackoffice, useGetPraticaBackoffice, useListCategorieAllegato, usePrendiInCaricoPratica,
   type DocumentoPratica, type PraticaBackoffice,
 } from "@workspace/api-client-react";
-import { AlertTriangle, ArrowLeft, Download, Eye, FileText, HandHelping, Loader2, Mail, MessageCircle, Paperclip, Phone, Send, Trash2, Upload, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Download, Eye, FileText, HandHelping, Loader2, Mail, MessageCircle, MessageSquareText, Paperclip, Phone, Send, Trash2, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -91,6 +91,9 @@ export default function PraticaDettaglioBackoffice() {
   const presa = usePrendiInCaricoPratica();
   const cambiaStato = useCambiaStatoPratica();
   const commenta = useCreateCommentoPraticaBackoffice();
+  const chatRef = useRef<HTMLDivElement>(null);
+  const numeroCommenti = q.data?.commenti.length ?? 0;
+  useEffect(() => { if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight; }, [numeroCommenti]);
   const elimina = useDeletePraticaBackoffice();
   const [errore, setErrore] = useState<string | null>(null);
   const [anteprima, setAnteprima] = useState<Anteprima | null>(null);
@@ -197,9 +200,13 @@ export default function PraticaDettaglioBackoffice() {
         </dl>
       </Sezione>
 
-      <Sezione titolo="Messaggio iniziale" testId="sezione-messaggio">
-        <p className="text-sm whitespace-pre-wrap" data-testid="text-messaggio">{p.messaggio || "Il collaboratore non ha scritto nessun messaggio."}</p>
-      </Sezione>
+      <section className="rounded-lg border border-primary/30 border-l-4 border-l-primary bg-primary/5 p-5 rise" data-testid="sezione-messaggio">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <h2 className="text-lg font-bold text-primary flex items-center gap-2"><MessageSquareText className="size-5" /> Messaggio iniziale</h2>
+          <span className="text-xs text-muted-foreground">Scritto da <strong className="text-foreground">{p.collaboratore.cognome} {p.collaboratore.nome}</strong> · {fmtIstante(p.inviataIl)}</span>
+        </div>
+        <p className="text-base leading-relaxed whitespace-pre-wrap rounded-md bg-card border border-border p-4" data-testid="text-messaggio">{p.messaggio || "Il collaboratore non ha scritto nessun messaggio."}</p>
+      </section>
 
       <Sezione titolo="Documenti del collaboratore" testId="sezione-documenti">
         {p.mandato && (
@@ -246,19 +253,23 @@ export default function PraticaDettaglioBackoffice() {
       </Sezione>
 
       <Sezione titolo="Commenti" testId="sezione-commenti" nota="È la chat con il collaboratore: i commenti sono visibili a entrambi.">
-        {p.commenti.length === 0 ? <p className="text-sm text-muted-foreground mb-4">Nessun commento.</p> : (
-          <ul className="space-y-3 mb-4">
-            {p.commenti.map((c) => (
-              <li key={c.id} className={`rounded-lg border p-3 text-sm max-w-[85%] ${c.mio ? "ml-auto bg-secondary/60 border-border" : c.ruolo === "collaboratore" ? "bg-card border-accent" : "bg-card border-border"}`} data-testid={`commento-${c.id}`}>
-                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mb-1">
-                  <strong className="text-foreground">{c.autore}</strong><Badge variant="outline">{ruoloLabel(c.ruolo)}</Badge><span>{fmtIstante(c.creatoIl)}</span>
-                </div>
-                <p className="whitespace-pre-wrap">{c.testo}</p>
-                {c.canaleAvviso && <p className="text-xs text-muted-foreground mt-2">Avviso alla sede: {etichettaCanale(c.canaleAvviso)}</p>}
-              </li>
-            ))}
-          </ul>
-        )}
+        <div ref={chatRef} className="rounded-lg border border-border bg-secondary/30 p-3 sm:p-4 mb-4 max-h-[28rem] overflow-y-auto" data-testid="chat-commenti">
+          {p.commenti.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">Nessun commento: scrivi il primo messaggio al collaboratore.</p> : (
+            <ul className="space-y-3">
+              {p.commenti.map((c) => (
+                <li key={c.id} className={`flex flex-col max-w-[85%] ${c.mio ? "ml-auto items-end" : "items-start"}`} data-testid={`commento-${c.id}`}>
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground mb-1 px-1">
+                    <strong className="text-foreground">{c.mio ? "Tu" : c.autore}</strong><span>{ruoloLabel(c.ruolo)}</span><span>{fmtIstante(c.creatoIl)}</span>
+                  </div>
+                  <div className={`rounded-2xl px-4 py-2.5 text-sm shadow-sm ${c.mio ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-card border border-border rounded-bl-sm"}`}>
+                    <p className="whitespace-pre-wrap break-words">{c.testo}</p>
+                  </div>
+                  {c.canaleAvviso && <p className="text-[11px] text-muted-foreground mt-1 px-1">Avviso alla sede: {etichettaCanale(c.canaleAvviso)}</p>}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
         <div className="space-y-3">
           <Textarea value={testo} maxLength={4000} rows={3} onChange={(e) => setTesto(e.target.value)} placeholder="Scrivi un commento per il collaboratore" data-testid="input-commento" />
           <div className="flex flex-wrap items-end justify-between gap-3">
