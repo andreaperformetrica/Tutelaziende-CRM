@@ -22,6 +22,7 @@ import {
   type AnagraficaNormalizzata,
 } from "../lib/persone";
 import { chiudiSessioniUtente } from "../lib/sessioni";
+import { inviaCredenzialiCollaboratore } from "../lib/email-credenziali";
 import { valida } from "../lib/validazione";
 import { richiediRuolo } from "../middlewares/auth";
 
@@ -238,7 +239,7 @@ router.post("/collaboratori", soloBackofficeScrittura, async (req, res) => {
   const passwordHash = await hashPassword(dati.passwordProvvisoria);
 
   try {
-    const id = await db.transaction(async (tx) => {
+    const creato = await db.transaction(async (tx) => {
       const [utente] = await tx
         .insert(utentiTable)
         .values({
@@ -277,9 +278,16 @@ router.post("/collaboratori", soloBackofficeScrittura, async (req, res) => {
           dettagli: { capogruppoId: dati.capogruppoId },
         });
       }
-      return collaboratore!.id;
+      return { id: collaboratore!.id, utenteId: utente!.id };
     });
-    res.status(201).json(await dettaglio(id));
+    void inviaCredenzialiCollaboratore({
+      utenteId: creato.utenteId,
+      nome: anagrafica.nome,
+      cognome: anagrafica.cognome,
+      email: anagrafica.email!,
+      password: dati.passwordProvvisoria,
+    });
+    res.status(201).json(await dettaglio(creato.id));
   } catch (err) {
     throw erroreDuplicatoDb(err) ?? err;
   }

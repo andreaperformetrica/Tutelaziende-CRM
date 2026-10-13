@@ -30,6 +30,7 @@ export const EVENTI_NOTIFICA = {
   assistito_duplicato: "Anagrafica già registrata (agli admin)",
   evento_invito: "Invito a un evento (alla sede)",
   estratto_inviato: "Estratto pratiche chiuse (alla sede)",
+  credenziali_collaboratore: "Credenziali di accesso (al nuovo collaboratore)",
 } as const;
 export type EventoNotifica = keyof typeof EVENTI_NOTIFICA;
 
@@ -174,7 +175,7 @@ function riempiTemplate(modello: string, v: Record<string, string>): string {
 // Recapito (dopo il commit)
 // ---------------------------------------------------------------------------------------------
 
-interface EsitoInvio {
+export interface EsitoInvio {
   esito: "inviata" | "non_inviata" | "errore";
   dettaglio: string | null;
   idEsterno?: string | null;
@@ -182,7 +183,7 @@ interface EsitoInvio {
 
 const troncato = (s: string) => (s.length > 300 ? `${s.slice(0, 297)}...` : s);
 
-const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+export const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 function htmlDaTesto(testo: string): string {
   const corpo = escapeHtml(testo)
     .split(/\n{2,}/)
@@ -209,22 +210,40 @@ async function inviaEmail(n: NotificaRow): Promise<EsitoInvio> {
     const { pdf, nomeFile } = await pdfEstratto(n.estrattoId);
     allegati = [{ filename: nomeFile, content: pdf.toString("base64") }];
   }
-  const r = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${valore("RESEND_API_KEY")}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from: valore("NOTIFICHE_EMAIL_MITTENTE"),
-      to: [n.destinatarioContatto],
-      subject: n.oggetto ?? "Aggiornamento",
-      text: n.testo,
-      html: htmlDaTesto(n.testo),
-      ...(allegati ? { attachments: allegati } : {}),
-    }),
-    signal: AbortSignal.timeout(TIMEOUT_MS),
-  });
-  if (!r.ok) return { esito: "errore", dettaglio: await leggiErrore(r) };
-  const j = (await r.json().catch(() => ({}))) as { id?: string };
-  return { esito: "inviata", dettaglio: null, idEsterno: j.id ?? null };
+  return spedisciEmail({ a: n.destinatarioContatto, oggetto: n.oggetto ?? "Aggiornamento", testo: n.testo, html: htmlDaTesto(n.testo), allegati });
+}
+
+export interface AllegatoEmail {
+  filename: string;
+  content: string;
+  /** Per le immagini incorporate nel corpo dell'email (src="cid:..."). */
+  content_id?: string;
+}
+
+/** Spedisce una email con Resend. Non lancia errori: restituisce l'esito. */
+export async function spedisciEmail(e: { a: string; oggetto: string; testo: string; html: string; allegati?: AllegatoEmail[] }): Promise<EsitoInvio> {
+  const { attivo, mancanti } = statoCanali().email;
+  if (!attivo) return { esito: "non_inviata", dettaglio: `Chiavi email mancanti: ${mancanti.join(", ")}.` };
+  try {
+    const r = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${valore("RESEND_API_KEY")}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: valore("NOTIFICHE_EMAIL_MITTENTE"),
+        to: [e.a],
+        subject: e.oggetto,
+        text: e.testo,
+        html: e.html,
+        ...(e.allegati ? { attachments: e.allegati } : {}),
+      }),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    if (!r.ok) return { esito: "errore", dettaglio: await leggiErrore(r) };
+    const j = (await r.json().catch(() => ({}))) as { id?: string };
+    return { esito: "inviata", dettaglio: null, idEsterno: j.id ?? null };
+  } catch (err) {
+    return { esito: "errore", dettaglio: troncato(err instanceof Error ? err.message : "Errore di rete") };
+  }
 }
 
 const comeWhatsapp = (numero: string) => (numero.startsWith("whatsapp:") ? numero : `whatsapp:${numero}`);
