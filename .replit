@@ -22,7 +22,7 @@ timeoutMs = 20000
 [userenv]
 
 [userenv.shared]
-NOTIFICHE_EMAIL_MITTENTE = "Tutela Aziende Notifiche <notify@performetrica.ai>"
+NOTIFICHE_EMAIL_MITTENTE = "Tutelaziende <notifiche@performetrica.ai>"
 
 [nix]
 channel = "stable-25_05"
