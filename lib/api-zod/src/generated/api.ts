@@ -3444,16 +3444,24 @@ export const listPraticheQueryPerPaginaMax = 200;
 export const ListPraticheQueryParams = zod.object({
   "q": zod.coerce.string().optional().describe('Ricerca su nome, cognome e codice fiscale dell\'assistito o sul numero pratica'),
   "collaboratoreId": zod.coerce.number().int().optional().describe('Solo le pratiche di questo collaboratore del gruppo'),
+  "gruppo": zod.enum(['bozze', 'in_lavorazione', 'chiuse']).optional().describe('Solo le bozze (non inviate), le pratiche in lavorazione (inviate, stato non chiuso) o le chiuse'),
   "pagina": zod.coerce.number().int().min(1).optional(),
   "perPagina": zod.coerce.number().int().min(1).max(listPraticheQueryPerPaginaMax).optional()
 })
 
 export const ListPraticheResponse = zod.object({
+  "conteggi": zod.object({
+  "tutte": zod.number().int(),
+  "bozze": zod.number().int(),
+  "inLavorazione": zod.number().int(),
+  "chiuse": zod.number().int()
+}),
   "elementi": zod.array(zod.object({
   "id": zod.number().int(),
   "numero": zod.number().int().nullable().describe('Numero progressivo, assegnato all\'invio'),
   "bozza": zod.boolean(),
   "stato": zod.string().describe('Nome dello stato; Bozza finche\' non e\' inviata'),
+  "statoChiuso": zod.boolean().describe('Vero se lo stato conta come chiuso'),
   "assistito": zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),

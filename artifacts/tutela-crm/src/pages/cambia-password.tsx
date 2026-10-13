@@ -11,7 +11,7 @@ import { useSession, homeFor } from "@/lib/auth";
 import { parseApiError } from "@/lib/format";
 import { FieldError } from "@/components/common";
 
-export default function CambiaPasswordPage() {
+export default function CambiaPasswordPage({ incorporata = false }: { incorporata?: boolean }) {
   const { session } = useSession();
   const qc = useQueryClient();
   const [, nav] = useLocation();
@@ -22,7 +22,7 @@ export default function CambiaPasswordPage() {
   const [errs, setErrs] = useState<Record<string, string>>({});
   const [srv, setSrv] = useState<string | null>(null);
   const m = useCambiaPassword();
-  const forzato = !!session?.deveCambiarePassword;
+  const forzato = !incorporata && !!session?.deveCambiarePassword;
 
   const invia = (ev: React.FormEvent) => {
     ev.preventDefault();
@@ -38,7 +38,7 @@ export default function CambiaPasswordPage() {
         qc.setQueryData(getGetSessioneQueryKey(), s);
         qc.invalidateQueries({ queryKey: getGetSessioneQueryKey() });
         toast({ title: "Password aggiornata" });
-        nav(homeFor(s.area));
+        if (incorporata) { setAtt(""); setNuova(""); setConf(""); setErrs({}); } else nav(homeFor(s.area));
       },
       onError: (err) => {
         const p = parseApiError(err);
@@ -54,7 +54,7 @@ export default function CambiaPasswordPage() {
     { id: "conferma", label: "Conferma nuova password", v: conf, set: setConf, ac: "new-password" },
   ];
   return (
-    <div className={forzato ? "min-h-[100dvh] grid place-items-center p-6 bg-sidebar" : "max-w-lg"}>
+    <div className={forzato ? "min-h-[100dvh] grid place-items-center p-6 bg-sidebar" : incorporata ? "" : "max-w-lg"}>
       <form onSubmit={invia} className={`rise ${forzato ? "w-full max-w-md bg-card rounded-xl p-8 shadow-2xl border-t-4 border-accent" : "bg-card border border-border rounded-lg p-6"}`} data-testid="form-cambia-password">
         {forzato ? (
           <div className="flex gap-3 rounded-md bg-accent/20 border border-accent p-3 mb-5" data-testid="avviso-primo-accesso">
@@ -62,7 +62,7 @@ export default function CambiaPasswordPage() {
             <p className="text-sm"><b>Primo accesso o password reimpostata.</b> Per motivi di sicurezza devi scegliere una nuova password personale prima di continuare: non potrai usare altre sezioni finché non l'avrai cambiata.</p>
           </div>
         ) : null}
-        <div className="flex items-center gap-2 mb-1"><KeyRound className="size-5 text-primary" /><h1 className="text-2xl font-bold">Cambia password</h1></div>
+        <div className="flex items-center gap-2 mb-1"><KeyRound className="size-5 text-primary" />{incorporata ? <h2 className="text-lg font-bold">Cambia password</h2> : <h1 className="text-2xl font-bold">Cambia password</h1>}</div>
         <p className="text-sm text-muted-foreground mb-5">Almeno 8 caratteri, diversa da quella attuale.</p>
         {srv && <div role="alert" className="mb-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive font-medium" data-testid="text-errore">{srv}</div>}
         <div className="space-y-4">
@@ -75,7 +75,7 @@ export default function CambiaPasswordPage() {
           ))}
           <div className="flex gap-2 pt-1">
             <Button type="submit" disabled={m.isPending} data-testid="button-salva-password">{m.isPending && <Loader2 className="size-4 mr-2 animate-spin" />} Salva nuova password</Button>
-            {!forzato && session && <Button type="button" variant="ghost" onClick={() => nav(homeFor(session.area))} data-testid="button-annulla">Annulla</Button>}
+            {!forzato && !incorporata && session && <Button type="button" variant="ghost" onClick={() => nav(homeFor(session.area))} data-testid="button-annulla">Annulla</Button>}
           </div>
         </div>
       </form>

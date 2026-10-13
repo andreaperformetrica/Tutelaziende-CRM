@@ -45,13 +45,13 @@ export function AssistitiLista({ base, backoffice, capogruppo, puoCreare }: { ba
         subtitle={lista.data ? `${totale} ${totale === 1 ? "risultato" : "risultati"}` : "Caricamento elenco"}
         actions={puoCreare ? <Button onClick={() => nav(`${base}/nuovo`)} data-testid="button-nuovo-assistito"><Plus className="size-4 mr-1.5" /> Nuovo assistito</Button> : undefined} />
       <div className="flex flex-wrap gap-2 mb-4 rise">
-        <div className="relative flex-1 min-w-56">
+        <div className="relative flex-1 min-w-full sm:min-w-56">
           <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input autoComplete="off" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Cerca per nome, cognome o codice fiscale" className="pl-9 bg-card" data-testid="input-ricerca" />
+          <Input autoComplete="off" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Cerca nome, cognome o codice fiscale" className="pl-9 bg-card" data-testid="input-ricerca" />
         </div>
         {mostraCollaboratore && (
           <Select value={coll} onValueChange={(v) => { setColl(v); setPagina(1); }}>
-            <SelectTrigger className="w-60 bg-card" data-testid="filtro-collaboratore"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-60 bg-card" data-testid="filtro-collaboratore"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Ogni collaboratore</SelectItem>
               {(collaboratori.data ?? []).map((c) => <SelectItem key={c.id} value={String(c.id)}>{c.cognome} {c.nome} · {c.numeroSportello}</SelectItem>)}
@@ -71,7 +71,30 @@ export function AssistitiLista({ base, backoffice, capogruppo, puoCreare }: { ba
           action={filtrato ? <Button variant="outline" onClick={reset}>Azzera ricerca</Button> : puoCreare ? <Button onClick={() => nav(`${base}/nuovo`)}>Nuovo assistito</Button> : undefined} />
       ) : (
         <>
-          <div className="rounded-lg border border-border bg-card overflow-x-auto rise">
+          <ul className="md:hidden space-y-2.5 rise" data-testid="lista-assistiti-mobile">
+            {lista.data.elementi.map((a) => (
+              <li key={a.id} className="rounded-lg border border-border bg-card" data-testid={`card-assistito-${a.id}`}>
+                <Link href={`${base}/${a.id}`} className="block p-4 active:bg-secondary/60 rounded-lg transition-colors">
+                  <div className="font-bold text-base leading-tight">
+                    {a.cognome} {a.nome}
+                    {a.straniero && <Globe2 className="inline size-3.5 ml-1.5 text-accent-foreground/70" aria-label="Cittadino straniero" />}
+                  </div>
+                  <div className="font-mono text-xs tracking-wider text-muted-foreground mt-1">{a.codiceFiscale}</div>
+                  <div className="mt-2 text-xs text-muted-foreground">Nato il {fmtData(a.dataNascita)} · {a.citta}</div>
+                  <div className="mt-0.5 text-xs text-muted-foreground font-mono">{fmtCellulare(a.cellulare)}</div>
+                  {mostraCollaboratore && <div className="mt-1 text-xs text-muted-foreground">Collaboratore: {a.collaboratore.cognome} {a.collaboratore.nome} · {a.collaboratore.numeroSportello}</div>}
+                </Link>
+                {puoCreare && a.modificabile && (
+                  <div className="px-4 pb-4 -mt-1">
+                    <Button className="w-full h-11" variant="outline" onClick={() => setApriPer({ id: a.id, nome: `${a.cognome} ${a.nome}` })} data-testid={`button-apri-pratica-mobile-${a.id}`}>
+                      <FilePlus2 className="size-4 mr-1.5" /> Apri pratica
+                    </Button>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+          <div className="hidden md:block rounded-lg border border-border bg-card overflow-x-auto rise">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/60 hover:bg-muted/60">

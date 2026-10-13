@@ -35,7 +35,8 @@ import {
   caricaPraticaPropria,
   caricaPraticaVisibile,
   condizioneVisibilitaPratiche,
-  contaPratiche,
+  condizioneGruppoPratiche,
+  contaGruppiPratiche,
   dettaglioPratica,
   ERRORE_PRATICA_BOZZA,
   ERRORE_PRATICA_INVIATA,
@@ -83,18 +84,20 @@ router.get("/pratiche", async (req, res) => {
       ? sql`(${condizioneRicerca(q)} or ${praticheTable.numero} = ${Number(q)})`
       : condizioneRicerca(q)
     : undefined;
-  const where = and(
+  const baseWhere = and(
     condizioneVisibilitaPratiche(req),
     p.collaboratoreId ? eq(praticheTable.collaboratoreId, p.collaboratoreId) : undefined,
     ricerca,
   );
-  const [totale, righe] = await Promise.all([
-    contaPratiche(where),
+  const where = and(baseWhere, condizioneGruppoPratiche(p.gruppo));
+  const [conteggi, righe] = await Promise.all([
+    contaGruppiPratiche(baseWhere),
     selezionaPratiche(where)
       .limit(perPagina)
       .offset((pagina - 1) * perPagina),
   ]);
-  res.json({ elementi: righe.map((r) => mappaRiepilogo(r, mio)), totale, pagina, perPagina });
+  const totale = p.gruppo === "bozze" ? conteggi.bozze : p.gruppo === "in_lavorazione" ? conteggi.inLavorazione : p.gruppo === "chiuse" ? conteggi.chiuse : conteggi.tutte;
+  res.json({ elementi: righe.map((r) => mappaRiepilogo(r, mio)), totale, pagina, perPagina, conteggi });
 });
 
 router.get("/pratiche/stato-invio", async (_req, res) => {

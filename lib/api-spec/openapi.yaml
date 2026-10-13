@@ -1633,6 +1633,13 @@ paths:
           description: Solo le pratiche di questo collaboratore del gruppo
           schema:
             type: integer
+        - name: gruppo
+          in: query
+          required: false
+          description: "Solo le bozze (non inviate), le pratiche in lavorazione (inviate, stato non chiuso) o le chiuse"
+          schema:
+            type: string
+            enum: [bozze, in_lavorazione, chiuse]
         - name: pagina
           in: query
           required: false
@@ -3301,12 +3308,13 @@ components:
         nome: { type: string }
     PraticaRiepilogo:
       type: object
-      required: [id, numero, bozza, stato, assistito, collaboratore, tipo, dataRichiesta, creataIl, gestitaDa, propria]
+      required: [id, numero, bozza, stato, statoChiuso, assistito, collaboratore, tipo, dataRichiesta, creataIl, gestitaDa, propria]
       properties:
         id: { type: integer }
         numero: { type: [integer, "null"], description: "Numero progressivo, assegnato all'invio" }
         bozza: { type: boolean }
         stato: { type: string, description: "Nome dello stato; Bozza finche' non e' inviata" }
+        statoChiuso: { type: boolean, description: "Vero se lo stato conta come chiuso" }
         assistito:
           $ref: "#/components/schemas/PraticaAssistitoRiepilogo"
         collaboratore:
@@ -3317,10 +3325,20 @@ components:
         creataIl: { type: string, format: date-time }
         gestitaDa: { type: [string, "null"], description: "Operatore del back office che la gestisce" }
         propria: { type: boolean, description: "Vero se la pratica e' del collaboratore che la guarda (non di un collaboratore del gruppo)" }
+    ConteggiGruppiPratiche:
+      type: object
+      required: [tutte, bozze, inLavorazione, chiuse]
+      properties:
+        tutte: { type: integer }
+        bozze: { type: integer }
+        inLavorazione: { type: integer }
+        chiuse: { type: integer }
     PratichePagina:
       type: object
-      required: [elementi, totale, pagina, perPagina]
+      required: [elementi, totale, pagina, perPagina, conteggi]
       properties:
+        conteggi:
+          $ref: "#/components/schemas/ConteggiGruppiPratiche"
         elementi:
           type: array
           items:

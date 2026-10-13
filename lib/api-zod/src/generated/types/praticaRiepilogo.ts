@@ -19,6 +19,8 @@ export interface PraticaRiepilogo {
   bozza: boolean;
   /** Nome dello stato; Bozza finche' non e' inviata */
   stato: string;
+  /** Vero se lo stato conta come chiuso */
+  statoChiuso: boolean;
   assistito: PraticaAssistitoRiepilogo;
   collaboratore: PraticaCollaboratoreRiepilogo;
   tipo: PraticaTipoRiepilogo;

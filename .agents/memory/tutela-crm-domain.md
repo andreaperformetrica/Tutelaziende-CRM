@@ -20,3 +20,7 @@ Domain rules (user-confirmed):
 - Log archiving: super admin exports a period (CSV in storage); rows are flagged archived, not deleted.
 
 Test users rule (user request): seeded and reset test users must NOT be forced to change password at login ("otherwise I can never test everything"). Keep deve_cambiare_password=false for them; the forced change stays in the app only for users created from the UI. Never re-force it when resetting test data. **Why:** the user asked. **How to apply:** any seed or reset script.
+
+## Mobile (collaboratore area)
+- Collaboratore shell: below `lg` it uses a fixed bottom tab bar (5 voci) and a compact header; lists (pratiche, assistiti) show cards below `md` and tables from `md` up. Shared UI inputs/buttons/selects are taller on mobile (h-11), normal from `md`. The backoffice shell is NOT yet mobile-optimized (sidebar).
+- To check logged-in pages visually: headless chromium over CDP via `generated-artifacts/shot/shot.mjs <email> <path> <out.png>` (logs in with the test password through the proxy on port 80).

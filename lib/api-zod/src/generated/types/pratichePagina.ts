@@ -5,9 +5,11 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ConteggiGruppiPratiche } from './conteggiGruppiPratiche';
 import type { PraticaRiepilogo } from './praticaRiepilogo';
 
 export interface PratichePagina {
+  conteggi: ConteggiGruppiPratiche;
   elementi: PraticaRiepilogo[];
   totale: number;
   pagina: number;

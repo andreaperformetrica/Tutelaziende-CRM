@@ -1086,6 +1086,8 @@ export interface PraticaRiepilogo {
   bozza: boolean;
   /** Nome dello stato; Bozza finche' non e' inviata */
   stato: string;
+  /** Vero se lo stato conta come chiuso */
+  statoChiuso: boolean;
   assistito: PraticaAssistitoRiepilogo;
   collaboratore: PraticaCollaboratoreRiepilogo;
   tipo: PraticaTipoRiepilogo;
@@ -1104,7 +1106,15 @@ export interface PraticaRiepilogo {
   propria: boolean;
 }
 
+export interface ConteggiGruppiPratiche {
+  tutte: number;
+  bozze: number;
+  inLavorazione: number;
+  chiuse: number;
+}
+
 export interface PratichePagina {
+  conteggi: ConteggiGruppiPratiche;
   elementi: PraticaRiepilogo[];
   totale: number;
   pagina: number;
@@ -2076,6 +2086,10 @@ q?: string;
  */
 collaboratoreId?: number;
 /**
+ * Solo le bozze (non inviate), le pratiche in lavorazione (inviate, stato non chiuso) o le chiuse
+ */
+gruppo?: ListPraticheGruppo;
+/**
  * @minimum 1
  */
 pagina?: number;
@@ -2085,6 +2099,15 @@ pagina?: number;
  */
 perPagina?: number;
 };
+
+export type ListPraticheGruppo = typeof ListPraticheGruppo[keyof typeof ListPraticheGruppo];
+
+
+export const ListPraticheGruppo = {
+  bozze: 'bozze',
+  in_lavorazione: 'in_lavorazione',
+  chiuse: 'chiuse',
+} as const;
 
 export type ListPraticheBackofficeParams = {
 collaboratoreId?: number;

@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ListPraticheGruppo } from './listPraticheGruppo';
 
 export type ListPraticheParams = {
 /**
@@ -15,6 +16,10 @@ q?: string;
  * Solo le pratiche di questo collaboratore del gruppo
  */
 collaboratoreId?: number;
+/**
+ * Solo le bozze (non inviate), le pratiche in lavorazione (inviate, stato non chiuso) o le chiuse
+ */
+gruppo?: ListPraticheGruppo;
 /**
  * @minimum 1
  */

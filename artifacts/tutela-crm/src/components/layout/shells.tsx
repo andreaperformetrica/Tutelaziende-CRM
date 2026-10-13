@@ -117,17 +117,24 @@ export function BackofficeShell({ s, children }: { s: SessioneUtente; children: 
 export function CollaboratoreShell({ s, children }: { s: SessioneUtente; children: ReactNode }) {
   const [loc] = useLocation();
   const esci = useEsci();
-  const voci = [{ href: "/collaboratore", label: "Home", icon: Home }, { href: "/collaboratore/assistiti", label: "Assistiti", icon: UserRound }, { href: "/collaboratore/pratiche", label: "Le mie pratiche", icon: FileText }, { href: "/collaboratore/eventi", label: "Eventi", icon: CalendarDays }, { href: "/cambia-password", label: "Cambia password", icon: KeyRound }];
+  const voci = [
+    { href: "/collaboratore", label: "Home", corto: "Home", icon: Home },
+    { href: "/collaboratore/assistiti", label: "Assistiti", corto: "Assistiti", icon: UserRound },
+    { href: "/collaboratore/pratiche", label: "Le mie pratiche", corto: "Pratiche", icon: FileText },
+    { href: "/collaboratore/eventi", label: "Eventi", corto: "Eventi", icon: CalendarDays },
+    { href: "/collaboratore/impostazioni", label: "Impostazioni", corto: "Impostazioni", icon: Settings },
+  ];
+  const attiva = (href: string) => loc === href || (href !== "/collaboratore" && loc.startsWith(href + "/"));
   return (
-    <div className="min-h-[100dvh] bg-secondary/40 paper">
+    <div className="min-h-[100dvh] bg-secondary/40 paper overflow-x-hidden">
       <header className="bg-primary text-primary-foreground border-b-4 border-accent">
-        <div className="mx-auto max-w-5xl px-4 h-16 flex items-center gap-6">
+        <div className="mx-auto max-w-5xl px-4 h-14 lg:h-16 flex items-center gap-4 lg:gap-6">
           <Marchio chiaro />
-          <nav className="flex gap-1 ml-2" data-testid="nav-collaboratore">
+          <nav className="hidden lg:flex gap-1 ml-2" data-testid="nav-collaboratore">
             {voci.map((v) => (
               <Link key={v.href} href={v.href} data-testid={`link-menu-${v.label.toLowerCase().replace(" ", "-")}`}
-                className={cn("flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors", (loc === v.href || (v.href !== "/collaboratore" && loc.startsWith(v.href + "/"))) ? "bg-accent text-accent-foreground" : "hover:bg-primary-foreground/10")}>
-                <v.icon className="size-4" /><span className="hidden sm:inline">{v.label}</span>
+                className={cn("flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors", attiva(v.href) ? "bg-accent text-accent-foreground" : "hover:bg-primary-foreground/10")}>
+                <v.icon className="size-4" /><span>{v.label}</span>
               </Link>
             ))}
           </nav>
@@ -136,11 +143,24 @@ export function CollaboratoreShell({ s, children }: { s: SessioneUtente; childre
               <div className="text-sm font-semibold" data-testid="text-utente-nome">{s.nome} {s.cognome}</div>
               <div className="text-[11px] opacity-70">{ruoloLabel(s.ruolo)}</div>
             </div>
-            <button onClick={esci} data-testid="button-esci" className="flex items-center gap-1.5 rounded-full border border-primary-foreground/30 px-3 py-1.5 text-sm hover:bg-primary-foreground/10 transition-colors"><LogOut className="size-4" /> Esci</button>
+            <button onClick={esci} data-testid="button-esci" aria-label="Esci" className="flex items-center gap-1.5 rounded-full border border-primary-foreground/30 size-10 sm:size-auto justify-center sm:px-3 sm:py-1.5 text-sm hover:bg-primary-foreground/10 transition-colors"><LogOut className="size-4" /> <span className="hidden sm:inline">Esci</span></button>
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+      <main className="mx-auto max-w-5xl px-4 py-5 lg:py-8 pb-28 lg:pb-8">{children}</main>
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-card border-t border-border shadow-[0_-2px_12px_rgba(0,0,0,0.08)] pb-[env(safe-area-inset-bottom)]" data-testid="nav-collaboratore-mobile" aria-label="Menu principale">
+        <ul className="grid grid-cols-5">
+          {voci.map((v) => (
+            <li key={v.href}>
+              <Link href={v.href} data-testid={`tab-${v.corto.toLowerCase()}`} aria-current={attiva(v.href) ? "page" : undefined}
+                className={cn("flex flex-col items-center justify-center gap-0.5 min-h-16 px-1 text-[11px] font-semibold transition-colors", attiva(v.href) ? "text-primary" : "text-muted-foreground")}>
+                <span className={cn("grid place-items-center h-7 w-12 rounded-full transition-colors", attiva(v.href) && "bg-accent")}><v.icon className="size-5" /></span>
+                <span className="truncate max-w-full">{v.corto}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </div>
   );
 }

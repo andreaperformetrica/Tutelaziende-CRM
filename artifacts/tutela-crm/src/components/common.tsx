@@ -11,7 +11,7 @@ export function PageHeader({ title, subtitle, actions, kicker }: { title: string
         <h1 className="text-3xl font-bold leading-none" data-testid="text-page-title">{title}</h1>
         {subtitle && <div className="text-sm text-muted-foreground mt-2">{subtitle}</div>}
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      {actions && <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto [&>button]:flex-1 sm:[&>button]:flex-none">{actions}</div>}
     </div>
   );
 }

@@ -5,7 +5,7 @@ import {
   getGetPraticaQueryKey, getListPraticheQueryKey, useCreateCommentoPratica, useDeleteDocumentoPratica, useDeletePratica,
   useGetPratica, useInviaPratica, useSalvaMessaggioPratica, type PraticaDettaglio,
 } from "@workspace/api-client-react";
-import { AlertTriangle, ArrowLeft, CheckCircle2, Download, FileText, Loader2, Lock, Paperclip, Send, Trash2, Upload } from "lucide-react";
+import { AlertTriangle, ArrowLeft, CheckCircle2, Download, FileText, Loader2, Lock, Paperclip, Save, Send, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -238,7 +238,6 @@ export default function PraticaDettaglioCollaboratore() {
           {p.modificabile ? (
             <>
               <Textarea value={messaggio} maxLength={4000} rows={4} onChange={(e) => { setMessaggio(e.target.value); setSporco(true); }} placeholder="Scrivi qui il messaggio per l'ufficio" data-testid="input-messaggio-pratica" />
-              <div className="mt-3 flex justify-end"><Button variant="outline" size="sm" onClick={salva} disabled={salvaMsg.isPending || !sporco} data-testid="button-salva-bozza">{salvaMsg.isPending && <Loader2 className="size-4 mr-2 animate-spin" />} Salva bozza</Button></div>
             </>
           ) : <p className="text-sm whitespace-pre-wrap">{p.messaggio || "Nessun messaggio."}</p>}
         </Sezione>
@@ -277,7 +276,12 @@ export default function PraticaDettaglioCollaboratore() {
           {bloccato && <FieldError>{p.invio.messaggio}</FieldError>}
           <p className="text-xs text-muted-foreground mb-3">Dopo l'invio la pratica riceve un numero progressivo e non si potrà più cancellare né sostituire i documenti inviati.</p>
           <div className="flex flex-wrap justify-between gap-2">
-            <Button variant="outline" onClick={() => setEliminaBozza(true)} data-testid="button-elimina-bozza"><Trash2 className="size-4 mr-1.5" /> Cancella bozza</Button>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" onClick={() => setEliminaBozza(true)} data-testid="button-elimina-bozza"><Trash2 className="size-4 mr-1.5" /> Cancella bozza</Button>
+              <Button variant="outline" onClick={salva} disabled={salvaMsg.isPending} data-testid="button-salva-bozza">
+                {salvaMsg.isPending ? <Loader2 className="size-4 mr-2 animate-spin" /> : <Save className="size-4 mr-1.5" />} Salva bozza
+              </Button>
+            </div>
             <Button onClick={invio} disabled={!puoInviare || invia.isPending} data-testid="button-invia-pratica">
               {invia.isPending ? <Loader2 className="size-4 mr-2 animate-spin" /> : <Send className="size-4 mr-2" />} Invia pratica
             </Button>

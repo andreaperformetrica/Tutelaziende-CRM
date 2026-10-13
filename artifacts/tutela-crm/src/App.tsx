@@ -43,6 +43,7 @@ import EventoCheckIn from '@/pages/admin/evento-check-in';
 import EventiCollaboratore from '@/pages/collaboratore/eventi';
 import EventoDettaglioCollaboratore from '@/pages/collaboratore/evento-dettaglio';
 import HomeCollaboratore from '@/pages/home-collaboratore';
+import ImpostazioniCollaboratore from '@/pages/collaboratore/impostazioni';
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { refetchOnWindowFocus: false } } });
 
@@ -109,6 +110,7 @@ function Router() {
         <Route path="/collaboratore/assistiti" component={g(<AssistitiCollaboratore />, 'collaboratore', ['collaboratore'])} />
         <Route path="/collaboratore/assistiti/nuovo" component={g(<AssistitoNuovo />, 'collaboratore', ['collaboratore'])} />
         <Route path="/collaboratore/assistiti/:id" component={g(<AssistitoDettaglioCollaboratore />, 'collaboratore', ['collaboratore'])} />
+        <Route path="/collaboratore/impostazioni" component={g(<ImpostazioniCollaboratore />, 'collaboratore', ['collaboratore'])} />
         <Route path="/collaboratore/pratiche" component={g(<PraticheCollaboratore />, 'collaboratore', ['collaboratore'])} />
         <Route path="/collaboratore/pratiche/:id" component={g(<PraticaDettaglioCollaboratore />, 'collaboratore', ['collaboratore'])} />
         <Route path="/collaboratore" component={g(<HomeCollaboratore />, 'collaboratore', ['collaboratore'])} />

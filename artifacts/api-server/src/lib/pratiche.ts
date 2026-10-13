@@ -107,12 +107,39 @@ export async function contaPratiche(where: SQL | undefined): Promise<number> {
   return r?.n ?? 0;
 }
 
+const GRUPPI_PRATICHE = {
+  bozze: sql`${praticheTable.inviataIl} is null`,
+  in_lavorazione: sql`(${praticheTable.inviataIl} is not null and coalesce(${statiPraticaTable.chiuso}, false) = false)`,
+  chiuse: sql`(${praticheTable.inviataIl} is not null and coalesce(${statiPraticaTable.chiuso}, false) = true)`,
+} as const;
+
+export const condizioneGruppoPratiche = (gruppo: keyof typeof GRUPPI_PRATICHE | undefined): SQL | undefined => (gruppo ? GRUPPI_PRATICHE[gruppo] : undefined);
+
+/** Quante pratiche ci sono in ogni gruppo (bozze, in lavorazione, chiuse) tra quelle che rispettano `where`. */
+export async function contaGruppiPratiche(where: SQL | undefined) {
+  const [r] = await db
+    .select({
+      tutte: sql<number>`count(*)::int`,
+      bozze: sql<number>`(count(*) filter (where ${GRUPPI_PRATICHE.bozze}))::int`,
+      inLavorazione: sql<number>`(count(*) filter (where ${GRUPPI_PRATICHE.in_lavorazione}))::int`,
+      chiuse: sql<number>`(count(*) filter (where ${GRUPPI_PRATICHE.chiuse}))::int`,
+    })
+    .from(praticheTable)
+    .innerJoin(assistitiTable, eq(assistitiTable.id, praticheTable.assistitoId))
+    .innerJoin(personeTable, eq(personeTable.id, assistitiTable.personaId))
+    .innerJoin(collaboratoriTable, eq(collaboratoriTable.id, praticheTable.collaboratoreId))
+    .leftJoin(statiPraticaTable, eq(statiPraticaTable.id, praticheTable.statoId))
+    .where(where);
+  return r ?? { tutte: 0, bozze: 0, inLavorazione: 0, chiuse: 0 };
+}
+
 export function mappaRiepilogo(r: RigaPratica, mio: number) {
   return {
     id: r.id,
     numero: r.numero,
     bozza: r.inviataIl === null,
     stato: r.statoNome,
+    statoChiuso: r.statoChiuso,
     assistito: { id: r.assistitoId, nome: r.assNome, cognome: r.assCognome, codiceFiscale: r.assCf },
     collaboratore: { id: r.collaboratoreId, nome: r.collNome, cognome: r.collCognome, numeroSportello: r.collSportello },
     tipo: { id: r.tipoPraticaId, nome: r.tipoNome },
