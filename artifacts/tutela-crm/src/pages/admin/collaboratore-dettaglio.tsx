@@ -1,17 +1,18 @@
 import { useState, type ReactNode } from "react";
-import { Link, useParams } from "wouter";
+import { Link, useLocation, useParams } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  getGetCollaboratoreQueryKey, getListCollaboratoriQueryKey, useGetCollaboratore, useImpostaPasswordProvvisoriaCollaboratore, useUpdateCollaboratore,
+  getGetCollaboratoreQueryKey, getListCollaboratoriQueryKey, useDeleteCollaboratore, useGetCollaboratore, useImpostaPasswordProvvisoriaCollaboratore, useReinviaCredenzialiCollaboratore, useUpdateCollaboratore,
   type CollaboratoreDettaglio,
 } from "@workspace/api-client-react";
-import { ArrowLeft, ChevronRight, KeyRound, Pencil, Power, ShieldAlert, Users } from "lucide-react";
+import { ArrowLeft, ChevronRight, KeyRound, Mail, Pencil, Power, ShieldAlert, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CollaboratoreForm } from "@/components/collaboratori/collaboratore-form";
 import { BannerStraniero } from "@/components/anagrafica/anagrafica-fields";
 import { PasswordDialog } from "@/components/password-dialog";
+import { ConfermaElimina } from "@/components/pratiche/conferma-elimina";
 import { ErrorState, PageHeader, StatoBadge } from "@/components/common";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@/lib/auth";
@@ -30,16 +31,22 @@ export default function CollaboratoreDettaglioPage() {
   const params = useParams<{ id: string }>();
   const id = Number(params.id);
   
+  const [, nav] = useLocation();
   const { session } = useSession();
   const qc = useQueryClient();
   const { toast } = useToast();
   const [modifica, setModifica] = useState(false);
   const [pwOpen, setPwOpen] = useState(false);
   const [pwErr, setPwErr] = useState<string | null>(null);
+  const [confermaInvio, setConfermaInvio] = useState(false);
+  const [confermaElimina, setConfermaElimina] = useState(false);
+  const reinvia = useReinviaCredenzialiCollaboratore();
+  const elimina = useDeleteCollaboratore();
   const q = useGetCollaboratore(id, { query: { enabled: Number.isFinite(id), queryKey: getGetCollaboratoreQueryKey(id) } });
   const update = useUpdateCollaboratore();
   const imposta = useImpostaPasswordProvvisoriaCollaboratore();
   const puoModificare = session?.ruolo === "super_admin" || session?.ruolo === "admin";
+  const eSuperAdmin = session?.ruolo === "super_admin";
 
   const invalida = () => {
     qc.invalidateQueries({ queryKey: getListCollaboratoriQueryKey() });
@@ -83,6 +90,12 @@ export default function CollaboratoreDettaglioPage() {
             <Button variant={c.attivo ? "outline" : "default"} disabled={update.isPending} onClick={() => toggleAttivo(c)} data-testid="button-toggle-attivo">
               <Power className="size-4 mr-1.5" /> {c.attivo ? "Disattiva" : "Riattiva"}
             </Button>
+            {eSuperAdmin && (
+              <>
+                <Button variant="outline" disabled={!c.attivo || reinvia.isPending} onClick={() => setConfermaInvio(true)} data-testid="button-reinvia-credenziali"><Mail className="size-4 mr-1.5" /> Reinvia credenziali</Button>
+                <Button variant="outline" className="text-destructive hover:text-destructive" onClick={() => setConfermaElimina(true)} data-testid="button-elimina-collaboratore"><Trash2 className="size-4 mr-1.5" /> Elimina</Button>
+              </>
+            )}
           </>
         ) : <Badge variant="secondary" data-testid="badge-sola-lettura">Sola lettura</Badge>} />
 
@@ -149,6 +162,30 @@ export default function CollaboratoreDettaglioPage() {
         </div>
       </div>
 
+      <ConfermaElimina aperto={confermaInvio} azione="Invia" titolo="Reinviare le credenziali?"
+        testo={`A ${c.cognome} ${c.nome} verrà impostata una nuova password provvisoria e inviata per email a ${c.email}. La password attuale smette di funzionare e le sessioni aperte vengono chiuse.`}
+        onAnnulla={() => setConfermaInvio(false)}
+        onConferma={() => {
+          setConfermaInvio(false);
+          reinvia.mutate({ id: c.id }, {
+            onSuccess: (r) => {
+              invalida();
+              if (r.esito === "inviata") toast({ title: "Credenziali inviate", description: `Email inviata a ${c.email}.` });
+              else toast({ variant: "destructive", title: "Email non inviata", description: `${r.dettaglio ?? "Invio non riuscito."} La nuova password è stata impostata ma nessuno la conosce: usa Password provvisoria per sceglierne una.` });
+            },
+            onError: (e) => toast({ variant: "destructive", title: "Operazione non riuscita", description: parseApiError(e).message }),
+          });
+        }} />
+      <ConfermaElimina aperto={confermaElimina} titolo="Eliminare il collaboratore?"
+        testo={`${c.cognome} ${c.nome} verrà eliminato definitivamente, insieme al suo accesso. Si può fare solo se non ha assistiti, pratiche o compensi. L'operazione non si può annullare.`}
+        onAnnulla={() => setConfermaElimina(false)}
+        onConferma={() => {
+          setConfermaElimina(false);
+          elimina.mutate({ id: c.id }, {
+            onSuccess: () => { qc.invalidateQueries({ queryKey: getListCollaboratoriQueryKey() }); toast({ title: "Collaboratore eliminato" }); nav("/admin/collaboratori"); },
+            onError: (e) => toast({ variant: "destructive", title: "Eliminazione non riuscita", description: parseApiError(e).message }),
+          });
+        }} />
       <PasswordDialog open={pwOpen} onClose={() => setPwOpen(false)} nome={`${c.cognome} ${c.nome}`} pending={imposta.isPending} error={pwErr}
         onConfirm={(pw) => imposta.mutate({ id: c.id, data: { passwordProvvisoria: pw } }, {
           onSuccess: () => { invalida(); setPwOpen(false); toast({ title: "Password provvisoria impostata" }); },

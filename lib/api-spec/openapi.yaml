@@ -279,6 +279,27 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CollaboratoreDettaglio"
+    delete:
+      operationId: deleteCollaboratore
+      tags: [collaboratori]
+      summary: Elimina un collaboratore senza dati collegati (solo super admin)
+      responses:
+        "204":
+          description: Eseguito
+  /collaboratori/{id}/reinvia-credenziali:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    post:
+      operationId: reinviaCredenzialiCollaboratore
+      tags: [collaboratori]
+      summary: Imposta una nuova password provvisoria casuale e la invia per email al collaboratore (solo super admin)
+      responses:
+        "200":
+          description: Esito dell'invio
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EsitoReinvioCredenziali"
   /collaboratori/{id}/password-provvisoria:
     parameters:
       - $ref: "#/components/parameters/IdPath"
@@ -2122,6 +2143,12 @@ components:
         nuovaPassword:
           type: string
           minLength: 8
+    EsitoReinvioCredenziali:
+      type: object
+      required: [esito, dettaglio]
+      properties:
+        esito: { type: string, enum: [inviata, non_inviata, errore] }
+        dettaglio: { type: [string, "null"], description: "Motivo se l'email non e' partita" }
     PasswordProvvisoriaInput:
       type: object
       required: [passwordProvvisoria]

@@ -81,8 +81,8 @@ function costruisci(c: Credenziali, mostraPassword: boolean) {
   return { html, testo };
 }
 
-/** Invia l'email delle credenziali e ne registra l'esito. Non lancia mai errori: la creazione del collaboratore non dipende dall'invio. */
-export async function inviaCredenzialiCollaboratore(c: Credenziali): Promise<void> {
+/** Invia l'email delle credenziali e ne registra l'esito. Non lancia mai errori: l'operazione che la richiede non dipende dall'invio. */
+export async function inviaCredenzialiCollaboratore(c: Credenziali): Promise<{ esito: "inviata" | "non_inviata" | "errore"; dettaglio: string | null }> {
   try {
     const oggetto = "Accesso a Tutelaziende: le sue credenziali";
     const [riga] = await db
@@ -111,7 +111,9 @@ export async function inviaCredenzialiCollaboratore(c: Credenziali): Promise<voi
       .update(notificheTable)
       .set({ esito: e.esito, dettaglioEsito: e.dettaglio, idEsterno: e.idEsterno ?? null, elaboratoIl: new Date() })
       .where(eq(notificheTable.id, riga!.id));
+    return { esito: e.esito, dettaglio: e.dettaglio };
   } catch (err) {
     logger.error({ err }, "Errore nell'invio dell'email delle credenziali");
+    return { esito: "errore", dettaglio: "Errore interno nell'invio dell'email." };
   }
 }

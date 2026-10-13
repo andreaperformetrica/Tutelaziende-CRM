@@ -51,6 +51,8 @@ export * from './documentoTipoInput';
 export * from './domandaQuestionario';
 export * from './domandaQuestionarioTipo';
 export * from './erroreApi';
+export * from './esitoReinvioCredenziali';
+export * from './esitoReinvioCredenzialiEsito';
 export * from './estrattoDettaglio';
 export * from './estrattoRiepilogo';
 export * from './etichettaFiltroNotifiche';

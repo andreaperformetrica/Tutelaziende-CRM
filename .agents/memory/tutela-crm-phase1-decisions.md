@@ -11,3 +11,4 @@ description: Permission and capogruppo rules chosen in phase 1 that later phases
 
 **Why:** chosen by the agent in phase 1 (not specified by the user); user to confirm during verification.
 **How to apply:** reuse the same rules when adding assistiti/pratiche visibility (group-level access for capogruppo).
+- Super admin only: delete a collaboratore (blocked with 409 if it has assistiti, pratiche, segnalazioni, compensi/estratti, group members or recorded event times; otherwise also removes invites, participants, mandato assignment, login and anagrafica) and "Reinvia credenziali" (new random provisional password, sessions closed, emailed; the old password cannot be recovered because it is hashed). Admin can still disattivare and set a provisional password by hand.

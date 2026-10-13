@@ -68,6 +68,24 @@ export interface CambioPasswordInput {
   nuovaPassword: string;
 }
 
+export type EsitoReinvioCredenzialiEsito = typeof EsitoReinvioCredenzialiEsito[keyof typeof EsitoReinvioCredenzialiEsito];
+
+
+export const EsitoReinvioCredenzialiEsito = {
+  inviata: 'inviata',
+  non_inviata: 'non_inviata',
+  errore: 'errore',
+} as const;
+
+export interface EsitoReinvioCredenziali {
+  esito: EsitoReinvioCredenzialiEsito;
+  /**
+     * Motivo se l'email non e' partita
+     * @nullable
+     */
+  dettaglio: string | null;
+}
+
 export interface PasswordProvvisoriaInput {
   /** @minLength 8 */
   passwordProvvisoria: string;

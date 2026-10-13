@@ -46,6 +46,7 @@ import type {
   CreaEstrattiInput,
   DareAvere,
   DocumentoTipoInput,
+  EsitoReinvioCredenziali,
   EstrattoDettaglio,
   EstrattoRiepilogo,
   EventoBackoffice,
@@ -1308,6 +1309,154 @@ export const useUpdateCollaboratore = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getUpdateCollaboratoreMutationOptions(options));
+    }
+
+export const getDeleteCollaboratoreUrl = (id: number,) => {
+
+
+
+
+  return `/api/collaboratori/${id}`
+}
+
+/**
+ * @summary Elimina un collaboratore senza dati collegati (solo super admin)
+ */
+export const deleteCollaboratore = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteCollaboratoreUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteCollaboratoreMutationKey = () => ['deleteCollaboratore'] as const;
+
+export const getDeleteCollaboratoreMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCollaboratore>>, TError,DeleteCollaboratoreMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteCollaboratore>>, TError,DeleteCollaboratoreMutationVariables, TContext> => {
+
+const mutationKey = getDeleteCollaboratoreMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteCollaboratore>>, DeleteCollaboratoreMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteCollaboratore(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteCollaboratoreMutationResult = NonNullable<Awaited<ReturnType<typeof deleteCollaboratore>>>
+
+    export type DeleteCollaboratoreMutationError = ErrorType<unknown>
+    export type DeleteCollaboratoreMutationVariables = {id: number}
+
+    /**
+ * @summary Elimina un collaboratore senza dati collegati (solo super admin)
+ */
+export const useDeleteCollaboratore = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteCollaboratore>>, TError,DeleteCollaboratoreMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteCollaboratore>>,
+        TError,
+        DeleteCollaboratoreMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteCollaboratoreMutationOptions(options));
+    }
+
+export const getReinviaCredenzialiCollaboratoreUrl = (id: number,) => {
+
+
+
+
+  return `/api/collaboratori/${id}/reinvia-credenziali`
+}
+
+/**
+ * @summary Imposta una nuova password provvisoria casuale e la invia per email al collaboratore (solo super admin)
+ */
+export const reinviaCredenzialiCollaboratore = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<EsitoReinvioCredenziali> => {
+
+  return customFetch<EsitoReinvioCredenziali>(getReinviaCredenzialiCollaboratoreUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getReinviaCredenzialiCollaboratoreMutationKey = () => ['reinviaCredenzialiCollaboratore'] as const;
+
+export const getReinviaCredenzialiCollaboratoreMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reinviaCredenzialiCollaboratore>>, TError,ReinviaCredenzialiCollaboratoreMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reinviaCredenzialiCollaboratore>>, TError,ReinviaCredenzialiCollaboratoreMutationVariables, TContext> => {
+
+const mutationKey = getReinviaCredenzialiCollaboratoreMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reinviaCredenzialiCollaboratore>>, ReinviaCredenzialiCollaboratoreMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  reinviaCredenzialiCollaboratore(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ReinviaCredenzialiCollaboratoreMutationResult = NonNullable<Awaited<ReturnType<typeof reinviaCredenzialiCollaboratore>>>
+
+    export type ReinviaCredenzialiCollaboratoreMutationError = ErrorType<unknown>
+    export type ReinviaCredenzialiCollaboratoreMutationVariables = {id: number}
+
+    /**
+ * @summary Imposta una nuova password provvisoria casuale e la invia per email al collaboratore (solo super admin)
+ */
+export const useReinviaCredenzialiCollaboratore = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reinviaCredenzialiCollaboratore>>, TError,ReinviaCredenzialiCollaboratoreMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof reinviaCredenzialiCollaboratore>>,
+        TError,
+        ReinviaCredenzialiCollaboratoreMutationVariables,
+        TContext
+      > => {
+      return useMutation(getReinviaCredenzialiCollaboratoreMutationOptions(options));
     }
 
 export const getImpostaPasswordProvvisoriaCollaboratoreUrl = (id: number,) => {

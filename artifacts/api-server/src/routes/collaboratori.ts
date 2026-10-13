@@ -1,16 +1,19 @@
+import { randomInt } from "node:crypto";
 import { Router, type IRouter } from "express";
 import { and, asc, eq, ilike, ne, or, sql, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import {
   CreateCollaboratoreBody,
+  DeleteCollaboratoreParams,
   GetCollaboratoreParams,
   ImpostaPasswordProvvisoriaCollaboratoreBody,
   ImpostaPasswordProvvisoriaCollaboratoreParams,
   ListCollaboratoriQueryParams,
+  ReinviaCredenzialiCollaboratoreParams,
   UpdateCollaboratoreBody,
   UpdateCollaboratoreParams,
 } from "@workspace/api-zod";
-import { collaboratoriTable, db, personeTable, utentiTable } from "@workspace/db";
+import { assegnazioniMandatoTable, collaboratoriTable, db, eventiInvitiTable, eventiPartecipantiTable, personeTable, utentiTable } from "@workspace/db";
 import { HttpError, nonAutorizzato, nonTrovato } from "../lib/errori";
 import { contestoDa, differenze, registraLog } from "../lib/log";
 import { CODICE_ITALIA } from "../lib/luoghi";
@@ -28,6 +31,7 @@ import { richiediRuolo } from "../middlewares/auth";
 
 const router: IRouter = Router();
 const soloBackofficeScrittura = richiediRuolo("super_admin", "admin");
+const soloSuperAdmin = richiediRuolo("super_admin");
 
 const capogruppo = alias(collaboratoriTable, "capogruppo");
 const personaCapogruppo = alias(personeTable, "persona_capogruppo");
@@ -438,6 +442,87 @@ router.post("/collaboratori/:id/password-provvisoria", soloBackofficeScrittura, 
     });
   });
   res.json(await dettaglio(id));
+});
+
+const ALFABETO_PASSWORD = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+const nuovaPasswordCasuale = () => Array.from({ length: 12 }, () => ALFABETO_PASSWORD[randomInt(ALFABETO_PASSWORD.length)]).join("");
+
+/** Nuova password provvisoria casuale, impostata e inviata per email al collaboratore. Solo super admin. */
+router.post("/collaboratori/:id/reinvia-credenziali", soloSuperAdmin, async (req, res) => {
+  const { id } = valida(ReinviaCredenzialiCollaboratoreParams, req.params);
+  const [c] = await selezionaCollaboratori(eq(collaboratoriTable.id, id));
+  if (!c) throw nonTrovato("Collaboratore non trovato.");
+  if (!c.attivo) throw new HttpError(409, "Il collaboratore è disattivato: riattivalo prima di inviargli le credenziali.", "COLLABORATORE_DISATTIVATO");
+  const password = nuovaPasswordCasuale();
+  const passwordHash = await hashPassword(password);
+  await db.transaction(async (tx) => {
+    await tx
+      .update(utentiTable)
+      .set({ passwordHash, deveCambiarePassword: true, modificatoIl: sql`now()` })
+      .where(eq(utentiTable.id, c.utenteId));
+    await chiudiSessioniUtente(c.utenteId, tx);
+    await registraLog(tx, contestoDa(req), {
+      azione: "collaboratore.reinvia_credenziali",
+      entita: "collaboratore",
+      entitaId: id,
+      descrizione: `Reinviate le credenziali (nuova password provvisoria) al collaboratore ${c.cognome} ${c.nome}`,
+    });
+  });
+  res.json(await inviaCredenzialiCollaboratore({ utenteId: c.utenteId, nome: c.nome, cognome: c.cognome, email: c.email, password }));
+});
+
+/** Elimina un collaboratore solo se non ha dati collegati (assistiti, pratiche, compensi, orari registrati agli eventi, gruppo). */
+router.delete("/collaboratori/:id", soloSuperAdmin, async (req, res) => {
+  const { id } = valida(DeleteCollaboratoreParams, req.params);
+  const [c] = await selezionaCollaboratori(eq(collaboratoriTable.id, id));
+  if (!c) throw nonTrovato("Collaboratore non trovato.");
+  const r = await db.execute<{ assistiti: number; pratiche: number; segnalazioni: number; compensi: number; membri: number; orari: number }>(sql`
+    select
+      (select count(*)::int from assistiti where collaboratore_id = ${id}) as assistiti,
+      (select count(*)::int from pratiche where collaboratore_id = ${id}) as pratiche,
+      (select count(*)::int from segnalazioni_duplicati where richiedente_collaboratore_id = ${id}) as segnalazioni,
+      ((select count(*)::int from estratti where collaboratore_id = ${id})
+        + (select count(*)::int from compensi_righe where collaboratore_id = ${id})
+        + (select count(*)::int from importazioni_righe where collaboratore_id = ${id})) as compensi,
+      (select count(*)::int from collaboratori where capogruppo_id = ${id}) as membri,
+      (select count(*)::int from eventi_partecipanti where collaboratore_id = ${id} and (entrata_il is not null or uscita_il is not null)) as orari`);
+  const d = r.rows[0]!;
+  const motivi = [
+    d.assistiti > 0 && `${d.assistiti} assistiti`,
+    d.pratiche > 0 && `${d.pratiche} pratiche`,
+    d.segnalazioni > 0 && `${d.segnalazioni} segnalazioni`,
+    d.compensi > 0 && "compensi o estratti",
+    d.membri > 0 && `${d.membri} collaboratori nel suo gruppo`,
+    d.orari > 0 && "orari registrati agli eventi",
+  ].filter(Boolean);
+  if (motivi.length > 0) {
+    throw new HttpError(409, `Non si può eliminare ${c.cognome} ${c.nome}: ha dati collegati (${motivi.join(", ")}). Puoi disattivarlo.`, "DATI_COLLEGATI");
+  }
+  try {
+    await db.transaction(async (tx) => {
+      await tx.delete(eventiPartecipantiTable).where(eq(eventiPartecipantiTable.collaboratoreId, id));
+      await tx.delete(eventiInvitiTable).where(eq(eventiInvitiTable.collaboratoreId, id));
+      await tx.delete(assegnazioniMandatoTable).where(eq(assegnazioniMandatoTable.collaboratoreId, id));
+      await chiudiSessioniUtente(c.utenteId, tx);
+      const [riga] = await tx.select({ personaId: collaboratoriTable.personaId }).from(collaboratoriTable).where(eq(collaboratoriTable.id, id));
+      await tx.delete(collaboratoriTable).where(eq(collaboratoriTable.id, id));
+      await tx.delete(utentiTable).where(eq(utentiTable.id, c.utenteId));
+      await tx.delete(personeTable).where(eq(personeTable.id, riga!.personaId));
+      await registraLog(tx, contestoDa(req), {
+        azione: "collaboratore.elimina",
+        entita: "collaboratore",
+        entitaId: id,
+        descrizione: `Eliminato il collaboratore ${c.cognome} ${c.nome} (sportello ${c.numeroSportello})`,
+        dettagli: { codiceFiscale: c.codiceFiscale, email: c.email, numeroSportello: c.numeroSportello, tipologia: c.tipologia },
+      });
+    });
+  } catch (err) {
+    if ((err as { code?: string }).code === "23503" || (err as { cause?: { code?: string } }).cause?.code === "23503") {
+      throw new HttpError(409, `Non si può eliminare ${c.cognome} ${c.nome}: ha dati collegati. Puoi disattivarlo.`, "DATI_COLLEGATI");
+    }
+    throw err;
+  }
+  res.status(204).end();
 });
 
 export default router;

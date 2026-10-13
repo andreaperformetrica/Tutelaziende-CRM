@@ -472,6 +472,29 @@ export const UpdateCollaboratoreResponse = zod.object({
 
 
 /**
+ * @summary Elimina un collaboratore senza dati collegati (solo super admin)
+ */
+export const DeleteCollaboratoreParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const DeleteCollaboratoreResponse = zod.void()
+
+
+/**
+ * @summary Imposta una nuova password provvisoria casuale e la invia per email al collaboratore (solo super admin)
+ */
+export const ReinviaCredenzialiCollaboratoreParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const ReinviaCredenzialiCollaboratoreResponse = zod.object({
+  "esito": zod.enum(['inviata', 'non_inviata', 'errore']),
+  "dettaglio": zod.string().nullable().describe('Motivo se l\'email non e\' partita')
+})
+
+
+/**
  * @summary Imposta una nuova password provvisoria (da cambiare al primo accesso)
  */
 export const ImpostaPasswordProvvisoriaCollaboratoreParams = zod.object({
