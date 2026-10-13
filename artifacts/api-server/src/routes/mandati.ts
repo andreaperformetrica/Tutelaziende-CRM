@@ -1,18 +1,18 @@
 import express, { Router, type IRouter } from "express";
-import { and, count, eq, sql } from "drizzle-orm";
+import { count, eq, sql } from "drizzle-orm";
 import {
   AssegnaMandatoBody,
   DeleteMandatoParams,
   ListAssegnazioniMandatoQueryParams,
-  ListMandatiQueryParams,
   RimuoviAssegnazioneMandatoQueryParams,
   RinominaMandatoBody,
   RinominaMandatoParams,
 } from "@workspace/api-zod";
-import { assegnazioniMandatoTable, collaboratoriTable, db, mandatiTable, personeTable, tipiPraticaTable, utentiTable } from "@workspace/db";
+import { assegnazioniMandatoTable, collaboratoriTable, db, mandatiTable, personeTable, utentiTable } from "@workspace/db";
 import { pulisciNome } from "../lib/configurazione-pratiche";
 import { HttpError, nonTrovato } from "../lib/errori";
 import { contestoDa, registraLog } from "../lib/log";
+import { CAMPI_MANDATO, controllaModello } from "../lib/mandato-compilato";
 import { codiceErrorePg } from "../lib/postgres";
 import { DIMENSIONE_MASSIMA_FILE, eliminaFile, leggiFile, salvaFile, validaFile } from "../lib/storage";
 import { valida } from "../lib/validazione";
@@ -23,7 +23,7 @@ const router: IRouter = Router();
 router.use(["/mandati", "/assegnazioni-mandato"], richiediRuolo("super_admin", "admin"));
 const corpoFile = express.raw({ type: () => true, limit: DIMENSIONE_MASSIMA_FILE });
 
-const DUPLICATO = new HttpError(409, "Esiste già un mandato con questo nome per questo tipo di pratica.", "NOME_DUPLICATO", "nome");
+const DUPLICATO = new HttpError(409, "Esiste già un mandato con questo nome.", "NOME_DUPLICATO", "nome");
 
 const assegnati = sql<number>`(select count(*)::int from ${assegnazioniMandatoTable} where ${assegnazioniMandatoTable.mandatoId} = ${mandatiTable.id})`;
 
@@ -31,7 +31,6 @@ function selezione() {
   return db
     .select({
       id: mandatiTable.id,
-      tipoPraticaId: mandatiTable.tipoPraticaId,
       nome: mandatiTable.nome,
       fileNome: mandatiTable.fileNome,
       fileTipo: mandatiTable.fileTipo,
@@ -48,7 +47,6 @@ function selezione() {
 type Riga = Awaited<ReturnType<typeof selezione>>[number];
 const mappa = (r: Riga) => ({
   id: r.id,
-  tipoPraticaId: r.tipoPraticaId,
   nome: r.nome,
   fileNome: r.fileNome,
   fileTipo: r.fileTipo,
@@ -70,12 +68,6 @@ async function caricaMandato(id: number) {
   return m;
 }
 
-async function caricaTipo(id: number) {
-  const [t] = await db.select().from(tipiPraticaTable).where(eq(tipiPraticaTable.id, id));
-  if (!t) throw nonTrovato("Tipo di pratica non trovato.");
-  return t;
-}
-
 async function caricaCollaboratore(id: number) {
   const [c] = await db
     .select({ id: collaboratoriTable.id, cognome: personeTable.cognome, nome: personeTable.nome, sportello: collaboratoriTable.numeroSportello })
@@ -93,13 +85,24 @@ async function mandatoMappato(id: number) {
   return mappa(r!);
 }
 
-router.get("/mandati", async (req, res) => {
-  const p = valida(ListMandatiQueryParams, req.query);
-  const righe = await selezione()
-    .where(p.tipoPraticaId ? eq(mandatiTable.tipoPraticaId, p.tipoPraticaId) : undefined)
-    .orderBy(mandatiTable.tipoPraticaId, sql`lower(${mandatiTable.nome})`);
+router.get("/mandati", async (_req, res) => {
+  const righe = await selezione().orderBy(sql`lower(${mandatiTable.nome})`);
   res.json(righe.map(mappa));
 });
+
+/** Il modello deve essere un Word e i campi @gruppo.nome devono essere tra quelli che il sistema sa compilare. */
+async function validaModello(file: { nome: string; buffer: Buffer }) {
+  if (!/\.docx$/i.test(file.nome)) {
+    throw new HttpError(400, "Il mandato deve essere un documento Word (.docx) con i campi da compilare.", "FILE_FORMATO_NON_AMMESSO");
+  }
+  const { trovati, sconosciuti } = await controllaModello(file.buffer);
+  if (sconosciuti.length) {
+    throw new HttpError(400, `Il modello contiene campi che non conosco: ${sconosciuti.join(", ")}. Campi ammessi: ${CAMPI_MANDATO.map((c) => `@${c}`).join(", ")}.`, "FILE_NON_VALIDO");
+  }
+  if (!trovati.length) {
+    throw new HttpError(400, "Nel modello non c'è nessun campo da compilare (per esempio @cliente.cognome).", "FILE_NON_VALIDO");
+  }
+}
 
 router.get("/mandati/:id/file", async (req, res) => {
   const m = await caricaMandato(intero(req.params["id"], "id"));
@@ -107,11 +110,10 @@ router.get("/mandati/:id/file", async (req, res) => {
   inviaFile(res, stream, m.fileNome, m.fileTipo, m.fileDimensione);
 });
 
-/** Aggiunge un mandato alla raccolta di un tipo di pratica. */
+/** Aggiunge un mandato (modello Word) alla raccolta. */
 router.post("/mandati/file", corpoFile, async (req, res) => {
-  const tipoPraticaId = intero(req.query["tipoPraticaId"], "tipoPraticaId");
-  const tipo = await caricaTipo(tipoPraticaId);
   const file = validaFile(req.query["nomeFile"], req.body);
+  await validaModello(file);
   const nome = pulisciNome(req.query["nome"] ?? file.nome.replace(/\.[^.]+$/, ""), "Il nome del mandato", 100);
   const chiave = await salvaFile(file.buffer, file.tipo);
   try {
@@ -119,7 +121,7 @@ router.post("/mandati/file", corpoFile, async (req, res) => {
       const [m] = await tx
         .insert(mandatiTable)
         .values({
-          tipoPraticaId, nome, fileChiave: chiave, fileNome: file.nome, fileTipo: file.tipo, fileDimensione: file.dimensione,
+          nome, fileChiave: chiave, fileNome: file.nome, fileTipo: file.tipo, fileDimensione: file.dimensione,
           caricatoDaUtenteId: req.utente!.id,
         })
         .returning({ id: mandatiTable.id });
@@ -127,8 +129,8 @@ router.post("/mandati/file", corpoFile, async (req, res) => {
         azione: "mandato.carica",
         entita: "mandato",
         entitaId: m!.id,
-        descrizione: `Caricato il mandato "${nome}" (${file.nome}) per il tipo di pratica "${tipo.nome}"`,
-        dettagli: { tipoPraticaId, nome, fileNome: file.nome, dimensione: file.dimensione },
+        descrizione: `Caricato il mandato "${nome}" (${file.nome})`,
+        dettagli: { nome, fileNome: file.nome, dimensione: file.dimensione },
       });
       return m!.id;
     });
@@ -143,8 +145,8 @@ router.post("/mandati/file", corpoFile, async (req, res) => {
 /** Sostituisce il file di un mandato: il cambio vale per tutti i collaboratori a cui e' assegnato. */
 router.put("/mandati/:id/file", corpoFile, async (req, res) => {
   const m = await caricaMandato(intero(req.params["id"], "id"));
-  const tipo = await caricaTipo(m.tipoPraticaId);
   const file = validaFile(req.query["nomeFile"], req.body);
+  await validaModello(file);
   const chiave = await salvaFile(file.buffer, file.tipo);
   try {
     await db.transaction(async (tx) => {
@@ -160,7 +162,7 @@ router.put("/mandati/:id/file", corpoFile, async (req, res) => {
         azione: "mandato.sostituisci",
         entita: "mandato",
         entitaId: m.id,
-        descrizione: `Sostituito il file del mandato "${m.nome}" (tipo "${tipo.nome}"): ${m.fileNome} con ${file.nome}; vale per ${n?.n ?? 0} ${n?.n === 1 ? "collaboratore" : "collaboratori"}`,
+        descrizione: `Sostituito il file del mandato "${m.nome}": ${m.fileNome} con ${file.nome}; vale per ${n?.n ?? 0} ${n?.n === 1 ? "collaboratore" : "collaboratori"}`,
         dettagli: { precedente: m.fileNome, fileNome: file.nome, dimensione: file.dimensione, collaboratoriAssegnati: n?.n ?? 0 },
       });
     });
@@ -176,7 +178,6 @@ router.patch("/mandati/:id", async (req, res) => {
   const { id } = valida(RinominaMandatoParams, req.params);
   const b = valida(RinominaMandatoBody, req.body);
   const m = await caricaMandato(id);
-  const tipo = await caricaTipo(m.tipoPraticaId);
   const nome = pulisciNome(b.nome, "Il nome del mandato", 100);
   try {
     await db.transaction(async (tx) => {
@@ -185,7 +186,7 @@ router.patch("/mandati/:id", async (req, res) => {
         azione: "mandato.rinomina",
         entita: "mandato",
         entitaId: id,
-        descrizione: `Rinominato il mandato "${m.nome}" in "${nome}" (tipo "${tipo.nome}")`,
+        descrizione: `Rinominato il mandato "${m.nome}" in "${nome}"`,
         dettagli: { prima: m.nome, dopo: nome },
       });
     });
@@ -199,7 +200,6 @@ router.patch("/mandati/:id", async (req, res) => {
 router.delete("/mandati/:id", async (req, res) => {
   const { id } = valida(DeleteMandatoParams, req.params);
   const m = await caricaMandato(id);
-  const tipo = await caricaTipo(m.tipoPraticaId);
   const [n] = await db.select({ n: count() }).from(assegnazioniMandatoTable).where(eq(assegnazioniMandatoTable.mandatoId, id));
   const inUso = new HttpError(
     409,
@@ -214,8 +214,8 @@ router.delete("/mandati/:id", async (req, res) => {
         azione: "mandato.elimina",
         entita: "mandato",
         entitaId: id,
-        descrizione: `Eliminato il mandato "${m.nome}" (${m.fileNome}) del tipo di pratica "${tipo.nome}"`,
-        dettagli: { nome: m.nome, fileNome: m.fileNome, tipoPraticaId: m.tipoPraticaId },
+        descrizione: `Eliminato il mandato "${m.nome}" (${m.fileNome})`,
+        dettagli: { nome: m.nome, fileNome: m.fileNome },
       });
     });
   } catch (err) {
@@ -230,42 +230,38 @@ router.delete("/mandati/:id", async (req, res) => {
 
 const mappaAssegnazione = (a: typeof assegnazioniMandatoTable.$inferSelect) => ({
   collaboratoreId: a.collaboratoreId,
-  tipoPraticaId: a.tipoPraticaId,
   mandatoId: a.mandatoId,
 });
 
 router.get("/assegnazioni-mandato", async (req, res) => {
   const p = valida(ListAssegnazioniMandatoQueryParams, req.query);
-  const condizioni = [
-    ...(p.tipoPraticaId ? [eq(assegnazioniMandatoTable.tipoPraticaId, p.tipoPraticaId)] : []),
-    ...(p.collaboratoreId ? [eq(assegnazioniMandatoTable.collaboratoreId, p.collaboratoreId)] : []),
-  ];
-  const righe = await db.select().from(assegnazioniMandatoTable).where(condizioni.length ? and(...condizioni) : undefined);
+  const righe = await db
+    .select()
+    .from(assegnazioniMandatoTable)
+    .where(p.collaboratoreId ? eq(assegnazioniMandatoTable.collaboratoreId, p.collaboratoreId) : undefined);
   res.json(righe.map(mappaAssegnazione));
 });
 
-/** Assegna a un collaboratore il mandato per un tipo di pratica; se ne ha gia' uno, lo cambia. */
-router.put("/assegnazioni-mandato", async (req, res) => {
-  const b = valida(AssegnaMandatoBody, req.body);
-  const coll = await caricaCollaboratore(b.collaboratoreId);
-  const tipo = await caricaTipo(b.tipoPraticaId);
-  const m = await caricaMandato(b.mandatoId);
-  if (m.tipoPraticaId !== tipo.id) {
-    throw new HttpError(400, `Il mandato "${m.nome}" non appartiene al tipo di pratica "${tipo.nome}".`, "MANDATO_TIPO_DIVERSO", "mandatoId");
-  }
-  const [prima] = await db
+async function mandatoAssegnato(collaboratoreId: number) {
+  const [r] = await db
     .select({ id: mandatiTable.id, nome: mandatiTable.nome })
     .from(assegnazioniMandatoTable)
     .innerJoin(mandatiTable, eq(mandatiTable.id, assegnazioniMandatoTable.mandatoId))
-    .where(and(eq(assegnazioniMandatoTable.collaboratoreId, coll.id), eq(assegnazioniMandatoTable.tipoPraticaId, tipo.id)));
+    .where(eq(assegnazioniMandatoTable.collaboratoreId, collaboratoreId));
+  return r;
+}
+
+/** Assegna a un collaboratore il mandato della sua sede; se ne ha gia' uno, lo cambia. Vale per tutti i tipi di pratica. */
+router.put("/assegnazioni-mandato", async (req, res) => {
+  const b = valida(AssegnaMandatoBody, req.body);
+  const coll = await caricaCollaboratore(b.collaboratoreId);
+  const m = await caricaMandato(b.mandatoId);
+  const prima = await mandatoAssegnato(coll.id);
   const a = await db.transaction(async (tx) => {
     const [r] = await tx
       .insert(assegnazioniMandatoTable)
-      .values({ collaboratoreId: coll.id, tipoPraticaId: tipo.id, mandatoId: m.id })
-      .onConflictDoUpdate({
-        target: [assegnazioniMandatoTable.collaboratoreId, assegnazioniMandatoTable.tipoPraticaId],
-        set: { mandatoId: m.id, assegnatoIl: new Date() },
-      })
+      .values({ collaboratoreId: coll.id, mandatoId: m.id })
+      .onConflictDoUpdate({ target: [assegnazioniMandatoTable.collaboratoreId], set: { mandatoId: m.id, assegnatoIl: new Date() } })
       .returning();
     if (!prima || prima.id !== m.id) {
       await registraLog(tx, contestoDa(req), {
@@ -273,9 +269,9 @@ router.put("/assegnazioni-mandato", async (req, res) => {
         entita: "mandato",
         entitaId: m.id,
         descrizione: prima
-          ? `Cambiato il mandato "${tipo.nome}" di ${chiEIl(coll)}: da "${prima.nome}" a "${m.nome}"`
-          : `Assegnato il mandato "${m.nome}" (tipo "${tipo.nome}") a ${chiEIl(coll)}`,
-        dettagli: { collaboratoreId: coll.id, tipoPraticaId: tipo.id, mandatoId: m.id, precedenteMandatoId: prima?.id ?? null },
+          ? `Cambiato il mandato di ${chiEIl(coll)}: da "${prima.nome}" a "${m.nome}"`
+          : `Assegnato il mandato "${m.nome}" a ${chiEIl(coll)}`,
+        dettagli: { collaboratoreId: coll.id, mandatoId: m.id, precedenteMandatoId: prima?.id ?? null },
       });
     }
     return r!;
@@ -286,23 +282,16 @@ router.put("/assegnazioni-mandato", async (req, res) => {
 router.delete("/assegnazioni-mandato", async (req, res) => {
   const p = valida(RimuoviAssegnazioneMandatoQueryParams, req.query);
   const coll = await caricaCollaboratore(p.collaboratoreId);
-  const tipo = await caricaTipo(p.tipoPraticaId);
-  const [prima] = await db
-    .select({ id: mandatiTable.id, nome: mandatiTable.nome })
-    .from(assegnazioniMandatoTable)
-    .innerJoin(mandatiTable, eq(mandatiTable.id, assegnazioniMandatoTable.mandatoId))
-    .where(and(eq(assegnazioniMandatoTable.collaboratoreId, coll.id), eq(assegnazioniMandatoTable.tipoPraticaId, tipo.id)));
-  if (!prima) throw nonTrovato("A questo collaboratore non è assegnato nessun mandato per questo tipo di pratica.");
+  const prima = await mandatoAssegnato(coll.id);
+  if (!prima) throw nonTrovato("A questo collaboratore non è assegnato nessun mandato.");
   await db.transaction(async (tx) => {
-    await tx
-      .delete(assegnazioniMandatoTable)
-      .where(and(eq(assegnazioniMandatoTable.collaboratoreId, coll.id), eq(assegnazioniMandatoTable.tipoPraticaId, tipo.id)));
+    await tx.delete(assegnazioniMandatoTable).where(eq(assegnazioniMandatoTable.collaboratoreId, coll.id));
     await registraLog(tx, contestoDa(req), {
       azione: "mandato.rimuovi",
       entita: "mandato",
       entitaId: prima.id,
-      descrizione: `Tolto il mandato "${prima.nome}" (tipo "${tipo.nome}") a ${chiEIl(coll)}`,
-      dettagli: { collaboratoreId: coll.id, tipoPraticaId: tipo.id, mandatoId: prima.id },
+      descrizione: `Tolto il mandato "${prima.nome}" a ${chiEIl(coll)}`,
+      dettagli: { collaboratoreId: coll.id, mandatoId: prima.id },
     });
   });
   res.status(204).end();

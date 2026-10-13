@@ -7,6 +7,5 @@
  */
 
 export type RimuoviAssegnazioneMandatoParams = {
-tipoPraticaId: number;
 collaboratoreId: number;
 };

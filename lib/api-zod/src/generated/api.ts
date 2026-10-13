@@ -3085,15 +3085,10 @@ export const DeleteModuloTipoResponse = zod.object({
 
 
 /**
- * @summary Raccolta dei mandati (tutti, o di un tipo di pratica)
+ * @summary Raccolta dei mandati (modelli Word per sede)
  */
-export const ListMandatiQueryParams = zod.object({
-  "tipoPraticaId": zod.coerce.number().int().optional()
-})
-
 export const ListMandatiResponseItem = zod.object({
   "id": zod.number().int(),
-  "tipoPraticaId": zod.number().int(),
   "nome": zod.string(),
   "fileNome": zod.string(),
   "fileTipo": zod.string(),
@@ -3118,7 +3113,6 @@ export const RinominaMandatoBody = zod.object({
 
 export const RinominaMandatoResponse = zod.object({
   "id": zod.number().int(),
-  "tipoPraticaId": zod.number().int(),
   "nome": zod.string(),
   "fileNome": zod.string(),
   "fileTipo": zod.string(),
@@ -3140,42 +3134,37 @@ export const DeleteMandatoResponse = zod.void()
 
 
 /**
- * @summary Mandato assegnato a ogni collaboratore, per tipo di pratica
+ * @summary Mandato assegnato a ogni collaboratore
  */
 export const ListAssegnazioniMandatoQueryParams = zod.object({
-  "tipoPraticaId": zod.coerce.number().int().optional(),
   "collaboratoreId": zod.coerce.number().int().optional()
 })
 
 export const ListAssegnazioniMandatoResponseItem = zod.object({
   "collaboratoreId": zod.number().int(),
-  "tipoPraticaId": zod.number().int(),
   "mandatoId": zod.number().int()
 })
 export const ListAssegnazioniMandatoResponse = zod.array(ListAssegnazioniMandatoResponseItem)
 
 
 /**
- * @summary Assegna (o cambia) il mandato di un collaboratore per un tipo di pratica
+ * @summary Assegna (o cambia) il mandato di un collaboratore
  */
 export const AssegnaMandatoBody = zod.object({
   "collaboratoreId": zod.number().int(),
-  "tipoPraticaId": zod.number().int(),
   "mandatoId": zod.number().int()
 })
 
 export const AssegnaMandatoResponse = zod.object({
   "collaboratoreId": zod.number().int(),
-  "tipoPraticaId": zod.number().int(),
   "mandatoId": zod.number().int()
 })
 
 
 /**
- * @summary Toglie il mandato assegnato a un collaboratore per un tipo di pratica
+ * @summary Toglie il mandato assegnato a un collaboratore
  */
 export const RimuoviAssegnazioneMandatoQueryParams = zod.object({
-  "tipoPraticaId": zod.coerce.number().int(),
   "collaboratoreId": zod.coerce.number().int()
 })
 
@@ -3292,8 +3281,7 @@ export const CreatePraticaResponse = zod.object({
   "mandato": zod.union([zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "fileNome": zod.string(),
-  "dimensione": zod.number().int()
+  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito')
 }),zod.null()]),
   "mandatoMancante": zod.boolean().describe('Il tipo richiede il mandato ma al collaboratore non e\' stato assegnato'),
   "richiesti": zod.array(zod.object({
@@ -3418,8 +3406,7 @@ export const GetPraticaResponse = zod.object({
   "mandato": zod.union([zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "fileNome": zod.string(),
-  "dimensione": zod.number().int()
+  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito')
 }),zod.null()]),
   "mandatoMancante": zod.boolean().describe('Il tipo richiede il mandato ma al collaboratore non e\' stato assegnato'),
   "richiesti": zod.array(zod.object({
@@ -3542,8 +3529,7 @@ export const SalvaMessaggioPraticaResponse = zod.object({
   "mandato": zod.union([zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "fileNome": zod.string(),
-  "dimensione": zod.number().int()
+  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito')
 }),zod.null()]),
   "mandatoMancante": zod.boolean().describe('Il tipo richiede il mandato ma al collaboratore non e\' stato assegnato'),
   "richiesti": zod.array(zod.object({
@@ -3649,8 +3635,7 @@ export const DeleteDocumentoPraticaResponse = zod.object({
   "mandato": zod.union([zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "fileNome": zod.string(),
-  "dimensione": zod.number().int()
+  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito')
 }),zod.null()]),
   "mandatoMancante": zod.boolean().describe('Il tipo richiede il mandato ma al collaboratore non e\' stato assegnato'),
   "richiesti": zod.array(zod.object({
@@ -3763,8 +3748,7 @@ export const InviaPraticaResponse = zod.object({
   "mandato": zod.union([zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "fileNome": zod.string(),
-  "dimensione": zod.number().int()
+  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito')
 }),zod.null()]),
   "mandatoMancante": zod.boolean().describe('Il tipo richiede il mandato ma al collaboratore non e\' stato assegnato'),
   "richiesti": zod.array(zod.object({
@@ -3877,8 +3861,7 @@ export const CreateCommentoPraticaResponse = zod.object({
   "mandato": zod.union([zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "fileNome": zod.string(),
-  "dimensione": zod.number().int()
+  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito')
 }),zod.null()]),
   "mandatoMancante": zod.boolean().describe('Il tipo richiede il mandato ma al collaboratore non e\' stato assegnato'),
   "richiesti": zod.array(zod.object({
@@ -4223,8 +4206,7 @@ export const GetPraticaBackofficeResponse = zod.object({
   "mandato": zod.union([zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "fileNome": zod.string(),
-  "dimensione": zod.number().int()
+  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito')
 }),zod.null()]),
   "documenti": zod.array(zod.object({
   "id": zod.number().int(),
@@ -4353,8 +4335,7 @@ export const PrendiInCaricoPraticaResponse = zod.object({
   "mandato": zod.union([zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "fileNome": zod.string(),
-  "dimensione": zod.number().int()
+  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito')
 }),zod.null()]),
   "documenti": zod.array(zod.object({
   "id": zod.number().int(),
@@ -4477,8 +4458,7 @@ export const CambiaStatoPraticaResponse = zod.object({
   "mandato": zod.union([zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "fileNome": zod.string(),
-  "dimensione": zod.number().int()
+  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito')
 }),zod.null()]),
   "documenti": zod.array(zod.object({
   "id": zod.number().int(),
@@ -4602,8 +4582,7 @@ export const CreateCommentoPraticaBackofficeResponse = zod.object({
   "mandato": zod.union([zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "fileNome": zod.string(),
-  "dimensione": zod.number().int()
+  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito')
 }),zod.null()]),
   "documenti": zod.array(zod.object({
   "id": zod.number().int(),

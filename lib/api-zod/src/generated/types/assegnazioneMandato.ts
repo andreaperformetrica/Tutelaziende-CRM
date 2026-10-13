@@ -8,6 +8,5 @@
 
 export interface AssegnazioneMandato {
   collaboratoreId: number;
-  tipoPraticaId: number;
   mandatoId: number;
 }

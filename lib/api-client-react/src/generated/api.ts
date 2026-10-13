@@ -73,7 +73,6 @@ import type {
   ListEstrattiParams,
   ListImportazioniParams,
   ListLogOperazioniParams,
-  ListMandatiParams,
   ListNotificheParams,
   ListPraticheBackofficeParams,
   ListPraticheParams,
@@ -6589,27 +6588,20 @@ export const useDeleteModuloTipo = <TError = ErrorType<unknown>,
       return useMutation(getDeleteModuloTipoMutationOptions(options));
     }
 
-export const getListMandatiUrl = (params?: ListMandatiParams,) => {
-  const normalizedParams = new URLSearchParams();
+export const getListMandatiUrl = () => {
 
-  Object.entries(params || {}).forEach(([key, value]) => {
 
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
-    }
-  });
 
-  const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/mandati?${stringifiedParams}` : `/api/mandati`
+  return `/api/mandati`
 }
 
 /**
- * @summary Raccolta dei mandati (tutti, o di un tipo di pratica)
+ * @summary Raccolta dei mandati (modelli Word per sede)
  */
-export const listMandati = async (params?: ListMandatiParams, options?: Parameters<typeof customFetch>[1]): Promise<Mandato[]> => {
+export const listMandati = async ( options?: Parameters<typeof customFetch>[1]): Promise<Mandato[]> => {
 
-  return customFetch<Mandato[]>(getListMandatiUrl(params),
+  return customFetch<Mandato[]>(getListMandatiUrl(),
   {
     ...options,
     method: 'GET'
@@ -6622,23 +6614,23 @@ export const listMandati = async (params?: ListMandatiParams, options?: Paramete
 
 
 
-export const getListMandatiQueryKey = (params?: ListMandatiParams,) => {
+export const getListMandatiQueryKey = () => {
     return [
-    `/api/mandati`, ...(params ? [params] : [])
+    `/api/mandati`
     ] as const;
     }
 
 
-export const getListMandatiQueryOptions = <TData = Awaited<ReturnType<typeof listMandati>>, TError = ErrorType<unknown>>(params?: ListMandatiParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMandati>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getListMandatiQueryOptions = <TData = Awaited<ReturnType<typeof listMandati>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMandati>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getListMandatiQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getListMandatiQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMandati>>> = ({ signal }) => listMandati(params, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMandati>>> = ({ signal }) => listMandati({ signal, ...requestOptions });
 
 
 
@@ -6652,15 +6644,15 @@ export type ListMandatiQueryError = ErrorType<unknown>
 
 
 /**
- * @summary Raccolta dei mandati (tutti, o di un tipo di pratica)
+ * @summary Raccolta dei mandati (modelli Word per sede)
  */
 
 export function useListMandati<TData = Awaited<ReturnType<typeof listMandati>>, TError = ErrorType<unknown>>(
- params?: ListMandatiParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMandati>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMandati>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getListMandatiQueryOptions(params,options)
+  const queryOptions = getListMandatiQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -6852,7 +6844,7 @@ export const getListAssegnazioniMandatoUrl = (params?: ListAssegnazioniMandatoPa
 }
 
 /**
- * @summary Mandato assegnato a ogni collaboratore, per tipo di pratica
+ * @summary Mandato assegnato a ogni collaboratore
  */
 export const listAssegnazioniMandato = async (params?: ListAssegnazioniMandatoParams, options?: Parameters<typeof customFetch>[1]): Promise<AssegnazioneMandato[]> => {
 
@@ -6899,7 +6891,7 @@ export type ListAssegnazioniMandatoQueryError = ErrorType<unknown>
 
 
 /**
- * @summary Mandato assegnato a ogni collaboratore, per tipo di pratica
+ * @summary Mandato assegnato a ogni collaboratore
  */
 
 export function useListAssegnazioniMandato<TData = Awaited<ReturnType<typeof listAssegnazioniMandato>>, TError = ErrorType<unknown>>(
@@ -6929,7 +6921,7 @@ export const getAssegnaMandatoUrl = () => {
 }
 
 /**
- * @summary Assegna (o cambia) il mandato di un collaboratore per un tipo di pratica
+ * @summary Assegna (o cambia) il mandato di un collaboratore
  */
 export const assegnaMandato = async (assegnazioneMandatoInput: AssegnazioneMandatoInput, options?: Parameters<typeof customFetch>[1]): Promise<AssegnazioneMandato> => {
 
@@ -6995,7 +6987,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AssegnaMandatoMutationVariables = {data: BodyType<AssegnazioneMandatoInput>}
 
     /**
- * @summary Assegna (o cambia) il mandato di un collaboratore per un tipo di pratica
+ * @summary Assegna (o cambia) il mandato di un collaboratore
  */
 export const useAssegnaMandato = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof assegnaMandato>>, TError,AssegnaMandatoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -7024,7 +7016,7 @@ export const getRimuoviAssegnazioneMandatoUrl = (params: RimuoviAssegnazioneMand
 }
 
 /**
- * @summary Toglie il mandato assegnato a un collaboratore per un tipo di pratica
+ * @summary Toglie il mandato assegnato a un collaboratore
  */
 export const rimuoviAssegnazioneMandato = async (params: RimuoviAssegnazioneMandatoParams, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
 
@@ -7076,7 +7068,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type RimuoviAssegnazioneMandatoMutationVariables = {params: RimuoviAssegnazioneMandatoParams}
 
     /**
- * @summary Toglie il mandato assegnato a un collaboratore per un tipo di pratica
+ * @summary Toglie il mandato assegnato a un collaboratore
  */
 export const useRimuoviAssegnazioneMandato = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof rimuoviAssegnazioneMandato>>, TError,RimuoviAssegnazioneMandatoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}

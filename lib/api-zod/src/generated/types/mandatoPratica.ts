@@ -9,6 +9,6 @@
 export interface MandatoPratica {
   id: number;
   nome: string;
+  /** Nome del PDF compilato con i dati dell'assistito */
   fileNome: string;
-  dimensione: number;
 }

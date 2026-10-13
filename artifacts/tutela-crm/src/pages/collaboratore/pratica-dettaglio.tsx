@@ -38,10 +38,10 @@ function Dato({ k, children, mono }: { k: string; children: ReactNode; mono?: bo
   );
 }
 
-function LinkFile({ href, nome, dimensione, testId }: { href: string; nome: string; dimensione: number; testId?: string }) {
+function LinkFile({ href, nome, dimensione, testId }: { href: string; nome: string; dimensione?: number; testId?: string }) {
   return (
     <a href={href} download className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline break-all" data-testid={testId}>
-      <Download className="size-4 shrink-0" /> {nome} <span className="text-xs text-muted-foreground font-normal whitespace-nowrap">({formatoDimensione(dimensione)})</span>
+      <Download className="size-4 shrink-0" /> {nome} {dimensione !== undefined && <span className="text-xs text-muted-foreground font-normal whitespace-nowrap">({formatoDimensione(dimensione)})</span>}
     </a>
   );
 }
@@ -148,10 +148,10 @@ export default function PraticaDettaglioCollaboratore() {
         </Sezione>
         <Sezione titolo="Mandato del tuo sportello" testId="sezione-mandato">
           {p.mandato ? (
-            <div className="text-sm"><div className="font-semibold">{p.mandato.nome}</div><LinkFile href={urlMandatoPratica(id)} nome={p.mandato.fileNome} dimensione={p.mandato.dimensione} testId="download-mandato" /></div>
+            <div className="text-sm"><div className="font-semibold">{p.mandato.nome}</div><LinkFile href={urlMandatoPratica(id)} nome={`Scarica il mandato compilato (PDF)`} testId="download-mandato" /></div>
           ) : p.mandatoMancante ? (
             <p className="text-sm text-destructive" data-testid="mandato-mancante">Per questo tipo di pratica serve il mandato, ma al tuo sportello non ne è stato assegnato uno. Contatta l'amministrazione.</p>
-          ) : <p className="text-sm text-muted-foreground">Nessun mandato assegnato al tuo sportello per questo tipo di pratica.</p>}
+          ) : <p className="text-sm text-muted-foreground">Nessun mandato assegnato al tuo sportello.</p>}
         </Sezione>
       </div>
 

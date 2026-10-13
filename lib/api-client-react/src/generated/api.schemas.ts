@@ -922,7 +922,6 @@ export interface OrdineInput {
 
 export interface Mandato {
   id: number;
-  tipoPraticaId: number;
   nome: string;
   fileNome: string;
   fileTipo: string;
@@ -939,13 +938,11 @@ export interface MandatoInput {
 
 export interface AssegnazioneMandato {
   collaboratoreId: number;
-  tipoPraticaId: number;
   mandatoId: number;
 }
 
 export interface AssegnazioneMandatoInput {
   collaboratoreId: number;
-  tipoPraticaId: number;
   mandatoId: number;
 }
 
@@ -1098,8 +1095,8 @@ export interface ModuloPratica {
 export interface MandatoPratica {
   id: number;
   nome: string;
+  /** Nome del PDF compilato con i dati dell'assistito */
   fileNome: string;
-  dimensione: number;
 }
 
 export interface DocumentoRichiesto {
@@ -2001,17 +1998,11 @@ collaboratoreId: number;
 anno: number;
 };
 
-export type ListMandatiParams = {
-tipoPraticaId?: number;
-};
-
 export type ListAssegnazioniMandatoParams = {
-tipoPraticaId?: number;
 collaboratoreId?: number;
 };
 
 export type RimuoviAssegnazioneMandatoParams = {
-tipoPraticaId: number;
 collaboratoreId: number;
 };
 

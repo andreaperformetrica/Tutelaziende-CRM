@@ -1,4 +1,5 @@
 /** Gestione delle pratiche nel back office: elenco, scheda, cronologia. */
+import { nomePdfMandato } from "./mandato-compilato";
 import type { Request } from "express";
 import { and, asc, eq, isNotNull, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
@@ -154,7 +155,7 @@ export async function dettaglioBackoffice(req: Request, id: number) {
       email: coll?.email ?? null,
       cellulare: coll?.cellulare ?? "",
     },
-    mandato: mandato ? { id: mandato.id, nome: mandato.nome, fileNome: mandato.fileNome, dimensione: mandato.dimensione } : null,
+    mandato: mandato ? { id: mandato.id, nome: mandato.nome, fileNome: nomePdfMandato(p) } : null,
     documenti: mappati.filter((d) => !d.daUfficio),
     allegatiUfficio: mappati.filter((d) => d.daUfficio),
     messaggio: p.messaggio,

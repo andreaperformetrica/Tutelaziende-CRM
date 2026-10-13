@@ -955,7 +955,7 @@ paths:
                 $ref: "#/components/schemas/EventoSede"
   # I file degli eventi (PUT /backoffice/eventi/{id}/questionario/file e /attestato/file, GET dei file e dei PDF) sono fuori specifica.
   # I caricamenti di file non sono nella specifica (corpo binario): POST /mandati/file, PUT /mandati/{id}/file, POST /tipi-pratica/{id}/moduli/file,
-  # PUT /moduli-tipo/{id}/file, e i download GET /moduli-tipo/{id}/file e GET /mandati/{id}/file.
+  # PUT /moduli-tipo/{id}/file, e i download GET /moduli-tipo/{id}/file e GET /mandati/{id}/file (modello Word). Il mandato compilato in PDF si scarica da GET /pratiche/{id}/mandato/file e GET /backoffice/pratiche/{id}/mandato/file.
   /backoffice/compensi/resoconto:
     get:
       operationId: getResocontoCompensi
@@ -1485,13 +1485,7 @@ paths:
     get:
       operationId: listMandati
       tags: [configurazione]
-      summary: Raccolta dei mandati (tutti, o di un tipo di pratica)
-      parameters:
-        - name: tipoPraticaId
-          in: query
-          required: false
-          schema:
-            type: integer
+      summary: Raccolta dei mandati (modelli Word per sede)
       responses:
         "200":
           description: Esito
@@ -1532,13 +1526,8 @@ paths:
     get:
       operationId: listAssegnazioniMandato
       tags: [configurazione]
-      summary: Mandato assegnato a ogni collaboratore, per tipo di pratica
+      summary: Mandato assegnato a ogni collaboratore
       parameters:
-        - name: tipoPraticaId
-          in: query
-          required: false
-          schema:
-            type: integer
         - name: collaboratoreId
           in: query
           required: false
@@ -1556,7 +1545,7 @@ paths:
     put:
       operationId: assegnaMandato
       tags: [configurazione]
-      summary: Assegna (o cambia) il mandato di un collaboratore per un tipo di pratica
+      summary: Assegna (o cambia) il mandato di un collaboratore
       requestBody:
         required: true
         content:
@@ -1573,13 +1562,8 @@ paths:
     delete:
       operationId: rimuoviAssegnazioneMandato
       tags: [configurazione]
-      summary: Toglie il mandato assegnato a un collaboratore per un tipo di pratica
+      summary: Toglie il mandato assegnato a un collaboratore
       parameters:
-        - name: tipoPraticaId
-          in: query
-          required: true
-          schema:
-            type: integer
         - name: collaboratoreId
           in: query
           required: true
@@ -3146,10 +3130,9 @@ components:
           items: { type: integer }
     Mandato:
       type: object
-      required: [id, tipoPraticaId, nome, fileNome, fileTipo, dimensione, caricatoIl, caricatoDa, collaboratoriAssegnati]
+      required: [id, nome, fileNome, fileTipo, dimensione, caricatoIl, caricatoDa, collaboratoriAssegnati]
       properties:
         id: { type: integer }
-        tipoPraticaId: { type: integer }
         nome: { type: string }
         fileNome: { type: string }
         fileTipo: { type: string }
@@ -3164,17 +3147,15 @@ components:
         nome: { type: string }
     AssegnazioneMandato:
       type: object
-      required: [collaboratoreId, tipoPraticaId, mandatoId]
+      required: [collaboratoreId, mandatoId]
       properties:
         collaboratoreId: { type: integer }
-        tipoPraticaId: { type: integer }
         mandatoId: { type: integer }
     AssegnazioneMandatoInput:
       type: object
-      required: [collaboratoreId, tipoPraticaId, mandatoId]
+      required: [collaboratoreId, mandatoId]
       properties:
         collaboratoreId: { type: integer }
-        tipoPraticaId: { type: integer }
         mandatoId: { type: integer }
     StatoPratica:
       type: object
@@ -3313,12 +3294,11 @@ components:
         dimensione: { type: integer }
     MandatoPratica:
       type: object
-      required: [id, nome, fileNome, dimensione]
+      required: [id, nome, fileNome]
       properties:
         id: { type: integer }
         nome: { type: string }
-        fileNome: { type: string }
-        dimensione: { type: integer }
+        fileNome: { type: string, description: "Nome del PDF compilato con i dati dell'assistito" }
     DocumentoRichiesto:
       type: object
       required: [id, nome]

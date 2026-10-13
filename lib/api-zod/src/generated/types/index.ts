@@ -91,7 +91,6 @@ export * from './listEstrattiParams';
 export * from './listEstrattiStato';
 export * from './listImportazioniParams';
 export * from './listLogOperazioniParams';
-export * from './listMandatiParams';
 export * from './listNotificheCanale';
 export * from './listNotificheEsito';
 export * from './listNotificheParams';

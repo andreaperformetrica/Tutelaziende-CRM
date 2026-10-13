@@ -1,4 +1,5 @@
 /** Accesso e composizione delle pratiche per il Web Collaboratore. */
+import { nomePdfMandato } from "./mandato-compilato";
 import type { Request } from "express";
 import { and, asc, desc, eq, or, sql, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
@@ -143,8 +144,8 @@ export const ERRORE_PRATICA_INVIATA = (azione: string) =>
 
 export const ERRORE_PRATICA_BOZZA = new HttpError(409, "La pratica non è ancora stata inviata.", "PRATICA_IN_BOZZA");
 
-/** Mandato del collaboratore per il tipo: quello fissato all'invio, altrimenti quello attualmente assegnato. */
-export async function mandatoDellaPratica(p: Pick<RigaPratica, "mandatoId" | "collaboratoreId" | "tipoPraticaId">) {
+/** Mandato (modello della sede) del collaboratore: quello fissato all'invio, altrimenti quello attualmente assegnato. */
+export async function mandatoDellaPratica(p: Pick<RigaPratica, "mandatoId" | "collaboratoreId">) {
   const base = db
     .select({ id: mandatiTable.id, nome: mandatiTable.nome, fileNome: mandatiTable.fileNome, fileChiave: mandatiTable.fileChiave, fileTipo: mandatiTable.fileTipo, dimensione: mandatiTable.fileDimensione })
     .from(mandatiTable);
@@ -153,7 +154,7 @@ export async function mandatoDellaPratica(p: Pick<RigaPratica, "mandatoId" | "co
     (
       await base
         .innerJoin(assegnazioniMandatoTable, eq(assegnazioniMandatoTable.mandatoId, mandatiTable.id))
-        .where(and(eq(assegnazioniMandatoTable.collaboratoreId, p.collaboratoreId), eq(assegnazioniMandatoTable.tipoPraticaId, p.tipoPraticaId)))
+        .where(eq(assegnazioniMandatoTable.collaboratoreId, p.collaboratoreId))
     )[0] ?? null
   );
 }
@@ -197,7 +198,7 @@ export async function verificaCompletezza(p: RigaPratica, mandato: unknown): Pro
   const mandatoMancante = docs.some((d) => d.mandato) && !mandato;
   const mancanti = [
     ...richiesti.filter((d) => !caricatiIds.has(d.id)).map((d) => `Documento da caricare: ${d.nome}`),
-    ...(mandatoMancante ? ["Al tuo sportello non è stato assegnato il mandato per questo tipo di pratica: contatta l'amministrazione"] : []),
+    ...(mandatoMancante ? ["Al tuo sportello non è stato assegnato il mandato: contatta l'amministrazione"] : []),
   ];
   return { mancanti, richiesti, mandatoMancante };
 }
@@ -256,7 +257,7 @@ export async function dettaglioPratica(req: Request, id: number) {
     ...mappaRiepilogo(p, mio),
     assistito: mappaAssistito(ass!, req),
     moduli: moduli.map((m) => ({ id: m.id, nome: m.nome, fileNome: m.fileNome, dimensione: m.fileDimensione })),
-    mandato: mandato ? { id: mandato.id, nome: mandato.nome, fileNome: mandato.fileNome, dimensione: mandato.dimensione } : null,
+    mandato: mandato ? { id: mandato.id, nome: mandato.nome, fileNome: nomePdfMandato(p) } : null,
     mandatoMancante: completezza.mandatoMancante,
     richiesti: completezza.richiesti,
     documenti: documenti.map(({ d, nome, cognome }) => mappaDocumentoPratica(d, nome, cognome, categorie)),

@@ -1,3 +1,5 @@
+import { Readable } from "node:stream";
+import { mandatoCompilatoPdf } from "../lib/mandato-compilato";
 import { NOME_STATO_PAGATA, aggiornaMaturazione, estrattoDellaPratica } from "../lib/compensi";
 import express, { Router, type IRouter } from "express";
 import { and, asc, desc, eq, isNotNull, isNull, ne, sql, type SQL } from "drizzle-orm";
@@ -335,8 +337,8 @@ router.get("/backoffice/pratiche/:id/mandato/file", async (req, res) => {
   const p = await caricaPraticaInviata(intero(req.params["id"], "id"));
   const m = await mandatoDellaPratica(p);
   if (!m) throw nonTrovato("Nessun mandato assegnato per questa pratica.");
-  const { stream } = await leggiFile(m.fileChiave);
-  inviaFile(res, stream, m.fileNome, m.fileTipo, m.dimensione, req.query["anteprima"] === "1");
+  const { pdf, nomeFile } = await mandatoCompilatoPdf(p, m.fileChiave);
+  inviaFile(res, Readable.from(pdf), nomeFile, "application/pdf", pdf.length, req.query["anteprima"] === "1");
 });
 
 // ---------------------------------------------------------------------------------------------

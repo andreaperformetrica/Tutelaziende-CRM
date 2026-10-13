@@ -23,3 +23,7 @@ timeoutMs = 20000
 
 [userenv.shared]
 NOTIFICHE_EMAIL_MITTENTE = "Tutela Aziende Notifiche <notify@performetrica.ai>"
+
+[nix]
+channel = "stable-25_05"
+packages = ["libreoffice"]

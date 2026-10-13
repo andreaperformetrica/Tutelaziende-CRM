@@ -204,7 +204,7 @@ export default function PraticaDettaglioBackoffice() {
       <Sezione titolo="Documenti del collaboratore" testId="sezione-documenti">
         {p.mandato && (
           <div className="mb-3 pb-3 border-b border-border flex flex-wrap items-center justify-between gap-3" data-testid="riga-mandato">
-            <div className="text-sm"><span className="font-semibold">{p.mandato.nome}</span> <Badge variant="outline" className="ml-1">Mandato</Badge><div className="text-xs text-muted-foreground">{p.mandato.fileNome} ({formatoDimensione(p.mandato.dimensione)})</div></div>
+            <div className="text-sm"><span className="font-semibold">{p.mandato.nome}</span> <Badge variant="outline" className="ml-1">Mandato</Badge><div className="text-xs text-muted-foreground">{p.mandato.fileNome} (compilato con i dati dell'assistito)</div></div>
             <div className="flex gap-2">
               <Button size="sm" variant="outline" onClick={() => setAnteprima({ titolo: p.mandato!.nome, url: urlMandatoBackoffice(id, true), scarica: urlMandatoBackoffice(id), immagine: eImmagine(p.mandato!.fileNome) })} data-testid="anteprima-mandato"><Eye className="size-4 mr-1.5" /> Anteprima</Button>
               <Button size="sm" variant="ghost" asChild><a href={urlMandatoBackoffice(id)} download aria-label="Scarica il mandato"><Download className="size-4" /></a></Button>

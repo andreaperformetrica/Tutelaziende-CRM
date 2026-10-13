@@ -8,7 +8,6 @@
 
 export interface Mandato {
   id: number;
-  tipoPraticaId: number;
   nome: string;
   fileNome: string;
   fileTipo: string;

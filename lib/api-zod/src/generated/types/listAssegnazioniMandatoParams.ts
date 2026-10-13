@@ -7,6 +7,5 @@
  */
 
 export type ListAssegnazioniMandatoParams = {
-tipoPraticaId?: number;
 collaboratoreId?: number;
 };

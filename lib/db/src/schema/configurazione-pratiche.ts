@@ -54,14 +54,11 @@ export const moduliTipoTable = pgTable(
   (t) => [index("moduli_tipo_tipo_idx").on(t.tipoPraticaId)],
 );
 
-/** Mandato della raccolta (es. "Mandato Roma"): caricato una volta e poi assegnato ai collaboratori. Appartiene a un tipo di pratica. */
+/** Mandato della raccolta (es. "Mandato Roma"): modello Word con campi da compilare, caricato una volta e poi assegnato ai collaboratori. Non dipende dal tipo di pratica. */
 export const mandatiTable = pgTable(
   "mandati",
   {
     id: serial("id").primaryKey(),
-    tipoPraticaId: integer("tipo_pratica_id")
-      .notNull()
-      .references(() => tipiPraticaTable.id, { onDelete: "cascade" }),
     nome: text("nome").notNull(),
     fileChiave: text("file_chiave").notNull(),
     fileNome: text("file_nome").notNull(),
@@ -70,10 +67,10 @@ export const mandatiTable = pgTable(
     caricatoIl: timestamp("caricato_il", { withTimezone: true }).notNull().defaultNow(),
     caricatoDaUtenteId: integer("caricato_da_utente_id").references(() => utentiTable.id),
   },
-  (t) => [uniqueIndex("mandati_tipo_nome_uq").on(t.tipoPraticaId, sql`lower(${t.nome})`)],
+  (t) => [uniqueIndex("mandati_nome_uq").on(sql`lower(${t.nome})`)],
 );
 
-/** Mandato assegnato a un collaboratore per un tipo di pratica (uno solo per coppia). */
+/** Mandato assegnato a un collaboratore (uno solo per collaboratore, valido per tutti i tipi di pratica). */
 export const assegnazioniMandatoTable = pgTable(
   "assegnazioni_mandato",
   {
@@ -81,15 +78,12 @@ export const assegnazioniMandatoTable = pgTable(
     collaboratoreId: integer("collaboratore_id")
       .notNull()
       .references(() => collaboratoriTable.id),
-    tipoPraticaId: integer("tipo_pratica_id")
-      .notNull()
-      .references(() => tipiPraticaTable.id, { onDelete: "cascade" }),
     mandatoId: integer("mandato_id")
       .notNull()
       .references(() => mandatiTable.id, { onDelete: "restrict" }),
     assegnatoIl: timestamp("assegnato_il", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("assegnazioni_mandato_coppia_uq").on(t.collaboratoreId, t.tipoPraticaId), index("assegnazioni_mandato_mandato_idx").on(t.mandatoId)],
+  (t) => [uniqueIndex("assegnazioni_mandato_collaboratore_uq").on(t.collaboratoreId), index("assegnazioni_mandato_mandato_idx").on(t.mandatoId)],
 );
 
 /** Stato di una pratica: creato, rinominato e ordinato dall'admin. `chiuso` indica se conta come chiusa. */

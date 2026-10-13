@@ -198,6 +198,9 @@ importers:
       express:
         specifier: ^5.2.1
         version: 5.2.1
+      jszip:
+        specifier: ^3.10.2
+        version: 3.10.2
       pdf-lib:
         specifier: ^1.17.1
         version: 1.17.1

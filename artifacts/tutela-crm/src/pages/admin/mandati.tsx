@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   getListAssegnazioniMandatoQueryKey, getListMandatiQueryKey, useAssegnaMandato, useDeleteMandato, useListAssegnazioniMandato, useListCollaboratori,
-  useListMandati, useListTipiPratica, useRimuoviAssegnazioneMandato, useRinominaMandato, type Mandato,
+  useListMandati, useRimuoviAssegnazioneMandato, useRinominaMandato, type Mandato,
 } from "@workspace/api-client-react";
 import { Check, Download, FileSignature, Loader2, Pencil, RefreshCw, Search, Trash2, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,7 @@ function useRicarica() {
   return () => Promise.all([qc.invalidateQueries({ queryKey: getListMandatiQueryKey() }), qc.invalidateQueries({ queryKey: getListAssegnazioniMandatoQueryKey() })]);
 }
 
-function Raccolta({ tipoId, mandati }: { tipoId: number; mandati: Mandato[] }) {
+function Raccolta({ mandati }: { mandati: Mandato[] }) {
   const { toast } = useToast();
   const ricarica = useRicarica();
   const rinomina = useRinominaMandato();
@@ -44,7 +44,7 @@ function Raccolta({ tipoId, mandati }: { tipoId: number; mandati: Mandato[] }) {
     setErr(null);
     setOccupato("nuovo");
     try {
-      await inviaFile<Mandato>("POST", "/mandati/file", { tipoPraticaId: tipoId, nome: nome.trim() || f.name.replace(/\.[^.]+$/, "") }, f);
+      await inviaFile<Mandato>("POST", "/mandati/file", { nome: nome.trim() || f.name.replace(/\.[^.]+$/, "") }, f);
       await ricarica();
       setNome("");
       toast({ title: "Mandato aggiunto alla raccolta" });
@@ -63,10 +63,22 @@ function Raccolta({ tipoId, mandati }: { tipoId: number; mandati: Mandato[] }) {
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Carica qui i mandati una sola volta, con un nome riconoscibile (per esempio "Mandato Roma"). Poi li assegni ai collaboratori nell'altra scheda.
+        Carica qui il modello Word di ogni sede, con un nome riconoscibile (per esempio "Mandato Napoli"). Poi assegni a ogni collaboratore il mandato della sua sede nell'altra scheda.
         Sostituendo il file di un mandato, il cambio vale per tutti i collaboratori che lo usano.
       </p>
-      {!mandati.length ? <p className="text-sm text-muted-foreground" data-testid="nessun-mandato">Nessun mandato caricato per questo tipo di pratica.</p> : (
+      <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm space-y-1" data-testid="campi-mandato">
+        <div className="font-semibold">Campi da inserire nel modello</div>
+        <p className="text-muted-foreground">
+          Scrivi nel documento Word questi campi e il sistema li sostituirà con i dati dell'assistito quando il collaboratore scarica il mandato in PDF dalla pratica.
+        </p>
+        <p className="font-mono text-xs break-words">
+          @cliente.cognome @cliente.nome @cliente.nascita @cliente.sesso @cliente.luogoNascita @cliente.cf @cliente.tel @cliente.cell @cliente.email @cliente.indirizzo @cliente.civico @cliente.cap @cliente.citta @cliente.provincia @cliente.nazione @richiesta.tipo @polizza.tipo
+        </p>
+        <p className="text-muted-foreground">
+          I campi @cliente.cap e @cliente.provincia, e @polizza.tipo, restano vuoti perché questi dati non sono registrati. @richiesta.tipo riporta il tipo di pratica.
+        </p>
+      </div>
+      {!mandati.length ? <p className="text-sm text-muted-foreground" data-testid="nessun-mandato">Nessun mandato caricato.</p> : (
         <div className="rounded-lg border border-border bg-card overflow-x-auto">
           <Table>
             <TableHeader>
@@ -123,11 +135,11 @@ function Raccolta({ tipoId, mandati }: { tipoId: number; mandati: Mandato[] }) {
   );
 }
 
-function Assegnazioni({ tipoId, mandati }: { tipoId: number; mandati: Mandato[] }) {
+function Assegnazioni({ mandati }: { mandati: Mandato[] }) {
   const { toast } = useToast();
   const ricarica = useRicarica();
   const collQ = useListCollaboratori({ stato: "attivi" });
-  const assQ = useListAssegnazioniMandato({ tipoPraticaId: tipoId });
+  const assQ = useListAssegnazioniMandato();
   const assegna = useAssegnaMandato();
   const rimuovi = useRimuoviAssegnazioneMandato();
   const [cerca, setCerca] = useState("");
@@ -147,13 +159,13 @@ function Assegnazioni({ tipoId, mandati }: { tipoId: number; mandati: Mandato[] 
     setErr(null);
     setOccupato(collaboratoreId);
     const fine = { onSettled: () => setOccupato(null), onError: (e: unknown) => setErr(parseApiError(e).message) };
-    if (valore === NESSUNO) rimuovi.mutate({ params: { collaboratoreId, tipoPraticaId: tipoId } }, { ...fine, onSuccess: () => { ricarica(); toast({ title: "Mandato tolto" }); } });
-    else assegna.mutate({ data: { collaboratoreId, tipoPraticaId: tipoId, mandatoId: Number(valore) } }, { ...fine, onSuccess: () => { ricarica(); toast({ title: "Mandato assegnato" }); } });
+    if (valore === NESSUNO) rimuovi.mutate({ params: { collaboratoreId } }, { ...fine, onSuccess: () => { ricarica(); toast({ title: "Mandato tolto" }); } });
+    else assegna.mutate({ data: { collaboratoreId, mandatoId: Number(valore) } }, { ...fine, onSuccess: () => { ricarica(); toast({ title: "Mandato assegnato" }); } });
   };
 
   if (collQ.isLoading || assQ.isLoading) return <Skeleton className="h-48 w-full" />;
   if (collQ.isError || assQ.isError) return <ErrorState message="Impossibile caricare le assegnazioni." onRetry={() => { collQ.refetch(); assQ.refetch(); }} />;
-  if (!mandati.length) return <EmptyState icon={<FileSignature className="size-6" />} title="Nessun mandato nella raccolta" text="Carica prima almeno un mandato per questo tipo di pratica, nella scheda Raccolta mandati." />;
+  if (!mandati.length) return <EmptyState icon={<FileSignature className="size-6" />} title="Nessun mandato nella raccolta" text="Carica prima almeno un mandato, nella scheda Raccolta mandati." />;
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end gap-4">
@@ -200,43 +212,23 @@ function Assegnazioni({ tipoId, mandati }: { tipoId: number; mandati: Mandato[] 
 }
 
 export default function MandatiPage() {
-  const tipiQ = useListTipiPratica();
-  const [tipoSel, setTipoSel] = useState("");
-  const tipi = tipiQ.data ?? [];
-  const tipoId = tipoSel ? Number(tipoSel) : tipi.find((t) => t.attivo)?.id ?? tipi[0]?.id;
-  const mandatiQ = useListMandati({ tipoPraticaId: tipoId }, { query: { enabled: tipoId !== undefined, queryKey: getListMandatiQueryKey({ tipoPraticaId: tipoId }) } });
+  const mandatiQ = useListMandati();
 
   return (
     <div>
       <PageHeader kicker="Configurazione" title="Mandati"
-        subtitle="Prima si caricano i mandati (per esempio uno per ogni città), poi si assegna a ogni collaboratore quello che deve usare per ciascun tipo di pratica." />
-      {tipiQ.isLoading ? <Skeleton className="h-64 w-full" />
-        : tipiQ.isError ? <ErrorState message="Impossibile caricare i tipi di pratica." onRetry={() => tipiQ.refetch()} />
-        : !tipi.length || tipoId === undefined ? <EmptyState icon={<FileSignature className="size-6" />} title="Nessun tipo di pratica" text="Crea prima un tipo di pratica per caricare i mandati." />
+        subtitle="Il mandato è un modello Word per sede. Si caricano i modelli, poi si assegna a ogni collaboratore quello da usare: vale per tutti i tipi di pratica e si scarica compilato dentro la pratica." />
+      {mandatiQ.isLoading ? <Skeleton className="h-48 w-full" />
+        : mandatiQ.isError ? <ErrorState message="Impossibile caricare i mandati." onRetry={() => mandatiQ.refetch()} />
         : (
-          <div className="space-y-4">
-            <div className="w-72">
-              <Label htmlFor="sel-tipo">Tipo di pratica</Label>
-              <Select value={String(tipoId)} onValueChange={setTipoSel}>
-                <SelectTrigger id="sel-tipo" data-testid="select-tipo-mandato"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {tipi.map((t) => <SelectItem key={t.id} value={String(t.id)} data-testid={`opzione-tipo-${t.id}`}>{t.nome}{t.attivo ? "" : " (disattivato)"}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            {mandatiQ.isLoading ? <Skeleton className="h-48 w-full" />
-              : mandatiQ.isError ? <ErrorState message="Impossibile caricare i mandati." onRetry={() => mandatiQ.refetch()} />
-              : (
-                <Tabs defaultValue="raccolta" key={tipoId}>
-                  <TabsList>
-                    <TabsTrigger value="raccolta" data-testid="tab-raccolta">Raccolta mandati ({mandatiQ.data?.length ?? 0})</TabsTrigger>
-                    <TabsTrigger value="assegnazioni" data-testid="tab-assegnazioni">Assegnazione ai collaboratori</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="raccolta" className="mt-4"><Raccolta tipoId={tipoId} mandati={mandatiQ.data ?? []} /></TabsContent>
-                  <TabsContent value="assegnazioni" className="mt-4"><Assegnazioni tipoId={tipoId} mandati={mandatiQ.data ?? []} /></TabsContent>
-                </Tabs>
-              )}
-          </div>
+          <Tabs defaultValue="raccolta">
+            <TabsList>
+              <TabsTrigger value="raccolta" data-testid="tab-raccolta">Raccolta mandati ({mandatiQ.data?.length ?? 0})</TabsTrigger>
+              <TabsTrigger value="assegnazioni" data-testid="tab-assegnazioni">Assegnazione ai collaboratori</TabsTrigger>
+            </TabsList>
+            <TabsContent value="raccolta" className="mt-4"><Raccolta mandati={mandatiQ.data ?? []} /></TabsContent>
+            <TabsContent value="assegnazioni" className="mt-4"><Assegnazioni mandati={mandatiQ.data ?? []} /></TabsContent>
+          </Tabs>
         )}
     </div>
   );
