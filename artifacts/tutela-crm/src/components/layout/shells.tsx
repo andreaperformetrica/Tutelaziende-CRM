@@ -147,7 +147,7 @@ export function CollaboratoreShell({ s, children }: { s: SessioneUtente; childre
         <div className="mx-auto max-w-5xl px-4 h-14 lg:h-16 flex items-center gap-4 lg:gap-6">
           <Marchio chiaro />
           <nav className="hidden lg:flex gap-1 ml-2" data-testid="nav-collaboratore">
-            {voci.map((v) => (
+            {voci.filter((v) => v.href !== "/collaboratore/impostazioni").map((v) => (
               <Link key={v.href} href={v.href} data-testid={`link-menu-${v.label.toLowerCase().replace(" ", "-")}`}
                 className={cn("flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors", attiva(v.href) ? "bg-accent text-accent-foreground" : "hover:bg-primary-foreground/10")}>
                 <v.icon className="size-4 shrink-0" /><span>{v.label}</span>
@@ -158,7 +158,10 @@ export function CollaboratoreShell({ s, children }: { s: SessioneUtente; childre
           <div className="ml-auto flex items-center gap-3">
             <div className="hidden sm:block text-right leading-tight">
               <div className="text-sm font-semibold" data-testid="text-utente-nome">{s.nome} {s.cognome}</div>
-              <div className="text-[11px] opacity-70">{ruoloLabel(s.ruolo)}</div>
+              <Link href="/collaboratore/impostazioni" data-testid="link-menu-impostazioni"
+                className={cn("inline-flex items-center gap-1 text-[11px] opacity-70 hover:opacity-100 hover:underline", attiva("/collaboratore/impostazioni") && "opacity-100 underline")}>
+                <Settings className="size-3" /> Impostazioni
+              </Link>
             </div>
             <button onClick={esci} data-testid="button-esci" aria-label="Esci" className="flex items-center gap-1.5 rounded-full border border-primary-foreground/30 size-10 sm:size-auto justify-center sm:px-3 sm:py-1.5 text-sm hover:bg-primary-foreground/10 transition-colors"><LogOut className="size-4" /> <span className="hidden sm:inline">Esci</span></button>
           </div>
