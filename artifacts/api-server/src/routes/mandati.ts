@@ -25,6 +25,17 @@ const corpoFile = express.raw({ type: () => true, limit: DIMENSIONE_MASSIMA_FILE
 
 const DUPLICATO = new HttpError(409, "Esiste già un mandato con questo nome.", "NOME_DUPLICATO", "nome");
 
+/** Il nome del mandato e' unico senza distinguere maiuscole: il controllo e' qui (e non in un indice) per non dipendere dai dati gia' presenti. */
+async function controllaNomeLibero(tx: Pick<typeof db, "execute" | "select">, nome: string, escludiId?: number) {
+  await tx.execute(sql`select pg_advisory_xact_lock(4002)`);
+  const [esiste] = await tx
+    .select({ id: mandatiTable.id })
+    .from(mandatiTable)
+    .where(sql`lower(${mandatiTable.nome}) = lower(${nome})${escludiId ? sql` and ${mandatiTable.id} <> ${escludiId}` : sql``}`)
+    .limit(1);
+  if (esiste) throw DUPLICATO;
+}
+
 const assegnati = sql<number>`(select count(*)::int from ${assegnazioniMandatoTable} where ${assegnazioniMandatoTable.mandatoId} = ${mandatiTable.id})`;
 
 function selezione() {
@@ -118,6 +129,7 @@ router.post("/mandati/file", corpoFile, async (req, res) => {
   const chiave = await salvaFile(file.buffer, file.tipo);
   try {
     const id = await db.transaction(async (tx) => {
+      await controllaNomeLibero(tx, nome);
       const [m] = await tx
         .insert(mandatiTable)
         .values({
@@ -137,7 +149,6 @@ router.post("/mandati/file", corpoFile, async (req, res) => {
     res.status(201).json(await mandatoMappato(id));
   } catch (err) {
     await eliminaFile(chiave, req.log);
-    if (codiceErrorePg(err).code === "23505") throw DUPLICATO;
     throw err;
   }
 });
@@ -179,21 +190,17 @@ router.patch("/mandati/:id", async (req, res) => {
   const b = valida(RinominaMandatoBody, req.body);
   const m = await caricaMandato(id);
   const nome = pulisciNome(b.nome, "Il nome del mandato", 100);
-  try {
-    await db.transaction(async (tx) => {
-      await tx.update(mandatiTable).set({ nome }).where(eq(mandatiTable.id, id));
-      await registraLog(tx, contestoDa(req), {
-        azione: "mandato.rinomina",
-        entita: "mandato",
-        entitaId: id,
-        descrizione: `Rinominato il mandato "${m.nome}" in "${nome}"`,
-        dettagli: { prima: m.nome, dopo: nome },
-      });
+  await db.transaction(async (tx) => {
+    await controllaNomeLibero(tx, nome, id);
+    await tx.update(mandatiTable).set({ nome }).where(eq(mandatiTable.id, id));
+    await registraLog(tx, contestoDa(req), {
+      azione: "mandato.rinomina",
+      entita: "mandato",
+      entitaId: id,
+      descrizione: `Rinominato il mandato "${m.nome}" in "${nome}"`,
+      dettagli: { prima: m.nome, dopo: nome },
     });
-  } catch (err) {
-    if (codiceErrorePg(err).code === "23505") throw DUPLICATO;
-    throw err;
-  }
+  });
   res.json(await mandatoMappato(id));
 });
 

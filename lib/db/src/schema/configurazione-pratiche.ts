@@ -55,20 +55,16 @@ export const moduliTipoTable = pgTable(
 );
 
 /** Mandato della raccolta (es. "Mandato Roma"): modello Word con campi da compilare, caricato una volta e poi assegnato ai collaboratori. Non dipende dal tipo di pratica. */
-export const mandatiTable = pgTable(
-  "mandati",
-  {
-    id: serial("id").primaryKey(),
-    nome: text("nome").notNull(),
-    fileChiave: text("file_chiave").notNull(),
-    fileNome: text("file_nome").notNull(),
-    fileTipo: text("file_tipo").notNull(),
-    fileDimensione: integer("file_dimensione").notNull(),
-    caricatoIl: timestamp("caricato_il", { withTimezone: true }).notNull().defaultNow(),
-    caricatoDaUtenteId: integer("caricato_da_utente_id").references(() => utentiTable.id),
-  },
-  (t) => [uniqueIndex("mandati_nome_uq").on(sql`lower(${t.nome})`)],
-);
+export const mandatiTable = pgTable("mandati", {
+  id: serial("id").primaryKey(),
+  nome: text("nome").notNull(),
+  fileChiave: text("file_chiave").notNull(),
+  fileNome: text("file_nome").notNull(),
+  fileTipo: text("file_tipo").notNull(),
+  fileDimensione: integer("file_dimensione").notNull(),
+  caricatoIl: timestamp("caricato_il", { withTimezone: true }).notNull().defaultNow(),
+  caricatoDaUtenteId: integer("caricato_da_utente_id").references(() => utentiTable.id),
+});
 
 /** Mandato assegnato a un collaboratore (uno solo per collaboratore, valido per tutti i tipi di pratica). */
 export const assegnazioniMandatoTable = pgTable(
