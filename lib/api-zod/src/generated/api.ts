@@ -583,6 +583,8 @@ export const ListAssistitiResponse = zod.object({
   "cellulare": zod.string(),
   "email": zod.string().nullish(),
   "citta": zod.string(),
+  "provincia": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatoria'),
+  "cap": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatorio'),
   "indirizzo": zod.string().nullish(),
   "collaboratore": zod.object({
   "id": zod.number().int(),
@@ -614,6 +616,7 @@ export const createAssistitoBodyCodiceFiscaleMax = 16;
 
 
 
+
 export const CreateAssistitoBody = zod.object({
   "nome": zod.string().min(1),
   "cognome": zod.string().min(1),
@@ -625,7 +628,9 @@ export const CreateAssistitoBody = zod.object({
   "partitaIva": zod.string().nullish().describe('Facoltativa, 11 cifre'),
   "cellulare": zod.string(),
   "citta": zod.string().min(1),
-  "indirizzo": zod.string().nullish(),
+  "provincia": zod.string().describe('Sigla della provincia di residenza (2 lettere)'),
+  "cap": zod.string().describe('CAP di residenza (5 cifre)'),
+  "indirizzo": zod.string().min(1).describe('Via e numero civico'),
   "email": zod.string().nullish()
 })
 
@@ -647,6 +652,8 @@ export const CreateAssistitoResponse = zod.object({
   "cellulare": zod.string(),
   "email": zod.string().nullish(),
   "citta": zod.string(),
+  "provincia": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatoria'),
+  "cap": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatorio'),
   "indirizzo": zod.string().nullish(),
   "collaboratore": zod.object({
   "id": zod.number().int(),
@@ -686,6 +693,8 @@ export const GetAssistitoResponse = zod.object({
   "cellulare": zod.string(),
   "email": zod.string().nullish(),
   "citta": zod.string(),
+  "provincia": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatoria'),
+  "cap": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatorio'),
   "indirizzo": zod.string().nullish(),
   "collaboratore": zod.object({
   "id": zod.number().int(),
@@ -716,6 +725,7 @@ export const updateAssistitoBodyCodiceFiscaleMax = 16;
 
 
 
+
 export const UpdateAssistitoBody = zod.object({
   "nome": zod.string().min(1),
   "cognome": zod.string().min(1),
@@ -727,7 +737,9 @@ export const UpdateAssistitoBody = zod.object({
   "partitaIva": zod.string().nullish().describe('Facoltativa, 11 cifre'),
   "cellulare": zod.string(),
   "citta": zod.string().min(1),
-  "indirizzo": zod.string().nullish(),
+  "provincia": zod.string().describe('Sigla della provincia di residenza (2 lettere)'),
+  "cap": zod.string().describe('CAP di residenza (5 cifre)'),
+  "indirizzo": zod.string().min(1).describe('Via e numero civico'),
   "email": zod.string().nullish()
 })
 
@@ -749,6 +761,8 @@ export const UpdateAssistitoResponse = zod.object({
   "cellulare": zod.string(),
   "email": zod.string().nullish(),
   "citta": zod.string(),
+  "provincia": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatoria'),
+  "cap": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatorio'),
   "indirizzo": zod.string().nullish(),
   "collaboratore": zod.object({
   "id": zod.number().int(),
@@ -792,6 +806,8 @@ export const AssociaAssistitoACollaboratoreResponse = zod.object({
   "cellulare": zod.string(),
   "email": zod.string().nullish(),
   "citta": zod.string(),
+  "provincia": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatoria'),
+  "cap": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatorio'),
   "indirizzo": zod.string().nullish(),
   "collaboratore": zod.object({
   "id": zod.number().int(),
@@ -1004,6 +1020,7 @@ export const CercaLuoghiQueryParams = zod.object({
 })
 
 export const CercaLuoghiResponseItem = zod.object({
+  "cap": zod.array(zod.string()).describe('CAP del comune (piu di uno per le citta divise in zone), vuoto per gli stati esteri'),
   "codice": zod.string().describe('Codice catastale (Belfiore) del comune (es. H501) o dello stato estero (es. Z129)'),
   "nome": zod.string(),
   "provincia": zod.string().nullable().describe('Sigla della provincia, null per gli stati esteri'),
@@ -3533,6 +3550,8 @@ export const CreatePraticaResponse = zod.object({
   "cellulare": zod.string(),
   "email": zod.string().nullish(),
   "citta": zod.string(),
+  "provincia": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatoria'),
+  "cap": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatorio'),
   "indirizzo": zod.string().nullish(),
   "collaboratore": zod.object({
   "id": zod.number().int(),
@@ -3661,6 +3680,8 @@ export const GetPraticaResponse = zod.object({
   "cellulare": zod.string(),
   "email": zod.string().nullish(),
   "citta": zod.string(),
+  "provincia": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatoria'),
+  "cap": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatorio'),
   "indirizzo": zod.string().nullish(),
   "collaboratore": zod.object({
   "id": zod.number().int(),
@@ -3787,6 +3808,8 @@ export const SalvaMessaggioPraticaResponse = zod.object({
   "cellulare": zod.string(),
   "email": zod.string().nullish(),
   "citta": zod.string(),
+  "provincia": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatoria'),
+  "cap": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatorio'),
   "indirizzo": zod.string().nullish(),
   "collaboratore": zod.object({
   "id": zod.number().int(),
@@ -3896,6 +3919,8 @@ export const DeleteDocumentoPraticaResponse = zod.object({
   "cellulare": zod.string(),
   "email": zod.string().nullish(),
   "citta": zod.string(),
+  "provincia": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatoria'),
+  "cap": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatorio'),
   "indirizzo": zod.string().nullish(),
   "collaboratore": zod.object({
   "id": zod.number().int(),
@@ -4012,6 +4037,8 @@ export const InviaPraticaResponse = zod.object({
   "cellulare": zod.string(),
   "email": zod.string().nullish(),
   "citta": zod.string(),
+  "provincia": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatoria'),
+  "cap": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatorio'),
   "indirizzo": zod.string().nullish(),
   "collaboratore": zod.object({
   "id": zod.number().int(),
@@ -4128,6 +4155,8 @@ export const CreateCommentoPraticaResponse = zod.object({
   "cellulare": zod.string(),
   "email": zod.string().nullish(),
   "citta": zod.string(),
+  "provincia": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatoria'),
+  "cap": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatorio'),
   "indirizzo": zod.string().nullish(),
   "collaboratore": zod.object({
   "id": zod.number().int(),
@@ -4502,6 +4531,8 @@ export const GetPraticaBackofficeResponse = zod.object({
   "cellulare": zod.string(),
   "email": zod.string().nullish(),
   "citta": zod.string(),
+  "provincia": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatoria'),
+  "cap": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatorio'),
   "indirizzo": zod.string().nullish(),
   "collaboratore": zod.object({
   "id": zod.number().int(),
@@ -4632,6 +4663,8 @@ export const PrendiInCaricoPraticaResponse = zod.object({
   "cellulare": zod.string(),
   "email": zod.string().nullish(),
   "citta": zod.string(),
+  "provincia": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatoria'),
+  "cap": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatorio'),
   "indirizzo": zod.string().nullish(),
   "collaboratore": zod.object({
   "id": zod.number().int(),
@@ -4756,6 +4789,8 @@ export const CambiaStatoPraticaResponse = zod.object({
   "cellulare": zod.string(),
   "email": zod.string().nullish(),
   "citta": zod.string(),
+  "provincia": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatoria'),
+  "cap": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatorio'),
   "indirizzo": zod.string().nullish(),
   "collaboratore": zod.object({
   "id": zod.number().int(),
@@ -4881,6 +4916,8 @@ export const CreateCommentoPraticaBackofficeResponse = zod.object({
   "cellulare": zod.string(),
   "email": zod.string().nullish(),
   "citta": zod.string(),
+  "provincia": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatoria'),
+  "cap": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatorio'),
   "indirizzo": zod.string().nullish(),
   "collaboratore": zod.object({
   "id": zod.number().int(),

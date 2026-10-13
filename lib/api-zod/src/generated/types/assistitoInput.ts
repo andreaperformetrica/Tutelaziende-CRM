@@ -32,8 +32,15 @@ export interface AssistitoInput {
   cellulare: string;
   /** @minLength 1 */
   citta: string;
-  /** @nullable */
-  indirizzo?: string | null;
+  /** Sigla della provincia di residenza (2 lettere) */
+  provincia: string;
+  /** CAP di residenza (5 cifre) */
+  cap: string;
+  /**
+     * Via e numero civico
+     * @minLength 1
+     */
+  indirizzo: string;
   /** @nullable */
   email?: string | null;
 }

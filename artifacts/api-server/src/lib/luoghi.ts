@@ -1,4 +1,5 @@
 import dati from "../data/luoghi.json";
+import capComuni from "../data/cap.json";
 
 export interface LuogoDati {
   codice: string;
@@ -6,6 +7,8 @@ export interface LuogoDati {
   provincia: string | null;
   tipo: "comune" | "stato";
   attuale: boolean;
+  /** CAP del comune (piu' di uno per le citta' divise in zone); vuoto per gli stati e per i comuni senza dato. */
+  cap: string[];
 }
 
 export const CODICE_ITALIA = "IT";
@@ -22,7 +25,7 @@ function normalizza(testo: string): string {
     .trim();
 }
 
-interface Indicizzato extends LuogoDati {
+interface Indicizzato extends Omit<LuogoDati, "cap"> {
   chiavi: string[];
 }
 
@@ -52,7 +55,7 @@ const indice: Indicizzato[] = [
 const perCodice = new Map(indice.map((l) => [l.codice, l]));
 
 function senzaChiavi(l: Indicizzato): LuogoDati {
-  return { codice: l.codice, nome: l.nome, provincia: l.provincia, tipo: l.tipo, attuale: l.attuale };
+  return { codice: l.codice, nome: l.nome, provincia: l.provincia, tipo: l.tipo, attuale: l.attuale, cap: l.tipo === "comune" ? (capComuni as Record<string, string[]>)[l.codice] ?? [] : [] };
 }
 
 export function trovaLuogo(codice: string): LuogoDati | null {

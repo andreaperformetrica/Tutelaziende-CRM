@@ -127,7 +127,7 @@ export function CollaboratoreShell({ s, children }: { s: SessioneUtente; childre
   ];
   const attiva = (href: string) => loc === href || (href !== "/collaboratore" && loc.startsWith(href + "/"));
   return (
-    <div className="min-h-[100dvh] bg-secondary/40 paper overflow-x-hidden">
+    <div className="min-h-[100dvh] bg-[hsl(220_9%_95%)] overflow-x-hidden">
       <header className="bg-primary text-primary-foreground border-b-4 border-accent">
         <div className="mx-auto max-w-5xl px-4 h-14 lg:h-16 flex items-center gap-4 lg:gap-6">
           <Marchio chiaro />

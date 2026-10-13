@@ -8,6 +8,8 @@
 import type { LuogoTipo } from './luogoTipo';
 
 export interface Luogo {
+  /** CAP del comune (piu di uno per le citta divise in zone), vuoto per gli stati esteri */
+  cap: string[];
   /** Codice catastale (Belfiore) del comune (es. H501) o dello stato estero (es. Z129) */
   codice: string;
   nome: string;

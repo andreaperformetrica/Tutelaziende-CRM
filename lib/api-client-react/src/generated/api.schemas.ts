@@ -191,6 +191,8 @@ export const LuogoTipo = {
 } as const;
 
 export interface Luogo {
+  /** CAP del comune (piu di uno per le citta divise in zone), vuoto per gli stati esteri */
+  cap: string[];
   /** Codice catastale (Belfiore) del comune (es. H501) o dello stato estero (es. Z129) */
   codice: string;
   nome: string;
@@ -363,8 +365,15 @@ export interface AssistitoInput {
   cellulare: string;
   /** @minLength 1 */
   citta: string;
-  /** @nullable */
-  indirizzo?: string | null;
+  /** Sigla della provincia di residenza (2 lettere) */
+  provincia: string;
+  /** CAP di residenza (5 cifre) */
+  cap: string;
+  /**
+     * Via e numero civico
+     * @minLength 1
+     */
+  indirizzo: string;
   /** @nullable */
   email?: string | null;
 }
@@ -404,6 +413,16 @@ export interface Assistito {
   /** @nullable */
   email?: string | null;
   citta: string;
+  /**
+     * Null solo per gli assistiti inseriti prima che fosse obbligatoria
+     * @nullable
+     */
+  provincia?: string | null;
+  /**
+     * Null solo per gli assistiti inseriti prima che fosse obbligatorio
+     * @nullable
+     */
+  cap?: string | null;
   /** @nullable */
   indirizzo?: string | null;
   collaboratore: CollaboratoreAssistito;

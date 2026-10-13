@@ -219,6 +219,7 @@ export async function datiMandato(assistitoId: number, tipoPratica: string): Pro
       cognome: personeTable.cognome, nome: personeTable.nome, nascita: personeTable.dataNascita, sesso: personeTable.sesso,
       luogoNascita: personeTable.luogoNascitaNome, cf: personeTable.codiceFiscale, tel: personeTable.telefono, cell: personeTable.cellulare,
       email: personeTable.email, nazione: personeTable.nazionalitaNome, citta: assistitiTable.citta, indirizzo: assistitiTable.indirizzo,
+      cap: assistitiTable.cap, provincia: assistitiTable.provincia,
     })
     .from(assistitiTable)
     .innerJoin(personeTable, eq(personeTable.id, assistitiTable.personaId))
@@ -228,7 +229,7 @@ export async function datiMandato(assistitoId: number, tipoPratica: string): Pro
   return {
     cliente: {
       cognome: r.cognome, nome: r.nome, nascita: dataIt(String(r.nascita)), sesso: r.sesso, luogoNascita: r.luogoNascita, cf: r.cf,
-      tel: r.tel ?? "", cell: r.cell, email: r.email ?? "", indirizzo: ind.via, civico: ind.civico, cap: "", citta: r.citta, provincia: "",
+      tel: r.tel ?? "", cell: r.cell, email: r.email ?? "", indirizzo: ind.via, civico: ind.civico, cap: r.cap ?? "", citta: r.citta, provincia: r.provincia ?? "",
       nazione: r.nazione,
     },
     richiesta: { tipo: tipoPratica },

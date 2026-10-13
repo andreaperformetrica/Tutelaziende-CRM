@@ -2356,8 +2356,12 @@ components:
 
     Luogo:
       type: object
-      required: [codice, nome, provincia, tipo, attuale]
+      required: [codice, nome, provincia, tipo, attuale, cap]
       properties:
+        cap:
+          type: array
+          items: { type: string }
+          description: CAP del comune (piu di uno per le citta divise in zone), vuoto per gli stati esteri
         codice:
           type: string
           description: Codice catastale (Belfiore) del comune (es. H501) o dello stato estero (es. Z129)
@@ -2622,6 +2626,9 @@ components:
         - codiceFiscale
         - cellulare
         - citta
+        - provincia
+        - cap
+        - indirizzo
       properties:
         nome:
           type: string
@@ -2652,8 +2659,16 @@ components:
         citta:
           type: string
           minLength: 1
+        provincia:
+          type: string
+          description: Sigla della provincia di residenza (2 lettere)
+        cap:
+          type: string
+          description: CAP di residenza (5 cifre)
         indirizzo:
-          type: ["string", "null"]
+          type: string
+          minLength: 1
+          description: Via e numero civico
         email:
           type: ["string", "null"]
     CollaboratoreAssistito:
@@ -2728,6 +2743,12 @@ components:
           type: ["string", "null"]
         citta:
           type: string
+        provincia:
+          type: ["string", "null"]
+          description: Null solo per gli assistiti inseriti prima che fosse obbligatoria
+        cap:
+          type: ["string", "null"]
+          description: Null solo per gli assistiti inseriti prima che fosse obbligatorio
         indirizzo:
           type: ["string", "null"]
         collaboratore:

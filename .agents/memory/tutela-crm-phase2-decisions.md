@@ -12,3 +12,11 @@ description: Duplicate-handling, visibility and permission choices made for assi
 
 **Why:** choices made by the agent from the phase 2 brief; user to confirm.
 **How to apply:** keep later phases (pratiche) consistent with these visibility and leak-free duplicate rules.
+
+## Residenza dell'assistito (aggiornamento)
+- Città, provincia (sigla), CAP (5 cifre) e indirizzo (via + civico in un campo) sono obbligatori in creazione/modifica. Gli assistiti vecchi hanno provincia/CAP vuoti nel DB e vanno completati alla prima modifica.
+- Ricerca automatica: suggerimenti comuni dalla ricerca luoghi esistente; il dataset CAP (da comuni-json, per codice catastale) è in `api-server/src/data/cap.json`. Comuni con più CAP: il CAP non viene precompilato, si sceglie da elenco. Nessun servizio esterno di geocoding.
+- Provincia e CAP alimentano anche i segnaposto del mandato compilato (cliente.cap, cliente.provincia).
+
+**Why:** richiesta utente; i dati servono per i mandati.
+**How to apply:** la creazione di assistiti da importazione Excel (se mai aggiunta) deve fornire anche provincia/CAP/indirizzo.

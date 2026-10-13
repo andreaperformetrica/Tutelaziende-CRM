@@ -89,8 +89,10 @@ export function AssistitoScheda({ base, etichettaIndietro }: { base: string; eti
             <dl className="grid gap-4 sm:grid-cols-2">
               <Dato k="Cellulare" mono>{fmtCellulare(a.cellulare)}</Dato>
               <Dato k="Email">{a.email ?? "—"}</Dato>
-              <Dato k="Città">{a.citta}</Dato>
               <Dato k="Indirizzo">{a.indirizzo ?? "—"}</Dato>
+              <Dato k="CAP" mono>{a.cap ?? "—"}</Dato>
+              <Dato k="Città">{a.citta}</Dato>
+              <Dato k="Provincia" mono>{a.provincia ?? "—"}</Dato>
             </dl>
           </section>
           <section className="bg-card border border-border rounded-lg p-5 rise">

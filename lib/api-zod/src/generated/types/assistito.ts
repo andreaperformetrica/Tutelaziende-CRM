@@ -32,6 +32,16 @@ export interface Assistito {
   /** @nullable */
   email?: string | null;
   citta: string;
+  /**
+     * Null solo per gli assistiti inseriti prima che fosse obbligatoria
+     * @nullable
+     */
+  provincia?: string | null;
+  /**
+     * Null solo per gli assistiti inseriti prima che fosse obbligatorio
+     * @nullable
+     */
+  cap?: string | null;
   /** @nullable */
   indirizzo?: string | null;
   collaboratore: CollaboratoreAssistito;

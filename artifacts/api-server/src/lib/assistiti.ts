@@ -24,6 +24,8 @@ export const colonneAssistito = {
   collaboratoreId: assistitiTable.collaboratoreId,
   citta: assistitiTable.citta,
   indirizzo: assistitiTable.indirizzo,
+  provincia: assistitiTable.provincia,
+  cap: assistitiTable.cap,
   creatoIl: assistitiTable.creatoIl,
   modificatoIl: assistitiTable.modificatoIl,
   nome: personeTable.nome,
@@ -112,6 +114,8 @@ export function mappaAssistito(r: RigaAssistito, req: Request) {
     partitaIva: r.partitaIva,
     citta: r.citta,
     indirizzo: r.indirizzo,
+    provincia: r.provincia,
+    cap: r.cap,
     collaboratore: {
       id: r.collaboratoreId,
       nome: r.collNome,

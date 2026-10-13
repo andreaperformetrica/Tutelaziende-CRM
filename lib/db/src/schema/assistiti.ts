@@ -21,6 +21,9 @@ export const assistitiTable = pgTable(
       .references(() => collaboratoriTable.id),
     citta: text("citta").notNull(),
     indirizzo: text("indirizzo"),
+    /** Sigla provincia e CAP di residenza: obbligatori in inserimento, vuoti solo per gli assistiti piu' vecchi. */
+    provincia: text("provincia"),
+    cap: text("cap"),
     creatoDaUtenteId: integer("creato_da_utente_id").references(() => utentiTable.id),
     creatoIl: timestamp("creato_il", { withTimezone: true }).notNull().defaultNow(),
     modificatoIl: timestamp("modificato_il", { withTimezone: true }).notNull().defaultNow(),

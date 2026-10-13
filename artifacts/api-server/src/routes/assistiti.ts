@@ -37,7 +37,29 @@ function pulisciCitta(valore: string): string {
   return c;
 }
 
-const pulisciOpzionale = (v: string | null | undefined) => (v && v.trim() ? v.trim() : null);
+function pulisciIndirizzo(valore: string): string {
+  const i = valore.replace(/\s+/g, " ").trim();
+  if (!i) throw new HttpError(400, "L'indirizzo è obbligatorio.", "DATI_NON_VALIDI", "indirizzo");
+  return i;
+}
+
+function pulisciCap(valore: string): string {
+  const c = valore.trim();
+  if (!/^\d{5}$/.test(c)) throw new HttpError(400, "Il CAP deve essere di 5 cifre.", "DATI_NON_VALIDI", "cap");
+  return c;
+}
+
+function pulisciProvincia(valore: string): string {
+  const p = valore.trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(p)) throw new HttpError(400, "La provincia deve essere indicata con la sigla di 2 lettere (es. RM).", "DATI_NON_VALIDI", "provincia");
+  return p;
+}
+
+interface Residenza { citta: string; indirizzo: string; cap: string; provincia: string }
+
+function pulisciResidenza(d: { citta: string; indirizzo: string; cap: string; provincia: string }): Residenza {
+  return { citta: pulisciCitta(d.citta), indirizzo: pulisciIndirizzo(d.indirizzo), cap: pulisciCap(d.cap), provincia: pulisciProvincia(d.provincia) };
+}
 
 const ETICHETTE_CAMPI: Record<string, string> = {
   nome: "nome",
@@ -51,11 +73,13 @@ const ETICHETTE_CAMPI: Record<string, string> = {
   email: "email",
   partitaIva: "partita IVA",
   citta: "citta",
+  provincia: "provincia",
+  cap: "CAP",
   indirizzo: "indirizzo",
 };
 
-function piatto(a: Record<string, unknown>, citta: string, indirizzo: string | null): Record<string, unknown> {
-  const r: Record<string, unknown> = { citta, indirizzo };
+function piatto(a: Record<string, unknown>, res: { citta: string; indirizzo: string | null; cap: string | null; provincia: string | null }): Record<string, unknown> {
+  const r: Record<string, unknown> = { citta: res.citta, indirizzo: res.indirizzo, cap: res.cap, provincia: res.provincia };
   for (const k of Object.keys(ETICHETTE_CAMPI)) if (!(k in r)) r[k] = a[k] ?? null;
   return r;
 }
@@ -86,8 +110,8 @@ router.get("/assistiti/:id", async (req, res) => {
 router.post("/assistiti", soloCollaboratore, async (req, res) => {
   const dati = valida(CreateAssistitoBody, req.body);
   const anagrafica = normalizzaAnagrafica(dati, { emailObbligatoria: false });
-  const citta = pulisciCitta(dati.citta);
-  const indirizzo = pulisciOpzionale(dati.indirizzo);
+  const residenza = pulisciResidenza(dati);
+  const { citta, indirizzo } = residenza;
   const u = req.utente!;
 
   await controllaDuplicatiAssistito(req, anagrafica, { citta, indirizzo }, "creare");
@@ -98,7 +122,7 @@ router.post("/assistiti", soloCollaboratore, async (req, res) => {
       const [persona] = await tx.insert(personeTable).values(anagrafica).returning({ id: personeTable.id });
       const [assistito] = await tx
         .insert(assistitiTable)
-        .values({ personaId: persona!.id, collaboratoreId: u.collaboratoreId!, citta, indirizzo, creatoDaUtenteId: u.id })
+        .values({ personaId: persona!.id, collaboratoreId: u.collaboratoreId!, ...residenza, creatoDaUtenteId: u.id })
         .returning({ id: assistitiTable.id });
       await registraLog(tx, contestoDa(req), {
         azione: "assistito.crea",
@@ -128,19 +152,19 @@ router.put("/assistiti/:id", soloCollaboratore, async (req, res) => {
     throw nonAutorizzato("Puoi modificare solo i tuoi assistiti.");
   }
   const anagrafica: AnagraficaNormalizzata = normalizzaAnagrafica(dati, { emailObbligatoria: false });
-  const citta = pulisciCitta(dati.citta);
-  const indirizzo = pulisciOpzionale(dati.indirizzo);
+  const residenza = pulisciResidenza(dati);
+  const { citta, indirizzo } = residenza;
 
   await controllaDuplicatiAssistito(req, anagrafica, { citta, indirizzo }, "modificare", prima.personaId);
 
-  const diff = differenze(piatto(prima, prima.citta, prima.indirizzo), piatto(anagrafica, citta, indirizzo), ETICHETTE_CAMPI);
+  const diff = differenze(piatto(prima, prima), piatto(anagrafica, residenza), ETICHETTE_CAMPI);
   try {
     await db.transaction(async (tx) => {
       await tx
         .update(personeTable)
         .set({ ...anagrafica, modificatoIl: sql`now()` })
         .where(eq(personeTable.id, prima.personaId));
-      await tx.update(assistitiTable).set({ citta, indirizzo, modificatoIl: sql`now()` }).where(eq(assistitiTable.id, id));
+      await tx.update(assistitiTable).set({ ...residenza, modificatoIl: sql`now()` }).where(eq(assistitiTable.id, id));
       if (diff.elenco.length > 0) {
         await registraLog(tx, contestoDa(req), {
           azione: "assistito.modifica",

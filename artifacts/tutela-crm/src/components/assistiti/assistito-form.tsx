@@ -12,11 +12,14 @@ import { Info, Loader2, OctagonAlert, Save } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AnagraficaFields, anagraficaEmailFacoltativaSchema, Campo, type AnagraficaValues } from "@/components/anagrafica/anagrafica-fields";
+import { ResidenzaFields } from "@/components/assistiti/residenza-fields";
 import { parseApiError, type ParsedError } from "@/lib/format";
 
 const schema = anagraficaEmailFacoltativaSchema.extend({
   citta: z.string().trim().min(1, "La città è obbligatoria"),
-  indirizzo: z.string().optional(),
+  provincia: z.string().trim().regex(/^[A-Za-z]{2}$/, "Indica la sigla di 2 lettere (es. RM)"),
+  cap: z.string().trim().regex(/^\d{5}$/, "Il CAP deve essere di 5 cifre"),
+  indirizzo: z.string().trim().min(1, "L'indirizzo è obbligatorio"),
 });
 type Values = z.infer<typeof schema>;
 
@@ -43,10 +46,10 @@ export function AssistitoForm({ initial, base, onSaved, onCancel }: { initial?: 
       luogoNascitaCodice: initial.luogoNascitaCodice,
       luogoNascitaEtichetta: initial.luogoNascitaProvincia ? `${initial.luogoNascitaNome} (${initial.luogoNascitaProvincia})` : initial.luogoNascitaNome,
       nazionalita: initial.nazionalita, codiceFiscale: initial.codiceFiscale, email: initial.email ?? "", telefono: "", partitaIva: initial.partitaIva ?? "",
-      cellulare: initial.cellulare, citta: initial.citta, indirizzo: initial.indirizzo ?? "",
+      cellulare: initial.cellulare, citta: initial.citta, provincia: initial.provincia ?? "", cap: initial.cap ?? "", indirizzo: initial.indirizzo ?? "",
     } : {
       nome: "", cognome: "", sesso: undefined as unknown as "M", dataNascita: "", luogoNascitaCodice: "", luogoNascitaEtichetta: "",
-      nazionalita: "IT", codiceFiscale: "", email: "", telefono: "", partitaIva: "", cellulare: "", citta: "", indirizzo: "",
+      nazionalita: "IT", codiceFiscale: "", email: "", telefono: "", partitaIva: "", cellulare: "", citta: "", provincia: "", cap: "", indirizzo: "",
     },
   });
   const { errors } = form.formState;
@@ -57,7 +60,7 @@ export function AssistitoForm({ initial, base, onSaved, onCancel }: { initial?: 
       nome: v.nome.trim(), cognome: v.cognome.trim(), sesso: v.sesso, dataNascita: v.dataNascita,
       luogoNascitaCodice: v.luogoNascitaCodice, nazionalita: v.nazionalita, codiceFiscale: normalizzaCodiceFiscale(v.codiceFiscale),
       cellulare: v.cellulare.trim(), citta: v.citta.trim(),
-      indirizzo: v.indirizzo?.trim() || null, email: v.email.trim() || null, partitaIva: v.partitaIva?.trim() || null,
+      provincia: v.provincia.trim().toUpperCase(), cap: v.cap.trim(), indirizzo: v.indirizzo.trim(), email: v.email.trim() || null, partitaIva: v.partitaIva?.trim() || null,
     };
     const onError = (err: unknown) => {
       const p = parseApiError(err);
@@ -98,14 +101,7 @@ export function AssistitoForm({ initial, base, onSaved, onCancel }: { initial?: 
         )}
         <Sezione t="Dati anagrafici"><AnagraficaFields emailObbligatoria={false} mostraTelefono={false} /></Sezione>
         <Sezione t="Residenza">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Campo label="Città" name="citta" required err={errors.citta?.message}>
-              <Input id="input-citta" autoComplete="off" {...form.register("citta")} className={errors.citta ? "border-destructive" : ""} data-testid="input-citta" />
-            </Campo>
-            <Campo label="Indirizzo (facoltativo)" name="indirizzo" err={errors.indirizzo?.message}>
-              <Input id="input-indirizzo" autoComplete="off" {...form.register("indirizzo")} data-testid="input-indirizzo" />
-            </Campo>
-          </div>
+          <ResidenzaFields />
         </Sezione>
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><Info className="size-3.5" /> Codice fiscale e cellulare devono essere univoci in tutta la piattaforma.</p>
         <div className="flex gap-2 sticky bottom-0 py-3 bg-background/90 backdrop-blur border-t border-border -mx-1 px-1">
