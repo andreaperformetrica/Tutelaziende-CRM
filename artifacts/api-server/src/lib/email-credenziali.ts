@@ -32,7 +32,7 @@ function costruisci(c: Credenziali, mostraPassword: boolean) {
   const haApp = !!(apple || android);
   const introduzione = haApp
     ? "Per potervi accedere è necessario scaricare l'applicazione TUTELAZIENDE dal Play Store o dall'Apple Store."
-    : "Per accedere usi il link qui sotto.";
+    : "Per accedere alla piattaforma usi il link qui sotto.";
   const note = "Al primo accesso le verrà chiesto di scegliere una nuova password.";
 
   const link = (href: string, etichetta: string) => `<a href="${escapeHtml(href)}" style="color:#1a56c4;text-decoration:underline">${escapeHtml(etichetta)}</a>`;
@@ -41,7 +41,7 @@ function costruisci(c: Credenziali, mostraPassword: boolean) {
     celle.length
       ? `<tr><td align="center" style="padding:14px 0 6px 0"><table role="presentation" width="100%"><tr>${celle.map((x) => `<td align="center" style="font-size:14px">${x}</td>`).join("")}</tr></table></td></tr>`
       : ""
-  }<tr><td align="center" style="padding:10px 0;font-size:14px">${link(piattaforma, "Link Patronato")}</td></tr>`;
+  }<tr><td align="center" style="padding:10px 0;font-size:14px">${link(piattaforma, "Link Accesso alla piattaforma")}</td></tr>`;
 
   const html = `<!doctype html><html lang="it"><body style="margin:0;padding:0;background:${SFONDO}">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${SFONDO}"><tr><td align="center" style="padding:28px 12px 0 12px">
@@ -68,7 +68,7 @@ function costruisci(c: Credenziali, mostraPassword: boolean) {
     introduzione,
     ...(apple ? [`Apple: ${apple}`] : []),
     ...(android ? [`Android: ${android}`] : []),
-    `Link Patronato: ${piattaforma}`,
+    `Link Accesso alla piattaforma: ${piattaforma}`,
     "",
     "Ecco le credenziali",
     `Username: ${c.email}`,
