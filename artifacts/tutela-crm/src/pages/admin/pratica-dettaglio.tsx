@@ -256,17 +256,20 @@ export default function PraticaDettaglioBackoffice() {
         <div ref={chatRef} className="rounded-lg border border-border bg-secondary/30 p-3 sm:p-4 mb-4 max-h-[28rem] overflow-y-auto" data-testid="chat-commenti">
           {p.commenti.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">Nessun commento: scrivi il primo messaggio al collaboratore.</p> : (
             <ul className="space-y-3">
-              {p.commenti.map((c) => (
-                <li key={c.id} className={`flex flex-col max-w-[85%] ${c.mio ? "ml-auto items-end" : "items-start"}`} data-testid={`commento-${c.id}`}>
+              {p.commenti.map((c) => {
+                const staff = c.mio || c.ruolo !== "collaboratore";
+                return (
+                <li key={c.id} className={`flex flex-col max-w-[85%] ${staff ? "ml-auto items-end" : "items-start"}`} data-testid={`commento-${c.id}`}>
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground mb-1 px-1">
                     <strong className="text-foreground">{c.mio ? "Tu" : c.autore}</strong><span>{ruoloLabel(c.ruolo)}</span><span>{fmtIstante(c.creatoIl)}</span>
                   </div>
-                  <div className={`rounded-2xl px-4 py-2.5 text-sm shadow-sm ${c.mio ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-card border border-border rounded-bl-sm"}`}>
+                  <div className={`rounded-2xl px-4 py-2.5 text-sm shadow-sm ${staff ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-card border border-border rounded-bl-sm"}`}>
                     <p className="whitespace-pre-wrap break-words">{c.testo}</p>
                   </div>
                   {c.canaleAvviso && <p className="text-[11px] text-muted-foreground mt-1 px-1">Avviso alla sede: {etichettaCanale(c.canaleAvviso)}</p>}
                 </li>
-              ))}
+                );
+              })}
             </ul>
           )}
         </div>
