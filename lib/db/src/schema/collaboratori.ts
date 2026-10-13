@@ -16,6 +16,8 @@ export const collaboratoriTable = pgTable("collaboratori", {
   tipologia: text("tipologia", { enum: ["CAF", "PATRONATO"] }).notNull(),
   /** Capogruppo del gruppo a cui appartiene (un solo livello). */
   capogruppoId: integer("capogruppo_id").references((): AnyPgColumn => collaboratoriTable.id),
+  /** Segnato come capogruppo anche prima di avere collaboratori nel gruppo. */
+  eCapogruppo: boolean("e_capogruppo").notNull().default(false),
   creatoIl: timestamp("creato_il", { withTimezone: true }).notNull().defaultNow(),
 });
 

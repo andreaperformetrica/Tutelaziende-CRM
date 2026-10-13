@@ -259,6 +259,8 @@ export interface Collaboratore {
      * @nullable
      */
   capogruppoNome: string | null;
+  /** E' un capogruppo (segnato come tale oppure con almeno un collaboratore nel gruppo) */
+  capogruppo: boolean;
   /** Quanti collaboratori ha nel proprio gruppo (0 se non e' capogruppo) */
   numeroCollaboratori: number;
   attivo: boolean;
@@ -266,6 +268,15 @@ export interface Collaboratore {
   /** @nullable */
   ultimoAccesso: string | null;
   creatoIl: string;
+}
+
+export interface RuoloCapogruppoInput {
+  capogruppo: boolean;
+}
+
+export interface MembriGruppoInput {
+  /** @minItems 1 */
+  collaboratoreIds: number[];
 }
 
 export type CollaboratoreDettaglio = Collaboratore & {

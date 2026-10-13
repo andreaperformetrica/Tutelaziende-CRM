@@ -7,7 +7,7 @@ export async function costruisciSessione(utente: UtenteAutenticato) {
     null;
   if (utente.collaboratoreId !== null) {
     const [c] = await db
-      .select({ id: collaboratoriTable.id, numeroSportello: collaboratoriTable.numeroSportello, tipologia: collaboratoriTable.tipologia })
+      .select({ id: collaboratoriTable.id, numeroSportello: collaboratoriTable.numeroSportello, tipologia: collaboratoriTable.tipologia, eCapogruppo: collaboratoriTable.eCapogruppo })
       .from(collaboratoriTable)
       .where(eq(collaboratoriTable.id, utente.collaboratoreId));
     if (c) {
@@ -15,7 +15,8 @@ export async function costruisciSessione(utente: UtenteAutenticato) {
         .select({ n: count() })
         .from(collaboratoriTable)
         .where(eq(collaboratoriTable.capogruppoId, c.id));
-      collaboratore = { ...c, capogruppo: (membri?.n ?? 0) > 0 };
+      const { eCapogruppo, ...resto } = c;
+      collaboratore = { ...resto, capogruppo: eCapogruppo || (membri?.n ?? 0) > 0 };
     }
   }
   return {

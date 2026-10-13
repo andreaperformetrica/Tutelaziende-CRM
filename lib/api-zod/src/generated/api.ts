@@ -269,6 +269,7 @@ export const ListCollaboratoriResponseItem = zod.object({
   "tipologia": zod.enum(['CAF', 'PATRONATO']),
   "capogruppoId": zod.number().int().nullable(),
   "capogruppoNome": zod.string().nullable().describe('Cognome e nome del capogruppo'),
+  "capogruppo": zod.boolean().describe('E\' un capogruppo (segnato come tale oppure con almeno un collaboratore nel gruppo)'),
   "numeroCollaboratori": zod.number().int().describe('Quanti collaboratori ha nel proprio gruppo (0 se non e\' capogruppo)'),
   "attivo": zod.boolean(),
   "deveCambiarePassword": zod.boolean(),
@@ -333,6 +334,7 @@ export const CreateCollaboratoreResponse = zod.object({
   "tipologia": zod.enum(['CAF', 'PATRONATO']),
   "capogruppoId": zod.number().int().nullable(),
   "capogruppoNome": zod.string().nullable().describe('Cognome e nome del capogruppo'),
+  "capogruppo": zod.boolean().describe('E\' un capogruppo (segnato come tale oppure con almeno un collaboratore nel gruppo)'),
   "numeroCollaboratori": zod.number().int().describe('Quanti collaboratori ha nel proprio gruppo (0 se non e\' capogruppo)'),
   "attivo": zod.boolean(),
   "deveCambiarePassword": zod.boolean(),
@@ -380,6 +382,7 @@ export const GetCollaboratoreResponse = zod.object({
   "tipologia": zod.enum(['CAF', 'PATRONATO']),
   "capogruppoId": zod.number().int().nullable(),
   "capogruppoNome": zod.string().nullable().describe('Cognome e nome del capogruppo'),
+  "capogruppo": zod.boolean().describe('E\' un capogruppo (segnato come tale oppure con almeno un collaboratore nel gruppo)'),
   "numeroCollaboratori": zod.number().int().describe('Quanti collaboratori ha nel proprio gruppo (0 se non e\' capogruppo)'),
   "attivo": zod.boolean(),
   "deveCambiarePassword": zod.boolean(),
@@ -454,6 +457,7 @@ export const UpdateCollaboratoreResponse = zod.object({
   "tipologia": zod.enum(['CAF', 'PATRONATO']),
   "capogruppoId": zod.number().int().nullable(),
   "capogruppoNome": zod.string().nullable().describe('Cognome e nome del capogruppo'),
+  "capogruppo": zod.boolean().describe('E\' un capogruppo (segnato come tale oppure con almeno un collaboratore nel gruppo)'),
   "numeroCollaboratori": zod.number().int().describe('Quanti collaboratori ha nel proprio gruppo (0 se non e\' capogruppo)'),
   "attivo": zod.boolean(),
   "deveCambiarePassword": zod.boolean(),
@@ -479,6 +483,113 @@ export const DeleteCollaboratoreParams = zod.object({
 })
 
 export const DeleteCollaboratoreResponse = zod.void()
+
+
+/**
+ * @summary Rende un collaboratore capogruppo (anche senza membri) o gli toglie il ruolo
+ */
+export const ImpostaRuoloCapogruppoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const ImpostaRuoloCapogruppoBody = zod.object({
+  "capogruppo": zod.boolean()
+})
+
+export const ImpostaRuoloCapogruppoResponse = zod.object({
+  "id": zod.number().int(),
+  "utenteId": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "sesso": zod.enum(['M', 'F']),
+  "dataNascita": zod.string().describe('AAAA-MM-GG'),
+  "luogoNascitaCodice": zod.string(),
+  "luogoNascitaNome": zod.string(),
+  "luogoNascitaProvincia": zod.string().nullable(),
+  "luogoNascitaEstero": zod.boolean(),
+  "nazionalita": zod.string().describe('IT oppure codice dello stato estero'),
+  "nazionalitaNome": zod.string(),
+  "straniero": zod.boolean().describe('Vero se la nazionalita non e\' italiana'),
+  "codiceFiscale": zod.string(),
+  "partitaIva": zod.string().nullish().describe('Facoltativa, 11 cifre'),
+  "email": zod.string(),
+  "telefono": zod.string().nullable(),
+  "cellulare": zod.string().describe('Formato internazionale, es. +393331234567'),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO']),
+  "capogruppoId": zod.number().int().nullable(),
+  "capogruppoNome": zod.string().nullable().describe('Cognome e nome del capogruppo'),
+  "capogruppo": zod.boolean().describe('E\' un capogruppo (segnato come tale oppure con almeno un collaboratore nel gruppo)'),
+  "numeroCollaboratori": zod.number().int().describe('Quanti collaboratori ha nel proprio gruppo (0 se non e\' capogruppo)'),
+  "attivo": zod.boolean(),
+  "deveCambiarePassword": zod.boolean(),
+  "ultimoAccesso": zod.string().nullable(),
+  "creatoIl": zod.string()
+}).and(zod.object({
+  "membri": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO']),
+  "attivo": zod.boolean()
+})).describe('Collaboratori che appartengono al gruppo (vuoto se non e\' capogruppo)')
+}))
+
+
+/**
+ * @summary Aggiunge collaboratori al gruppo di un capogruppo
+ */
+export const AggiungiMembriGruppoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+
+
+
+export const AggiungiMembriGruppoBody = zod.object({
+  "collaboratoreIds": zod.array(zod.number().int()).min(1)
+})
+
+export const AggiungiMembriGruppoResponse = zod.object({
+  "id": zod.number().int(),
+  "utenteId": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "sesso": zod.enum(['M', 'F']),
+  "dataNascita": zod.string().describe('AAAA-MM-GG'),
+  "luogoNascitaCodice": zod.string(),
+  "luogoNascitaNome": zod.string(),
+  "luogoNascitaProvincia": zod.string().nullable(),
+  "luogoNascitaEstero": zod.boolean(),
+  "nazionalita": zod.string().describe('IT oppure codice dello stato estero'),
+  "nazionalitaNome": zod.string(),
+  "straniero": zod.boolean().describe('Vero se la nazionalita non e\' italiana'),
+  "codiceFiscale": zod.string(),
+  "partitaIva": zod.string().nullish().describe('Facoltativa, 11 cifre'),
+  "email": zod.string(),
+  "telefono": zod.string().nullable(),
+  "cellulare": zod.string().describe('Formato internazionale, es. +393331234567'),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO']),
+  "capogruppoId": zod.number().int().nullable(),
+  "capogruppoNome": zod.string().nullable().describe('Cognome e nome del capogruppo'),
+  "capogruppo": zod.boolean().describe('E\' un capogruppo (segnato come tale oppure con almeno un collaboratore nel gruppo)'),
+  "numeroCollaboratori": zod.number().int().describe('Quanti collaboratori ha nel proprio gruppo (0 se non e\' capogruppo)'),
+  "attivo": zod.boolean(),
+  "deveCambiarePassword": zod.boolean(),
+  "ultimoAccesso": zod.string().nullable(),
+  "creatoIl": zod.string()
+}).and(zod.object({
+  "membri": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO']),
+  "attivo": zod.boolean()
+})).describe('Collaboratori che appartengono al gruppo (vuoto se non e\' capogruppo)')
+}))
 
 
 /**
@@ -532,6 +643,7 @@ export const ImpostaPasswordProvvisoriaCollaboratoreResponse = zod.object({
   "tipologia": zod.enum(['CAF', 'PATRONATO']),
   "capogruppoId": zod.number().int().nullable(),
   "capogruppoNome": zod.string().nullable().describe('Cognome e nome del capogruppo'),
+  "capogruppo": zod.boolean().describe('E\' un capogruppo (segnato come tale oppure con almeno un collaboratore nel gruppo)'),
   "numeroCollaboratori": zod.number().int().describe('Quanti collaboratori ha nel proprio gruppo (0 se non e\' capogruppo)'),
   "attivo": zod.boolean(),
   "deveCambiarePassword": zod.boolean(),

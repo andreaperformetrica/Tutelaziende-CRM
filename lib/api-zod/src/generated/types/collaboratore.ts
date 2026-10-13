@@ -46,6 +46,8 @@ export interface Collaboratore {
      * @nullable
      */
   capogruppoNome: string | null;
+  /** E' un capogruppo (segnato come tale oppure con almeno un collaboratore nel gruppo) */
+  capogruppo: boolean;
   /** Quanti collaboratori ha nel proprio gruppo (0 se non e' capogruppo) */
   numeroCollaboratori: number;
   attivo: boolean;

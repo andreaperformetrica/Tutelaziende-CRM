@@ -19,6 +19,7 @@ export const AZIONI_LOG = {
   "collaboratore.disattiva": "Disattivazione collaboratore",
   "collaboratore.riattiva": "Riattivazione collaboratore",
   "collaboratore.capogruppo": "Assegnazione capogruppo",
+  "collaboratore.ruolo_capogruppo": "Ruolo di capogruppo",
   "collaboratore.password_provvisoria": "Password provvisoria collaboratore",
   "collaboratore.reinvia_credenziali": "Reinvio credenziali al collaboratore",
   "collaboratore.elimina": "Eliminazione collaboratore",

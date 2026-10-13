@@ -1,6 +1,6 @@
 import { randomInt } from "node:crypto";
 import { Router, type IRouter } from "express";
-import { and, asc, eq, ilike, ne, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, eq, ilike, inArray, ne, or, sql, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import {
   CreateCollaboratoreBody,
@@ -10,6 +10,10 @@ import {
   ImpostaPasswordProvvisoriaCollaboratoreParams,
   ListCollaboratoriQueryParams,
   ReinviaCredenzialiCollaboratoreParams,
+  ImpostaRuoloCapogruppoBody,
+  ImpostaRuoloCapogruppoParams,
+  AggiungiMembriGruppoBody,
+  AggiungiMembriGruppoParams,
   UpdateCollaboratoreBody,
   UpdateCollaboratoreParams,
 } from "@workspace/api-zod";
@@ -57,6 +61,7 @@ const colonne = {
   numeroSportello: collaboratoriTable.numeroSportello,
   tipologia: collaboratoriTable.tipologia,
   capogruppoId: collaboratoriTable.capogruppoId,
+  eCapogruppo: collaboratoriTable.eCapogruppo,
   capogruppoCognome: personaCapogruppo.cognome,
   capogruppoNome: personaCapogruppo.nome,
   numeroCollaboratori: sql<number>`(select count(*)::int from collaboratori as membro where membro.capogruppo_id = ${collaboratoriTable.id})`,
@@ -82,9 +87,10 @@ function selezionaCollaboratori(where?: SQL) {
 }
 
 function mappa(r: RigaCollaboratore) {
-  const { capogruppoCognome, capogruppoNome, personaId: _personaId, ...resto } = r;
+  const { capogruppoCognome, capogruppoNome, personaId: _personaId, eCapogruppo, ...resto } = r;
   return {
     ...resto,
+    capogruppo: eCapogruppo || r.numeroCollaboratori > 0,
     straniero: r.nazionalita !== CODICE_ITALIA,
     capogruppoNome: capogruppoCognome ? `${capogruppoCognome} ${capogruppoNome}` : null,
     ultimoAccesso: r.ultimoAccesso ? r.ultimoAccesso.toISOString() : null,
@@ -152,7 +158,11 @@ async function controllaCapogruppo(capogruppoId: number | null | undefined, self
       .from(collaboratoriTable)
       .where(eq(collaboratoriTable.capogruppoId, selfId))
       .limit(1);
-    if (haMembri) {
+    const [segnato] = await db
+      .select({ e: collaboratoriTable.eCapogruppo })
+      .from(collaboratoriTable)
+      .where(eq(collaboratoriTable.id, selfId));
+    if (haMembri || segnato?.e) {
       throw new HttpError(
         400,
         "Questo collaboratore e' capogruppo di altri collaboratori e non puo appartenere a un gruppo.",
@@ -419,6 +429,69 @@ router.put("/collaboratori/:id", soloBackofficeScrittura, async (req, res) => {
   } catch (err) {
     throw erroreDuplicatoDb(err) ?? err;
   }
+  res.json(await dettaglio(id));
+});
+
+/** Rende un collaboratore capogruppo anche prima di avere un gruppo, oppure gli toglie il ruolo (solo se il gruppo e' vuoto). */
+router.put("/collaboratori/:id/capogruppo", soloBackofficeScrittura, async (req, res) => {
+  const { id } = valida(ImpostaRuoloCapogruppoParams, req.params);
+  const { capogruppo: voluto } = valida(ImpostaRuoloCapogruppoBody, req.body);
+  const [c] = await selezionaCollaboratori(eq(collaboratoriTable.id, id));
+  if (!c) throw nonTrovato("Collaboratore non trovato.");
+  const nome = `${c.cognome} ${c.nome}`;
+  if (voluto) {
+    if (c.capogruppoId !== null) {
+      throw new HttpError(409, "Questo collaboratore appartiene a un gruppo: toglilo dal gruppo prima di renderlo capogruppo.", "CAPOGRUPPO_NON_VALIDO");
+    }
+    if (!c.attivo) throw new HttpError(409, "Il collaboratore è disattivato: riattivalo prima di renderlo capogruppo.", "COLLABORATORE_DISATTIVATO");
+  } else if (c.numeroCollaboratori > 0) {
+    throw new HttpError(409, "Il gruppo ha ancora dei collaboratori: toglili dal gruppo prima di rimuovere il ruolo di capogruppo.", "GRUPPO_NON_VUOTO");
+  }
+  if (c.eCapogruppo !== voluto) {
+    await db.transaction(async (tx) => {
+      await tx.update(collaboratoriTable).set({ eCapogruppo: voluto }).where(eq(collaboratoriTable.id, id));
+      await registraLog(tx, contestoDa(req), {
+        azione: "collaboratore.ruolo_capogruppo",
+        entita: "collaboratore",
+        entitaId: id,
+        descrizione: voluto ? `${nome} è stato reso capogruppo` : `Tolto il ruolo di capogruppo a ${nome}`,
+      });
+    });
+  }
+  res.json(await dettaglio(id));
+});
+
+/** Inserisce collaboratori nel gruppo di un capogruppo. */
+router.post("/collaboratori/:id/membri", soloBackofficeScrittura, async (req, res) => {
+  const { id } = valida(AggiungiMembriGruppoParams, req.params);
+  const { collaboratoreIds } = valida(AggiungiMembriGruppoBody, req.body);
+  const [c] = await selezionaCollaboratori(eq(collaboratoriTable.id, id));
+  if (!c) throw nonTrovato("Collaboratore non trovato.");
+  if (!(c.eCapogruppo || c.numeroCollaboratori > 0)) throw new HttpError(409, "Prima rendi capogruppo questo collaboratore.", "CAPOGRUPPO_NON_VALIDO");
+  if (!c.attivo) throw new HttpError(409, "Il capogruppo è disattivato.", "COLLABORATORE_DISATTIVATO");
+  const ids = [...new Set(collaboratoreIds)];
+  if (ids.includes(id)) throw new HttpError(400, "Un collaboratore non può far parte del proprio gruppo.", "CAPOGRUPPO_NON_VALIDO");
+  const scelti = await selezionaCollaboratori(inArray(collaboratoriTable.id, ids));
+  if (scelti.length !== ids.length) throw new HttpError(400, "Uno dei collaboratori scelti non esiste.", "CAPOGRUPPO_NON_VALIDO");
+  for (const m of scelti) {
+    const nome = `${m.cognome} ${m.nome}`;
+    if (m.capogruppoId === id) throw new HttpError(409, `${nome} fa già parte di questo gruppo.`, "CAPOGRUPPO_NON_VALIDO");
+    if (m.capogruppoId !== null) throw new HttpError(409, `${nome} appartiene già a un altro gruppo.`, "CAPOGRUPPO_NON_VALIDO");
+    if (m.eCapogruppo || m.numeroCollaboratori > 0) throw new HttpError(409, `${nome} è a sua volta capogruppo e non può entrare in un gruppo.`, "CAPOGRUPPO_NON_VALIDO");
+  }
+  await db.transaction(async (tx) => {
+    await tx.update(collaboratoriTable).set({ capogruppoId: id }).where(inArray(collaboratoriTable.id, ids));
+    const ctx = contestoDa(req);
+    for (const m of scelti) {
+      await registraLog(tx, ctx, {
+        azione: "collaboratore.capogruppo",
+        entita: "collaboratore",
+        entitaId: m.id,
+        descrizione: `Assegnato il capogruppo (${c.cognome} ${c.nome}) a ${m.cognome} ${m.nome}`,
+        dettagli: { prima: { capogruppoId: null }, dopo: { capogruppoId: id } },
+      });
+    }
+  });
   res.json(await dettaglio(id));
 });
 

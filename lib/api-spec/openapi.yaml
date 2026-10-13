@@ -288,6 +288,46 @@ paths:
       responses:
         "204":
           description: Eseguito
+  /collaboratori/{id}/capogruppo:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    put:
+      operationId: impostaRuoloCapogruppo
+      tags: [collaboratori]
+      summary: Rende un collaboratore capogruppo (anche senza membri) o gli toglie il ruolo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RuoloCapogruppoInput"
+      responses:
+        "200":
+          description: Collaboratore aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollaboratoreDettaglio"
+  /collaboratori/{id}/membri:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    post:
+      operationId: aggiungiMembriGruppo
+      tags: [collaboratori]
+      summary: Aggiunge collaboratori al gruppo di un capogruppo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MembriGruppoInput"
+      responses:
+        "200":
+          description: Collaboratore capogruppo aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollaboratoreDettaglio"
   /collaboratori/{id}/reinvia-credenziali:
     parameters:
       - $ref: "#/components/parameters/IdPath"
@@ -2438,6 +2478,7 @@ components:
         - tipologia
         - capogruppoId
         - capogruppoNome
+        - capogruppo
         - numeroCollaboratori
         - attivo
         - deveCambiarePassword
@@ -2494,6 +2535,9 @@ components:
         capogruppoNome:
           type: ["string", "null"]
           description: Cognome e nome del capogruppo
+        capogruppo:
+          type: boolean
+          description: E' un capogruppo (segnato come tale oppure con almeno un collaboratore nel gruppo)
         numeroCollaboratori:
           type: integer
           description: Quanti collaboratori ha nel proprio gruppo (0 se non e' capogruppo)
@@ -2505,6 +2549,21 @@ components:
           type: ["string", "null"]
         creatoIl:
           type: string
+    RuoloCapogruppoInput:
+      type: object
+      required: [capogruppo]
+      properties:
+        capogruppo:
+          type: boolean
+    MembriGruppoInput:
+      type: object
+      required: [collaboratoreIds]
+      properties:
+        collaboratoreIds:
+          type: array
+          minItems: 1
+          items:
+            type: integer
     CollaboratoreDettaglio:
       allOf:
         - $ref: "#/components/schemas/Collaboratore"

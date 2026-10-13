@@ -2,12 +2,14 @@ import { useState, type ReactNode } from "react";
 import { Link, useLocation, useParams } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  getGetCollaboratoreQueryKey, getListCollaboratoriQueryKey, useDeleteCollaboratore, useGetCollaboratore, useImpostaPasswordProvvisoriaCollaboratore, useReinviaCredenzialiCollaboratore, useUpdateCollaboratore,
+  getGetCollaboratoreQueryKey, getListCollaboratoriQueryKey, useAggiungiMembriGruppo, useDeleteCollaboratore, useImpostaRuoloCapogruppo, useListCollaboratori, useGetCollaboratore, useImpostaPasswordProvvisoriaCollaboratore, useReinviaCredenzialiCollaboratore, useUpdateCollaboratore,
   type CollaboratoreDettaglio,
 } from "@workspace/api-client-react";
-import { ArrowLeft, ChevronRight, KeyRound, Mail, Pencil, Power, ShieldAlert, Trash2, Users } from "lucide-react";
+import { ArrowLeft, ChevronRight, KeyRound, Mail, Pencil, Plus, Power, ShieldAlert, Trash2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CollaboratoreForm } from "@/components/collaboratori/collaboratore-form";
 import { BannerStraniero } from "@/components/anagrafica/anagrafica-fields";
@@ -27,6 +29,46 @@ function Dato({ k, children, mono }: { k: string; children: ReactNode; mono?: bo
   );
 }
 
+function AggiungiMembriDialog({ capogruppo, aperto, onClose, onFatto }: { capogruppo: CollaboratoreDettaglio; aperto: boolean; onClose: () => void; onFatto: () => void }) {
+  const { toast } = useToast();
+  const [scelti, setScelti] = useState<number[]>([]);
+  const [errore, setErrore] = useState<string | null>(null);
+  const elenco = useListCollaboratori({ stato: "attivi" }, { query: { enabled: aperto, queryKey: ["collaboratori-candidati-gruppo"] } });
+  const aggiungi = useAggiungiMembriGruppo();
+  const candidati = (elenco.data ?? []).filter((x) => x.id !== capogruppo.id && x.capogruppoId === null && !x.capogruppo);
+  const chiudi = () => { setScelti([]); setErrore(null); onClose(); };
+  return (
+    <Dialog open={aperto} onOpenChange={(o) => { if (!o) chiudi(); }}>
+      <DialogContent data-testid="dialog-aggiungi-membri">
+        <DialogHeader>
+          <DialogTitle>Aggiungi collaboratori al gruppo</DialogTitle>
+          <DialogDescription>Gruppo di {capogruppo.cognome} {capogruppo.nome}. Compaiono solo i collaboratori attivi che non appartengono già a un gruppo.</DialogDescription>
+        </DialogHeader>
+        <div className="max-h-72 overflow-y-auto space-y-1">
+          {elenco.isLoading && <Skeleton className="h-20 w-full" />}
+          {!elenco.isLoading && candidati.length === 0 && <p className="text-sm text-muted-foreground py-4 text-center" data-testid="nessun-candidato">Nessun collaboratore disponibile.</p>}
+          {candidati.map((x) => (
+            <label key={x.id} className="flex items-center gap-3 rounded-md border border-border px-3 py-2 cursor-pointer hover:bg-muted/50" data-testid={`candidato-${x.id}`}>
+              <Checkbox checked={scelti.includes(x.id)} onCheckedChange={(v) => setScelti((a) => v ? [...a, x.id] : a.filter((i) => i !== x.id))} />
+              <span className="text-sm font-medium">{x.cognome} {x.nome}</span>
+              <span className="ml-auto text-xs text-muted-foreground font-mono">Sportello {x.numeroSportello} · {tipologiaLabel(x.tipologia)}</span>
+            </label>
+          ))}
+        </div>
+        {errore && <p className="text-sm text-destructive" role="alert">{errore}</p>}
+        <DialogFooter>
+          <Button variant="outline" onClick={chiudi}>Annulla</Button>
+          <Button disabled={scelti.length === 0 || aggiungi.isPending} data-testid="button-conferma-membri"
+            onClick={() => aggiungi.mutate({ id: capogruppo.id, data: { collaboratoreIds: scelti } }, {
+              onSuccess: () => { toast({ title: scelti.length === 1 ? "Collaboratore aggiunto al gruppo" : "Collaboratori aggiunti al gruppo" }); chiudi(); onFatto(); },
+              onError: (e) => setErrore(parseApiError(e).message),
+            })}>Aggiungi{scelti.length > 0 ? ` (${scelti.length})` : ""}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function CollaboratoreDettaglioPage() {
   const params = useParams<{ id: string }>();
   const id = Number(params.id);
@@ -40,6 +82,8 @@ export default function CollaboratoreDettaglioPage() {
   const [pwErr, setPwErr] = useState<string | null>(null);
   const [confermaInvio, setConfermaInvio] = useState(false);
   const [confermaElimina, setConfermaElimina] = useState(false);
+  const [aggiungiAperto, setAggiungiAperto] = useState(false);
+  const ruolo = useImpostaRuoloCapogruppo();
   const reinvia = useReinviaCredenzialiCollaboratore();
   const elimina = useDeleteCollaboratore();
   const q = useGetCollaboratore(id, { query: { enabled: Number.isFinite(id), queryKey: getGetCollaboratoreQueryKey(id) } });
@@ -52,6 +96,10 @@ export default function CollaboratoreDettaglioPage() {
     qc.invalidateQueries({ queryKey: getListCollaboratoriQueryKey() });
     qc.invalidateQueries({ queryKey: getGetCollaboratoreQueryKey(id) });
   };
+  const cambiaRuolo = (capogruppo: boolean) => ruolo.mutate({ id, data: { capogruppo } }, {
+    onSuccess: () => { invalida(); toast({ title: capogruppo ? "Ora è capogruppo" : "Ruolo di capogruppo rimosso" }); },
+    onError: (e) => toast({ variant: "destructive", title: "Operazione non riuscita", description: parseApiError(e).message }),
+  });
   const toggleAttivo = (c: CollaboratoreDettaglio) => {
     update.mutate({
       id: c.id, data: {
@@ -82,7 +130,7 @@ export default function CollaboratoreDettaglioPage() {
     <div>
       <Link href="/admin/collaboratori" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-3 transition-colors" data-testid="link-indietro"><ArrowLeft className="size-4" /> Collaboratori</Link>
       <PageHeader title={`${c.cognome} ${c.nome}`}
-        subtitle={<span className="flex flex-wrap items-center gap-2"><StatoBadge attivo={c.attivo} /><Badge variant="outline">{tipologiaLabel(c.tipologia)}</Badge><span className="font-mono">Sportello {c.numeroSportello}</span></span>}
+        subtitle={<span className="flex flex-wrap items-center gap-2"><StatoBadge attivo={c.attivo} /><Badge variant="outline">{tipologiaLabel(c.tipologia)}</Badge>{c.capogruppo && <Badge className="bg-accent text-accent-foreground" data-testid="badge-capogruppo">Capogruppo</Badge>}<span className="font-mono">Sportello {c.numeroSportello}</span></span>}
         actions={puoModificare ? (
           <>
             <Button variant="outline" onClick={() => setModifica(true)} data-testid="button-modifica"><Pencil className="size-4 mr-1.5" /> Modifica</Button>
@@ -102,10 +150,28 @@ export default function CollaboratoreDettaglioPage() {
       <div className="space-y-5">
         {c.straniero && <BannerStraniero nazionalita={c.nazionalitaNome} />}
 
-        {c.numeroCollaboratori > 0 && (
+        {(c.capogruppo || (puoModificare && c.capogruppoId === null)) && (
           <section className="rounded-lg border-2 border-accent bg-accent/15 p-5 rise" data-testid="sezione-gruppo">
-            <h2 className="flex items-center gap-2 text-xl font-bold mb-3"><Users className="size-5" /> Gruppo di {c.cognome} {c.nome}
-              <Badge className="bg-accent-foreground text-accent">{c.numeroCollaboratori}</Badge></h2>
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <h2 className="flex items-center gap-2 text-xl font-bold"><Users className="size-5" /> Gruppo di {c.cognome} {c.nome}
+                {c.capogruppo && <Badge className="bg-accent-foreground text-accent">{c.numeroCollaboratori}</Badge>}</h2>
+              {puoModificare && (
+                <div className="ml-auto flex gap-2">
+                  {c.capogruppo ? (
+                    <>
+                      <Button size="sm" onClick={() => setAggiungiAperto(true)} disabled={!c.attivo} data-testid="button-aggiungi-membri"><Plus className="size-4 mr-1" /> Aggiungi collaboratori</Button>
+                      {c.numeroCollaboratori === 0 && (
+                        <Button size="sm" variant="outline" disabled={ruolo.isPending} onClick={() => cambiaRuolo(false)} data-testid="button-rimuovi-capogruppo">Togli il ruolo</Button>
+                      )}
+                    </>
+                  ) : (
+                    <Button size="sm" disabled={!c.attivo || ruolo.isPending} onClick={() => cambiaRuolo(true)} data-testid="button-rendi-capogruppo">Rendi capogruppo</Button>
+                  )}
+                </div>
+              )}
+            </div>
+            {!c.capogruppo && <p className="text-sm text-muted-foreground">Non è capogruppo. Rendilo capogruppo per poi inserire i collaboratori del suo gruppo.</p>}
+            {c.capogruppo && c.membri.length === 0 && <p className="text-sm text-muted-foreground" data-testid="gruppo-vuoto">Il gruppo è ancora vuoto.</p>}
             <ul className="grid gap-2 sm:grid-cols-2">
               {c.membri.map((m) => (
                 <li key={m.id}>
@@ -162,6 +228,7 @@ export default function CollaboratoreDettaglioPage() {
         </div>
       </div>
 
+      <AggiungiMembriDialog capogruppo={c} aperto={aggiungiAperto} onClose={() => setAggiungiAperto(false)} onFatto={invalida} />
       <ConfermaElimina aperto={confermaInvio} azione="Invia" titolo="Reinviare le credenziali?"
         testo={`A ${c.cognome} ${c.nome} verrà impostata una nuova password provvisoria e inviata per email a ${c.email}. La password attuale smette di funzionare e le sessioni aperte vengono chiuse.`}
         onAnnulla={() => setConfermaInvio(false)}

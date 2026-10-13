@@ -51,7 +51,7 @@ export function CollaboratoreForm({ initial, onSaved, onCancel }: { initial?: Co
     },
   });
   const { errors } = form.formState;
-  const haMembri = (initial?.numeroCollaboratori ?? 0) > 0;
+  const haMembri = !!initial?.capogruppo;
 
   const opzioni = useMemo(() => {
     const l = (attivi ?? []).filter((c) => c.attivo && c.capogruppoId === null && c.id !== initial?.id)
@@ -141,7 +141,7 @@ export function CollaboratoreForm({ initial, onSaved, onCancel }: { initial?: Co
                 </Select>
               )} />
               {haMembri
-                ? <p className="text-xs text-muted-foreground" data-testid="nota-capogruppo">Questo collaboratore è capogruppo di {initial?.numeroCollaboratori} {initial?.numeroCollaboratori === 1 ? "collaboratore" : "collaboratori"}: non può a sua volta avere un capogruppo.</p>
+                ? <p className="text-xs text-muted-foreground" data-testid="nota-capogruppo">Questo collaboratore è capogruppo{(initial?.numeroCollaboratori ?? 0) > 0 ? ` di ${initial?.numeroCollaboratori} ${initial?.numeroCollaboratori === 1 ? "collaboratore" : "collaboratori"}` : ""}: non può a sua volta avere un capogruppo.</p>
                 : <p className="text-xs text-muted-foreground">Solo collaboratori attivi che non appartengono già a un gruppo.</p>}
             </div>
           </div>

@@ -84,6 +84,7 @@ import type {
   Luogo,
   Mandato,
   MandatoInput,
+  MembriGruppoInput,
   MessaggioPraticaInput,
   ModuloTipoInput,
   Nazionalita,
@@ -110,6 +111,7 @@ import type {
   RigaDareAvereInput,
   RigaDareAvereModificaInput,
   RimuoviAssegnazioneMandatoParams,
+  RuoloCapogruppoInput,
   SegnalazioneDuplicato,
   ServizioImport,
   ServizioImportCodice,
@@ -1387,6 +1389,184 @@ export const useDeleteCollaboratore = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteCollaboratoreMutationOptions(options));
+    }
+
+export const getImpostaRuoloCapogruppoUrl = (id: number,) => {
+
+
+
+
+  return `/api/collaboratori/${id}/capogruppo`
+}
+
+/**
+ * @summary Rende un collaboratore capogruppo (anche senza membri) o gli toglie il ruolo
+ */
+export const impostaRuoloCapogruppo = async (id: number,
+    ruoloCapogruppoInput: RuoloCapogruppoInput, options?: Parameters<typeof customFetch>[1]): Promise<CollaboratoreDettaglio> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<CollaboratoreDettaglio>(getImpostaRuoloCapogruppoUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(ruoloCapogruppoInput)
+  }
+);}
+
+
+
+
+
+export const getImpostaRuoloCapogruppoMutationKey = () => ['impostaRuoloCapogruppo'] as const;
+
+export const getImpostaRuoloCapogruppoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof impostaRuoloCapogruppo>>, TError,ImpostaRuoloCapogruppoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof impostaRuoloCapogruppo>>, TError,ImpostaRuoloCapogruppoMutationVariables, TContext> => {
+
+const mutationKey = getImpostaRuoloCapogruppoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof impostaRuoloCapogruppo>>, ImpostaRuoloCapogruppoMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  impostaRuoloCapogruppo(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ImpostaRuoloCapogruppoMutationResult = NonNullable<Awaited<ReturnType<typeof impostaRuoloCapogruppo>>>
+    export type ImpostaRuoloCapogruppoMutationBody = BodyType<RuoloCapogruppoInput>
+    export type ImpostaRuoloCapogruppoMutationError = ErrorType<unknown>
+    export type ImpostaRuoloCapogruppoMutationVariables = {id: number;data: BodyType<RuoloCapogruppoInput>}
+
+    /**
+ * @summary Rende un collaboratore capogruppo (anche senza membri) o gli toglie il ruolo
+ */
+export const useImpostaRuoloCapogruppo = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof impostaRuoloCapogruppo>>, TError,ImpostaRuoloCapogruppoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof impostaRuoloCapogruppo>>,
+        TError,
+        ImpostaRuoloCapogruppoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getImpostaRuoloCapogruppoMutationOptions(options));
+    }
+
+export const getAggiungiMembriGruppoUrl = (id: number,) => {
+
+
+
+
+  return `/api/collaboratori/${id}/membri`
+}
+
+/**
+ * @summary Aggiunge collaboratori al gruppo di un capogruppo
+ */
+export const aggiungiMembriGruppo = async (id: number,
+    membriGruppoInput: MembriGruppoInput, options?: Parameters<typeof customFetch>[1]): Promise<CollaboratoreDettaglio> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<CollaboratoreDettaglio>(getAggiungiMembriGruppoUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(membriGruppoInput)
+  }
+);}
+
+
+
+
+
+export const getAggiungiMembriGruppoMutationKey = () => ['aggiungiMembriGruppo'] as const;
+
+export const getAggiungiMembriGruppoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aggiungiMembriGruppo>>, TError,AggiungiMembriGruppoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof aggiungiMembriGruppo>>, TError,AggiungiMembriGruppoMutationVariables, TContext> => {
+
+const mutationKey = getAggiungiMembriGruppoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof aggiungiMembriGruppo>>, AggiungiMembriGruppoMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  aggiungiMembriGruppo(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AggiungiMembriGruppoMutationResult = NonNullable<Awaited<ReturnType<typeof aggiungiMembriGruppo>>>
+    export type AggiungiMembriGruppoMutationBody = BodyType<MembriGruppoInput>
+    export type AggiungiMembriGruppoMutationError = ErrorType<unknown>
+    export type AggiungiMembriGruppoMutationVariables = {id: number;data: BodyType<MembriGruppoInput>}
+
+    /**
+ * @summary Aggiunge collaboratori al gruppo di un capogruppo
+ */
+export const useAggiungiMembriGruppo = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof aggiungiMembriGruppo>>, TError,AggiungiMembriGruppoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof aggiungiMembriGruppo>>,
+        TError,
+        AggiungiMembriGruppoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAggiungiMembriGruppoMutationOptions(options));
     }
 
 export const getReinviaCredenzialiCollaboratoreUrl = (id: number,) => {
