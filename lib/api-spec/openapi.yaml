@@ -2092,6 +2092,18 @@ paths:
       responses:
         "204":
           description: Eseguito
+  /avvisi:
+    get:
+      operationId: getAvvisi
+      tags: [news]
+      summary: Novita per la home del collaboratore (inviti a eventi da confermare e aggiornamenti delle sue pratiche)
+      responses:
+        "200":
+          description: Avvisi
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Avvisi"
   /news:
     get:
       operationId: listNews
@@ -3613,6 +3625,43 @@ components:
           items: { type: string }
         invio:
           $ref: "#/components/schemas/InvioPratiche"
+    Avvisi:
+      type: object
+      required: [eventi, pratiche]
+      properties:
+        eventi:
+          type: array
+          items:
+            $ref: "#/components/schemas/AvvisoEvento"
+        pratiche:
+          type: array
+          items:
+            $ref: "#/components/schemas/AvvisoPratica"
+    AvvisoEvento:
+      type: object
+      required: [eventoId, titolo, data, oraInizio, luogo, invitatoIl]
+      properties:
+        eventoId: { type: integer }
+        titolo: { type: string }
+        data: { type: string, description: "AAAA-MM-GG" }
+        oraInizio: { type: string }
+        luogo: { type: string }
+        invitatoIl: { type: string, format: date-time }
+    AvvisoPratica:
+      type: object
+      required: [praticaId, numero, assistito, tipo, aggiornamento, stato, quando]
+      properties:
+        praticaId: { type: integer }
+        numero: { type: [integer, "null"] }
+        assistito: { type: string }
+        tipo: { type: string, description: "Tipo di pratica" }
+        aggiornamento:
+          type: string
+          enum: [stato, messaggio, allegato, presa_in_carico, altro]
+        stato:
+          type: [string, "null"]
+          description: Nome del nuovo stato quando l'aggiornamento e un cambio di stato
+        quando: { type: string, format: date-time }
     NewsAllegato:
       type: object
       required: [id, nome, tipo, dimensione]

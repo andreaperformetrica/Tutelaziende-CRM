@@ -1,11 +1,61 @@
-import { getGetCollaboratoreQueryKey, useGetCollaboratore, useListNews } from "@workspace/api-client-react";
-import { Download, Newspaper, Pin, Users } from "lucide-react";
+import { Link } from "wouter";
+import { getGetCollaboratoreQueryKey, useGetAvvisi, useGetCollaboratore, useListNews, type AvvisoPratica } from "@workspace/api-client-react";
+import { Bell, CalendarDays, ChevronRight, Download, FileText, Newspaper, Pin, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { ErrorState } from "@/components/common";
 import { useSession } from "@/lib/auth";
-import { fmtIstante, parseApiError, tipologiaLabel } from "@/lib/format";
+import { fmtData, fmtIstante, fmtOrarioEvento, parseApiError, tipologiaLabel } from "@/lib/format";
 import { formatoDimensione, urlAllegatoNews } from "@/lib/upload";
+
+function testoAggiornamento(a: AvvisoPratica): string {
+  switch (a.aggiornamento) {
+    case "stato": return `Nuovo stato: ${a.stato ?? "aggiornato"}`;
+    case "messaggio": return "Nuovo messaggio dall'ufficio";
+    case "allegato": return "Nuovo allegato dall'ufficio";
+    case "presa_in_carico": return "Pratica presa in carico";
+    default: return "Pratica aggiornata";
+  }
+}
+
+function Novita() {
+  const q = useGetAvvisi();
+  const eventi = q.data?.eventi ?? [];
+  const pratiche = q.data?.pratiche ?? [];
+  if (!eventi.length && !pratiche.length) return null;
+  const riga = "flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2.5 min-h-12 hover:bg-secondary/60 transition-colors";
+  return (
+    <section className="rounded-xl border-2 border-accent bg-card p-5 rise" aria-labelledby="titolo-novita" data-testid="sezione-novita">
+      <h2 id="titolo-novita" className="flex items-center gap-2 text-xl font-bold mb-3"><Bell className="size-5" /> Novità per te</h2>
+      <ul className="space-y-2">
+        {eventi.map((e) => (
+          <li key={`e${e.eventoId}`}>
+            <Link href={`/collaboratore/eventi/${e.eventoId}`} className={riga} data-testid={`avviso-evento-${e.eventoId}`}>
+              <CalendarDays className="size-5 shrink-0 text-primary" />
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold truncate">Invito all&apos;evento: {e.titolo}</span>
+                <span className="block text-xs text-muted-foreground">{fmtData(e.data)} · {fmtOrarioEvento(e.oraInizio)} · {e.luogo} · da confermare</span>
+              </span>
+              <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+            </Link>
+          </li>
+        ))}
+        {pratiche.map((p) => (
+          <li key={`p${p.praticaId}`}>
+            <Link href={`/collaboratore/pratiche/${p.praticaId}`} className={riga} data-testid={`avviso-pratica-${p.praticaId}`}>
+              <FileText className="size-5 shrink-0 text-primary" />
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold truncate">{testoAggiornamento(p)}</span>
+                <span className="block text-xs text-muted-foreground truncate">Pratica {p.numero ? `n. ${p.numero} · ` : ""}{p.tipo} · {p.assistito} · {fmtIstante(p.quando)}</span>
+              </span>
+              <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
 
 export default function HomeCollaboratore() {
   const { session } = useSession();
@@ -31,6 +81,7 @@ export default function HomeCollaboratore() {
           {capogruppo && <Badge className="mt-3 bg-accent text-accent-foreground">Capogruppo</Badge>}
         </div>
       </div>
+      <Novita />
       <section className="rounded-xl border border-border bg-card p-5 rise" aria-labelledby="titolo-news" data-testid="sezione-news">
         <h2 id="titolo-news" className="flex items-center gap-2 text-xl font-bold mb-3"><Newspaper className="size-5" /> News</h2>
         {news.isLoading ? <Skeleton className="h-24" /> : news.isError ? <ErrorState message={parseApiError(news.error).message} onRetry={() => news.refetch()} />

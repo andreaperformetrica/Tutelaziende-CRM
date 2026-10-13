@@ -1303,6 +1303,48 @@ export interface PraticaDettaglio {
   invio: InvioPratiche;
 }
 
+export interface AvvisoEvento {
+  eventoId: number;
+  titolo: string;
+  /** AAAA-MM-GG */
+  data: string;
+  oraInizio: string;
+  luogo: string;
+  invitatoIl: string;
+}
+
+export type AvvisoPraticaAggiornamento = typeof AvvisoPraticaAggiornamento[keyof typeof AvvisoPraticaAggiornamento];
+
+
+export const AvvisoPraticaAggiornamento = {
+  stato: 'stato',
+  messaggio: 'messaggio',
+  allegato: 'allegato',
+  presa_in_carico: 'presa_in_carico',
+  altro: 'altro',
+} as const;
+
+export interface AvvisoPratica {
+  praticaId: number;
+  /** @nullable */
+  numero: number | null;
+  assistito: string;
+  /** Tipo di pratica */
+  tipo: string;
+  aggiornamento: AvvisoPraticaAggiornamento;
+  /**
+     * Nome del nuovo stato quando l'aggiornamento e un cambio di stato
+     * @nullable
+     */
+  stato: string | null;
+  quando: string;
+}
+
+export interface Avvisi {
+  eventi: AvvisoEvento[];
+  pratiche: AvvisoPratica[];
+}
+
 export interface NewsAllegato {
   id: number;
   nome: string;

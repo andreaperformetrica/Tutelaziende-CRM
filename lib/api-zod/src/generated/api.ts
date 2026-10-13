@@ -5051,6 +5051,30 @@ export const DeleteCategoriaAllegatoResponse = zod.void()
 
 
 /**
+ * @summary Novita per la home del collaboratore (inviti a eventi da confermare e aggiornamenti delle sue pratiche)
+ */
+export const GetAvvisiResponse = zod.object({
+  "eventi": zod.array(zod.object({
+  "eventoId": zod.number().int(),
+  "titolo": zod.string(),
+  "data": zod.string().describe('AAAA-MM-GG'),
+  "oraInizio": zod.string(),
+  "luogo": zod.string(),
+  "invitatoIl": zod.coerce.date()
+})),
+  "pratiche": zod.array(zod.object({
+  "praticaId": zod.number().int(),
+  "numero": zod.number().int().nullable(),
+  "assistito": zod.string(),
+  "tipo": zod.string().describe('Tipo di pratica'),
+  "aggiornamento": zod.enum(['stato', 'messaggio', 'allegato', 'presa_in_carico', 'altro']),
+  "stato": zod.string().nullable().describe('Nome del nuovo stato quando l\'aggiornamento e un cambio di stato'),
+  "quando": zod.coerce.date()
+}))
+})
+
+
+/**
  * @summary Notizie pubblicate per la home del collaboratore
  */
 export const ListNewsResponseItem = zod.object({

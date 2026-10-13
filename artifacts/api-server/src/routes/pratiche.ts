@@ -1,7 +1,7 @@
 import { Readable } from "node:stream";
 import { mandatoCompilatoPdf } from "../lib/mandato-compilato";
 import express, { Router, type IRouter } from "express";
-import { and, asc, count, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, count, eq, isNotNull, isNull, sql } from "drizzle-orm";
 import {
   CreateCommentoPraticaBody,
   CreateCommentoPraticaParams,
@@ -143,7 +143,13 @@ router.post("/pratiche", async (req, res) => {
 
 router.get("/pratiche/:id", async (req, res) => {
   const { id } = valida(GetPraticaParams, req.params);
-  res.json(await dettaglioPratica(req, id));
+  const dettaglio = await dettaglioPratica(req, id);
+  // Solo il proprietario "legge" la pratica (non il capogruppo che la guarda): da qui in poi gli aggiornamenti non sono piu' novita'.
+  await db
+    .update(praticheTable)
+    .set({ vistaDalCollaboratoreIl: new Date() })
+    .where(and(eq(praticheTable.id, id), eq(praticheTable.collaboratoreId, mioCollaboratoreId(req)), isNotNull(praticheTable.inviataIl)));
+  res.json(dettaglio);
 });
 
 router.delete("/pratiche/:id", async (req, res) => {

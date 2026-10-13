@@ -39,6 +39,8 @@ export const praticheTable = pgTable(
     ultimaAttivitaCollaboratoreIl: timestamp("ultima_attivita_collaboratore_il", { withTimezone: true }),
     /** Ultima azione del back office (presa in carico, stato, commento, allegato). */
     ultimaAttivitaBackofficeIl: timestamp("ultima_attivita_backoffice_il", { withTimezone: true }),
+    /** Ultima volta che il collaboratore proprietario ha aperto la pratica: serve agli avvisi della sua home. */
+    vistaDalCollaboratoreIl: timestamp("vista_dal_collaboratore_il", { withTimezone: true }),
     /**
      * Compenso maturato: quando una pratica di un tipo pagabile passa a uno stato chiuso si fissano qui l'istante di chiusura
      * e punti e valore del tipo di quel momento. Tornando a uno stato aperto si azzerano (finche' non e' in un estratto).

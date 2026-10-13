@@ -13,3 +13,4 @@
 - [Mandati per sede](tutela-crm-mandati-per-sede.md) — mandato is a per-sede docx template, one per collaboratore, compiled to PDF in the pratica (supersedes per-tipo notes)
 - [Colori stati pratica](tutela-crm-colori-stati.md) — optional chosen color + frontend fallback, StatoBadge, riepilogo per stato in collaboratore pratiche
 - [News home collaboratore](tutela-crm-news.md) — news (with downloadable attachments) managed by admin/operatore, published-only for collaboratori
+- [Avvisi home collaboratore](tutela-crm-avvisi-home.md) — "Novità per te": inviti evento + aggiornamenti pratica calcolati al volo, letto = vista_dal_collaboratore_il

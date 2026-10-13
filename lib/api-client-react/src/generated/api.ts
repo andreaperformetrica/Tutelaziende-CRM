@@ -28,6 +28,7 @@ import type {
   AssistitoInput,
   AssociaCollaboratoreInput,
   AssociaSegnalazioneInput,
+  Avvisi,
   CambioPasswordInput,
   CambioStatoInput,
   CategoriaAllegato,
@@ -9615,6 +9616,83 @@ export const useDeleteCategoriaAllegato = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getDeleteCategoriaAllegatoMutationOptions(options));
     }
+
+export const getGetAvvisiUrl = () => {
+
+
+
+
+  return `/api/avvisi`
+}
+
+/**
+ * @summary Novita per la home del collaboratore (inviti a eventi da confermare e aggiornamenti delle sue pratiche)
+ */
+export const getAvvisi = async ( options?: Parameters<typeof customFetch>[1]): Promise<Avvisi> => {
+
+  return customFetch<Avvisi>(getGetAvvisiUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAvvisiQueryKey = () => {
+    return [
+    `/api/avvisi`
+    ] as const;
+    }
+
+
+export const getGetAvvisiQueryOptions = <TData = Awaited<ReturnType<typeof getAvvisi>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAvvisi>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAvvisiQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAvvisi>>> = ({ signal }) => getAvvisi({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAvvisi>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAvvisiQueryResult = NonNullable<Awaited<ReturnType<typeof getAvvisi>>>
+export type GetAvvisiQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Novita per la home del collaboratore (inviti a eventi da confermare e aggiornamenti delle sue pratiche)
+ */
+
+export function useGetAvvisi<TData = Awaited<ReturnType<typeof getAvvisi>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAvvisi>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAvvisiQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getListNewsUrl = () => {
 
