@@ -12,3 +12,4 @@ description: Permissions, locks and design choices for eventi, QR, check-in, att
 - WhatsApp invite uses a second Twilio template (secret `TWILIO_WHATSAPP_TEMPLATE_EVENTO_SID`), deliberately not part of the general channel status.
 **Why:** privacy habit from phase 6 (invites carry only titolo, data, orario, luogo, link) and the user's rule of locking data once real-world events are recorded.
 **How to apply:** keep these locks when adding features (e.g. notifying sedi on event changes is not built yet).
+- Questionario builder: admin can create questions (checkbox choices or open answer with N lines) per evento; saving generates a PDF stored in the same questionario* file columns, so sede download/flags are unchanged. Uploading a file clears the questions; deleting the questionario clears both. Questions live in eventi.questionario_domande (jsonb). Answers are never collected online (printed on paper).

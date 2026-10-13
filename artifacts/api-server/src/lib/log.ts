@@ -77,6 +77,7 @@ export const AZIONI_LOG = {
   "evento.orari_modifica": "Modifica manuale degli orari di un partecipante",
   "evento.questionario_carica": "Caricamento questionario di un evento",
   "evento.questionario_elimina": "Eliminazione questionario di un evento",
+  "evento.questionario_domande": "Creazione o modifica delle domande del questionario di un evento",
   "evento.attestato_carica": "Caricamento layout dell'attestato",
   "evento.attestato_elimina": "Eliminazione layout dell'attestato",
   "evento.attestato_posizione": "Modifica posizione del nome sull'attestato",

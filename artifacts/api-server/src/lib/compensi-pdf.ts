@@ -62,7 +62,7 @@ async function nuovoDocumento() {
   return { doc, w: new Scrittore(doc, f) };
 }
 
-async function incorporaLogo(doc: PDFDocument, logo: LogoStampa | null): Promise<PDFImage | null> {
+export async function incorporaLogo(doc: PDFDocument, logo: LogoStampa | null): Promise<PDFImage | null> {
   if (!logo) return null;
   try {
     const { stream } = await leggiFile(logo.chiave);

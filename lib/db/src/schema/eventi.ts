@@ -1,6 +1,15 @@
-import { date, index, integer, pgTable, real, serial, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { date, index, integer, jsonb, pgTable, real, serial, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { collaboratoriTable } from "./collaboratori";
 import { utentiTable } from "./utenti";
+
+export interface DomandaQuestionario {
+  testo: string;
+  tipo: "scelta" | "aperta";
+  /** Solo per "scelta": le caselle da spuntare. */
+  opzioni: string[];
+  /** Solo per "aperta": quante righe lasciare per scrivere. */
+  righe: number;
+}
 
 /**
  * Evento o corso di formazione. Data e orari sono quelli del calendario italiano (Europe/Rome).
@@ -19,6 +28,8 @@ export const eventiTable = pgTable("eventi", {
   questionarioTipo: text("questionario_tipo"),
   questionarioDimensione: integer("questionario_dimensione"),
   questionarioCaricatoIl: timestamp("questionario_caricato_il", { withTimezone: true }),
+  /** Domande del questionario creato nel sistema (il PDF generato sta nei campi questionario*); null se il questionario e' un file caricato. */
+  questionarioDomande: jsonb("questionario_domande").$type<DomandaQuestionario[]>(),
   layoutChiave: text("layout_chiave"),
   layoutNome: text("layout_nome"),
   layoutTipo: text("layout_tipo"),

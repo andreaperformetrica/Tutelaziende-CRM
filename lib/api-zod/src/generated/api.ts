@@ -1170,6 +1170,16 @@ export const CreateEventoBody = zod.object({
   "collaboratoriIds": zod.array(zod.number().int())
 })
 
+export const createEventoResponseDomandeItemTestoMax = 500;
+
+export const createEventoResponseDomandeItemOpzioniItemMax = 200;
+
+export const createEventoResponseDomandeItemOpzioniMax = 15;
+
+export const createEventoResponseDomandeItemRigheMax = 10;
+
+
+
 export const CreateEventoResponse = zod.object({
   "evento": zod.object({
   "id": zod.number().int(),
@@ -1187,6 +1197,12 @@ export const CreateEventoResponse = zod.object({
   "dimensione": zod.number().int(),
   "caricatoIl": zod.string()
 }),zod.null()]),
+  "domande": zod.array(zod.object({
+  "testo": zod.string().min(1).max(createEventoResponseDomandeItemTestoMax),
+  "tipo": zod.enum(['scelta', 'aperta']).describe('scelta = caselle da spuntare, aperta = righe per scrivere'),
+  "opzioni": zod.array(zod.string().min(1).max(createEventoResponseDomandeItemOpzioniItemMax)).max(createEventoResponseDomandeItemOpzioniMax),
+  "righe": zod.number().int().min(1).max(createEventoResponseDomandeItemRigheMax)
+})).describe('Domande del questionario creato nel sistema (vuoto se il questionario e\' un file caricato o manca)'),
   "attestato": zod.object({
   "layout": zod.union([zod.object({
   "nome": zod.string(),
@@ -1228,6 +1244,16 @@ export const GetEventoBackofficeParams = zod.object({
   "id": zod.coerce.number().int()
 })
 
+export const getEventoBackofficeResponseDomandeItemTestoMax = 500;
+
+export const getEventoBackofficeResponseDomandeItemOpzioniItemMax = 200;
+
+export const getEventoBackofficeResponseDomandeItemOpzioniMax = 15;
+
+export const getEventoBackofficeResponseDomandeItemRigheMax = 10;
+
+
+
 export const GetEventoBackofficeResponse = zod.object({
   "evento": zod.object({
   "id": zod.number().int(),
@@ -1245,6 +1271,12 @@ export const GetEventoBackofficeResponse = zod.object({
   "dimensione": zod.number().int(),
   "caricatoIl": zod.string()
 }),zod.null()]),
+  "domande": zod.array(zod.object({
+  "testo": zod.string().min(1).max(getEventoBackofficeResponseDomandeItemTestoMax),
+  "tipo": zod.enum(['scelta', 'aperta']).describe('scelta = caselle da spuntare, aperta = righe per scrivere'),
+  "opzioni": zod.array(zod.string().min(1).max(getEventoBackofficeResponseDomandeItemOpzioniItemMax)).max(getEventoBackofficeResponseDomandeItemOpzioniMax),
+  "righe": zod.number().int().min(1).max(getEventoBackofficeResponseDomandeItemRigheMax)
+})).describe('Domande del questionario creato nel sistema (vuoto se il questionario e\' un file caricato o manca)'),
   "attestato": zod.object({
   "layout": zod.union([zod.object({
   "nome": zod.string(),
@@ -1306,6 +1338,16 @@ export const UpdateEventoBody = zod.object({
   "descrizione": zod.string().max(updateEventoBodyDescrizioneMax).optional()
 })
 
+export const updateEventoResponseDomandeItemTestoMax = 500;
+
+export const updateEventoResponseDomandeItemOpzioniItemMax = 200;
+
+export const updateEventoResponseDomandeItemOpzioniMax = 15;
+
+export const updateEventoResponseDomandeItemRigheMax = 10;
+
+
+
 export const UpdateEventoResponse = zod.object({
   "evento": zod.object({
   "id": zod.number().int(),
@@ -1323,6 +1365,12 @@ export const UpdateEventoResponse = zod.object({
   "dimensione": zod.number().int(),
   "caricatoIl": zod.string()
 }),zod.null()]),
+  "domande": zod.array(zod.object({
+  "testo": zod.string().min(1).max(updateEventoResponseDomandeItemTestoMax),
+  "tipo": zod.enum(['scelta', 'aperta']).describe('scelta = caselle da spuntare, aperta = righe per scrivere'),
+  "opzioni": zod.array(zod.string().min(1).max(updateEventoResponseDomandeItemOpzioniItemMax)).max(updateEventoResponseDomandeItemOpzioniMax),
+  "righe": zod.number().int().min(1).max(updateEventoResponseDomandeItemRigheMax)
+})).describe('Domande del questionario creato nel sistema (vuoto se il questionario e\' un file caricato o manca)'),
   "attestato": zod.object({
   "layout": zod.union([zod.object({
   "nome": zod.string(),
@@ -1381,6 +1429,16 @@ export const AddInvitiEventoBody = zod.object({
   "collaboratoriIds": zod.array(zod.number().int()).min(1)
 })
 
+export const addInvitiEventoResponseDomandeItemTestoMax = 500;
+
+export const addInvitiEventoResponseDomandeItemOpzioniItemMax = 200;
+
+export const addInvitiEventoResponseDomandeItemOpzioniMax = 15;
+
+export const addInvitiEventoResponseDomandeItemRigheMax = 10;
+
+
+
 export const AddInvitiEventoResponse = zod.object({
   "evento": zod.object({
   "id": zod.number().int(),
@@ -1398,6 +1456,12 @@ export const AddInvitiEventoResponse = zod.object({
   "dimensione": zod.number().int(),
   "caricatoIl": zod.string()
 }),zod.null()]),
+  "domande": zod.array(zod.object({
+  "testo": zod.string().min(1).max(addInvitiEventoResponseDomandeItemTestoMax),
+  "tipo": zod.enum(['scelta', 'aperta']).describe('scelta = caselle da spuntare, aperta = righe per scrivere'),
+  "opzioni": zod.array(zod.string().min(1).max(addInvitiEventoResponseDomandeItemOpzioniItemMax)).max(addInvitiEventoResponseDomandeItemOpzioniMax),
+  "righe": zod.number().int().min(1).max(addInvitiEventoResponseDomandeItemRigheMax)
+})).describe('Domande del questionario creato nel sistema (vuoto se il questionario e\' un file caricato o manca)'),
   "attestato": zod.object({
   "layout": zod.union([zod.object({
   "nome": zod.string(),
@@ -1440,6 +1504,16 @@ export const RemoveInvitoEventoParams = zod.object({
   "collaboratoreId": zod.coerce.number().int()
 })
 
+export const removeInvitoEventoResponseDomandeItemTestoMax = 500;
+
+export const removeInvitoEventoResponseDomandeItemOpzioniItemMax = 200;
+
+export const removeInvitoEventoResponseDomandeItemOpzioniMax = 15;
+
+export const removeInvitoEventoResponseDomandeItemRigheMax = 10;
+
+
+
 export const RemoveInvitoEventoResponse = zod.object({
   "evento": zod.object({
   "id": zod.number().int(),
@@ -1457,6 +1531,12 @@ export const RemoveInvitoEventoResponse = zod.object({
   "dimensione": zod.number().int(),
   "caricatoIl": zod.string()
 }),zod.null()]),
+  "domande": zod.array(zod.object({
+  "testo": zod.string().min(1).max(removeInvitoEventoResponseDomandeItemTestoMax),
+  "tipo": zod.enum(['scelta', 'aperta']).describe('scelta = caselle da spuntare, aperta = righe per scrivere'),
+  "opzioni": zod.array(zod.string().min(1).max(removeInvitoEventoResponseDomandeItemOpzioniItemMax)).max(removeInvitoEventoResponseDomandeItemOpzioniMax),
+  "righe": zod.number().int().min(1).max(removeInvitoEventoResponseDomandeItemRigheMax)
+})).describe('Domande del questionario creato nel sistema (vuoto se il questionario e\' un file caricato o manca)'),
   "attestato": zod.object({
   "layout": zod.union([zod.object({
   "nome": zod.string(),
@@ -1508,6 +1588,16 @@ export const UpdateOrariPartecipanteBody = zod.object({
   "uscita": zod.string().regex(updateOrariPartecipanteBodyUscitaRegExp).nullable().describe('HH:MM nel giorno dell\'evento; null per cancellare')
 })
 
+export const updateOrariPartecipanteResponseDomandeItemTestoMax = 500;
+
+export const updateOrariPartecipanteResponseDomandeItemOpzioniItemMax = 200;
+
+export const updateOrariPartecipanteResponseDomandeItemOpzioniMax = 15;
+
+export const updateOrariPartecipanteResponseDomandeItemRigheMax = 10;
+
+
+
 export const UpdateOrariPartecipanteResponse = zod.object({
   "evento": zod.object({
   "id": zod.number().int(),
@@ -1525,6 +1615,12 @@ export const UpdateOrariPartecipanteResponse = zod.object({
   "dimensione": zod.number().int(),
   "caricatoIl": zod.string()
 }),zod.null()]),
+  "domande": zod.array(zod.object({
+  "testo": zod.string().min(1).max(updateOrariPartecipanteResponseDomandeItemTestoMax),
+  "tipo": zod.enum(['scelta', 'aperta']).describe('scelta = caselle da spuntare, aperta = righe per scrivere'),
+  "opzioni": zod.array(zod.string().min(1).max(updateOrariPartecipanteResponseDomandeItemOpzioniItemMax)).max(updateOrariPartecipanteResponseDomandeItemOpzioniMax),
+  "righe": zod.number().int().min(1).max(updateOrariPartecipanteResponseDomandeItemRigheMax)
+})).describe('Domande del questionario creato nel sistema (vuoto se il questionario e\' un file caricato o manca)'),
   "attestato": zod.object({
   "layout": zod.union([zod.object({
   "nome": zod.string(),
@@ -1615,6 +1711,16 @@ export const UpdatePosizioneAttestatoBody = zod.object({
   "nomeDimensione": zod.number().int().min(updatePosizioneAttestatoBodyNomeDimensioneMin).max(updatePosizioneAttestatoBodyNomeDimensioneMax)
 })
 
+export const updatePosizioneAttestatoResponseDomandeItemTestoMax = 500;
+
+export const updatePosizioneAttestatoResponseDomandeItemOpzioniItemMax = 200;
+
+export const updatePosizioneAttestatoResponseDomandeItemOpzioniMax = 15;
+
+export const updatePosizioneAttestatoResponseDomandeItemRigheMax = 10;
+
+
+
 export const UpdatePosizioneAttestatoResponse = zod.object({
   "evento": zod.object({
   "id": zod.number().int(),
@@ -1632,6 +1738,12 @@ export const UpdatePosizioneAttestatoResponse = zod.object({
   "dimensione": zod.number().int(),
   "caricatoIl": zod.string()
 }),zod.null()]),
+  "domande": zod.array(zod.object({
+  "testo": zod.string().min(1).max(updatePosizioneAttestatoResponseDomandeItemTestoMax),
+  "tipo": zod.enum(['scelta', 'aperta']).describe('scelta = caselle da spuntare, aperta = righe per scrivere'),
+  "opzioni": zod.array(zod.string().min(1).max(updatePosizioneAttestatoResponseDomandeItemOpzioniItemMax)).max(updatePosizioneAttestatoResponseDomandeItemOpzioniMax),
+  "righe": zod.number().int().min(1).max(updatePosizioneAttestatoResponseDomandeItemRigheMax)
+})).describe('Domande del questionario creato nel sistema (vuoto se il questionario e\' un file caricato o manca)'),
   "attestato": zod.object({
   "layout": zod.union([zod.object({
   "nome": zod.string(),
@@ -1673,6 +1785,16 @@ export const DeleteLayoutAttestatoParams = zod.object({
   "id": zod.coerce.number().int()
 })
 
+export const deleteLayoutAttestatoResponseDomandeItemTestoMax = 500;
+
+export const deleteLayoutAttestatoResponseDomandeItemOpzioniItemMax = 200;
+
+export const deleteLayoutAttestatoResponseDomandeItemOpzioniMax = 15;
+
+export const deleteLayoutAttestatoResponseDomandeItemRigheMax = 10;
+
+
+
 export const DeleteLayoutAttestatoResponse = zod.object({
   "evento": zod.object({
   "id": zod.number().int(),
@@ -1690,6 +1812,12 @@ export const DeleteLayoutAttestatoResponse = zod.object({
   "dimensione": zod.number().int(),
   "caricatoIl": zod.string()
 }),zod.null()]),
+  "domande": zod.array(zod.object({
+  "testo": zod.string().min(1).max(deleteLayoutAttestatoResponseDomandeItemTestoMax),
+  "tipo": zod.enum(['scelta', 'aperta']).describe('scelta = caselle da spuntare, aperta = righe per scrivere'),
+  "opzioni": zod.array(zod.string().min(1).max(deleteLayoutAttestatoResponseDomandeItemOpzioniItemMax)).max(deleteLayoutAttestatoResponseDomandeItemOpzioniMax),
+  "righe": zod.number().int().min(1).max(deleteLayoutAttestatoResponseDomandeItemRigheMax)
+})).describe('Domande del questionario creato nel sistema (vuoto se il questionario e\' un file caricato o manca)'),
   "attestato": zod.object({
   "layout": zod.union([zod.object({
   "nome": zod.string(),
@@ -1731,6 +1859,16 @@ export const DeleteQuestionarioEventoParams = zod.object({
   "id": zod.coerce.number().int()
 })
 
+export const deleteQuestionarioEventoResponseDomandeItemTestoMax = 500;
+
+export const deleteQuestionarioEventoResponseDomandeItemOpzioniItemMax = 200;
+
+export const deleteQuestionarioEventoResponseDomandeItemOpzioniMax = 15;
+
+export const deleteQuestionarioEventoResponseDomandeItemRigheMax = 10;
+
+
+
 export const DeleteQuestionarioEventoResponse = zod.object({
   "evento": zod.object({
   "id": zod.number().int(),
@@ -1748,6 +1886,107 @@ export const DeleteQuestionarioEventoResponse = zod.object({
   "dimensione": zod.number().int(),
   "caricatoIl": zod.string()
 }),zod.null()]),
+  "domande": zod.array(zod.object({
+  "testo": zod.string().min(1).max(deleteQuestionarioEventoResponseDomandeItemTestoMax),
+  "tipo": zod.enum(['scelta', 'aperta']).describe('scelta = caselle da spuntare, aperta = righe per scrivere'),
+  "opzioni": zod.array(zod.string().min(1).max(deleteQuestionarioEventoResponseDomandeItemOpzioniItemMax)).max(deleteQuestionarioEventoResponseDomandeItemOpzioniMax),
+  "righe": zod.number().int().min(1).max(deleteQuestionarioEventoResponseDomandeItemRigheMax)
+})).describe('Domande del questionario creato nel sistema (vuoto se il questionario e\' un file caricato o manca)'),
+  "attestato": zod.object({
+  "layout": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "nomeX": zod.number().describe('Centro del nome, percentuale da sinistra'),
+  "nomeY": zod.number().describe('Centro del nome, percentuale dall\'alto'),
+  "nomeDimensione": zod.number().int().describe('Dimensione del carattere in punti')
+}),
+  "inviti": zod.array(zod.object({
+  "collaboratoreId": zod.number().int(),
+  "nome": zod.string().describe('Cognome e nome'),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.string(),
+  "attivo": zod.boolean(),
+  "invitatoIl": zod.string(),
+  "confermatoIl": zod.string().nullable(),
+  "partecipanti": zod.number().int()
+})),
+  "partecipanti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "collaboratoreId": zod.number().int(),
+  "sedeNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "entrataIl": zod.string().nullable(),
+  "uscitaIl": zod.string().nullable()
+}))
+})
+
+
+/**
+ * @summary Crea o modifica le domande del questionario e genera il PDF da stampare
+ */
+export const SaveQuestionarioEventoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const saveQuestionarioEventoBodyDomandeItemTestoMax = 500;
+
+export const saveQuestionarioEventoBodyDomandeItemOpzioniItemMax = 200;
+
+export const saveQuestionarioEventoBodyDomandeItemOpzioniMax = 15;
+
+export const saveQuestionarioEventoBodyDomandeItemRigheMax = 10;
+
+export const saveQuestionarioEventoBodyDomandeMax = 60;
+
+
+
+export const SaveQuestionarioEventoBody = zod.object({
+  "domande": zod.array(zod.object({
+  "testo": zod.string().min(1).max(saveQuestionarioEventoBodyDomandeItemTestoMax),
+  "tipo": zod.enum(['scelta', 'aperta']).describe('scelta = caselle da spuntare, aperta = righe per scrivere'),
+  "opzioni": zod.array(zod.string().min(1).max(saveQuestionarioEventoBodyDomandeItemOpzioniItemMax)).max(saveQuestionarioEventoBodyDomandeItemOpzioniMax),
+  "righe": zod.number().int().min(1).max(saveQuestionarioEventoBodyDomandeItemRigheMax)
+})).min(1).max(saveQuestionarioEventoBodyDomandeMax)
+})
+
+export const saveQuestionarioEventoResponseDomandeItemTestoMax = 500;
+
+export const saveQuestionarioEventoResponseDomandeItemOpzioniItemMax = 200;
+
+export const saveQuestionarioEventoResponseDomandeItemOpzioniMax = 15;
+
+export const saveQuestionarioEventoResponseDomandeItemRigheMax = 10;
+
+
+
+export const SaveQuestionarioEventoResponse = zod.object({
+  "evento": zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "data": zod.string().describe('AAAA-MM-GG'),
+  "oraInizio": zod.string().describe('HH:MM'),
+  "oraFine": zod.string().nullable(),
+  "luogo": zod.string(),
+  "descrizione": zod.string(),
+  "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
+}),
+  "questionario": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "domande": zod.array(zod.object({
+  "testo": zod.string().min(1).max(saveQuestionarioEventoResponseDomandeItemTestoMax),
+  "tipo": zod.enum(['scelta', 'aperta']).describe('scelta = caselle da spuntare, aperta = righe per scrivere'),
+  "opzioni": zod.array(zod.string().min(1).max(saveQuestionarioEventoResponseDomandeItemOpzioniItemMax)).max(saveQuestionarioEventoResponseDomandeItemOpzioniMax),
+  "righe": zod.number().int().min(1).max(saveQuestionarioEventoResponseDomandeItemRigheMax)
+})).describe('Domande del questionario creato nel sistema (vuoto se il questionario e\' un file caricato o manca)'),
   "attestato": zod.object({
   "layout": zod.union([zod.object({
   "nome": zod.string(),

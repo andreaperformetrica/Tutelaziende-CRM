@@ -21,6 +21,7 @@ import { ConfermaElimina } from "@/components/pratiche/conferma-elimina";
 import { SelettoreFile } from "@/components/pratiche/selettore-file";
 import { FormEvento } from "@/components/eventi/form-evento";
 import { SelettoreSedi } from "@/components/eventi/selettore-sedi";
+import { QuestionarioEditor } from "@/components/eventi/questionario-editor";
 import { useToast } from "@/hooks/use-toast";
 import { fmtData, fmtIstante, fmtOrarioEvento, oraDaIstante, parseApiError, tipologiaLabel } from "@/lib/format";
 import {
@@ -250,7 +251,9 @@ function Questionario({ s, id, onSalva, onErrore }: Comune) {
   const elimina = useDeleteQuestionarioEvento();
   const [occupato, setOccupato] = useState(false);
   const [conferma, setConferma] = useState(false);
+  const [modifica, setModifica] = useState(false);
   const f = s.questionario;
+  const creato = s.domande.length > 0;
   const carica = async (file: File) => {
     setOccupato(true);
     try {
@@ -261,20 +264,28 @@ function Questionario({ s, id, onSalva, onErrore }: Comune) {
   return (
     <section className="rounded-lg border border-border bg-card p-5">
       <h2 className="font-bold text-lg flex items-center gap-2"><FileText className="size-5" /> Questionario</h2>
-      <p className="text-sm text-muted-foreground mt-1 mb-4">Le sedi invitate lo scaricano e lo stampano per i partecipanti.</p>
+      <p className="text-sm text-muted-foreground mt-1 mb-4">Crealo qui con le tue domande oppure carica un file già pronto. Le sedi invitate lo scaricano e lo stampano per i partecipanti.</p>
       {f ? (
         <div className="flex flex-wrap items-center gap-3 rounded-md bg-secondary/50 p-3 mb-3" data-testid="card-questionario">
           <div className="min-w-0 flex-1">
             <div className="font-medium truncate">{f.nome}</div>
-            <div className="text-xs text-muted-foreground">{formatoDimensione(f.dimensione)} · caricato il {fmtIstante(f.caricatoIl)}</div>
+            <div className="text-xs text-muted-foreground">{creato ? `${s.domande.length} ${s.domande.length === 1 ? "domanda" : "domande"} · ` : ""}{formatoDimensione(f.dimensione)} · {creato ? "creato" : "caricato"} il {fmtIstante(f.caricatoIl)}</div>
           </div>
           <Button asChild size="sm" variant="outline"><a href={urlQuestionarioBackoffice(id)} data-testid="link-scarica-questionario"><Download className="size-3.5 mr-1.5" /> Scarica</a></Button>
           <Button size="sm" variant="ghost" onClick={() => setConferma(true)} data-testid="button-elimina-questionario"><Trash2 className="size-3.5" /></Button>
         </div>
       ) : <p className="text-sm mb-3">Nessun questionario caricato.</p>}
-      <SelettoreFile onFile={carica} disabled={occupato} testId="button-carica-questionario">
-        {occupato ? <Loader2 className="size-4 mr-2 animate-spin" /> : <Upload className="size-4 mr-2" />}{f ? "Sostituisci file" : "Carica file"}
-      </SelettoreFile>
+      {modifica ? (
+        <QuestionarioEditor id={id} iniziali={s.domande} onSalva={onSalva} onErrore={onErrore} onChiudi={() => setModifica(false)} />
+      ) : (
+        <div className="flex flex-wrap items-center gap-2">
+          <Button onClick={() => setModifica(true)} data-testid="button-crea-questionario"><Pencil className="size-4 mr-2" />{creato ? "Modifica le domande" : "Crea il questionario"}</Button>
+          <SelettoreFile onFile={carica} disabled={occupato} testId="button-carica-questionario">
+            {occupato ? <Loader2 className="size-4 mr-2 animate-spin" /> : <Upload className="size-4 mr-2" />}{f ? "Sostituisci con un file" : "Carica un file"}
+          </SelettoreFile>
+        </div>
+      )}
+      {!modifica && f && <p className="text-xs text-muted-foreground mt-2">Caricare un file toglie le domande create qui.</p>}
       <ConfermaElimina aperto={conferma} titolo="Eliminare il questionario?" testo="Le sedi non potranno più scaricarlo." onAnnulla={() => setConferma(false)}
         onConferma={() => { setConferma(false); elimina.mutate({ id }, { onSuccess: (r) => { onSalva(r); toast({ title: "Questionario eliminato" }); }, onError: onErrore }); }} />
     </section>

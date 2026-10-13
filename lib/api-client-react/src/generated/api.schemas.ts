@@ -681,9 +681,51 @@ export interface AttestatoEvento {
   nomeDimensione: number;
 }
 
+/**
+ * scelta = caselle da spuntare, aperta = righe per scrivere
+ */
+export type DomandaQuestionarioTipo = typeof DomandaQuestionarioTipo[keyof typeof DomandaQuestionarioTipo];
+
+
+export const DomandaQuestionarioTipo = {
+  scelta: 'scelta',
+  aperta: 'aperta',
+} as const;
+
+export interface DomandaQuestionario {
+  /**
+     * @minLength 1
+     * @maxLength 500
+     */
+  testo: string;
+  /** scelta = caselle da spuntare, aperta = righe per scrivere */
+  tipo: DomandaQuestionarioTipo;
+  /**
+     * @maxItems 15
+     * @items.minLength 1
+     * @items.maxLength 200
+     */
+  opzioni: string[];
+  /**
+     * @minimum 1
+     * @maximum 10
+     */
+  righe: number;
+}
+
+export interface QuestionarioInput {
+  /**
+     * @minItems 1
+     * @maxItems 60
+     */
+  domande: DomandaQuestionario[];
+}
+
 export interface EventoBackoffice {
   evento: EventoDati;
   questionario: FileEvento | null;
+  /** Domande del questionario creato nel sistema (vuoto se il questionario e' un file caricato o manca) */
+  domande: DomandaQuestionario[];
   attestato: AttestatoEvento;
   inviti: InvitoEvento[];
   partecipanti: PartecipanteEventoBackoffice[];

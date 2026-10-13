@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { AttestatoEvento } from './attestatoEvento';
+import type { DomandaQuestionario } from './domandaQuestionario';
 import type { EventoDati } from './eventoDati';
 import type { FileEvento } from './fileEvento';
 import type { InvitoEvento } from './invitoEvento';
@@ -14,6 +15,8 @@ import type { PartecipanteEventoBackoffice } from './partecipanteEventoBackoffic
 export interface EventoBackoffice {
   evento: EventoDati;
   questionario: FileEvento | null;
+  /** Domande del questionario creato nel sistema (vuoto se il questionario e' un file caricato o manca) */
+  domande: DomandaQuestionario[];
   attestato: AttestatoEvento;
   inviti: InvitoEvento[];
   partecipanti: PartecipanteEventoBackoffice[];

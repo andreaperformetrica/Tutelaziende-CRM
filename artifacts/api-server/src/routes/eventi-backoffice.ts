@@ -11,6 +11,8 @@ import {
   RegistraCheckInEventoBody,
   RegistraCheckInEventoParams,
   RemoveInvitoEventoParams,
+  SaveQuestionarioEventoBody,
+  SaveQuestionarioEventoParams,
   UpdateEventoBody,
   UpdateEventoParams,
   UpdateOrariPartecipanteBody,
@@ -28,6 +30,7 @@ import {
   utentiTable,
 } from "@workspace/db";
 import { generaAttestati } from "../lib/attestati";
+import { generaQuestionarioPdf } from "../lib/questionario-pdf";
 import { HttpError, nonTrovato } from "../lib/errori";
 import {
   caricaEvento,
@@ -386,7 +389,7 @@ router.put("/backoffice/eventi/:id/questionario/file", corpoFile, async (req, re
         .update(eventiTable)
         .set({
           questionarioChiave: chiave, questionarioNome: file.nome, questionarioTipo: file.tipo,
-          questionarioDimensione: file.dimensione, questionarioCaricatoIl: new Date(), modificatoIl: new Date(),
+          questionarioDimensione: file.dimensione, questionarioCaricatoIl: new Date(), questionarioDomande: null, modificatoIl: new Date(),
         })
         .where(eq(eventiTable.id, id));
       await registraLog(tx, contestoDa(req), {
@@ -395,6 +398,47 @@ router.put("/backoffice/eventi/:id/questionario/file", corpoFile, async (req, re
         entitaId: id,
         descrizione: `${e.questionarioChiave ? "Sostituito" : "Caricato"} il questionario dell'evento "${e.titolo}" (${file.nome})`,
         dettagli: { fileNome: file.nome, dimensione: file.dimensione, precedente: e.questionarioNome },
+      });
+    });
+  } catch (err) {
+    await eliminaFile(chiave, req.log);
+    throw err;
+  }
+  if (e.questionarioChiave) await eliminaFile(e.questionarioChiave, req.log);
+  res.json(await schedaBackoffice(id));
+});
+
+/** Salva le domande e genera il PDF da stampare, che prende il posto del file del questionario. */
+router.put("/backoffice/eventi/:id/questionario/domande", async (req, res) => {
+  const { id } = valida(SaveQuestionarioEventoParams, req.params);
+  const body = valida(SaveQuestionarioEventoBody, req.body);
+  const e = await caricaEvento(id);
+  const domande = body.domande.map((d, i) => {
+    const testo = d.testo.trim();
+    if (!testo) throw new HttpError(400, `La domanda ${i + 1} è vuota.`, "DATI_NON_VALIDI", "domande");
+    if (d.tipo === "aperta") return { testo, tipo: "aperta" as const, opzioni: [], righe: d.righe };
+    const opzioni = d.opzioni.map((o) => o.trim()).filter(Boolean);
+    if (opzioni.length < 2) throw new HttpError(400, `La domanda ${i + 1} deve avere almeno due risposte da spuntare.`, "DATI_NON_VALIDI", "domande");
+    return { testo, tipo: "scelta" as const, opzioni, righe: d.righe };
+  });
+  const pdf = await generaQuestionarioPdf(e, domande);
+  const nome = `Questionario - ${e.titolo}`.replace(/[\\/:*?"<>|]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 120) + ".pdf";
+  const chiave = await salvaFile(pdf, "application/pdf");
+  try {
+    await db.transaction(async (tx) => {
+      await tx
+        .update(eventiTable)
+        .set({
+          questionarioChiave: chiave, questionarioNome: nome, questionarioTipo: "application/pdf",
+          questionarioDimensione: pdf.length, questionarioCaricatoIl: new Date(), questionarioDomande: domande, modificatoIl: new Date(),
+        })
+        .where(eq(eventiTable.id, id));
+      await registraLog(tx, contestoDa(req), {
+        azione: "evento.questionario_domande",
+        entita: "evento",
+        entitaId: id,
+        descrizione: `${e.questionarioDomande ? "Modificato" : "Creato"} il questionario dell'evento "${e.titolo}" (${domande.length} ${domande.length === 1 ? "domanda" : "domande"})`,
+        dettagli: { domande: domande.length, scelta: domande.filter((d) => d.tipo === "scelta").length, aperte: domande.filter((d) => d.tipo === "aperta").length, precedente: e.questionarioNome },
       });
     });
   } catch (err) {
@@ -419,7 +463,7 @@ router.delete("/backoffice/eventi/:id/questionario", async (req, res) => {
   await db.transaction(async (tx) => {
     await tx
       .update(eventiTable)
-      .set({ questionarioChiave: null, questionarioNome: null, questionarioTipo: null, questionarioDimensione: null, questionarioCaricatoIl: null, modificatoIl: new Date() })
+      .set({ questionarioChiave: null, questionarioNome: null, questionarioTipo: null, questionarioDimensione: null, questionarioCaricatoIl: null, questionarioDomande: null, modificatoIl: new Date() })
       .where(eq(eventiTable.id, id));
     await registraLog(tx, contestoDa(req), {
       azione: "evento.questionario_elimina",

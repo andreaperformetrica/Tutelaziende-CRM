@@ -147,6 +147,7 @@ export async function schedaBackoffice(id: number) {
   return {
     evento: datiEvento(e),
     questionario: fileQuestionario(e),
+    domande: e.questionarioDomande ?? [],
     attestato: { layout: fileLayout(e), nomeX: e.nomeX, nomeY: e.nomeY, nomeDimensione: e.nomeDimensione },
     inviti: inviti.map((i) => ({ ...i, invitatoIl: i.invitatoIl.toISOString(), confermatoIl: iso(i.confermatoIl) })),
     partecipanti: await partecipantiBackoffice(id),
