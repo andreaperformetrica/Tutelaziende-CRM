@@ -5006,3 +5006,90 @@ export const DeleteCategoriaAllegatoParams = zod.object({
 export const DeleteCategoriaAllegatoResponse = zod.void()
 
 
+/**
+ * @summary Notizie pubblicate per la home del collaboratore
+ */
+export const ListNewsResponseItem = zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "testo": zod.string(),
+  "inEvidenza": zod.boolean(),
+  "pubblicataIl": zod.coerce.date()
+})
+export const ListNewsResponse = zod.array(ListNewsResponseItem)
+
+
+/**
+ * @summary Tutte le notizie, anche le bozze (back office)
+ */
+export const ListNewsBackofficeResponseItem = zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "testo": zod.string(),
+  "pubblicata": zod.boolean(),
+  "inEvidenza": zod.boolean(),
+  "creataIl": zod.coerce.date(),
+  "modificataIl": zod.coerce.date(),
+  "autore": zod.string().nullable()
+})
+export const ListNewsBackofficeResponse = zod.array(ListNewsBackofficeResponseItem)
+
+
+/**
+ * @summary Crea una notizia
+ */
+export const CreateNewsBody = zod.object({
+  "titolo": zod.string(),
+  "testo": zod.string(),
+  "pubblicata": zod.boolean(),
+  "inEvidenza": zod.boolean()
+})
+
+export const CreateNewsResponse = zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "testo": zod.string(),
+  "pubblicata": zod.boolean(),
+  "inEvidenza": zod.boolean(),
+  "creataIl": zod.coerce.date(),
+  "modificataIl": zod.coerce.date(),
+  "autore": zod.string().nullable()
+})
+
+
+/**
+ * @summary Modifica una notizia
+ */
+export const UpdateNewsParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const UpdateNewsBody = zod.object({
+  "titolo": zod.string(),
+  "testo": zod.string(),
+  "pubblicata": zod.boolean(),
+  "inEvidenza": zod.boolean()
+})
+
+export const UpdateNewsResponse = zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "testo": zod.string(),
+  "pubblicata": zod.boolean(),
+  "inEvidenza": zod.boolean(),
+  "creataIl": zod.coerce.date(),
+  "modificataIl": zod.coerce.date(),
+  "autore": zod.string().nullable()
+})
+
+
+/**
+ * @summary Elimina una notizia
+ */
+export const DeleteNewsParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const DeleteNewsResponse = zod.void()
+
+

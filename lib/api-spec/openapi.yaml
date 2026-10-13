@@ -8,6 +8,8 @@ servers:
   - url: /api
     description: Base API path
 tags:
+  - name: news
+    description: Notizie nella home del collaboratore
   - name: health
     description: Health operations
   - name: auth
@@ -2090,6 +2092,78 @@ paths:
       responses:
         "204":
           description: Eseguito
+  /news:
+    get:
+      operationId: listNews
+      tags: [news]
+      summary: Notizie pubblicate per la home del collaboratore
+      responses:
+        "200":
+          description: Notizie, prima quelle in evidenza e poi le piu' recenti
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/News"
+  /backoffice/news:
+    get:
+      operationId: listNewsBackoffice
+      tags: [news]
+      summary: Tutte le notizie, anche le bozze (back office)
+      responses:
+        "200":
+          description: Notizie
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NewsBackoffice"
+    post:
+      operationId: createNews
+      tags: [news]
+      summary: Crea una notizia
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewsInput"
+      responses:
+        "201":
+          description: Notizia creata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NewsBackoffice"
+  /backoffice/news/{id}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    put:
+      operationId: updateNews
+      tags: [news]
+      summary: Modifica una notizia
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewsInput"
+      responses:
+        "200":
+          description: Notizia aggiornata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NewsBackoffice"
+    delete:
+      operationId: deleteNews
+      tags: [news]
+      summary: Elimina una notizia
+      responses:
+        "204":
+          description: Eseguito
 components:
   parameters:
     IdPath:
@@ -3518,6 +3592,35 @@ components:
           items: { type: string }
         invio:
           $ref: "#/components/schemas/InvioPratiche"
+    News:
+      type: object
+      required: [id, titolo, testo, inEvidenza, pubblicataIl]
+      properties:
+        id: { type: integer }
+        titolo: { type: string }
+        testo: { type: string }
+        inEvidenza: { type: boolean }
+        pubblicataIl: { type: string, format: date-time }
+    NewsBackoffice:
+      type: object
+      required: [id, titolo, testo, pubblicata, inEvidenza, creataIl, modificataIl, autore]
+      properties:
+        id: { type: integer }
+        titolo: { type: string }
+        testo: { type: string }
+        pubblicata: { type: boolean }
+        inEvidenza: { type: boolean }
+        creataIl: { type: string, format: date-time }
+        modificataIl: { type: string, format: date-time }
+        autore: { type: [string, "null"] }
+    NewsInput:
+      type: object
+      required: [titolo, testo, pubblicata, inEvidenza]
+      properties:
+        titolo: { type: string }
+        testo: { type: string }
+        pubblicata: { type: boolean }
+        inEvidenza: { type: boolean }
     CategoriaAllegato:
       type: object
       required: [id, nome]

@@ -1284,6 +1284,33 @@ export interface PraticaDettaglio {
   invio: InvioPratiche;
 }
 
+export interface News {
+  id: number;
+  titolo: string;
+  testo: string;
+  inEvidenza: boolean;
+  pubblicataIl: string;
+}
+
+export interface NewsBackoffice {
+  id: number;
+  titolo: string;
+  testo: string;
+  pubblicata: boolean;
+  inEvidenza: boolean;
+  creataIl: string;
+  modificataIl: string;
+  /** @nullable */
+  autore: string | null;
+}
+
+export interface NewsInput {
+  titolo: string;
+  testo: string;
+  pubblicata: boolean;
+  inEvidenza: boolean;
+}
+
 export interface CategoriaAllegato {
   id: number;
   nome: string;

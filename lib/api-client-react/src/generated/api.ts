@@ -86,6 +86,9 @@ import type {
   MessaggioPraticaInput,
   ModuloTipoInput,
   Nazionalita,
+  News,
+  NewsBackoffice,
+  NewsInput,
   NotifichePagina,
   OrariCaricamento,
   OrariCaricamentoInput,
@@ -9611,5 +9614,410 @@ export const useDeleteCategoriaAllegato = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteCategoriaAllegatoMutationOptions(options));
+    }
+
+export const getListNewsUrl = () => {
+
+
+
+
+  return `/api/news`
+}
+
+/**
+ * @summary Notizie pubblicate per la home del collaboratore
+ */
+export const listNews = async ( options?: Parameters<typeof customFetch>[1]): Promise<News[]> => {
+
+  return customFetch<News[]>(getListNewsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListNewsQueryKey = () => {
+    return [
+    `/api/news`
+    ] as const;
+    }
+
+
+export const getListNewsQueryOptions = <TData = Awaited<ReturnType<typeof listNews>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listNews>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListNewsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listNews>>> = ({ signal }) => listNews({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listNews>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListNewsQueryResult = NonNullable<Awaited<ReturnType<typeof listNews>>>
+export type ListNewsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Notizie pubblicate per la home del collaboratore
+ */
+
+export function useListNews<TData = Awaited<ReturnType<typeof listNews>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listNews>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListNewsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListNewsBackofficeUrl = () => {
+
+
+
+
+  return `/api/backoffice/news`
+}
+
+/**
+ * @summary Tutte le notizie, anche le bozze (back office)
+ */
+export const listNewsBackoffice = async ( options?: Parameters<typeof customFetch>[1]): Promise<NewsBackoffice[]> => {
+
+  return customFetch<NewsBackoffice[]>(getListNewsBackofficeUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListNewsBackofficeQueryKey = () => {
+    return [
+    `/api/backoffice/news`
+    ] as const;
+    }
+
+
+export const getListNewsBackofficeQueryOptions = <TData = Awaited<ReturnType<typeof listNewsBackoffice>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listNewsBackoffice>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListNewsBackofficeQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listNewsBackoffice>>> = ({ signal }) => listNewsBackoffice({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listNewsBackoffice>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListNewsBackofficeQueryResult = NonNullable<Awaited<ReturnType<typeof listNewsBackoffice>>>
+export type ListNewsBackofficeQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Tutte le notizie, anche le bozze (back office)
+ */
+
+export function useListNewsBackoffice<TData = Awaited<ReturnType<typeof listNewsBackoffice>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listNewsBackoffice>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListNewsBackofficeQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateNewsUrl = () => {
+
+
+
+
+  return `/api/backoffice/news`
+}
+
+/**
+ * @summary Crea una notizia
+ */
+export const createNews = async (newsInput: NewsInput, options?: Parameters<typeof customFetch>[1]): Promise<NewsBackoffice> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<NewsBackoffice>(getCreateNewsUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(newsInput)
+  }
+);}
+
+
+
+
+
+export const getCreateNewsMutationKey = () => ['createNews'] as const;
+
+export const getCreateNewsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createNews>>, TError,CreateNewsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createNews>>, TError,CreateNewsMutationVariables, TContext> => {
+
+const mutationKey = getCreateNewsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createNews>>, CreateNewsMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createNews(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateNewsMutationResult = NonNullable<Awaited<ReturnType<typeof createNews>>>
+    export type CreateNewsMutationBody = BodyType<NewsInput>
+    export type CreateNewsMutationError = ErrorType<unknown>
+    export type CreateNewsMutationVariables = {data: BodyType<NewsInput>}
+
+    /**
+ * @summary Crea una notizia
+ */
+export const useCreateNews = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createNews>>, TError,CreateNewsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createNews>>,
+        TError,
+        CreateNewsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateNewsMutationOptions(options));
+    }
+
+export const getUpdateNewsUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/news/${id}`
+}
+
+/**
+ * @summary Modifica una notizia
+ */
+export const updateNews = async (id: number,
+    newsInput: NewsInput, options?: Parameters<typeof customFetch>[1]): Promise<NewsBackoffice> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<NewsBackoffice>(getUpdateNewsUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(newsInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateNewsMutationKey = () => ['updateNews'] as const;
+
+export const getUpdateNewsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateNews>>, TError,UpdateNewsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateNews>>, TError,UpdateNewsMutationVariables, TContext> => {
+
+const mutationKey = getUpdateNewsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateNews>>, UpdateNewsMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateNews(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateNewsMutationResult = NonNullable<Awaited<ReturnType<typeof updateNews>>>
+    export type UpdateNewsMutationBody = BodyType<NewsInput>
+    export type UpdateNewsMutationError = ErrorType<unknown>
+    export type UpdateNewsMutationVariables = {id: number;data: BodyType<NewsInput>}
+
+    /**
+ * @summary Modifica una notizia
+ */
+export const useUpdateNews = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateNews>>, TError,UpdateNewsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateNews>>,
+        TError,
+        UpdateNewsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateNewsMutationOptions(options));
+    }
+
+export const getDeleteNewsUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/news/${id}`
+}
+
+/**
+ * @summary Elimina una notizia
+ */
+export const deleteNews = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteNewsUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteNewsMutationKey = () => ['deleteNews'] as const;
+
+export const getDeleteNewsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteNews>>, TError,DeleteNewsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteNews>>, TError,DeleteNewsMutationVariables, TContext> => {
+
+const mutationKey = getDeleteNewsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteNews>>, DeleteNewsMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteNews(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteNewsMutationResult = NonNullable<Awaited<ReturnType<typeof deleteNews>>>
+
+    export type DeleteNewsMutationError = ErrorType<unknown>
+    export type DeleteNewsMutationVariables = {id: number}
+
+    /**
+ * @summary Elimina una notizia
+ */
+export const useDeleteNews = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteNews>>, TError,DeleteNewsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteNews>>,
+        TError,
+        DeleteNewsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteNewsMutationOptions(options));
     }
 

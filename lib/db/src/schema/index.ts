@@ -9,3 +9,4 @@ export * from "./pratiche";
 export * from "./notifiche";
 export * from "./eventi";
 export * from "./compensi";
+export * from "./news";

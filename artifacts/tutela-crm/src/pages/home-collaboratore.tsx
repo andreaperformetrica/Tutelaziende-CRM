@@ -1,16 +1,17 @@
-import { getGetCollaboratoreQueryKey, useGetCollaboratore } from "@workspace/api-client-react";
-import { Users } from "lucide-react";
+import { getGetCollaboratoreQueryKey, useGetCollaboratore, useListNews } from "@workspace/api-client-react";
+import { Newspaper, Pin, Users } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { ErrorState } from "@/components/common";
 import { useSession } from "@/lib/auth";
-import { parseApiError, tipologiaLabel } from "@/lib/format";
+import { fmtIstante, parseApiError, tipologiaLabel } from "@/lib/format";
 
 export default function HomeCollaboratore() {
   const { session } = useSession();
   const col = session?.collaboratore;
   const capogruppo = !!col?.capogruppo;
   const q = useGetCollaboratore(col?.id ?? 0, { query: { enabled: !!col && capogruppo, queryKey: getGetCollaboratoreQueryKey(col?.id ?? 0) } });
+  const news = useListNews();
   if (!session) return null;
   return (
     <div className="space-y-6">
@@ -29,6 +30,25 @@ export default function HomeCollaboratore() {
           {capogruppo && <Badge className="mt-3 bg-accent text-accent-foreground">Capogruppo</Badge>}
         </div>
       </div>
+      <section className="rounded-xl border border-border bg-card p-5 rise" aria-labelledby="titolo-news" data-testid="sezione-news">
+        <h2 id="titolo-news" className="flex items-center gap-2 text-xl font-bold mb-3"><Newspaper className="size-5" /> News</h2>
+        {news.isLoading ? <Skeleton className="h-24" /> : news.isError ? <ErrorState message={parseApiError(news.error).message} onRetry={() => news.refetch()} />
+          : !news.data?.length ? <p className="text-sm text-muted-foreground" data-testid="news-vuote">Non ci sono notizie al momento.</p>
+          : (
+            <ul className="divide-y divide-border">
+              {news.data.map((n) => (
+                <li key={n.id} className="py-3 first:pt-0 last:pb-0" data-testid={`news-${n.id}`}>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="font-bold leading-tight">{n.titolo}</h3>
+                    {n.inEvidenza && <Badge className="bg-accent text-accent-foreground gap-1"><Pin className="size-3" /> In evidenza</Badge>}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{fmtIstante(n.pubblicataIl).slice(0, 10)}</div>
+                  <p className="text-sm mt-2 whitespace-pre-line">{n.testo}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+      </section>
       {capogruppo && (
         <section className="rounded-xl border-2 border-accent bg-card p-5 rise" data-testid="sezione-gruppo">
           <h2 className="flex items-center gap-2 text-xl font-bold mb-3"><Users className="size-5" /> Il tuo gruppo</h2>

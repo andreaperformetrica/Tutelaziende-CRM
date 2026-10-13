@@ -18,6 +18,7 @@ import notificheRouter from "./notifiche";
 import eventiBackofficeRouter from "./eventi-backoffice";
 import eventiRouter from "./eventi";
 import compensiRouter from "./compensi";
+import newsRouter from "./news";
 import importazioniRouter from "./importazioni";
 import { caricaUtente, controlloOrigine, richiediLogin, richiediPasswordCambiata } from "../middlewares/auth";
 
@@ -50,5 +51,6 @@ router.use(eventiBackofficeRouter);
 router.use(eventiRouter);
 router.use(compensiRouter);
 router.use(importazioniRouter);
+router.use(newsRouter);
 
 export default router;

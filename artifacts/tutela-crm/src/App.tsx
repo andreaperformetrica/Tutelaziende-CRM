@@ -14,6 +14,7 @@ import CambiaPasswordPage from '@/pages/cambia-password';
 import TipiPraticaPage from '@/pages/admin/tipi-pratica';
 import TipoPraticaDettaglioPage from '@/pages/admin/tipo-pratica-dettaglio';
 import MandatiPage from '@/pages/admin/mandati';
+import NewsPage from '@/pages/admin/news';
 import StatiPraticaPage from '@/pages/admin/stati-pratica';
 import OrariPage from '@/pages/admin/orari';
 import CollaboratoriPage from '@/pages/admin/collaboratori';
@@ -90,6 +91,7 @@ function Router() {
         <Route path="/admin/collaboratori/:id" component={g(<CollaboratoreDettaglioPage />, 'backoffice', TUTTI_BO)} />
         <Route path="/admin/assistiti" component={g(<AssistitiBackoffice />, 'backoffice', TUTTI_BO)} />
         <Route path="/admin/assistiti/:id" component={g(<AssistitoDettaglioBackoffice />, 'backoffice', TUTTI_BO)} />
+        <Route path="/admin/news" component={g(<NewsPage />, 'backoffice', TUTTI_BO)} />
         <Route path="/admin/segnalazioni" component={g(<SegnalazioniPage />, 'backoffice', ADMIN)} />
         <Route path="/admin/tipi-pratica" component={g(<TipiPraticaPage />, 'backoffice', ADMIN)} />
         <Route path="/admin/tipi-pratica/:id" component={g(<TipoPraticaDettaglioPage />, 'backoffice', ADMIN)} />
