@@ -668,6 +668,18 @@ export interface FileEvento {
   caricatoIl: string;
 }
 
+/**
+ * Tipo di corso scritto sull'attestato; vuoto solo per gli eventi creati prima di questo campo
+ * @nullable
+ */
+export type EventoDatiTipoCorso = typeof EventoDatiTipoCorso[keyof typeof EventoDatiTipoCorso] | null;
+
+
+export const EventoDatiTipoCorso = {
+  CAF: 'CAF',
+  PATRONATO: 'PATRONATO',
+} as const;
+
 export interface EventoDati {
   id: number;
   titolo: string;
@@ -679,6 +691,16 @@ export interface EventoDati {
   oraFine: string | null;
   luogo: string;
   descrizione: string;
+  /**
+     * Tipo di corso scritto sull'attestato; vuoto solo per gli eventi creati prima di questo campo
+     * @nullable
+     */
+  tipoCorso: EventoDatiTipoCorso;
+  /**
+     * Argomento del corso scritto sull'attestato
+     * @nullable
+     */
+  argomento: string | null;
   /** Vero se la data e' prima di oggi */
   passato: boolean;
 }
@@ -717,16 +739,6 @@ export interface PartecipanteEventoBackoffice {
   entrataIl: string | null;
   /** @nullable */
   uscitaIl: string | null;
-}
-
-export interface AttestatoEvento {
-  layout: FileEvento | null;
-  /** Centro del nome, percentuale da sinistra */
-  nomeX: number;
-  /** Centro del nome, percentuale dall'alto */
-  nomeY: number;
-  /** Dimensione del carattere in punti */
-  nomeDimensione: number;
 }
 
 /**
@@ -774,10 +786,17 @@ export interface EventoBackoffice {
   questionario: FileEvento | null;
   /** Domande del questionario creato nel sistema (vuoto se il questionario e' un file caricato o manca) */
   domande: DomandaQuestionario[];
-  attestato: AttestatoEvento;
   inviti: InvitoEvento[];
   partecipanti: PartecipanteEventoBackoffice[];
 }
+
+export type EventoCreazioneInputTipoCorso = typeof EventoCreazioneInputTipoCorso[keyof typeof EventoCreazioneInputTipoCorso];
+
+
+export const EventoCreazioneInputTipoCorso = {
+  CAF: 'CAF',
+  PATRONATO: 'PATRONATO',
+} as const;
 
 export interface EventoCreazioneInput {
   /**
@@ -799,10 +818,25 @@ export interface EventoCreazioneInput {
      * @maxLength 200
      */
   luogo: string;
+  tipoCorso: EventoCreazioneInputTipoCorso;
+  /**
+     * Argomento del corso, scritto sull'attestato
+     * @minLength 1
+     * @maxLength 150
+     */
+  argomento: string;
   /** @maxLength 4000 */
   descrizione?: string;
   collaboratoriIds: number[];
 }
+
+export type EventoModificaInputTipoCorso = typeof EventoModificaInputTipoCorso[keyof typeof EventoModificaInputTipoCorso];
+
+
+export const EventoModificaInputTipoCorso = {
+  CAF: 'CAF',
+  PATRONATO: 'PATRONATO',
+} as const;
 
 export interface EventoModificaInput {
   /**
@@ -824,6 +858,13 @@ export interface EventoModificaInput {
      * @maxLength 200
      */
   luogo: string;
+  tipoCorso: EventoModificaInputTipoCorso;
+  /**
+     * Argomento del corso, scritto sull'attestato
+     * @minLength 1
+     * @maxLength 150
+     */
+  argomento: string;
   /** @maxLength 4000 */
   descrizione?: string;
 }
@@ -878,24 +919,6 @@ export interface CheckInEsito {
   /** @nullable */
   avviso: string | null;
   partecipante: PartecipanteEventoBackoffice;
-}
-
-export interface PosizioneAttestatoInput {
-  /**
-     * @minimum 0
-     * @maximum 100
-     */
-  nomeX: number;
-  /**
-     * @minimum 0
-     * @maximum 100
-     */
-  nomeY: number;
-  /**
-     * @minimum 8
-     * @maximum 120
-     */
-  nomeDimensione: number;
 }
 
 export interface EventoSedeRiepilogo {

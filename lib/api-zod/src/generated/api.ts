@@ -1287,6 +1287,8 @@ export const ListEventiBackofficeResponseItem = zod.object({
   "oraFine": zod.string().nullable(),
   "luogo": zod.string(),
   "descrizione": zod.string(),
+  "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
+  "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
   "invitati": zod.number().int(),
@@ -1308,6 +1310,8 @@ export const createEventoBodyOraInizioRegExp = new RegExp('^([01]\\d|2[0-3]):[0-
 export const createEventoBodyOraFineRegExp = new RegExp('^([01]\\d|2[0-3]):[0-5]\\d$');
 export const createEventoBodyLuogoMax = 200;
 
+export const createEventoBodyArgomentoMax = 150;
+
 export const createEventoBodyDescrizioneMax = 4000;
 
 
@@ -1318,6 +1322,8 @@ export const CreateEventoBody = zod.object({
   "oraInizio": zod.string().regex(createEventoBodyOraInizioRegExp),
   "oraFine": zod.string().regex(createEventoBodyOraFineRegExp).nullish(),
   "luogo": zod.string().min(1).max(createEventoBodyLuogoMax),
+  "tipoCorso": zod.enum(['CAF', 'PATRONATO']),
+  "argomento": zod.string().min(1).max(createEventoBodyArgomentoMax).describe('Argomento del corso, scritto sull\'attestato'),
   "descrizione": zod.string().max(createEventoBodyDescrizioneMax).optional(),
   "collaboratoriIds": zod.array(zod.number().int())
 })
@@ -1341,6 +1347,8 @@ export const CreateEventoResponse = zod.object({
   "oraFine": zod.string().nullable(),
   "luogo": zod.string(),
   "descrizione": zod.string(),
+  "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
+  "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
   "questionario": zod.union([zod.object({
@@ -1355,17 +1363,6 @@ export const CreateEventoResponse = zod.object({
   "opzioni": zod.array(zod.string().min(1).max(createEventoResponseDomandeItemOpzioniItemMax)).max(createEventoResponseDomandeItemOpzioniMax),
   "righe": zod.number().int().min(1).max(createEventoResponseDomandeItemRigheMax)
 })).describe('Domande del questionario creato nel sistema (vuoto se il questionario e\' un file caricato o manca)'),
-  "attestato": zod.object({
-  "layout": zod.union([zod.object({
-  "nome": zod.string(),
-  "tipo": zod.string(),
-  "dimensione": zod.number().int(),
-  "caricatoIl": zod.string()
-}),zod.null()]),
-  "nomeX": zod.number().describe('Centro del nome, percentuale da sinistra'),
-  "nomeY": zod.number().describe('Centro del nome, percentuale dall\'alto'),
-  "nomeDimensione": zod.number().int().describe('Dimensione del carattere in punti')
-}),
   "inviti": zod.array(zod.object({
   "collaboratoreId": zod.number().int(),
   "nome": zod.string().describe('Cognome e nome'),
@@ -1415,6 +1412,8 @@ export const GetEventoBackofficeResponse = zod.object({
   "oraFine": zod.string().nullable(),
   "luogo": zod.string(),
   "descrizione": zod.string(),
+  "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
+  "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
   "questionario": zod.union([zod.object({
@@ -1429,17 +1428,6 @@ export const GetEventoBackofficeResponse = zod.object({
   "opzioni": zod.array(zod.string().min(1).max(getEventoBackofficeResponseDomandeItemOpzioniItemMax)).max(getEventoBackofficeResponseDomandeItemOpzioniMax),
   "righe": zod.number().int().min(1).max(getEventoBackofficeResponseDomandeItemRigheMax)
 })).describe('Domande del questionario creato nel sistema (vuoto se il questionario e\' un file caricato o manca)'),
-  "attestato": zod.object({
-  "layout": zod.union([zod.object({
-  "nome": zod.string(),
-  "tipo": zod.string(),
-  "dimensione": zod.number().int(),
-  "caricatoIl": zod.string()
-}),zod.null()]),
-  "nomeX": zod.number().describe('Centro del nome, percentuale da sinistra'),
-  "nomeY": zod.number().describe('Centro del nome, percentuale dall\'alto'),
-  "nomeDimensione": zod.number().int().describe('Dimensione del carattere in punti')
-}),
   "inviti": zod.array(zod.object({
   "collaboratoreId": zod.number().int(),
   "nome": zod.string().describe('Cognome e nome'),
@@ -1477,6 +1465,8 @@ export const updateEventoBodyOraInizioRegExp = new RegExp('^([01]\\d|2[0-3]):[0-
 export const updateEventoBodyOraFineRegExp = new RegExp('^([01]\\d|2[0-3]):[0-5]\\d$');
 export const updateEventoBodyLuogoMax = 200;
 
+export const updateEventoBodyArgomentoMax = 150;
+
 export const updateEventoBodyDescrizioneMax = 4000;
 
 
@@ -1487,6 +1477,8 @@ export const UpdateEventoBody = zod.object({
   "oraInizio": zod.string().regex(updateEventoBodyOraInizioRegExp),
   "oraFine": zod.string().regex(updateEventoBodyOraFineRegExp).nullish(),
   "luogo": zod.string().min(1).max(updateEventoBodyLuogoMax),
+  "tipoCorso": zod.enum(['CAF', 'PATRONATO']),
+  "argomento": zod.string().min(1).max(updateEventoBodyArgomentoMax).describe('Argomento del corso, scritto sull\'attestato'),
   "descrizione": zod.string().max(updateEventoBodyDescrizioneMax).optional()
 })
 
@@ -1509,6 +1501,8 @@ export const UpdateEventoResponse = zod.object({
   "oraFine": zod.string().nullable(),
   "luogo": zod.string(),
   "descrizione": zod.string(),
+  "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
+  "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
   "questionario": zod.union([zod.object({
@@ -1523,17 +1517,6 @@ export const UpdateEventoResponse = zod.object({
   "opzioni": zod.array(zod.string().min(1).max(updateEventoResponseDomandeItemOpzioniItemMax)).max(updateEventoResponseDomandeItemOpzioniMax),
   "righe": zod.number().int().min(1).max(updateEventoResponseDomandeItemRigheMax)
 })).describe('Domande del questionario creato nel sistema (vuoto se il questionario e\' un file caricato o manca)'),
-  "attestato": zod.object({
-  "layout": zod.union([zod.object({
-  "nome": zod.string(),
-  "tipo": zod.string(),
-  "dimensione": zod.number().int(),
-  "caricatoIl": zod.string()
-}),zod.null()]),
-  "nomeX": zod.number().describe('Centro del nome, percentuale da sinistra'),
-  "nomeY": zod.number().describe('Centro del nome, percentuale dall\'alto'),
-  "nomeDimensione": zod.number().int().describe('Dimensione del carattere in punti')
-}),
   "inviti": zod.array(zod.object({
   "collaboratoreId": zod.number().int(),
   "nome": zod.string().describe('Cognome e nome'),
@@ -1600,6 +1583,8 @@ export const AddInvitiEventoResponse = zod.object({
   "oraFine": zod.string().nullable(),
   "luogo": zod.string(),
   "descrizione": zod.string(),
+  "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
+  "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
   "questionario": zod.union([zod.object({
@@ -1614,17 +1599,6 @@ export const AddInvitiEventoResponse = zod.object({
   "opzioni": zod.array(zod.string().min(1).max(addInvitiEventoResponseDomandeItemOpzioniItemMax)).max(addInvitiEventoResponseDomandeItemOpzioniMax),
   "righe": zod.number().int().min(1).max(addInvitiEventoResponseDomandeItemRigheMax)
 })).describe('Domande del questionario creato nel sistema (vuoto se il questionario e\' un file caricato o manca)'),
-  "attestato": zod.object({
-  "layout": zod.union([zod.object({
-  "nome": zod.string(),
-  "tipo": zod.string(),
-  "dimensione": zod.number().int(),
-  "caricatoIl": zod.string()
-}),zod.null()]),
-  "nomeX": zod.number().describe('Centro del nome, percentuale da sinistra'),
-  "nomeY": zod.number().describe('Centro del nome, percentuale dall\'alto'),
-  "nomeDimensione": zod.number().int().describe('Dimensione del carattere in punti')
-}),
   "inviti": zod.array(zod.object({
   "collaboratoreId": zod.number().int(),
   "nome": zod.string().describe('Cognome e nome'),
@@ -1675,6 +1649,8 @@ export const RemoveInvitoEventoResponse = zod.object({
   "oraFine": zod.string().nullable(),
   "luogo": zod.string(),
   "descrizione": zod.string(),
+  "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
+  "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
   "questionario": zod.union([zod.object({
@@ -1689,17 +1665,6 @@ export const RemoveInvitoEventoResponse = zod.object({
   "opzioni": zod.array(zod.string().min(1).max(removeInvitoEventoResponseDomandeItemOpzioniItemMax)).max(removeInvitoEventoResponseDomandeItemOpzioniMax),
   "righe": zod.number().int().min(1).max(removeInvitoEventoResponseDomandeItemRigheMax)
 })).describe('Domande del questionario creato nel sistema (vuoto se il questionario e\' un file caricato o manca)'),
-  "attestato": zod.object({
-  "layout": zod.union([zod.object({
-  "nome": zod.string(),
-  "tipo": zod.string(),
-  "dimensione": zod.number().int(),
-  "caricatoIl": zod.string()
-}),zod.null()]),
-  "nomeX": zod.number().describe('Centro del nome, percentuale da sinistra'),
-  "nomeY": zod.number().describe('Centro del nome, percentuale dall\'alto'),
-  "nomeDimensione": zod.number().int().describe('Dimensione del carattere in punti')
-}),
   "inviti": zod.array(zod.object({
   "collaboratoreId": zod.number().int(),
   "nome": zod.string().describe('Cognome e nome'),
@@ -1759,6 +1724,8 @@ export const UpdateOrariPartecipanteResponse = zod.object({
   "oraFine": zod.string().nullable(),
   "luogo": zod.string(),
   "descrizione": zod.string(),
+  "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
+  "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
   "questionario": zod.union([zod.object({
@@ -1773,17 +1740,6 @@ export const UpdateOrariPartecipanteResponse = zod.object({
   "opzioni": zod.array(zod.string().min(1).max(updateOrariPartecipanteResponseDomandeItemOpzioniItemMax)).max(updateOrariPartecipanteResponseDomandeItemOpzioniMax),
   "righe": zod.number().int().min(1).max(updateOrariPartecipanteResponseDomandeItemRigheMax)
 })).describe('Domande del questionario creato nel sistema (vuoto se il questionario e\' un file caricato o manca)'),
-  "attestato": zod.object({
-  "layout": zod.union([zod.object({
-  "nome": zod.string(),
-  "tipo": zod.string(),
-  "dimensione": zod.number().int(),
-  "caricatoIl": zod.string()
-}),zod.null()]),
-  "nomeX": zod.number().describe('Centro del nome, percentuale da sinistra'),
-  "nomeY": zod.number().describe('Centro del nome, percentuale dall\'alto'),
-  "nomeDimensione": zod.number().int().describe('Dimensione del carattere in punti')
-}),
   "inviti": zod.array(zod.object({
   "collaboratoreId": zod.number().int(),
   "nome": zod.string().describe('Cognome e nome'),
@@ -1840,171 +1796,6 @@ export const RegistraCheckInEventoResponse = zod.object({
 
 
 /**
- * @summary Imposta dove va scritto il nome del partecipante sul layout dell'attestato
- */
-export const UpdatePosizioneAttestatoParams = zod.object({
-  "id": zod.coerce.number().int()
-})
-
-export const updatePosizioneAttestatoBodyNomeXMin = 0;
-export const updatePosizioneAttestatoBodyNomeXMax = 100;
-
-export const updatePosizioneAttestatoBodyNomeYMin = 0;
-export const updatePosizioneAttestatoBodyNomeYMax = 100;
-
-export const updatePosizioneAttestatoBodyNomeDimensioneMin = 8;
-export const updatePosizioneAttestatoBodyNomeDimensioneMax = 120;
-
-
-
-export const UpdatePosizioneAttestatoBody = zod.object({
-  "nomeX": zod.number().min(updatePosizioneAttestatoBodyNomeXMin).max(updatePosizioneAttestatoBodyNomeXMax),
-  "nomeY": zod.number().min(updatePosizioneAttestatoBodyNomeYMin).max(updatePosizioneAttestatoBodyNomeYMax),
-  "nomeDimensione": zod.number().int().min(updatePosizioneAttestatoBodyNomeDimensioneMin).max(updatePosizioneAttestatoBodyNomeDimensioneMax)
-})
-
-export const updatePosizioneAttestatoResponseDomandeItemTestoMax = 500;
-
-export const updatePosizioneAttestatoResponseDomandeItemOpzioniItemMax = 200;
-
-export const updatePosizioneAttestatoResponseDomandeItemOpzioniMax = 15;
-
-export const updatePosizioneAttestatoResponseDomandeItemRigheMax = 10;
-
-
-
-export const UpdatePosizioneAttestatoResponse = zod.object({
-  "evento": zod.object({
-  "id": zod.number().int(),
-  "titolo": zod.string(),
-  "data": zod.string().describe('AAAA-MM-GG'),
-  "oraInizio": zod.string().describe('HH:MM'),
-  "oraFine": zod.string().nullable(),
-  "luogo": zod.string(),
-  "descrizione": zod.string(),
-  "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
-}),
-  "questionario": zod.union([zod.object({
-  "nome": zod.string(),
-  "tipo": zod.string(),
-  "dimensione": zod.number().int(),
-  "caricatoIl": zod.string()
-}),zod.null()]),
-  "domande": zod.array(zod.object({
-  "testo": zod.string().min(1).max(updatePosizioneAttestatoResponseDomandeItemTestoMax),
-  "tipo": zod.enum(['scelta', 'aperta']).describe('scelta = caselle da spuntare, aperta = righe per scrivere'),
-  "opzioni": zod.array(zod.string().min(1).max(updatePosizioneAttestatoResponseDomandeItemOpzioniItemMax)).max(updatePosizioneAttestatoResponseDomandeItemOpzioniMax),
-  "righe": zod.number().int().min(1).max(updatePosizioneAttestatoResponseDomandeItemRigheMax)
-})).describe('Domande del questionario creato nel sistema (vuoto se il questionario e\' un file caricato o manca)'),
-  "attestato": zod.object({
-  "layout": zod.union([zod.object({
-  "nome": zod.string(),
-  "tipo": zod.string(),
-  "dimensione": zod.number().int(),
-  "caricatoIl": zod.string()
-}),zod.null()]),
-  "nomeX": zod.number().describe('Centro del nome, percentuale da sinistra'),
-  "nomeY": zod.number().describe('Centro del nome, percentuale dall\'alto'),
-  "nomeDimensione": zod.number().int().describe('Dimensione del carattere in punti')
-}),
-  "inviti": zod.array(zod.object({
-  "collaboratoreId": zod.number().int(),
-  "nome": zod.string().describe('Cognome e nome'),
-  "numeroSportello": zod.string(),
-  "tipologia": zod.string(),
-  "attivo": zod.boolean(),
-  "invitatoIl": zod.string(),
-  "confermatoIl": zod.string().nullable(),
-  "partecipanti": zod.number().int()
-})),
-  "partecipanti": zod.array(zod.object({
-  "id": zod.number().int(),
-  "nome": zod.string(),
-  "cognome": zod.string(),
-  "collaboratoreId": zod.number().int(),
-  "sedeNome": zod.string(),
-  "numeroSportello": zod.string(),
-  "entrataIl": zod.string().nullable(),
-  "uscitaIl": zod.string().nullable()
-}))
-})
-
-
-/**
- * @summary Elimina il layout dell'attestato
- */
-export const DeleteLayoutAttestatoParams = zod.object({
-  "id": zod.coerce.number().int()
-})
-
-export const deleteLayoutAttestatoResponseDomandeItemTestoMax = 500;
-
-export const deleteLayoutAttestatoResponseDomandeItemOpzioniItemMax = 200;
-
-export const deleteLayoutAttestatoResponseDomandeItemOpzioniMax = 15;
-
-export const deleteLayoutAttestatoResponseDomandeItemRigheMax = 10;
-
-
-
-export const DeleteLayoutAttestatoResponse = zod.object({
-  "evento": zod.object({
-  "id": zod.number().int(),
-  "titolo": zod.string(),
-  "data": zod.string().describe('AAAA-MM-GG'),
-  "oraInizio": zod.string().describe('HH:MM'),
-  "oraFine": zod.string().nullable(),
-  "luogo": zod.string(),
-  "descrizione": zod.string(),
-  "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
-}),
-  "questionario": zod.union([zod.object({
-  "nome": zod.string(),
-  "tipo": zod.string(),
-  "dimensione": zod.number().int(),
-  "caricatoIl": zod.string()
-}),zod.null()]),
-  "domande": zod.array(zod.object({
-  "testo": zod.string().min(1).max(deleteLayoutAttestatoResponseDomandeItemTestoMax),
-  "tipo": zod.enum(['scelta', 'aperta']).describe('scelta = caselle da spuntare, aperta = righe per scrivere'),
-  "opzioni": zod.array(zod.string().min(1).max(deleteLayoutAttestatoResponseDomandeItemOpzioniItemMax)).max(deleteLayoutAttestatoResponseDomandeItemOpzioniMax),
-  "righe": zod.number().int().min(1).max(deleteLayoutAttestatoResponseDomandeItemRigheMax)
-})).describe('Domande del questionario creato nel sistema (vuoto se il questionario e\' un file caricato o manca)'),
-  "attestato": zod.object({
-  "layout": zod.union([zod.object({
-  "nome": zod.string(),
-  "tipo": zod.string(),
-  "dimensione": zod.number().int(),
-  "caricatoIl": zod.string()
-}),zod.null()]),
-  "nomeX": zod.number().describe('Centro del nome, percentuale da sinistra'),
-  "nomeY": zod.number().describe('Centro del nome, percentuale dall\'alto'),
-  "nomeDimensione": zod.number().int().describe('Dimensione del carattere in punti')
-}),
-  "inviti": zod.array(zod.object({
-  "collaboratoreId": zod.number().int(),
-  "nome": zod.string().describe('Cognome e nome'),
-  "numeroSportello": zod.string(),
-  "tipologia": zod.string(),
-  "attivo": zod.boolean(),
-  "invitatoIl": zod.string(),
-  "confermatoIl": zod.string().nullable(),
-  "partecipanti": zod.number().int()
-})),
-  "partecipanti": zod.array(zod.object({
-  "id": zod.number().int(),
-  "nome": zod.string(),
-  "cognome": zod.string(),
-  "collaboratoreId": zod.number().int(),
-  "sedeNome": zod.string(),
-  "numeroSportello": zod.string(),
-  "entrataIl": zod.string().nullable(),
-  "uscitaIl": zod.string().nullable()
-}))
-})
-
-
-/**
  * @summary Elimina il questionario dell'evento
  */
 export const DeleteQuestionarioEventoParams = zod.object({
@@ -2030,6 +1821,8 @@ export const DeleteQuestionarioEventoResponse = zod.object({
   "oraFine": zod.string().nullable(),
   "luogo": zod.string(),
   "descrizione": zod.string(),
+  "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
+  "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
   "questionario": zod.union([zod.object({
@@ -2044,17 +1837,6 @@ export const DeleteQuestionarioEventoResponse = zod.object({
   "opzioni": zod.array(zod.string().min(1).max(deleteQuestionarioEventoResponseDomandeItemOpzioniItemMax)).max(deleteQuestionarioEventoResponseDomandeItemOpzioniMax),
   "righe": zod.number().int().min(1).max(deleteQuestionarioEventoResponseDomandeItemRigheMax)
 })).describe('Domande del questionario creato nel sistema (vuoto se il questionario e\' un file caricato o manca)'),
-  "attestato": zod.object({
-  "layout": zod.union([zod.object({
-  "nome": zod.string(),
-  "tipo": zod.string(),
-  "dimensione": zod.number().int(),
-  "caricatoIl": zod.string()
-}),zod.null()]),
-  "nomeX": zod.number().describe('Centro del nome, percentuale da sinistra'),
-  "nomeY": zod.number().describe('Centro del nome, percentuale dall\'alto'),
-  "nomeDimensione": zod.number().int().describe('Dimensione del carattere in punti')
-}),
   "inviti": zod.array(zod.object({
   "collaboratoreId": zod.number().int(),
   "nome": zod.string().describe('Cognome e nome'),
@@ -2125,6 +1907,8 @@ export const SaveQuestionarioEventoResponse = zod.object({
   "oraFine": zod.string().nullable(),
   "luogo": zod.string(),
   "descrizione": zod.string(),
+  "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
+  "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
   "questionario": zod.union([zod.object({
@@ -2139,17 +1923,6 @@ export const SaveQuestionarioEventoResponse = zod.object({
   "opzioni": zod.array(zod.string().min(1).max(saveQuestionarioEventoResponseDomandeItemOpzioniItemMax)).max(saveQuestionarioEventoResponseDomandeItemOpzioniMax),
   "righe": zod.number().int().min(1).max(saveQuestionarioEventoResponseDomandeItemRigheMax)
 })).describe('Domande del questionario creato nel sistema (vuoto se il questionario e\' un file caricato o manca)'),
-  "attestato": zod.object({
-  "layout": zod.union([zod.object({
-  "nome": zod.string(),
-  "tipo": zod.string(),
-  "dimensione": zod.number().int(),
-  "caricatoIl": zod.string()
-}),zod.null()]),
-  "nomeX": zod.number().describe('Centro del nome, percentuale da sinistra'),
-  "nomeY": zod.number().describe('Centro del nome, percentuale dall\'alto'),
-  "nomeDimensione": zod.number().int().describe('Dimensione del carattere in punti')
-}),
   "inviti": zod.array(zod.object({
   "collaboratoreId": zod.number().int(),
   "nome": zod.string().describe('Cognome e nome'),
@@ -2185,6 +1958,8 @@ export const ListEventiResponseItem = zod.object({
   "oraFine": zod.string().nullable(),
   "luogo": zod.string(),
   "descrizione": zod.string(),
+  "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
+  "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
   "confermatoIl": zod.string().nullable(),
@@ -2210,6 +1985,8 @@ export const GetEventoResponse = zod.object({
   "oraFine": zod.string().nullable(),
   "luogo": zod.string(),
   "descrizione": zod.string(),
+  "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
+  "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
   "confermatoIl": zod.string().nullable(),
@@ -2247,6 +2024,8 @@ export const ConfermaPartecipazioneEventoResponse = zod.object({
   "oraFine": zod.string().nullable(),
   "luogo": zod.string(),
   "descrizione": zod.string(),
+  "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
+  "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
   "confermatoIl": zod.string().nullable(),
@@ -2295,6 +2074,8 @@ export const AddPartecipanteEventoResponse = zod.object({
   "oraFine": zod.string().nullable(),
   "luogo": zod.string(),
   "descrizione": zod.string(),
+  "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
+  "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
   "confermatoIl": zod.string().nullable(),
@@ -2344,6 +2125,8 @@ export const UpdatePartecipanteEventoResponse = zod.object({
   "oraFine": zod.string().nullable(),
   "luogo": zod.string(),
   "descrizione": zod.string(),
+  "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
+  "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
   "confermatoIl": zod.string().nullable(),
@@ -2382,6 +2165,8 @@ export const DeletePartecipanteEventoResponse = zod.object({
   "oraFine": zod.string().nullable(),
   "luogo": zod.string(),
   "descrizione": zod.string(),
+  "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
+  "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
   "confermatoIl": zod.string().nullable(),

@@ -23,6 +23,9 @@ export const eventiTable = pgTable("eventi", {
   oraFine: text("ora_fine"),
   luogo: text("luogo").notNull(),
   descrizione: text("descrizione").notNull().default(""),
+  /** Tipo di corso ("CAF" o "PATRONATO") e argomento trattato: si scrivono sull'attestato. Vuoti solo per gli eventi creati prima. */
+  tipoCorso: text("tipo_corso"),
+  argomento: text("argomento"),
   questionarioChiave: text("questionario_chiave"),
   questionarioNome: text("questionario_nome"),
   questionarioTipo: text("questionario_tipo"),

@@ -870,40 +870,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CheckInEsito"
-  /backoffice/eventi/{id}/attestato/posizione:
-    parameters:
-      - $ref: "#/components/parameters/IdPath"
-    put:
-      operationId: updatePosizioneAttestato
-      tags: [eventi-backoffice]
-      summary: Imposta dove va scritto il nome del partecipante sul layout dell'attestato
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/PosizioneAttestatoInput"
-      responses:
-        "200":
-          description: Evento aggiornato
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/EventoBackoffice"
-  /backoffice/eventi/{id}/attestato/layout:
-    parameters:
-      - $ref: "#/components/parameters/IdPath"
-    delete:
-      operationId: deleteLayoutAttestato
-      tags: [eventi-backoffice]
-      summary: Elimina il layout dell'attestato
-      responses:
-        "200":
-          description: Evento aggiornato
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/EventoBackoffice"
   /backoffice/eventi/{id}/questionario:
     parameters:
       - $ref: "#/components/parameters/IdPath"
@@ -3095,7 +3061,7 @@ components:
         caricatoIl: { type: string }
     EventoDati:
       type: object
-      required: [id, titolo, data, oraInizio, oraFine, luogo, descrizione, passato]
+      required: [id, titolo, data, oraInizio, oraFine, luogo, descrizione, tipoCorso, argomento, passato]
       properties:
         id: { type: integer }
         titolo: { type: string }
@@ -3104,6 +3070,11 @@ components:
         oraFine: { type: [string, "null"] }
         luogo: { type: string }
         descrizione: { type: string }
+        tipoCorso:
+          type: [string, "null"]
+          enum: [CAF, PATRONATO, null]
+          description: "Tipo di corso scritto sull'attestato; vuoto solo per gli eventi creati prima di questo campo"
+        argomento: { type: [string, "null"], description: "Argomento del corso scritto sull'attestato" }
         passato: { type: boolean, description: "Vero se la data e' prima di oggi" }
     EventoRiepilogo:
       type: object
@@ -3139,17 +3110,6 @@ components:
         numeroSportello: { type: string }
         entrataIl: { type: [string, "null"] }
         uscitaIl: { type: [string, "null"] }
-    AttestatoEvento:
-      type: object
-      required: [layout, nomeX, nomeY, nomeDimensione]
-      properties:
-        layout:
-          oneOf:
-            - $ref: "#/components/schemas/FileEvento"
-            - type: "null"
-        nomeX: { type: number, description: "Centro del nome, percentuale da sinistra" }
-        nomeY: { type: number, description: "Centro del nome, percentuale dall'alto" }
-        nomeDimensione: { type: integer, description: "Dimensione del carattere in punti" }
     DomandaQuestionario:
       type: object
       required: [testo, tipo, opzioni, righe]
@@ -3172,7 +3132,7 @@ components:
           items: { $ref: "#/components/schemas/DomandaQuestionario" }
     EventoBackoffice:
       type: object
-      required: [evento, questionario, domande, attestato, inviti, partecipanti]
+      required: [evento, questionario, domande, inviti, partecipanti]
       properties:
         evento: { $ref: "#/components/schemas/EventoDati" }
         questionario:
@@ -3183,7 +3143,6 @@ components:
           type: array
           description: Domande del questionario creato nel sistema (vuoto se il questionario e' un file caricato o manca)
           items: { $ref: "#/components/schemas/DomandaQuestionario" }
-        attestato: { $ref: "#/components/schemas/AttestatoEvento" }
         inviti:
           type: array
           items: { $ref: "#/components/schemas/InvitoEvento" }
@@ -3192,26 +3151,30 @@ components:
           items: { $ref: "#/components/schemas/PartecipanteEventoBackoffice" }
     EventoCreazioneInput:
       type: object
-      required: [titolo, data, oraInizio, luogo, collaboratoriIds]
+      required: [titolo, data, oraInizio, luogo, collaboratoriIds, tipoCorso, argomento]
       properties:
         titolo: { type: string, minLength: 1, maxLength: 150 }
         data: { type: string, pattern: "^\\d{4}-\\d{2}-\\d{2}$" }
         oraInizio: { type: string, pattern: "^([01]\\d|2[0-3]):[0-5]\\d$" }
         oraFine: { type: [string, "null"], pattern: "^([01]\\d|2[0-3]):[0-5]\\d$" }
         luogo: { type: string, minLength: 1, maxLength: 200 }
+        tipoCorso: { type: string, enum: [CAF, PATRONATO] }
+        argomento: { type: string, minLength: 1, maxLength: 150, description: "Argomento del corso, scritto sull'attestato" }
         descrizione: { type: string, maxLength: 4000 }
         collaboratoriIds:
           type: array
           items: { type: integer }
     EventoModificaInput:
       type: object
-      required: [titolo, data, oraInizio, luogo]
+      required: [titolo, data, oraInizio, luogo, tipoCorso, argomento]
       properties:
         titolo: { type: string, minLength: 1, maxLength: 150 }
         data: { type: string, pattern: "^\\d{4}-\\d{2}-\\d{2}$" }
         oraInizio: { type: string, pattern: "^([01]\\d|2[0-3]):[0-5]\\d$" }
         oraFine: { type: [string, "null"], pattern: "^([01]\\d|2[0-3]):[0-5]\\d$" }
         luogo: { type: string, minLength: 1, maxLength: 200 }
+        tipoCorso: { type: string, enum: [CAF, PATRONATO] }
+        argomento: { type: string, minLength: 1, maxLength: 150, description: "Argomento del corso, scritto sull'attestato" }
         descrizione: { type: string, maxLength: 4000 }
     InvitiEventoInput:
       type: object
@@ -3240,13 +3203,6 @@ components:
         tipo: { type: string, enum: [entrata, uscita] }
         avviso: { type: [string, "null"] }
         partecipante: { $ref: "#/components/schemas/PartecipanteEventoBackoffice" }
-    PosizioneAttestatoInput:
-      type: object
-      required: [nomeX, nomeY, nomeDimensione]
-      properties:
-        nomeX: { type: number, minimum: 0, maximum: 100 }
-        nomeY: { type: number, minimum: 0, maximum: 100 }
-        nomeDimensione: { type: integer, minimum: 8, maximum: 120 }
     EventoSedeRiepilogo:
       type: object
       required: [evento, confermatoIl, partecipanti, questionario]

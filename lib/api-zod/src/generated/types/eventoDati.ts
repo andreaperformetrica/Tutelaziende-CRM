@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { EventoDatiTipoCorso } from './eventoDatiTipoCorso';
 
 export interface EventoDati {
   id: number;
@@ -17,6 +18,16 @@ export interface EventoDati {
   oraFine: string | null;
   luogo: string;
   descrizione: string;
+  /**
+     * Tipo di corso scritto sull'attestato; vuoto solo per gli eventi creati prima di questo campo
+     * @nullable
+     */
+  tipoCorso: EventoDatiTipoCorso;
+  /**
+     * Argomento del corso scritto sull'attestato
+     * @nullable
+     */
+  argomento: string | null;
   /** Vero se la data e' prima di oggi */
   passato: boolean;
 }

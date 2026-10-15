@@ -5,7 +5,6 @@ import {
   AddInvitiEventoParams,
   CreateEventoBody,
   DeleteEventoParams,
-  DeleteLayoutAttestatoParams,
   DeleteQuestionarioEventoParams,
   GetEventoBackofficeParams,
   RegistraCheckInEventoBody,
@@ -17,8 +16,6 @@ import {
   UpdateEventoParams,
   UpdateOrariPartecipanteBody,
   UpdateOrariPartecipanteParams,
-  UpdatePosizioneAttestatoBody,
-  UpdatePosizioneAttestatoParams,
 } from "@workspace/api-zod";
 import {
   collaboratoriTable,
@@ -143,11 +140,12 @@ router.post("/backoffice/eventi", async (req, res) => {
   const sedi = await sediInvitabili(b.collaboratoriIds);
   const titolo = pulisciTesto(b.titolo, "Il titolo");
   const luogo = pulisciTesto(b.luogo, "Il luogo");
+  const argomento = pulisciTesto(b.argomento, "L'argomento del corso");
   const { id, notifiche } = await db.transaction(async (tx) => {
     const [e] = await tx
       .insert(eventiTable)
       .values({
-        titolo, data: b.data, oraInizio: b.oraInizio, oraFine: b.oraFine || null, luogo,
+        titolo, data: b.data, oraInizio: b.oraInizio, oraFine: b.oraFine || null, luogo, tipoCorso: b.tipoCorso, argomento,
         descrizione: (b.descrizione ?? "").trim(), creatoDaUtenteId: req.utente!.id,
       })
       .returning();
@@ -157,7 +155,7 @@ router.post("/backoffice/eventi", async (req, res) => {
       entita: "evento",
       entitaId: e!.id,
       descrizione: `Creato l'evento "${titolo}" del ${descrizioneData(e!)}, con ${sedi.length} ${sedi.length === 1 ? "sede invitata" : "sedi invitate"}`,
-      dettagli: { titolo, data: b.data, oraInizio: b.oraInizio, oraFine: b.oraFine ?? null, luogo, sediInvitate: sedi },
+      dettagli: { titolo, data: b.data, oraInizio: b.oraInizio, oraFine: b.oraFine ?? null, luogo, tipoCorso: b.tipoCorso, argomento, sediInvitate: sedi },
     });
     const notifiche = await notificaInvitoEvento(tx, e!, sedi);
     return { id: e!.id, notifiche };
@@ -186,10 +184,12 @@ router.patch("/backoffice/eventi/:id", async (req, res) => {
     oraInizio: b.oraInizio,
     oraFine: b.oraFine || null,
     luogo: pulisciTesto(b.luogo, "Il luogo"),
+    tipoCorso: b.tipoCorso,
+    argomento: pulisciTesto(b.argomento, "L'argomento del corso"),
     descrizione: (b.descrizione ?? "").trim(),
   };
   const diff = differenze(prima, { ...prima, ...dopo }, {
-    titolo: "titolo", data: "data", oraInizio: "ora di inizio", oraFine: "ora di fine", luogo: "luogo", descrizione: "descrizione",
+    titolo: "titolo", data: "data", oraInizio: "ora di inizio", oraFine: "ora di fine", luogo: "luogo", tipoCorso: "tipo di corso", argomento: "argomento del corso", descrizione: "descrizione",
   });
   await db.transaction(async (tx) => {
     await tx.update(eventiTable).set({ ...dopo, modificatoIl: new Date() }).where(eq(eventiTable.id, id));
@@ -485,102 +485,18 @@ router.delete("/backoffice/eventi/:id/questionario", async (req, res) => {
 // Attestati
 // ---------------------------------------------------------------------------------------------
 
-router.put("/backoffice/eventi/:id/attestato/file", corpoFile, async (req, res) => {
-  const id = intero(req.params["id"], "id");
-  const e = await caricaEvento(id);
-  const file = validaFile(req.query["nomeFile"], req.body, { soloPdfEImmagini: true });
-  // Si controlla subito che il layout si possa leggere, cosi' l'errore compare al caricamento e non alla stampa.
-  await generaAttestati({ buffer: file.buffer, tipo: file.tipo }, { x: 50, y: 50, dimensione: 20 }, ["Prova"]);
-  const chiave = await salvaFile(file.buffer, file.tipo);
-  try {
-    await db.transaction(async (tx) => {
-      await tx
-        .update(eventiTable)
-        .set({ layoutChiave: chiave, layoutNome: file.nome, layoutTipo: file.tipo, layoutDimensione: file.dimensione, modificatoIl: new Date() })
-        .where(eq(eventiTable.id, id));
-      await registraLog(tx, contestoDa(req), {
-        azione: "evento.attestato_carica",
-        entita: "evento",
-        entitaId: id,
-        descrizione: `${e.layoutChiave ? "Sostituito" : "Caricato"} il layout dell'attestato dell'evento "${e.titolo}" (${file.nome})`,
-        dettagli: { fileNome: file.nome, dimensione: file.dimensione, precedente: e.layoutNome },
-      });
-    });
-  } catch (err) {
-    await eliminaFile(chiave, req.log);
-    throw err;
-  }
-  if (e.layoutChiave) await eliminaFile(e.layoutChiave, req.log);
-  res.json(await schedaBackoffice(id));
-});
-
-router.delete("/backoffice/eventi/:id/attestato/layout", async (req, res) => {
-  const { id } = valida(DeleteLayoutAttestatoParams, req.params);
-  const e = await caricaEvento(id);
-  if (!e.layoutChiave) throw nonTrovato("Per questo evento non c'è nessun layout dell'attestato.");
-  await db.transaction(async (tx) => {
-    await tx
-      .update(eventiTable)
-      .set({ layoutChiave: null, layoutNome: null, layoutTipo: null, layoutDimensione: null, modificatoIl: new Date() })
-      .where(eq(eventiTable.id, id));
-    await registraLog(tx, contestoDa(req), {
-      azione: "evento.attestato_elimina",
-      entita: "evento",
-      entitaId: id,
-      descrizione: `Eliminato il layout dell'attestato dell'evento "${e.titolo}" (${e.layoutNome})`,
-      dettagli: { fileNome: e.layoutNome },
-    });
-  });
-  await eliminaFile(e.layoutChiave, req.log);
-  res.json(await schedaBackoffice(id));
-});
-
-router.put("/backoffice/eventi/:id/attestato/posizione", async (req, res) => {
-  const { id } = valida(UpdatePosizioneAttestatoParams, req.params);
-  const b = valida(UpdatePosizioneAttestatoBody, req.body);
-  const e = await caricaEvento(id);
-  await db.transaction(async (tx) => {
-    await tx.update(eventiTable).set({ nomeX: b.nomeX, nomeY: b.nomeY, nomeDimensione: b.nomeDimensione, modificatoIl: new Date() }).where(eq(eventiTable.id, id));
-    await registraLog(tx, contestoDa(req), {
-      azione: "evento.attestato_posizione",
-      entita: "evento",
-      entitaId: id,
-      descrizione: `Posizione del nome sull'attestato dell'evento "${e.titolo}": da ${e.nomeX}%, ${e.nomeY}%, corpo ${e.nomeDimensione} a ${b.nomeX}%, ${b.nomeY}%, corpo ${b.nomeDimensione}`,
-      dettagli: { prima: { x: e.nomeX, y: e.nomeY, dimensione: e.nomeDimensione }, dopo: { x: b.nomeX, y: b.nomeY, dimensione: b.nomeDimensione } },
-    });
-  });
-  res.json(await schedaBackoffice(id));
-});
-
-async function pdfAttestati(eventoId: number, nomi: string[], posizione?: { x: number; y: number; dimensione: number }) {
+async function pdfAttestati(eventoId: number, nomi: string[]) {
   const e = await caricaEvento(eventoId);
-  if (!e.layoutChiave || !e.layoutTipo) {
-    throw new HttpError(409, "Carica prima il layout dell'attestato.", "LAYOUT_MANCANTE");
+  if (e.tipoCorso !== "CAF" && e.tipoCorso !== "PATRONATO") {
+    throw new HttpError(409, "Indica il tipo di corso (CAF o Patronato) nell'evento prima di stampare gli attestati.", "DATI_ATTESTATO_MANCANTI");
   }
-  const buffer = await leggiBuffer(e.layoutChiave);
-  return generaAttestati(
-    { buffer, tipo: e.layoutTipo },
-    posizione ?? { x: e.nomeX, y: e.nomeY, dimensione: e.nomeDimensione },
-    nomi,
-  );
+  return generaAttestati({ tipoCorso: e.tipoCorso, argomento: e.argomento ?? "", data: e.data }, nomi);
 }
 
-const numeroInRange = (v: unknown, min: number, max: number): number | null => {
-  if (v === undefined || v === "") return null;
-  const n = Number(v);
-  return Number.isFinite(n) && n >= min && n <= max ? n : null;
-};
-
-/** Anteprima con un nome di prova; accetta x, y e dim in query per provare i valori senza salvarli. */
+/** Anteprima con un nome di prova e i dati reali dell'evento. */
 router.get("/backoffice/eventi/:id/attestato/anteprima", async (req, res) => {
   const id = intero(req.params["id"], "id");
-  const e = await caricaEvento(id);
-  const pos = {
-    x: numeroInRange(req.query["x"], 0, 100) ?? e.nomeX,
-    y: numeroInRange(req.query["y"], 0, 100) ?? e.nomeY,
-    dimensione: numeroInRange(req.query["dim"], 8, 120) ?? e.nomeDimensione,
-  };
-  inviaPdf(res, await pdfAttestati(id, ["Maria Rossi Esempio"], pos), "anteprima-attestato.pdf");
+  inviaPdf(res, await pdfAttestati(id, ["Maria Rossi Esempio"]), "anteprima-attestato.pdf");
 });
 
 router.get("/backoffice/eventi/:id/attestato/partecipanti/:partecipanteId", async (req, res) => {

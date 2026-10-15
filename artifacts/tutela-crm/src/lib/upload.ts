@@ -59,8 +59,9 @@ export function formatoDimensione(byte: number): string {
 
 export const urlQuestionarioBackoffice = (eventoId: number) => `${BASE}/backoffice/eventi/${eventoId}/questionario/file`;
 export const urlQuestionarioSede = (eventoId: number) => `${BASE}/eventi/${eventoId}/questionario/file`;
-export const urlAnteprimaAttestato = (eventoId: number, x: number, y: number, dim: number, versione: string | number = "") =>
-  `${BASE}/backoffice/eventi/${eventoId}/attestato/anteprima?x=${x}&y=${y}&dim=${dim}&v=${encodeURIComponent(String(versione))}`;
+/** `versione` cambia quando cambiano i dati dell'evento, cosi' l'anteprima non resta quella in cache. */
+export const urlAnteprimaAttestato = (eventoId: number, versione: string) =>
+  `${BASE}/backoffice/eventi/${eventoId}/attestato/anteprima?v=${encodeURIComponent(versione)}`;
 export const urlAttestatoPartecipante = (eventoId: number, partecipanteId: number) => `${BASE}/backoffice/eventi/${eventoId}/attestato/partecipanti/${partecipanteId}`;
 export const urlAttestatiPresenti = (eventoId: number) => `${BASE}/backoffice/eventi/${eventoId}/attestato/presenti`;
 

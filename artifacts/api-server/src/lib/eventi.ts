@@ -83,6 +83,8 @@ export const datiEvento = (e: EventoRow) => ({
   oraFine: e.oraFine,
   luogo: e.luogo,
   descrizione: e.descrizione,
+  tipoCorso: e.tipoCorso === "CAF" || e.tipoCorso === "PATRONATO" ? e.tipoCorso : null,
+  argomento: e.argomento,
   passato: e.data < oggiRoma(),
 });
 
@@ -91,11 +93,6 @@ const iso = (d: Date | null) => (d ? d.toISOString() : null);
 export const fileQuestionario = (e: EventoRow) =>
   e.questionarioChiave && e.questionarioNome && e.questionarioTipo && e.questionarioDimensione != null && e.questionarioCaricatoIl
     ? { nome: e.questionarioNome, tipo: e.questionarioTipo, dimensione: e.questionarioDimensione, caricatoIl: e.questionarioCaricatoIl.toISOString() }
-    : null;
-
-const fileLayout = (e: EventoRow) =>
-  e.layoutChiave && e.layoutNome && e.layoutTipo && e.layoutDimensione != null
-    ? { nome: e.layoutNome, tipo: e.layoutTipo, dimensione: e.layoutDimensione, caricatoIl: e.modificatoIl.toISOString() }
     : null;
 
 /** Sede (collaboratore) con i dati che servono per mostrarla e invitarla. */
@@ -148,7 +145,6 @@ export async function schedaBackoffice(id: number) {
     evento: datiEvento(e),
     questionario: fileQuestionario(e),
     domande: e.questionarioDomande ?? [],
-    attestato: { layout: fileLayout(e), nomeX: e.nomeX, nomeY: e.nomeY, nomeDimensione: e.nomeDimensione },
     inviti: inviti.map((i) => ({ ...i, invitatoIl: i.invitatoIl.toISOString(), confermatoIl: iso(i.confermatoIl) })),
     partecipanti: await partecipantiBackoffice(id),
   };

@@ -4,12 +4,13 @@ import type { EventoDati } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { FieldError } from "@/components/common";
 import { SelettoreSedi } from "@/components/eventi/selettore-sedi";
 
 export interface DatiFormEvento {
-  titolo: string; data: string; oraInizio: string; oraFine: string | null; luogo: string; descrizione: string;
+  titolo: string; data: string; oraInizio: string; oraFine: string | null; luogo: string; tipoCorso: "CAF" | "PATRONATO"; argomento: string; descrizione: string;
 }
 
 /** Modulo dati evento. Con `conSedi` mostra anche la scelta delle sedi da invitare (solo in creazione). */
@@ -22,6 +23,8 @@ export function FormEvento({ iniziale, conSedi, invio, errore, onSubmit, onAnnul
   const [oraInizio, setOraInizio] = useState(iniziale?.oraInizio ?? "");
   const [oraFine, setOraFine] = useState(iniziale?.oraFine ?? "");
   const [luogo, setLuogo] = useState(iniziale?.luogo ?? "");
+  const [tipoCorso, setTipoCorso] = useState<"CAF" | "PATRONATO" | "">(iniziale?.tipoCorso ?? "");
+  const [argomento, setArgomento] = useState(iniziale?.argomento ?? "");
   const [descrizione, setDescrizione] = useState(iniziale?.descrizione ?? "");
   const [sedi, setSedi] = useState<number[]>([]);
   const [locale, setLocale] = useState<string | null>(null);
@@ -32,8 +35,10 @@ export function FormEvento({ iniziale, conSedi, invio, errore, onSubmit, onAnnul
     if (!oraInizio) return setLocale("Inserisci l'ora di inizio.");
     if (oraFine && oraFine <= oraInizio) return setLocale("L'ora di fine deve essere dopo l'ora di inizio.");
     if (!luogo.trim()) return setLocale("Inserisci il luogo.");
+    if (!tipoCorso) return setLocale("Scegli il tipo di corso.");
+    if (!argomento.trim()) return setLocale("Inserisci l'argomento del corso.");
     setLocale(null);
-    onSubmit({ titolo: titolo.trim(), data, oraInizio, oraFine: oraFine || null, luogo: luogo.trim(), descrizione: descrizione.trim() }, sedi);
+    onSubmit({ titolo: titolo.trim(), data, oraInizio, oraFine: oraFine || null, luogo: luogo.trim(), tipoCorso, argomento: argomento.trim(), descrizione: descrizione.trim() }, sedi);
   };
 
   return (
@@ -60,6 +65,23 @@ export function FormEvento({ iniziale, conSedi, invio, errore, onSubmit, onAnnul
         <Label htmlFor="ev-luogo">Luogo</Label>
         <Input id="ev-luogo" value={luogo} maxLength={200} onChange={(e) => setLuogo(e.target.value)} data-testid="input-evento-luogo" />
       </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div>
+          <Label htmlFor="ev-tipo">Tipo di corso</Label>
+          <Select value={tipoCorso} onValueChange={(v) => setTipoCorso(v as "CAF" | "PATRONATO")}>
+            <SelectTrigger id="ev-tipo" data-testid="select-evento-tipo-corso"><SelectValue placeholder="Scegli" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="CAF">CAF</SelectItem>
+              <SelectItem value="PATRONATO">Patronato</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="sm:col-span-2">
+          <Label htmlFor="ev-argomento">Argomento del corso</Label>
+          <Input id="ev-argomento" value={argomento} maxLength={150} placeholder="Esempio: 730-2026" onChange={(e) => setArgomento(e.target.value)} data-testid="input-evento-argomento" />
+        </div>
+      </div>
+      <p className="text-xs text-muted-foreground -mt-2">Tipo, argomento e data compaiono sull&apos;attestato dei partecipanti.</p>
       <div>
         <Label htmlFor="ev-descrizione">Descrizione</Label>
         <Textarea id="ev-descrizione" rows={3} value={descrizione} maxLength={4000} onChange={(e) => setDescrizione(e.target.value)} data-testid="input-evento-descrizione" />

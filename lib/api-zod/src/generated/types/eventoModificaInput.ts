@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { EventoModificaInputTipoCorso } from './eventoModificaInputTipoCorso';
 
 export interface EventoModificaInput {
   /**
@@ -26,6 +27,13 @@ export interface EventoModificaInput {
      * @maxLength 200
      */
   luogo: string;
+  tipoCorso: EventoModificaInputTipoCorso;
+  /**
+     * Argomento del corso, scritto sull'attestato
+     * @minLength 1
+     * @maxLength 150
+     */
+  argomento: string;
   /** @maxLength 4000 */
   descrizione?: string;
 }

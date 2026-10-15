@@ -2,16 +2,15 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  getGetEventoBackofficeQueryKey, getListEventiBackofficeQueryKey, useAddInvitiEvento, useDeleteEvento, useDeleteLayoutAttestato,
+  getGetEventoBackofficeQueryKey, getListEventiBackofficeQueryKey, useAddInvitiEvento, useDeleteEvento,
   useDeleteQuestionarioEvento, useGetEventoBackoffice, useRemoveInvitoEvento, useUpdateEvento, useUpdateOrariPartecipante,
-  useUpdatePosizioneAttestato, type EventoBackoffice, type PartecipanteEventoBackoffice,
+  type EventoBackoffice, type PartecipanteEventoBackoffice,
 } from "@workspace/api-client-react";
 import { ArrowLeft, Award, Download, FileText, Loader2, Pencil, Printer, QrCode, Trash2, Upload, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Slider } from "@/components/ui/slider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -27,8 +26,6 @@ import { fmtData, fmtIstante, fmtOrarioEvento, oraDaIstante, parseApiError, tipo
 import {
   formatoDimensione, inviaFile, messaggioErrore, urlAnteprimaAttestato, urlAttestatiPresenti, urlAttestatoPartecipante, urlQuestionarioBackoffice,
 } from "@/lib/upload";
-
-const FORMATI_LAYOUT = ".pdf,.png,.jpg,.jpeg";
 
 export default function EventoDettaglioBackoffice() {
   const params = useParams<{ id: string }>();
@@ -97,7 +94,7 @@ export default function EventoDettaglioBackoffice() {
       </Dialog>
 
       <ConfermaElimina aperto={eliminaOk} titolo={`Eliminare l'evento "${e.titolo}"?`}
-        testo="Verranno eliminati inviti, iscritti, questionario e layout dell'attestato. Non si può eliminare un evento con entrate o uscite già registrate."
+        testo="Verranno eliminati inviti, iscritti e questionario. Non si può eliminare un evento con entrate o uscite già registrate."
         onAnnulla={() => setEliminaOk(false)}
         onConferma={() => { setEliminaOk(false); elimina.mutate({ id }, { onSuccess: () => { qc.invalidateQueries({ queryKey: getListEventiBackofficeQueryKey() }); toast({ title: "Evento eliminato" }); nav("/admin/eventi"); }, onError: errore }); }} />
     </div>
@@ -114,7 +111,7 @@ function Iscritti({ s, id, presenti, onSalva }: Comune & { presenti: number }) {
   const [uscita, setUscita] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const apri = (p: PartecipanteEventoBackoffice) => { setMod(p); setEntrata(oraDaIstante(p.entrataIl)); setUscita(oraDaIstante(p.uscitaIl)); setErr(null); };
-  const haLayout = !!s.attestato.layout;
+  const haLayout = attestatoPronto(s);
 
   return (
     <div className="space-y-3">
@@ -123,7 +120,7 @@ function Iscritti({ s, id, presenti, onSalva }: Comune & { presenti: number }) {
         {haLayout && presenti > 0 ? (
           <Button asChild variant="outline"><a href={urlAttestatiPresenti(id)} target="_blank" rel="noreferrer" data-testid="link-attestati-presenti"><Printer className="size-4 mr-2" /> Attestati di tutti i presenti</a></Button>
         ) : (
-          <Button variant="outline" disabled title={haLayout ? "Nessun presente" : "Carica prima il layout dell'attestato"}><Printer className="size-4 mr-2" /> Attestati di tutti i presenti</Button>
+          <Button variant="outline" disabled title={haLayout ? "Nessun presente" : "Indica prima tipo di corso e argomento nell'evento"}><Printer className="size-4 mr-2" /> Attestati di tutti i presenti</Button>
         )}
       </div>
       {s.partecipanti.length === 0 ? (
@@ -292,75 +289,30 @@ function Questionario({ s, id, onSalva, onErrore }: Comune) {
   );
 }
 
-function Attestato({ s, id, onSalva, onErrore }: Comune) {
-  const { toast } = useToast();
-  const posizione = useUpdatePosizioneAttestato();
-  const eliminaLayout = useDeleteLayoutAttestato();
-  const a = s.attestato;
-  const [x, setX] = useState(a.nomeX);
-  const [y, setY] = useState(a.nomeY);
-  const [dim, setDim] = useState(a.nomeDimensione);
-  const [anteprima, setAnteprima] = useState({ x: a.nomeX, y: a.nomeY, dim: a.nomeDimensione });
-  const [occupato, setOccupato] = useState(false);
-  const [conferma, setConferma] = useState(false);
-  useEffect(() => { const t = setTimeout(() => setAnteprima({ x, y, dim }), 450); return () => clearTimeout(t); }, [x, y, dim]);
-  const modificato = x !== a.nomeX || y !== a.nomeY || dim !== a.nomeDimensione;
+const tipoCorsoLabel = (t: string | null) => (t === "CAF" ? "CAF" : t === "PATRONATO" ? "Patronato" : "—");
 
-  const carica = async (file: File) => {
-    setOccupato(true);
-    try {
-      onSalva(await inviaFile<EventoBackoffice>("PUT", `/backoffice/eventi/${id}/attestato/file`, {}, file));
-      toast({ title: a.layout ? "Layout sostituito" : "Layout caricato" });
-    } catch (e) { toast({ variant: "destructive", title: "Caricamento non riuscito", description: messaggioErrore(e) }); } finally { setOccupato(false); }
-  };
-
+function Attestato({ s }: Comune) {
+  const e = s.evento;
+  const pronto = attestatoPronto(s);
   return (
     <section className="rounded-lg border border-border bg-card p-5">
       <h2 className="font-bold text-lg flex items-center gap-2"><Award className="size-5" /> Attestato</h2>
-      <p className="text-sm text-muted-foreground mt-1 mb-4">Carica il layout fisso (PDF o immagine): su ogni copia cambia solo il nome del partecipante.</p>
-      {a.layout ? (
-        <div className="flex flex-wrap items-center gap-3 rounded-md bg-secondary/50 p-3 mb-4" data-testid="card-layout">
-          <div className="min-w-0 flex-1">
-            <div className="font-medium truncate">{a.layout.nome}</div>
-            <div className="text-xs text-muted-foreground">{formatoDimensione(a.layout.dimensione)}</div>
-          </div>
-          <Button size="sm" variant="ghost" onClick={() => setConferma(true)} data-testid="button-elimina-layout"><Trash2 className="size-3.5" /></Button>
-        </div>
-      ) : <p className="text-sm mb-3">Nessun layout caricato.</p>}
-      <SelettoreFile onFile={carica} disabled={occupato} accept={FORMATI_LAYOUT} testId="button-carica-layout">
-        {occupato ? <Loader2 className="size-4 mr-2 animate-spin" /> : <Upload className="size-4 mr-2" />}{a.layout ? "Sostituisci layout" : "Carica layout"}
-      </SelettoreFile>
-
-      {a.layout && (
-        <div className="mt-5 space-y-4">
-          <div className="grid gap-4 sm:grid-cols-3">
-            <Regola etichetta="Posizione orizzontale" valore={`${x}%`}><Slider min={0} max={100} step={1} value={[x]} onValueChange={([v]) => setX(v!)} data-testid="slider-nome-x" /></Regola>
-            <Regola etichetta="Posizione verticale" valore={`${y}%`}><Slider min={0} max={100} step={1} value={[y]} onValueChange={([v]) => setY(v!)} data-testid="slider-nome-y" /></Regola>
-            <Regola etichetta="Dimensione" valore={`${dim} pt`}><Slider min={8} max={120} step={1} value={[dim]} onValueChange={([v]) => setDim(v!)} data-testid="slider-nome-dim" /></Regola>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button size="sm" disabled={!modificato || posizione.isPending} data-testid="button-salva-posizione"
-              onClick={() => posizione.mutate({ id, data: { nomeX: x, nomeY: y, nomeDimensione: dim } }, { onSuccess: (r) => { onSalva(r); toast({ title: "Posizione del nome salvata" }); }, onError: onErrore })}>
-              {posizione.isPending && <Loader2 className="size-4 mr-2 animate-spin" />}Salva posizione
-            </Button>
-            {modificato && <span className="text-xs text-muted-foreground">Modifiche non salvate</span>}
-          </div>
-          <iframe key={a.layout.caricatoIl} title="Anteprima attestato" className="w-full h-[360px] rounded-md border border-border bg-white"
-            src={`${urlAnteprimaAttestato(id, anteprima.x, anteprima.y, anteprima.dim, a.layout.caricatoIl)}#toolbar=0&navpanes=0`} data-testid="iframe-anteprima-attestato" />
-          <p className="text-xs text-muted-foreground">L'anteprima usa un nome di prova.</p>
-        </div>
+      <p className="text-sm text-muted-foreground mt-1 mb-4">Il modello Tutelaziende è fisso: su ogni copia cambiano solo questi dati, presi dall&apos;evento.</p>
+      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm rounded-md bg-secondary/50 p-3 mb-4" data-testid="dati-attestato">
+        <dt className="text-muted-foreground">Nome e cognome</dt><dd>Quello di ogni partecipante</dd>
+        <dt className="text-muted-foreground">Tipo di corso</dt><dd className="font-medium">{tipoCorsoLabel(e.tipoCorso)}</dd>
+        <dt className="text-muted-foreground">Argomento</dt><dd className="font-medium">{e.argomento || "—"}</dd>
+        <dt className="text-muted-foreground">Data del corso</dt><dd className="font-medium">{fmtData(e.data)}</dd>
+      </dl>
+      {pronto ? (
+        <iframe title="Anteprima attestato" className="w-full h-[360px] rounded-md border border-border bg-white"
+          src={`${urlAnteprimaAttestato(s.evento.id, `${e.tipoCorso}|${e.argomento}|${e.data}`)}#toolbar=0&navpanes=0`} data-testid="iframe-anteprima-attestato" />
+      ) : (
+        <p className="text-sm text-destructive" data-testid="attestato-incompleto">Per stampare gli attestati modifica l&apos;evento e indica il tipo di corso e l&apos;argomento.</p>
       )}
-      <ConfermaElimina aperto={conferma} titolo="Eliminare il layout dell'attestato?" testo="Non sarà più possibile stampare gli attestati finché non ne carichi un altro." onAnnulla={() => setConferma(false)}
-        onConferma={() => { setConferma(false); eliminaLayout.mutate({ id }, { onSuccess: (r) => { onSalva(r); toast({ title: "Layout eliminato" }); }, onError: onErrore }); }} />
     </section>
   );
 }
 
-function Regola({ etichetta, valore, children }: { etichetta: string; valore: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-2.5">
-      <div className="flex justify-between text-xs"><Label>{etichetta}</Label><span className="tabular-nums text-muted-foreground">{valore}</span></div>
-      {children}
-    </div>
-  );
-}
+/** Gli attestati si possono stampare solo se l'evento ha tipo di corso e argomento. */
+const attestatoPronto = (s: EventoBackoffice) => !!s.evento.tipoCorso && !!s.evento.argomento?.trim();
