@@ -3688,8 +3688,12 @@ components:
           $ref: "#/components/schemas/InvioPratiche"
     Avvisi:
       type: object
-      required: [eventi, pratiche]
+      required: [eventi, pratiche, promemoria]
       properties:
+        promemoria:
+          type: array
+          items:
+            $ref: "#/components/schemas/Promemoria"
         eventi:
           type: array
           items:
@@ -3698,6 +3702,19 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/AvvisoPratica"
+    Promemoria:
+      type: object
+      required: [chiave, tipo, titolo, dettaglio, link, data, urgente]
+      properties:
+        chiave: { type: string }
+        tipo:
+          type: string
+          enum: [evento, partecipanti, questionario, bozza, invio_sospeso]
+        titolo: { type: string }
+        dettaglio: { type: string }
+        link: { type: string, description: "Percorso interno dell'app" }
+        data: { type: [string, "null"], description: "AAAA-MM-GG" }
+        urgente: { type: boolean }
     AvvisoEvento:
       type: object
       required: [eventoId, titolo, data, oraInizio, luogo, invitatoIl]

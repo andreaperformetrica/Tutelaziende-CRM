@@ -158,6 +158,8 @@ export * from './praticaTipoRiepilogo';
 export * from './pratichePagina';
 export * from './pratichePaginaBackoffice';
 export * from './pratichePaginaBackofficeRiepilogoStatiItem';
+export * from './promemoria';
+export * from './promemoriaTipo';
 export * from './questionarioInput';
 export * from './resocontoCompensi';
 export * from './rigaDareAvere';

@@ -7,8 +7,10 @@
  */
 import type { AvvisoEvento } from './avvisoEvento';
 import type { AvvisoPratica } from './avvisoPratica';
+import type { Promemoria } from './promemoria';
 
 export interface Avvisi {
+  promemoria: Promemoria[];
   eventi: AvvisoEvento[];
   pratiche: AvvisoPratica[];
 }

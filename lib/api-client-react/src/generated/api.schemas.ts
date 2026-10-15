@@ -1314,6 +1314,32 @@ export interface PraticaDettaglio {
   invio: InvioPratiche;
 }
 
+export type PromemoriaTipo = typeof PromemoriaTipo[keyof typeof PromemoriaTipo];
+
+
+export const PromemoriaTipo = {
+  evento: 'evento',
+  partecipanti: 'partecipanti',
+  questionario: 'questionario',
+  bozza: 'bozza',
+  invio_sospeso: 'invio_sospeso',
+} as const;
+
+export interface Promemoria {
+  chiave: string;
+  tipo: PromemoriaTipo;
+  titolo: string;
+  dettaglio: string;
+  /** Percorso interno dell'app */
+  link: string;
+  /**
+     * AAAA-MM-GG
+     * @nullable
+     */
+  data: string | null;
+  urgente: boolean;
+}
+
 export interface AvvisoEvento {
   eventoId: number;
   titolo: string;
@@ -1352,6 +1378,7 @@ export interface AvvisoPratica {
 }
 
 export interface Avvisi {
+  promemoria: Promemoria[];
   eventi: AvvisoEvento[];
   pratiche: AvvisoPratica[];
 }

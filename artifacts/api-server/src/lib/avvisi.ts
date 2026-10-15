@@ -1,9 +1,10 @@
 import { and, desc, eq, gt, gte, inArray, isNotNull, isNull, ne, sql } from "drizzle-orm";
 import {
-  assistitiTable, commentiPraticaTable, db, documentiPraticaTable, eventiInvitiTable, eventiPraticaTable, eventiTable, personeTable,
+  assistitiTable, commentiPraticaTable, db, documentiPraticaTable, eventiInvitiTable, eventiPartecipantiTable, eventiPraticaTable, eventiTable, personeTable,
   praticheTable, tipiPraticaTable, utentiTable,
 } from "@workspace/db";
-import { oggiRoma } from "./eventi";
+import { formattaData, oggiRoma } from "./eventi";
+import { statoInvioPratiche } from "./orari";
 
 /** Le novita' sulle pratiche si mostrano per al massimo questo numero di giorni. */
 const GIORNI_AVVISI_PRATICHE = 30;
@@ -74,7 +75,101 @@ async function pratichePiuRecenti(collaboratoreId: number) {
   });
 }
 
+export type TipoPromemoria = "evento" | "partecipanti" | "questionario" | "bozza" | "invio_sospeso";
+
+export interface Promemoria {
+  chiave: string;
+  tipo: TipoPromemoria;
+  titolo: string;
+  dettaglio: string;
+  link: string;
+  /** Data di riferimento (AAAA-MM-GG) quando il promemoria riguarda un giorno preciso. */
+  data: string | null;
+  urgente: boolean;
+}
+
+/** Giorni di calendario tra oggi e una data AAAA-MM-GG (0 = oggi). */
+function giorniA(data: string, oggi: string): number {
+  return Math.round((Date.parse(`${data}T00:00:00Z`) - Date.parse(`${oggi}T00:00:00Z`)) / 86_400_000);
+}
+
+const quando = (g: number) => (g <= 0 ? "Oggi" : g === 1 ? "Domani" : `Tra ${g} giorni`);
+const GIORNI_PREAVVISO_QUESTIONARIO = 7;
+const MAX_BOZZE = 10;
+
+/**
+ * Promemoria della home: eventi confermati in arrivo, cose da fare per prepararli, bozze di pratica da completare
+ * e invio pratiche sospeso. Calcolati al volo, nessun dato viene salvato.
+ */
+async function promemoriaCollaboratore(collaboratoreId: number): Promise<Promemoria[]> {
+  const oggi = oggiRoma();
+  const [eventi, bozze, invio] = await Promise.all([
+    db
+      .select({
+        e: eventiTable,
+        partecipanti: sql<number>`(select count(*)::int from ${eventiPartecipantiTable} p where p.evento_id = ${eventiTable.id} and p.collaboratore_id = ${collaboratoreId})`,
+      })
+      .from(eventiInvitiTable)
+      .innerJoin(eventiTable, eq(eventiTable.id, eventiInvitiTable.eventoId))
+      .where(and(eq(eventiInvitiTable.collaboratoreId, collaboratoreId), isNotNull(eventiInvitiTable.confermatoIl), gte(eventiTable.data, oggi)))
+      .orderBy(eventiTable.data, eventiTable.oraInizio, eventiTable.id),
+    db
+      .select({ id: praticheTable.id, creataIl: praticheTable.creataIl, tipo: tipiPraticaTable.nome, assNome: personeTable.nome, assCognome: personeTable.cognome })
+      .from(praticheTable)
+      .innerJoin(tipiPraticaTable, eq(tipiPraticaTable.id, praticheTable.tipoPraticaId))
+      .innerJoin(assistitiTable, eq(assistitiTable.id, praticheTable.assistitoId))
+      .innerJoin(personeTable, eq(personeTable.id, assistitiTable.personaId))
+      .where(and(eq(praticheTable.collaboratoreId, collaboratoreId), isNull(praticheTable.inviataIl)))
+      .orderBy(praticheTable.creataIl)
+      .limit(MAX_BOZZE),
+    statoInvioPratiche(),
+  ]);
+
+  const risultato: Promemoria[] = [];
+  for (const { e, partecipanti } of eventi) {
+    const g = giorniA(e.data, oggi);
+    const link = `/collaboratore/eventi/${e.id}`;
+    risultato.push({
+      chiave: `evento-${e.id}`, tipo: "evento", titolo: `${quando(g)}: ${e.titolo}`,
+      dettaglio: `${formattaData(e.data)} · ${e.oraFine ? `${e.oraInizio} – ${e.oraFine}` : e.oraInizio} · ${e.luogo}`,
+      link, data: e.data, urgente: g <= 1,
+    });
+    if (partecipanti === 0) {
+      risultato.push({
+        chiave: `partecipanti-${e.id}`, tipo: "partecipanti", titolo: `Nessun partecipante inserito per "${e.titolo}"`,
+        dettaglio: `L'evento è ${quando(g).toLowerCase()}: inserisci i nomi di chi partecipa per ricevere i QR.`, link, data: e.data, urgente: g <= 3,
+      });
+    }
+    if (e.questionarioChiave && g <= GIORNI_PREAVVISO_QUESTIONARIO) {
+      risultato.push({
+        chiave: `questionario-${e.id}`, tipo: "questionario", titolo: `Scarica il questionario di "${e.titolo}"`,
+        dettaglio: "Il questionario va stampato e portato all'evento.", link, data: e.data, urgente: g <= 1,
+      });
+    }
+  }
+  for (const b of bozze) {
+    const giorni = Math.max(0, Math.floor((Date.now() - b.creataIl.getTime()) / 86_400_000));
+    risultato.push({
+      chiave: `bozza-${b.id}`, tipo: "bozza", titolo: `Bozza da completare: ${b.tipo} di ${b.assCognome} ${b.assNome}`,
+      dettaglio: giorni === 0 ? "Creata oggi, non ancora inviata." : `Creata ${giorni === 1 ? "ieri" : `${giorni} giorni fa`}, non ancora inviata.`,
+      link: `/collaboratore/pratiche/${b.id}`, data: null, urgente: giorni >= 7,
+    });
+  }
+  if (!invio.consentito) {
+    const fino = invio.bloccatoFinoA;
+    const testo = fino
+      ? new Intl.DateTimeFormat("it-IT", { timeZone: "Europe/Rome", weekday: "long", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(fino)
+      : null;
+    risultato.push({
+      chiave: "invio-sospeso", tipo: "invio_sospeso", titolo: "L'invio delle pratiche è sospeso in questo momento",
+      dettaglio: testo ? `Potrai inviare di nuovo da ${testo}. Le bozze restano salvate.` : "Le bozze restano salvate.",
+      link: "/collaboratore/pratiche", data: null, urgente: false,
+    });
+  }
+  return risultato;
+}
+
 export async function avvisiCollaboratore(collaboratoreId: number) {
-  const [eventi, pratiche] = await Promise.all([invitiDaConfermare(collaboratoreId), pratichePiuRecenti(collaboratoreId)]);
-  return { eventi, pratiche };
+  const [eventi, pratiche, promemoria] = await Promise.all([invitiDaConfermare(collaboratoreId), pratichePiuRecenti(collaboratoreId), promemoriaCollaboratore(collaboratoreId)]);
+  return { eventi, pratiche, promemoria };
 }

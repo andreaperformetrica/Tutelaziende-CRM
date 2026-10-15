@@ -5168,6 +5168,15 @@ export const DeleteCategoriaAllegatoResponse = zod.void()
  * @summary Novita per la home del collaboratore (inviti a eventi da confermare e aggiornamenti delle sue pratiche)
  */
 export const GetAvvisiResponse = zod.object({
+  "promemoria": zod.array(zod.object({
+  "chiave": zod.string(),
+  "tipo": zod.enum(['evento', 'partecipanti', 'questionario', 'bozza', 'invio_sospeso']),
+  "titolo": zod.string(),
+  "dettaglio": zod.string(),
+  "link": zod.string().describe('Percorso interno dell\'app'),
+  "data": zod.string().nullable().describe('AAAA-MM-GG'),
+  "urgente": zod.boolean()
+})),
   "eventi": zod.array(zod.object({
   "eventoId": zod.number().int(),
   "titolo": zod.string(),

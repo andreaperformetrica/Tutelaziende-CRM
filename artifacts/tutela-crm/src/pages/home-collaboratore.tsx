@@ -1,7 +1,8 @@
 import { Link } from "wouter";
-import { getGetCollaboratoreQueryKey, useGetAvvisi, useGetCollaboratore, useListNews, type AvvisoPratica } from "@workspace/api-client-react";
-import { Bell, CalendarDays, ChevronRight, Download, FileText, Newspaper, Pin, Users } from "lucide-react";
+import { getGetCollaboratoreQueryKey, useGetAvvisi, useGetCollaboratore, useListNews, type AvvisoPratica, type Promemoria as PromemoriaDati } from "@workspace/api-client-react";
+import { Bell, CalendarCheck, CalendarClock, CalendarDays, ChevronRight, ClipboardList, Download, FilePen, FileText, Newspaper, Pin, PauseCircle, Users, Users2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { ErrorState } from "@/components/common";
 import { useSession } from "@/lib/auth";
@@ -16,6 +17,40 @@ function testoAggiornamento(a: AvvisoPratica): string {
     case "presa_in_carico": return "Pratica presa in carico";
     default: return "Pratica aggiornata";
   }
+}
+
+const ICONE_PROMEMORIA: Record<PromemoriaDati["tipo"], typeof CalendarCheck> = {
+  evento: CalendarCheck, partecipanti: Users2, questionario: ClipboardList, bozza: FilePen, invio_sospeso: PauseCircle,
+};
+
+function Promemoria() {
+  const q = useGetAvvisi();
+  const elementi = q.data?.promemoria ?? [];
+  if (!elementi.length) return null;
+  return (
+    <section className="rounded-xl border border-border bg-card p-5 rise" aria-labelledby="titolo-promemoria" data-testid="sezione-promemoria">
+      <h2 id="titolo-promemoria" className="flex items-center gap-2 text-xl font-bold mb-3"><CalendarClock className="size-5" /> Promemoria</h2>
+      <ul className="space-y-2">
+        {elementi.map((p) => {
+          const Icona = ICONE_PROMEMORIA[p.tipo];
+          return (
+            <li key={p.chiave}>
+              <Link href={p.link} data-testid={`promemoria-${p.chiave}`}
+                className={cn("flex items-center gap-3 rounded-lg border bg-background px-3 py-2.5 min-h-12 hover:bg-secondary/60 transition-colors", p.urgente ? "border-accent border-2" : "border-border")}>
+                <Icona className="size-5 shrink-0 text-primary" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold">{p.titolo}</span>
+                  <span className="block text-xs text-muted-foreground">{p.dettaglio}</span>
+                </span>
+                {p.urgente && <Badge className="bg-accent text-accent-foreground shrink-0">Urgente</Badge>}
+                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
 }
 
 function Novita() {
@@ -81,6 +116,7 @@ export default function HomeCollaboratore() {
           {capogruppo && <Badge className="mt-3 bg-accent text-accent-foreground">Capogruppo</Badge>}
         </div>
       </div>
+      <Promemoria />
       <Novita />
       <section className="rounded-xl border border-border bg-card p-5 rise" aria-labelledby="titolo-news" data-testid="sezione-news">
         <h2 id="titolo-news" className="flex items-center gap-2 text-xl font-bold mb-3"><Newspaper className="size-5" /> News</h2>
