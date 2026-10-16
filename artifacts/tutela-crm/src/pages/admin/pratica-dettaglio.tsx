@@ -163,11 +163,11 @@ export default function PraticaDettaglioBackoffice() {
               {presa.isPending ? <Loader2 className="size-4 mr-2 animate-spin" /> : <HandHelping className="size-4 mr-2" />} Prendi in carico
             </Button>
           )}
-          <div className="flex items-end gap-2 ml-auto">
-            <div>
+          <div className="flex flex-wrap items-end gap-2 md:ml-auto w-full md:w-auto">
+            <div className="w-full sm:w-auto">
               <Label htmlFor="cambia-stato" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Stato</Label>
               <Select value={sceltoEffettivo} onValueChange={setStatoScelto}>
-                <SelectTrigger id="cambia-stato" className="mt-1 w-56 bg-card" data-testid="select-stato"><SelectValue /></SelectTrigger>
+                <SelectTrigger id="cambia-stato" className="mt-1 w-full sm:w-56 bg-card" data-testid="select-stato"><SelectValue /></SelectTrigger>
                 <SelectContent>{stati.map((s) => <SelectItem key={s.id} value={String(s.id)}>{s.nome}</SelectItem>)}</SelectContent>
               </Select>
             </div>

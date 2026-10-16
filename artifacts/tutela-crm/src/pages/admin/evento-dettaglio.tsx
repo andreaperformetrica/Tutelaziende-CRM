@@ -127,7 +127,7 @@ function Iscritti({ s, id, presenti, onSalva }: Comune & { presenti: number }) {
         <EmptyState icon={<UserPlus className="size-6" />} title="Nessun iscritto" text="Le sedi inseriscono i partecipanti dopo aver confermato l'invito." />
       ) : (
         <div className="rounded-lg border border-border bg-card overflow-x-auto">
-          <Table>
+          <Table className="tabella-schede">
             <TableHeader>
               <TableRow className="bg-muted/60 hover:bg-muted/60">
                 {["Partecipante", "Sede", "Entrata", "Uscita", ""].map((h) => <TableHead key={h} className="text-[11px] uppercase tracking-wider font-semibold h-10">{h}</TableHead>)}
@@ -137,9 +137,9 @@ function Iscritti({ s, id, presenti, onSalva }: Comune & { presenti: number }) {
               {s.partecipanti.map((p) => (
                 <TableRow key={p.id} data-testid={`row-iscritto-${p.id}`}>
                   <TableCell className="font-semibold whitespace-nowrap">{p.cognome} {p.nome}</TableCell>
-                  <TableCell className="text-sm whitespace-nowrap">{p.sedeNome} <span className="font-mono text-xs text-muted-foreground">· {p.numeroSportello}</span></TableCell>
-                  <TableCell className="tabular-nums text-sm whitespace-nowrap">{p.entrataIl ? fmtIstante(p.entrataIl) : <span className="text-muted-foreground">—</span>}</TableCell>
-                  <TableCell className="tabular-nums text-sm whitespace-nowrap">{p.uscitaIl ? fmtIstante(p.uscitaIl) : <span className="text-muted-foreground">—</span>}</TableCell>
+                  <TableCell data-label="Sede" className="text-sm whitespace-nowrap">{p.sedeNome} <span className="font-mono text-xs text-muted-foreground">· {p.numeroSportello}</span></TableCell>
+                  <TableCell data-label="Entrata" className="tabular-nums text-sm whitespace-nowrap">{p.entrataIl ? fmtIstante(p.entrataIl) : <span className="text-muted-foreground">—</span>}</TableCell>
+                  <TableCell data-label="Uscita" className="tabular-nums text-sm whitespace-nowrap">{p.uscitaIl ? fmtIstante(p.uscitaIl) : <span className="text-muted-foreground">—</span>}</TableCell>
                   <TableCell className="text-right whitespace-nowrap">
                     <Button size="sm" variant="ghost" onClick={() => apri(p)} data-testid={`button-orari-${p.id}`}><Pencil className="size-3.5 mr-1.5" /> Orari</Button>
                     {haLayout && <Button asChild size="sm" variant="ghost"><a href={urlAttestatoPartecipante(id, p.id)} target="_blank" rel="noreferrer" data-testid={`link-attestato-${p.id}`}><Award className="size-3.5 mr-1.5" /> Attestato</a></Button>}
@@ -194,7 +194,7 @@ function Sedi({ s, id, onSalva, onErrore }: Comune) {
         <EmptyState icon={<UserPlus className="size-6" />} title="Nessuna sede invitata" />
       ) : (
         <div className="rounded-lg border border-border bg-card overflow-x-auto">
-          <Table>
+          <Table className="tabella-schede">
             <TableHeader>
               <TableRow className="bg-muted/60 hover:bg-muted/60">
                 {["Sede", "Sportello", "Invitata il", "Partecipazione", "Iscritti", ""].map((h) => <TableHead key={h} className="text-[11px] uppercase tracking-wider font-semibold h-10">{h}</TableHead>)}
@@ -204,10 +204,10 @@ function Sedi({ s, id, onSalva, onErrore }: Comune) {
               {s.inviti.map((i) => (
                 <TableRow key={i.collaboratoreId} data-testid={`row-invito-${i.collaboratoreId}`}>
                   <TableCell className="font-semibold whitespace-nowrap">{i.nome}{!i.attivo && <Badge variant="outline" className="ml-2">Disattivata</Badge>}</TableCell>
-                  <TableCell className="text-sm whitespace-nowrap"><span className="font-mono">{i.numeroSportello}</span> · {tipologiaLabel(i.tipologia)}</TableCell>
-                  <TableCell className="tabular-nums text-sm whitespace-nowrap">{fmtIstante(i.invitatoIl)}</TableCell>
-                  <TableCell>{i.confermatoIl ? <Badge className="bg-primary text-primary-foreground">Confermata {fmtIstante(i.confermatoIl)}</Badge> : <Badge variant="outline">In attesa</Badge>}</TableCell>
-                  <TableCell className="tabular-nums">{i.partecipanti}</TableCell>
+                  <TableCell data-label="Sportello" className="text-sm whitespace-nowrap"><span className="font-mono">{i.numeroSportello}</span> · {tipologiaLabel(i.tipologia)}</TableCell>
+                  <TableCell data-label="Invitata il" className="tabular-nums text-sm whitespace-nowrap">{fmtIstante(i.invitatoIl)}</TableCell>
+                  <TableCell data-label="Partecipazione">{i.confermatoIl ? <Badge className="bg-primary text-primary-foreground">Confermata {fmtIstante(i.confermatoIl)}</Badge> : <Badge variant="outline">In attesa</Badge>}</TableCell>
+                  <TableCell data-label="Iscritti" className="tabular-nums">{i.partecipanti}</TableCell>
                   <TableCell className="text-right">
                     <Button size="sm" variant="ghost" disabled={i.partecipanti > 0} title={i.partecipanti > 0 ? "La sede ha già inserito dei partecipanti" : "Togli l'invito"} onClick={() => setDaTogliere(i)} data-testid={`button-togli-invito-${i.collaboratoreId}`}><Trash2 className="size-3.5" /></Button>
                   </TableCell>

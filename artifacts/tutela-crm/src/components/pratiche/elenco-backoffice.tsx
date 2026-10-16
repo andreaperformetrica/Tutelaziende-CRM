@@ -50,7 +50,7 @@ function parametri(f: Filtri, mieId: number | null, ordina: ListPraticheBackoffi
 }
 
 function Campo({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {
-  return <div className="min-w-40 flex-1"><Label htmlFor={id} className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</Label><div className="mt-1">{children}</div></div>;
+  return <div className="min-w-[calc(50%-0.4rem)] sm:min-w-40 flex-1"><Label htmlFor={id} className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</Label><div className="mt-1 [&_input]:min-w-0 [&_input]:w-full">{children}</div></div>;
 }
 
 function Scelta({ id, valore, onChange, tutti, opzioni, testId }: {
@@ -192,7 +192,7 @@ export function ElencoPraticheBackoffice({ soloMie }: { soloMie?: boolean }) {
       ) : (
         <>
           <div className="rounded-lg border border-border bg-card overflow-x-auto rise">
-            <Table>
+            <Table className="tabella-schede">
               <TableHeader>
                 <TableRow className="bg-muted/60 hover:bg-muted/60">
                   <Semplice label="Assistito" />
@@ -213,14 +213,14 @@ export function ElencoPraticheBackoffice({ soloMie }: { soloMie?: boolean }) {
                       {p.assistito.cognome} {p.assistito.nome}
                       {p.aggiornata && <Badge className="ml-2 bg-primary text-primary-foreground" data-testid={`badge-aggiornata-${p.id}`}>Aggiornata</Badge>}
                     </TableCell>
-                    <TableCell className="font-mono text-sm font-semibold">{p.numero}</TableCell>
-                    <TableCell className="text-sm whitespace-nowrap">{p.collaboratore.cognome} {p.collaboratore.nome}</TableCell>
-                    <TableCell className="text-sm">{p.citta}</TableCell>
-                    <TableCell className="text-sm tabular-nums whitespace-nowrap">{fmtDataIstante(p.dataRichiesta)}</TableCell>
-                    <TableCell><StatoBadge stato={p.stato} /></TableCell>
-                    <TableCell className="text-sm">{p.tipo.nome}</TableCell>
-                    <TableCell className="text-sm whitespace-nowrap">{p.gestitaDa ? <UtenteChip id={p.gestitaDa.id} colore={p.gestitaDa.colore}>{p.gestitaDa.cognome} {p.gestitaDa.nome}</UtenteChip> : <span className="text-muted-foreground">Non assegnata</span>}</TableCell>
-                    <TableCell><Button size="sm" className="bg-green-700 hover:bg-green-800 text-white" onClick={() => nav(`/admin/pratiche/${p.id}`)} data-testid={`button-apri-${p.id}`}>Apri</Button></TableCell>
+                    <TableCell data-label="Numero" className="font-mono text-sm font-semibold">{p.numero}</TableCell>
+                    <TableCell data-label="Collaboratore" className="text-sm whitespace-nowrap">{p.collaboratore.cognome} {p.collaboratore.nome}</TableCell>
+                    <TableCell data-label="Città" className="text-sm">{p.citta}</TableCell>
+                    <TableCell data-label="Richiesta" className="text-sm tabular-nums whitespace-nowrap">{fmtDataIstante(p.dataRichiesta)}</TableCell>
+                    <TableCell data-label="Stato"><StatoBadge stato={p.stato} /></TableCell>
+                    <TableCell data-label="Tipo" className="text-sm">{p.tipo.nome}</TableCell>
+                    <TableCell data-label="Gestita da" className="text-sm whitespace-nowrap">{p.gestitaDa ? <UtenteChip id={p.gestitaDa.id} colore={p.gestitaDa.colore}>{p.gestitaDa.cognome} {p.gestitaDa.nome}</UtenteChip> : <span className="text-muted-foreground">Non assegnata</span>}</TableCell>
+                    <TableCell className="max-md:pt-2"><Button size="sm" className="bg-green-700 hover:bg-green-800 text-white max-md:w-full" onClick={() => nav(`/admin/pratiche/${p.id}`)} data-testid={`button-apri-${p.id}`}>Apri</Button></TableCell>
                   </TableRow>
                 ))}
               </TableBody>

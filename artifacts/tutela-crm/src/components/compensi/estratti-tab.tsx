@@ -42,7 +42,7 @@ export function EstrattiTab() {
         <EmptyState icon={<FileText className="size-6" />} title="Nessun estratto" text="Gli estratti si creano dal resoconto, confermando le pratiche chiuse." />
       ) : (
         <div className="rounded-lg border border-border bg-card overflow-x-auto rise">
-          <Table>
+          <Table className="tabella-schede">
             <TableHeader>
               <TableRow className="bg-muted/60 hover:bg-muted/60">
                 {["N.", "Data", "Collaboratore", "Pratiche", "Punti", "Ristorno", "Stato"].map((h, i) => <TableHead key={h} className={`text-[11px] uppercase tracking-wider font-semibold h-10 ${i >= 4 && i < 6 ? "text-right" : ""}`}>{h}</TableHead>)}
@@ -51,13 +51,13 @@ export function EstrattiTab() {
             <TableBody>
               {lista.data.map((e) => (
                 <TableRow key={e.id} className="cursor-pointer hover:bg-secondary/50" onClick={() => nav(`/admin/compensi/estratti/${e.id}`)} data-testid={`row-estratto-${e.id}`}>
-                  <TableCell className="tabular-nums font-semibold">{e.id}</TableCell>
-                  <TableCell className="tabular-nums">{fmtData(e.dataEstratto)}</TableCell>
-                  <TableCell>{e.collaboratoreNome} <span className="text-muted-foreground text-xs">({e.numeroSportello})</span></TableCell>
-                  <TableCell className="tabular-nums">{e.numeroPratiche}</TableCell>
-                  <TableCell className="text-right tabular-nums">{e.totalePunti}</TableCell>
-                  <TableCell className="text-right tabular-nums">{fmtEuro(e.totaleEuro)}</TableCell>
-                  <TableCell>{e.pagato ? <Badge className="bg-primary text-primary-foreground">Pagato il {fmtData(e.pagatoIl)}</Badge> : <Badge variant="outline">Da pagare</Badge>}</TableCell>
+                  <TableCell data-label="Estratto n." className="tabular-nums font-semibold">{e.id}</TableCell>
+                  <TableCell data-label="Data" className="tabular-nums">{fmtData(e.dataEstratto)}</TableCell>
+                  <TableCell data-label="Collaboratore">{e.collaboratoreNome} <span className="text-muted-foreground text-xs">({e.numeroSportello})</span></TableCell>
+                  <TableCell data-label="Pratiche" className="tabular-nums">{e.numeroPratiche}</TableCell>
+                  <TableCell data-label="Punti" className="text-right tabular-nums">{e.totalePunti}</TableCell>
+                  <TableCell data-label="Ristorno" className="text-right tabular-nums">{fmtEuro(e.totaleEuro)}</TableCell>
+                  <TableCell data-label="Stato">{e.pagato ? <Badge className="bg-primary text-primary-foreground">Pagato il {fmtData(e.pagatoIl)}</Badge> : <Badge variant="outline">Da pagare</Badge>}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

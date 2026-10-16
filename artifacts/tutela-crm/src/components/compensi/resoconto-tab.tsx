@@ -79,7 +79,7 @@ export function ResocontoTab() {
       ) : (
         <>
           <div className="rounded-lg border border-border bg-card overflow-x-auto rise">
-            <Table>
+            <Table className="tabella-schede">
               <TableHeader>
                 <TableRow className="bg-muted/60 hover:bg-muted/60">
                   <TableHead className="w-10"><Checkbox checked={tutte} onCheckedChange={(v) => setScelte(v ? new Set(righe.map((r) => r.praticaId)) : new Set())} aria-label="Seleziona tutte" data-testid="seleziona-tutte" /></TableHead>
@@ -92,15 +92,15 @@ export function ResocontoTab() {
                 {righe.map((r) => (
                   <TableRow key={r.praticaId} data-testid={`row-resoconto-${r.praticaId}`}>
                     <TableCell><Checkbox checked={scelte.has(r.praticaId)} onCheckedChange={(v) => alternaRiga(r.praticaId, v === true)} aria-label={`Seleziona la pratica ${r.numero}`} data-testid={`check-pratica-${r.praticaId}`} /></TableCell>
-                    <TableCell className="whitespace-nowrap">{r.collaboratoreNome} <span className="text-muted-foreground text-xs">({r.numeroSportello})</span></TableCell>
-                    <TableCell>{r.assistito}</TableCell>
-                    <TableCell className="tabular-nums">{r.numero}</TableCell>
-                    <TableCell>{r.tipoNome}</TableCell>
-                    <TableCell className="tabular-nums">{fmtData(r.dataPratica)}</TableCell>
-                    <TableCell className="tabular-nums whitespace-nowrap">{fmtIstante(r.chiusaIl)}</TableCell>
-                    <TableCell className="tabular-nums">{r.giorniDallaChiusura}</TableCell>
-                    <TableCell className="text-right tabular-nums">{r.punti}</TableCell>
-                    <TableCell className="text-right tabular-nums">{fmtEuro(r.valoreEuro)}</TableCell>
+                    <TableCell data-label="Collaboratore" className="whitespace-nowrap">{r.collaboratoreNome} <span className="text-muted-foreground text-xs">({r.numeroSportello})</span></TableCell>
+                    <TableCell data-label="Assistito">{r.assistito}</TableCell>
+                    <TableCell data-label="Pratica" className="tabular-nums">{r.numero}</TableCell>
+                    <TableCell data-label="Tipo">{r.tipoNome}</TableCell>
+                    <TableCell data-label="Data pratica" className="tabular-nums">{fmtData(r.dataPratica)}</TableCell>
+                    <TableCell data-label="Chiusa il" className="tabular-nums whitespace-nowrap">{fmtIstante(r.chiusaIl)}</TableCell>
+                    <TableCell data-label="Giorni" className="tabular-nums">{r.giorniDallaChiusura}</TableCell>
+                    <TableCell data-label="Punti" className="text-right tabular-nums">{r.punti}</TableCell>
+                    <TableCell data-label="Ristorno" className="text-right tabular-nums">{fmtEuro(r.valoreEuro)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

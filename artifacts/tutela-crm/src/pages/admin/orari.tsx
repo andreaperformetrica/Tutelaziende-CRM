@@ -85,10 +85,10 @@ export default function OrariPage() {
                     <li key={r.chiave} className="flex flex-wrap items-center gap-2 rounded-md border border-border p-3" data-testid={`fascia-${i}`}>
                       <span className="text-sm text-muted-foreground">Da</span>
                       <SelezioneGiorno valore={r.giornoInizio} onChange={(n) => set(r.chiave, { giornoInizio: n })} etichetta="Giorno di inizio" testId={`select-giorno-inizio-${i}`} />
-                      <Input type="time" className="w-28" value={r.oraInizio} onChange={(e) => set(r.chiave, { oraInizio: e.target.value })} aria-label="Ora di inizio" data-testid={`input-ora-inizio-${i}`} />
+                      <Input type="time" className="w-32 sm:w-28" value={r.oraInizio} onChange={(e) => set(r.chiave, { oraInizio: e.target.value })} aria-label="Ora di inizio" data-testid={`input-ora-inizio-${i}`} />
                       <span className="text-sm text-muted-foreground">a</span>
                       <SelezioneGiorno valore={r.giornoFine} onChange={(n) => set(r.chiave, { giornoFine: n })} etichetta="Giorno di fine" testId={`select-giorno-fine-${i}`} />
-                      <Input type="time" className="w-28" value={r.oraFine} onChange={(e) => set(r.chiave, { oraFine: e.target.value })} aria-label="Ora di fine" data-testid={`input-ora-fine-${i}`} />
+                      <Input type="time" className="w-32 sm:w-28" value={r.oraFine} onChange={(e) => set(r.chiave, { oraFine: e.target.value })} aria-label="Ora di fine" data-testid={`input-ora-fine-${i}`} />
                       <label className="ml-auto flex items-center gap-2 text-sm text-muted-foreground">
                         <Switch checked={r.attiva} onCheckedChange={(c) => set(r.chiave, { attiva: c })} data-testid={`switch-attiva-${i}`} /> Attiva
                       </label>

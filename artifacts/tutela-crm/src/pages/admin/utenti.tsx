@@ -135,7 +135,7 @@ export default function UtentiPage() {
         : !lista.data?.length ? <EmptyState icon={<Users className="size-6" />} title="Nessun utente interno" text="Crea il primo utente per far lavorare lo staff in back office." action={<Button onClick={() => setDlg({ open: true, id: null })}>Nuovo utente</Button>} />
         : (
           <div className="rounded-lg border border-border bg-card overflow-x-auto rise">
-            <Table>
+            <Table className="tabella-schede">
               <TableHeader><TableRow className="bg-muted/60 hover:bg-muted/60">
                 {["Cognome e nome", "Email", "Ruolo", "Stato", "Ultimo accesso", ""].map((h) => <TableHead key={h} className="text-[11px] uppercase tracking-wider font-semibold h-10">{h}</TableHead>)}
               </TableRow></TableHeader>
@@ -143,10 +143,10 @@ export default function UtentiPage() {
                 {lista.data.map((u) => (
                   <TableRow key={u.id} className="hover:bg-secondary/50 transition-colors" data-testid={`row-utente-${u.id}`}>
                     <TableCell className="font-semibold"><span className="inline-flex items-center gap-3"><UtenteAvatar id={u.id} colore={u.colore} nome={u.nome} cognome={u.cognome} className="size-8 text-xs" />{u.cognome} {u.nome}</span></TableCell>
-                    <TableCell className="text-sm">{u.email}</TableCell>
-                    <TableCell><Badge variant="outline">{ruoloLabel(u.ruolo)}</Badge></TableCell>
-                    <TableCell><div className="flex flex-col gap-1 items-start"><StatoBadge attivo={u.attivo} />{u.deveCambiarePassword && <span className="text-[11px] text-accent-foreground font-semibold">Cambio password in attesa</span>}</div></TableCell>
-                    <TableCell className="text-sm tabular-nums">{u.ultimoAccesso ? fmtIstante(u.ultimoAccesso) : <span className="text-muted-foreground">Mai</span>}</TableCell>
+                    <TableCell data-label="Email" className="text-sm">{u.email}</TableCell>
+                    <TableCell data-label="Ruolo"><Badge variant="outline">{ruoloLabel(u.ruolo)}</Badge></TableCell>
+                    <TableCell data-label="Stato"><div className="flex flex-col gap-1 items-start"><StatoBadge attivo={u.attivo} />{u.deveCambiarePassword && <span className="text-[11px] text-accent-foreground font-semibold">Cambio password in attesa</span>}</div></TableCell>
+                    <TableCell data-label="Ultimo accesso" className="text-sm tabular-nums">{u.ultimoAccesso ? fmtIstante(u.ultimoAccesso) : <span className="text-muted-foreground">Mai</span>}</TableCell>
                     <TableCell className="text-right whitespace-nowrap">
                       {gestibile(u) ? (<>
                         <Button size="sm" variant="ghost" onClick={() => setDlg({ open: true, id: u.id })} data-testid={`button-modifica-utente-${u.id}`}><Pencil className="size-3.5 mr-1" /> Modifica</Button>

@@ -74,7 +74,7 @@ export default function TipiPraticaPage() {
         : !tipi.length ? <EmptyState icon={<FileText className="size-6" />} title="Nessun tipo di pratica" text="Crea il primo tipo per iniziare a configurare le pratiche." action={<Button onClick={() => setNuovo(true)}><Plus className="size-4 mr-2" /> Nuovo tipo</Button>} />
         : (
           <div className="rounded-lg border border-border bg-card overflow-x-auto rise">
-            <Table>
+            <Table className="tabella-schede">
               <TableHeader>
                 <TableRow>
                   <TableHead>Nome</TableHead><TableHead>Stato</TableHead><TableHead>Pagabile</TableHead>
@@ -86,12 +86,12 @@ export default function TipiPraticaPage() {
                 {tipi.map((t) => (
                   <TableRow key={t.id} data-testid={`riga-tipo-${t.id}`}>
                     <TableCell className="font-semibold"><Link href={`/admin/tipi-pratica/${t.id}`} className="hover:underline" data-testid={`link-tipo-${t.id}`}>{t.nome}</Link></TableCell>
-                    <TableCell>{t.attivo ? <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary">Attivo</Badge> : <Badge variant="outline" className="text-muted-foreground">Disattivato</Badge>}</TableCell>
-                    <TableCell>{t.pagabile ? "Sì" : "No"}</TableCell>
-                    <TableCell className="text-right tabular-nums">{t.pagabile ? t.punti : "-"}</TableCell>
-                    <TableCell className="text-right tabular-nums">{t.pagabile ? fmtEuro(t.valoreEuro) : "-"}</TableCell>
-                    <TableCell className="text-right tabular-nums">{t.documenti.length}</TableCell>
-                    <TableCell className="text-right tabular-nums">{t.moduli.length}</TableCell>
+                    <TableCell data-label="Stato">{t.attivo ? <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary">Attivo</Badge> : <Badge variant="outline" className="text-muted-foreground">Disattivato</Badge>}</TableCell>
+                    <TableCell data-label="Pagabile">{t.pagabile ? "Sì" : "No"}</TableCell>
+                    <TableCell data-label="Punti" className="text-right tabular-nums">{t.pagabile ? t.punti : "-"}</TableCell>
+                    <TableCell data-label="Valore" className="text-right tabular-nums">{t.pagabile ? fmtEuro(t.valoreEuro) : "-"}</TableCell>
+                    <TableCell data-label="Documenti" className="text-right tabular-nums">{t.documenti.length}</TableCell>
+                    <TableCell data-label="Moduli" className="text-right tabular-nums">{t.moduli.length}</TableCell>
                     <TableCell className="text-right"><Button asChild size="sm" variant="outline"><Link href={`/admin/tipi-pratica/${t.id}`} data-testid={`button-modifica-tipo-${t.id}`}><Pencil className="size-4 mr-1.5" /> Modifica</Link></Button></TableCell>
                   </TableRow>
                 ))}

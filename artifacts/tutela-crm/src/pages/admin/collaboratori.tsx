@@ -68,7 +68,7 @@ export default function CollaboratoriPage() {
           action={filtrato ? <Button variant="outline" onClick={reset}>Azzera filtri</Button> : puoCreare ? <Button onClick={() => nav("/admin/collaboratori/nuovo")}>Nuovo collaboratore</Button> : undefined} />
       ) : (
         <div className="rounded-lg border border-border bg-card overflow-x-auto rise">
-          <Table>
+          <Table className="tabella-schede">
             <TableHeader>
               <TableRow className="bg-muted/60 hover:bg-muted/60">
                 {["Cognome e nome", "Sportello", "Tipologia", "Capogruppo", "Gruppo", "Cellulare", "Email", "Stato"].map((h) => (
@@ -83,13 +83,13 @@ export default function CollaboratoriPage() {
                     <Link href={`/admin/collaboratori/${c.id}`} onClick={(e) => e.stopPropagation()} className="hover:underline" data-testid={`link-collaboratore-${c.id}`}>{c.cognome} {c.nome}</Link>
                     {c.straniero && <Globe2 className="inline size-3.5 ml-1.5 text-accent-foreground/70" aria-label="Cittadino straniero" />}
                   </TableCell>
-                  <TableCell className="font-mono text-sm">{c.numeroSportello}</TableCell>
-                  <TableCell><Badge variant="outline" className={c.tipologia === "CAF" ? "border-chart-4/40 text-chart-4" : "border-primary/40 text-primary"}>{tipologiaLabel(c.tipologia)}</Badge></TableCell>
-                  <TableCell className="whitespace-nowrap text-sm">{c.capogruppoNome ?? <span className="text-muted-foreground">—</span>}</TableCell>
-                  <TableCell className="text-sm tabular-nums">{c.numeroCollaboratori > 0 ? <Badge className="bg-accent text-accent-foreground">{c.numeroCollaboratori}</Badge> : <span className="text-muted-foreground">—</span>}</TableCell>
-                  <TableCell className="font-mono text-xs whitespace-nowrap">{fmtCellulare(c.cellulare)}</TableCell>
-                  <TableCell className="text-sm">{c.email}</TableCell>
-                  <TableCell><StatoBadge attivo={c.attivo} /></TableCell>
+                  <TableCell data-label="Sportello" className="font-mono text-sm">{c.numeroSportello}</TableCell>
+                  <TableCell data-label="Tipologia"><Badge variant="outline" className={c.tipologia === "CAF" ? "border-chart-4/40 text-chart-4" : "border-primary/40 text-primary"}>{tipologiaLabel(c.tipologia)}</Badge></TableCell>
+                  <TableCell data-label="Capogruppo" className="whitespace-nowrap text-sm">{c.capogruppoNome ?? <span className="text-muted-foreground">—</span>}</TableCell>
+                  <TableCell data-label="Gruppo" className="text-sm tabular-nums">{c.numeroCollaboratori > 0 ? <Badge className="bg-accent text-accent-foreground">{c.numeroCollaboratori}</Badge> : <span className="text-muted-foreground">—</span>}</TableCell>
+                  <TableCell data-label="Cellulare" className="font-mono text-xs whitespace-nowrap">{fmtCellulare(c.cellulare)}</TableCell>
+                  <TableCell data-label="Email" className="text-sm">{c.email}</TableCell>
+                  <TableCell data-label="Stato"><StatoBadge attivo={c.attivo} /></TableCell>
                 </TableRow>
               ))}
             </TableBody>

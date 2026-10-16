@@ -55,19 +55,19 @@ export default function LogPage() {
         : !q.data?.righe.length ? <EmptyState icon={<ScrollText className="size-6" />} title={filtrato ? "Nessuna operazione per questi filtri" : "Il registro è ancora vuoto"} text={filtrato ? "Modifica il periodo o l'utente selezionato." : "Le operazioni compiute dagli utenti compariranno qui."} />
         : (<>
           <div className={`rounded-lg border border-border bg-card overflow-x-auto transition-opacity ${q.isPlaceholderData ? "opacity-60" : ""}`}>
-            <Table>
+            <Table className="tabella-schede">
               <TableHeader><TableRow className="bg-muted/60 hover:bg-muted/60">
                 {["Data e ora", "Utente", "Ruolo", "Azione", "Descrizione", "IP"].map((h) => <TableHead key={h} className="text-[11px] uppercase tracking-wider font-semibold h-10 whitespace-nowrap">{h}</TableHead>)}
               </TableRow></TableHeader>
               <TableBody>
                 {q.data.righe.map((r) => (
                   <TableRow key={r.id} className="hover:bg-secondary/50 transition-colors align-top" data-testid={`row-log-${r.id}`}>
-                    <TableCell className="font-mono text-xs whitespace-nowrap">{fmtIstante(r.creatoIl, true)}</TableCell>
-                    <TableCell className="text-sm font-medium whitespace-nowrap">{r.utenteNome ? (r.utenteId !== null && r.ruolo && r.ruolo !== "collaboratore" ? <UtenteChip id={r.utenteId} colore={r.utenteColore}>{r.utenteNome}</UtenteChip> : r.utenteNome) : <span className="text-muted-foreground">Sistema</span>}</TableCell>
-                    <TableCell className="text-xs whitespace-nowrap">{r.ruolo ? ruoloLabel(r.ruolo) : "—"}</TableCell>
-                    <TableCell className="text-sm"><span className="inline-block rounded bg-secondary px-1.5 py-0.5 text-xs font-semibold text-secondary-foreground whitespace-nowrap">{r.azioneEtichetta}</span></TableCell>
-                    <TableCell className="text-sm min-w-64">{r.descrizione}</TableCell>
-                    <TableCell className="font-mono text-xs text-muted-foreground">{r.ip ?? "—"}</TableCell>
+                    <TableCell data-label="Data e ora" className="font-mono text-xs whitespace-nowrap">{fmtIstante(r.creatoIl, true)}</TableCell>
+                    <TableCell data-label="Utente" className="text-sm font-medium whitespace-nowrap">{r.utenteNome ? (r.utenteId !== null && r.ruolo && r.ruolo !== "collaboratore" ? <UtenteChip id={r.utenteId} colore={r.utenteColore}>{r.utenteNome}</UtenteChip> : r.utenteNome) : <span className="text-muted-foreground">Sistema</span>}</TableCell>
+                    <TableCell data-label="Ruolo" className="text-xs whitespace-nowrap">{r.ruolo ? ruoloLabel(r.ruolo) : "—"}</TableCell>
+                    <TableCell data-label="Azione" className="text-sm"><span className="inline-block rounded bg-secondary px-1.5 py-0.5 text-xs font-semibold text-secondary-foreground whitespace-nowrap">{r.azioneEtichetta}</span></TableCell>
+                    <TableCell data-label="Descrizione" className="text-sm min-w-64">{r.descrizione}</TableCell>
+                    <TableCell data-label="IP" className="font-mono text-xs text-muted-foreground">{r.ip ?? "—"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

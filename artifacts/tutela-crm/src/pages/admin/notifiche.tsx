@@ -98,22 +98,22 @@ export default function NotifichePage() {
         : !q.data?.righe.length ? <EmptyState icon={<Bell className="size-6" />} title={filtrato ? "Nessuna notifica per questi filtri" : "Il registro è ancora vuoto"} text={filtrato ? "Modifica i filtri o il periodo." : "Le notifiche compariranno qui quando una pratica viene inviata o commentata."} />
         : (<>
           <div className={`rounded-lg border border-border bg-card overflow-x-auto transition-opacity ${q.isPlaceholderData ? "opacity-60" : ""}`}>
-            <Table>
+            <Table className="tabella-schede">
               <TableHeader><TableRow className="bg-muted/60 hover:bg-muted/60">
                 {["Data e ora", "Destinatario", "Canale", "Evento", "Pratica", "Esito", ""].map((h, i) => <TableHead key={i} className="text-[11px] uppercase tracking-wider font-semibold h-10 whitespace-nowrap">{h}</TableHead>)}
               </TableRow></TableHeader>
               <TableBody>
                 {q.data.righe.map((n) => (
                   <TableRow key={n.id} className="hover:bg-secondary/50 transition-colors align-top" data-testid={`row-notifica-${n.id}`}>
-                    <TableCell className="font-mono text-xs whitespace-nowrap">{fmtIstante(n.elaboratoIl ?? n.creatoIl, true)}</TableCell>
-                    <TableCell className="text-sm">
+                    <TableCell data-label="Data e ora" className="font-mono text-xs whitespace-nowrap">{fmtIstante(n.elaboratoIl ?? n.creatoIl, true)}</TableCell>
+                    <TableCell data-label="Destinatario" className="text-sm">
                       <div className="font-medium">{n.destinatarioNome}</div>
                       <div className="text-xs text-muted-foreground break-all">{n.canale !== "email" && n.destinatarioContatto !== "—" ? fmtCellulare(n.destinatarioContatto) : n.destinatarioContatto}</div>
                     </TableCell>
-                    <TableCell><Canale c={n.canale} /></TableCell>
-                    <TableCell className="text-sm min-w-48">{n.eventoEtichetta}</TableCell>
-                    <TableCell className="text-sm whitespace-nowrap">{n.praticaId && n.numeroPratica ? <Link href={`/admin/pratiche/${n.praticaId}`} className="text-primary hover:underline">n. {n.numeroPratica}</Link> : "—"}</TableCell>
-                    <TableCell><Esito n={n} /></TableCell>
+                    <TableCell data-label="Canale"><Canale c={n.canale} /></TableCell>
+                    <TableCell data-label="Evento" className="text-sm min-w-48">{n.eventoEtichetta}</TableCell>
+                    <TableCell data-label="Pratica" className="text-sm whitespace-nowrap">{n.praticaId && n.numeroPratica ? <Link href={`/admin/pratiche/${n.praticaId}`} className="text-primary hover:underline">n. {n.numeroPratica}</Link> : "—"}</TableCell>
+                    <TableCell data-label="Esito"><Esito n={n} /></TableCell>
                     <TableCell><Button variant="ghost" size="sm" onClick={() => setAperta(n)} data-testid={`button-messaggio-${n.id}`}><Eye className="size-4 mr-1.5" /> Messaggio</Button></TableCell>
                   </TableRow>
                 ))}

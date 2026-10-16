@@ -437,3 +437,30 @@
 @keyframes rise { from { opacity:0; transform: translateY(8px);} to {opacity:1; transform:none;} }
 .rise { animation: rise .35s cubic-bezier(.2,.7,.2,1) both; }
 .paper { background-image: radial-gradient(hsl(235 40% 25% / .06) 1px, transparent 1px); background-size: 14px 14px; }
+
+/* Tabelle che su telefono diventano schede: ogni riga e' una scheda, ogni cella mostra la sua etichetta (data-label). */
+@media (max-width: 767px) {
+  table.tabella-schede,
+  table.tabella-schede tbody { display: block; width: 100%; }
+  table.tabella-schede thead { display: none; }
+  table.tabella-schede tr { display: block; padding: 0.75rem 1rem; border-bottom: 1px solid hsl(var(--border)); }
+  table.tabella-schede tbody tr:last-child { border-bottom: 0; }
+  table.tabella-schede td {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: 0.3rem 0; border: 0; text-align: right; white-space: normal;
+  }
+  table.tabella-schede td[data-label]::before {
+    font-family: Inter, system-ui, sans-serif;
+    content: attr(data-label); flex-shrink: 0; text-align: left; font-size: 0.6875rem; font-weight: 600;
+    letter-spacing: 0.05em; text-transform: uppercase; color: hsl(var(--muted-foreground));
+  }
+  table.tabella-schede td:first-child { justify-content: flex-start; text-align: left; flex-wrap: wrap; font-size: 1rem; padding-top: 0; }
+  table.tabella-schede td.senza-etichetta { justify-content: flex-start; }
+  table.tabella-schede td:empty { display: none; }
+}
+@media (max-width: 767px) {
+  table.tabella-schede td { min-width: 0 !important; }
+}
+@media (max-width: 767px) {
+  table.tabella-schede td:not([data-label]):not(:first-child) { justify-content: flex-start; flex-wrap: wrap; text-align: left; }
+}

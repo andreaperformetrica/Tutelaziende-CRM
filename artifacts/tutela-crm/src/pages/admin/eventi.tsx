@@ -36,7 +36,7 @@ export default function EventiBackoffice() {
           action={<Button onClick={() => setNuovo(true)}>Nuovo evento</Button>} />
       ) : (
         <div className="rounded-lg border border-border bg-card overflow-x-auto rise">
-          <Table>
+          <Table className="tabella-schede">
             <TableHeader>
               <TableRow className="bg-muted/60 hover:bg-muted/60">
                 {["Evento", "Quando", "Luogo", "Sedi confermate", "Iscritti", "Presenti", ""].map((h) => <TableHead key={h} className="text-[11px] uppercase tracking-wider font-semibold h-10 whitespace-nowrap">{h}</TableHead>)}
@@ -46,12 +46,12 @@ export default function EventiBackoffice() {
               {lista.data.map((r) => (
                 <TableRow key={r.evento.id} className="cursor-pointer hover:bg-secondary/50" onClick={() => nav(`/admin/eventi/${r.evento.id}`)} data-testid={`row-evento-${r.evento.id}`}>
                   <TableCell className="font-semibold">{r.evento.titolo}</TableCell>
-                  <TableCell className="tabular-nums whitespace-nowrap">{fmtData(r.evento.data)} · {fmtOrarioEvento(r.evento.oraInizio, r.evento.oraFine)}</TableCell>
-                  <TableCell className="text-sm">{r.evento.luogo}</TableCell>
-                  <TableCell className="tabular-nums">{r.confermati} / {r.invitati}</TableCell>
-                  <TableCell className="tabular-nums">{r.partecipanti}</TableCell>
-                  <TableCell className="tabular-nums">{r.presenti}</TableCell>
-                  <TableCell>{r.evento.passato ? <Badge variant="outline">Concluso</Badge> : <Badge className="bg-primary text-primary-foreground">In programma</Badge>}</TableCell>
+                  <TableCell data-label="Quando" className="tabular-nums whitespace-nowrap">{fmtData(r.evento.data)} · {fmtOrarioEvento(r.evento.oraInizio, r.evento.oraFine)}</TableCell>
+                  <TableCell data-label="Luogo" className="text-sm">{r.evento.luogo}</TableCell>
+                  <TableCell data-label="Sedi confermate" className="tabular-nums">{r.confermati} / {r.invitati}</TableCell>
+                  <TableCell data-label="Iscritti" className="tabular-nums">{r.partecipanti}</TableCell>
+                  <TableCell data-label="Presenti" className="tabular-nums">{r.presenti}</TableCell>
+                  <TableCell data-label="Stato">{r.evento.passato ? <Badge variant="outline">Concluso</Badge> : <Badge className="bg-primary text-primary-foreground">In programma</Badge>}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
