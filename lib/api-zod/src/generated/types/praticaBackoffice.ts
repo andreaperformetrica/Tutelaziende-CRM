@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { AllegatoTipo } from './allegatoTipo';
 import type { Assistito } from './assistito';
 import type { CollaboratorePratica } from './collaboratorePratica';
 import type { CommentoPraticaBackoffice } from './commentoPraticaBackoffice';
@@ -27,6 +28,8 @@ export interface PraticaBackoffice {
   documenti: DocumentoPratica[];
   /** Allegati aggiunti dagli operatori */
   allegatiUfficio: DocumentoPratica[];
+  /** Documenti che l'operatore puo' allegare, secondo il tipo di pratica */
+  allegatiOperatore: AllegatoTipo[];
   /** Messaggio iniziale scritto dal collaboratore */
   messaggio: string;
   commenti: CommentoPraticaBackoffice[];

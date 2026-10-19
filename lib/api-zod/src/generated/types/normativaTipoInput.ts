@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface CategoriaAllegatoInput {
-  nome: string;
+export interface NormativaTipoInput {
+  titolo: string;
+  url: string;
 }

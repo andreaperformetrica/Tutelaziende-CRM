@@ -7,6 +7,7 @@ import { alias } from "drizzle-orm/pg-core";
 import {
   assistitiTable,
   collaboratoriTable,
+  compensiCollaboratoreTable,
   compensiRigheTable,
   db,
   estrattiRigheTable,
@@ -65,13 +66,28 @@ export interface EsitoMaturazione {
   valoreCentesimi: number;
 }
 
+/** Compenso di un tipo per un collaboratore: l'eccezione del collaboratore, se c'e', altrimenti il default del tipo. */
+export async function compensoEffettivo(
+  ex: Executor,
+  tipoPraticaId: number,
+  collaboratoreId: number,
+): Promise<{ pagabile: boolean; punti: number; valoreCentesimi: number } | null> {
+  const [eccezione] = await ex
+    .select()
+    .from(compensiCollaboratoreTable)
+    .where(and(eq(compensiCollaboratoreTable.tipoPraticaId, tipoPraticaId), eq(compensiCollaboratoreTable.collaboratoreId, collaboratoreId)));
+  if (eccezione) return { pagabile: eccezione.pagabile, punti: eccezione.punti, valoreCentesimi: eccezione.valoreCentesimi };
+  const [tipo] = await ex.select().from(tipiPraticaTable).where(eq(tipiPraticaTable.id, tipoPraticaId));
+  return tipo ? { pagabile: tipo.pagabile, punti: tipo.punti, valoreCentesimi: tipo.valoreCentesimi } : null;
+}
+
 /**
  * Da chiamare quando cambia lo stato di una pratica. Passando a uno stato chiuso, per un tipo pagabile, si fissano punti e valore
  * del tipo; passando a uno stato aperto si azzerano. Da chiuso a chiuso non cambia nulla (la data di chiusura resta la prima).
  */
 export async function aggiornaMaturazione(
   tx: Executor,
-  pratica: { id: number; tipoPraticaId: number; chiusaIl: Date | null },
+  pratica: { id: number; tipoPraticaId: number; collaboratoreId: number; chiusaIl: Date | null },
   nuovoStato: { chiuso: boolean },
   ora: Date,
 ): Promise<EsitoMaturazione | null> {
@@ -82,13 +98,13 @@ export async function aggiornaMaturazione(
     return null;
   }
   if (pratica.chiusaIl) return null;
-  const [tipo] = await tx.select().from(tipiPraticaTable).where(eq(tipiPraticaTable.id, pratica.tipoPraticaId));
-  if (!tipo?.pagabile) return null;
+  const compenso = await compensoEffettivo(tx, pratica.tipoPraticaId, pratica.collaboratoreId);
+  if (!compenso?.pagabile) return null;
   await tx
     .update(praticheTable)
-    .set({ chiusaIl: ora, maturaPunti: tipo.punti, maturaValoreCentesimi: tipo.valoreCentesimi })
+    .set({ chiusaIl: ora, maturaPunti: compenso.punti, maturaValoreCentesimi: compenso.valoreCentesimi })
     .where(eq(praticheTable.id, pratica.id));
-  return { maturata: true, punti: tipo.punti, valoreCentesimi: tipo.valoreCentesimi };
+  return { maturata: true, punti: compenso.punti, valoreCentesimi: compenso.valoreCentesimi };
 }
 
 /** Estratto che contiene la pratica, se c'e'. */
@@ -151,7 +167,8 @@ export async function resoconto(filtri: { collaboratoreId?: number; dal?: string
     isNotNull(praticheTable.chiusaIl),
     isNotNull(praticheTable.inviataIl),
     eq(statiPraticaTable.chiuso, true),
-    eq(tipiPraticaTable.pagabile, true),
+    // Pagabile per il default del tipo o per un'eccezione del collaboratore; la matura e' gia' stata fissata alla chiusura.
+    sql`(${tipiPraticaTable.pagabile} = true or exists (select 1 from ${compensiCollaboratoreTable} cc where cc.tipo_pratica_id = ${praticheTable.tipoPraticaId} and cc.collaboratore_id = ${praticheTable.collaboratoreId} and cc.pagabile = true))`,
     sql`not exists (select 1 from ${estrattiRigheTable} er where er.pratica_id = ${praticheTable.id})`,
     filtri.collaboratoreId ? eq(praticheTable.collaboratoreId, filtri.collaboratoreId) : undefined,
     filtri.ids ? inArray(praticheTable.id, filtri.ids) : undefined,

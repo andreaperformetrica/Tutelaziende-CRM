@@ -9,6 +9,8 @@
 export interface ModuloTipo {
   id: number;
   nome: string;
+  /** Il modulo scaricato dal collaboratore e' compilato con i dati dell'assistito */
+  compilazioneAutomatica: boolean;
   fileNome: string;
   fileTipo: string;
   dimensione: number;

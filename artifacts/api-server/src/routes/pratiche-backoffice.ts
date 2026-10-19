@@ -16,7 +16,7 @@ import {
 } from "@workspace/api-zod";
 import {
   assistitiTable,
-  categorieAllegatoTable,
+  allegatiTipoTable,
   collaboratoriTable,
   commentiPraticaTable,
   db,
@@ -210,7 +210,7 @@ router.put("/backoffice/pratiche/:id/stato", async (req, res) => {
   }
   await db.transaction(async (tx) => {
     const [corrente] = await tx
-      .select({ statoId: praticheTable.statoId, tipoPraticaId: praticheTable.tipoPraticaId, chiusaIl: praticheTable.chiusaIl })
+      .select({ statoId: praticheTable.statoId, tipoPraticaId: praticheTable.tipoPraticaId, collaboratoreId: praticheTable.collaboratoreId, chiusaIl: praticheTable.chiusaIl })
       .from(praticheTable)
       .where(eq(praticheTable.id, id))
       .for("update");
@@ -223,7 +223,7 @@ router.put("/backoffice/pratiche/:id/stato", async (req, res) => {
     const [prec] = corrente.statoId ? await tx.select({ nome: statiPraticaTable.nome }).from(statiPraticaTable).where(eq(statiPraticaTable.id, corrente.statoId)) : [];
     const ora = new Date();
     await tx.update(praticheTable).set({ statoId: nuovo.id, modificataIl: ora, ultimaAttivitaBackofficeIl: ora }).where(eq(praticheTable.id, id));
-    const compenso = await aggiornaMaturazione(tx, { id, tipoPraticaId: corrente.tipoPraticaId, chiusaIl: corrente.chiusaIl }, nuovo, ora);
+    const compenso = await aggiornaMaturazione(tx, { id, tipoPraticaId: corrente.tipoPraticaId, collaboratoreId: corrente.collaboratoreId, chiusaIl: corrente.chiusaIl }, nuovo, ora);
     await tx.insert(eventiPraticaTable).values({ praticaId: id, tipo: "cambio_stato", utenteId: req.utente!.id, da: prec?.nome ?? null, a: nuovo.nome });
     await registraLog(tx, contestoDa(req), {
       azione: "pratica.cambio_stato",
@@ -270,20 +270,27 @@ router.post("/backoffice/pratiche/:id/commenti", async (req, res) => {
   res.status(201).json(await dettaglioBackoffice(req, id));
 });
 
-/** Allegato dell'operatore: descrizione e categoria obbligatorie. */
+/**
+ * Allegato dell'operatore: o una voce dell'elenco del tipo di pratica (`allegatoTipoId`) oppure "Altro" con un nome libero (`descrizione`).
+ */
 router.post("/backoffice/pratiche/:id/allegati/file", corpoFile, async (req, res) => {
   const id = intero(req.params["id"], "id");
   const p = await caricaPraticaInviata(id);
   const file = validaFile(req.query["nomeFile"], req.body, { soloPdfEImmagini: true });
-  const descrizione = String(req.query["descrizione"] ?? "").replace(/\s+/g, " ").trim();
-  if (!descrizione) throw new HttpError(400, "Inserisci la descrizione dell'allegato.", "DATI_NON_VALIDI", "descrizione");
-  if (descrizione.length > 200) throw new HttpError(400, "La descrizione può avere al massimo 200 caratteri.", "DATI_NON_VALIDI", "descrizione");
-  if (req.query["categoriaId"] === undefined || req.query["categoriaId"] === "") {
-    throw new HttpError(400, "Scegli la categoria dell'allegato.", "DATI_NON_VALIDI", "categoriaId");
+  let nomeAllegato: string;
+  const scelta = req.query["allegatoTipoId"];
+  if (scelta !== undefined && scelta !== "") {
+    const [voce] = await db
+      .select()
+      .from(allegatiTipoTable)
+      .where(and(eq(allegatiTipoTable.id, intero(scelta, "allegatoTipoId")), eq(allegatiTipoTable.tipoPraticaId, p.tipoPraticaId)));
+    if (!voce) throw new HttpError(400, "Documento non previsto per questo tipo di pratica.", "DATI_NON_VALIDI", "allegatoTipoId");
+    nomeAllegato = voce.nome;
+  } else {
+    nomeAllegato = String(req.query["descrizione"] ?? "").replace(/\s+/g, " ").trim();
+    if (!nomeAllegato) throw new HttpError(400, "Scrivi il nome dell'allegato.", "DATI_NON_VALIDI", "descrizione");
+    if (nomeAllegato.length > 200) throw new HttpError(400, "Il nome può avere al massimo 200 caratteri.", "DATI_NON_VALIDI", "descrizione");
   }
-  const categoriaId = intero(req.query["categoriaId"], "categoriaId");
-  const [cat] = await db.select().from(categorieAllegatoTable).where(eq(categorieAllegatoTable.id, categoriaId));
-  if (!cat) throw new HttpError(400, "Categoria non trovata.", "DATI_NON_VALIDI", "categoriaId");
 
   const chiave = await salvaFile(file.buffer, file.tipo);
   try {
@@ -294,7 +301,7 @@ router.post("/backoffice/pratiche/:id/allegati/file", corpoFile, async (req, res
         .values({
           praticaId: id,
           documentoTipoId: null,
-          nome: descrizione,
+          nome: nomeAllegato,
           fileChiave: chiave,
           fileNome: file.nome,
           fileTipo: file.tipo,
@@ -303,7 +310,6 @@ router.post("/backoffice/pratiche/:id/allegati/file", corpoFile, async (req, res
           caricatoDaUtenteId: req.utente!.id,
           dopoInvio: true,
           daBackoffice: true,
-          categoriaId: cat.id,
         })
         .returning({ id: documentiPraticaTable.id });
       await tx.update(praticheTable).set({ modificataIl: ora, ultimaAttivitaBackofficeIl: ora }).where(eq(praticheTable.id, id));
@@ -311,8 +317,8 @@ router.post("/backoffice/pratiche/:id/allegati/file", corpoFile, async (req, res
         azione: "pratica.allegato_backoffice",
         entita: "pratica",
         entitaId: id,
-        descrizione: `Aggiunto l'allegato "${descrizione}" (${cat.nome}, ${file.nome}) alla pratica ${descrizionePraticaBo(p)}`,
-        dettagli: { documentoId: d!.id, categoriaId: cat.id, fileNome: file.nome, dimensione: file.dimensione },
+        descrizione: `Aggiunto l'allegato "${nomeAllegato}" (${file.nome}) alla pratica ${descrizionePraticaBo(p)}`,
+        dettagli: { documentoId: d!.id, fileNome: file.nome, dimensione: file.dimensione },
       });
     });
   } catch (err) {

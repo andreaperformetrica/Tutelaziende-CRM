@@ -5,7 +5,7 @@ import {
   getGetPraticaQueryKey, getListPraticheQueryKey, useCreateCommentoPratica, useDeleteDocumentoPratica, useDeletePratica,
   useGetPratica, useInviaPratica, useSalvaMessaggioPratica, type PraticaDettaglio,
 } from "@workspace/api-client-react";
-import { AlertTriangle, ArrowLeft, CheckCircle2, Download, FileText, Loader2, Lock, Paperclip, Save, Send, Trash2, Upload } from "lucide-react";
+import { AlertTriangle, ArrowLeft, CheckCircle2, Download, ExternalLink, FileText, Loader2, Lock, Paperclip, Save, Send, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,7 +17,7 @@ import { StatoBadge } from "@/components/pratiche/stato-badge";
 import { SelettoreFile } from "@/components/pratiche/selettore-file";
 import { useToast } from "@/hooks/use-toast";
 import { fmtCellulare, fmtData, fmtIstante, parseApiError, nomeCollaboratore } from "@/lib/format";
-import { ErroreUpload, FORMATI_DOCUMENTI, formatoDimensione, inviaFile, urlDocumentoPratica, urlMandatoPratica, urlModulo } from "@/lib/upload";
+import { ErroreUpload, FORMATI_DOCUMENTI, formatoDimensione, inviaFile, urlDocumentoPratica, urlMandatoPratica, urlModulo, urlModuloPratica } from "@/lib/upload";
 
 type Doc = PraticaDettaglio["documenti"][number];
 
@@ -145,7 +145,7 @@ export default function PraticaDettaglioCollaboratore() {
       <div className="grid gap-5 lg:grid-cols-2">
         <Sezione titolo="Moduli da scaricare" testId="sezione-moduli">
           {p.moduli.length === 0 ? <p className="text-sm text-muted-foreground">Questo tipo di pratica non ha moduli da compilare.</p> : (
-            <ul className="space-y-2">{p.moduli.map((m) => <li key={m.id} className="text-sm"><div className="font-semibold">{m.nome}</div><LinkFile href={urlModulo(m.id)} nome={m.fileNome} dimensione={m.dimensione} testId={`download-modulo-${m.id}`} /></li>)}</ul>
+            <ul className="space-y-2">{p.moduli.map((m) => <li key={m.id} className="text-sm"><div className="font-semibold">{m.nome}</div><LinkFile href={m.compilato ? urlModuloPratica(id, m.id) : urlModulo(m.id)} nome={m.fileNome} dimensione={m.compilato ? undefined : m.dimensione} testId={`download-modulo-${m.id}`} /></li>)}</ul>
           )}
         </Sezione>
         <Sezione titolo="Mandato del tuo sportello" testId="sezione-mandato">
@@ -234,7 +234,7 @@ export default function PraticaDettaglioCollaboratore() {
             <ul className="divide-y divide-border">
               {daUfficio.map((d) => (
                 <li key={d.id} className="py-2" data-testid={`allegato-ufficio-${d.id}`}>
-                  <div className="text-sm font-semibold">{d.nome} <Badge variant="outline" className="ml-2">Ufficio</Badge>{d.categoria && <Badge variant="secondary" className="ml-1">{d.categoria}</Badge>}</div>
+                  <div className="text-sm font-semibold">{d.nome} <Badge variant="outline" className="ml-2">Ufficio</Badge></div>
                   <LinkFile href={urlDocumentoPratica(id, d.id)} nome={d.fileNome} dimensione={d.dimensione} />
                   <div className="text-xs text-muted-foreground">Aggiunto il {fmtIstante(d.caricatoIl)}</div>
                 </li>
@@ -298,6 +298,20 @@ export default function PraticaDettaglioCollaboratore() {
             </Button>
           </div>
         </section>
+      )}
+
+      {p.normative.length > 0 && (
+        <Sezione titolo="Normative" testId="sezione-normative">
+          <ul className="space-y-2">
+            {p.normative.map((n) => (
+              <li key={n.id} className="text-sm">
+                <a href={n.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline break-all" data-testid={`link-normativa-${n.id}`}>
+                  <ExternalLink className="size-4 shrink-0" /> {n.titolo}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </Sezione>
       )}
 
       <ConfermaElimina aperto={!!daEliminare} titolo="Togliere il documento?" testo={daEliminare ? `Il file "${daEliminare.fileNome}" verrà tolto dalla bozza.` : ""}

@@ -1563,6 +1563,156 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TipoPratica"
+  /documenti-noti:
+    get:
+      operationId: listDocumentiNoti
+      tags: [configurazione]
+      summary: Documenti noti (admin)
+      responses:
+        "200":
+          description: Documenti noti in ordine alfabetico
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DocumentoNoto"
+    post:
+      operationId: createDocumentoNoto
+      tags: [configurazione]
+      summary: Crea un documento noto (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentoNotoInput"
+      responses:
+        "201":
+          description: Documento creato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DocumentoNoto"
+  /tipi-pratica/{id}/compensi:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    post:
+      operationId: saveCompensoCollaboratore
+      tags: [configurazione]
+      summary: Imposta l'eccezione di compenso per un collaboratore
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompensoCollaboratoreInput"
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TipoPratica"
+  /compensi-tipo/{id}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    delete:
+      operationId: deleteCompensoCollaboratore
+      tags: [configurazione]
+      summary: Toglie l'eccezione di compenso
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TipoPratica"
+  /tipi-pratica/{id}/normative:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    post:
+      operationId: createNormativaTipo
+      tags: [configurazione]
+      summary: Aggiunge un link a una normativa
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NormativaTipoInput"
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TipoPratica"
+  /normative-tipo/{id}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    put:
+      operationId: updateNormativaTipo
+      tags: [configurazione]
+      summary: Modifica un link a una normativa
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NormativaTipoInput"
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TipoPratica"
+    delete:
+      operationId: deleteNormativaTipo
+      tags: [configurazione]
+      summary: Elimina un link a una normativa
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TipoPratica"
+  /tipi-pratica/{id}/allegati-operatore:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    post:
+      operationId: createAllegatoTipo
+      tags: [configurazione]
+      summary: Aggiunge un documento che l'operatore puo' allegare
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AllegatoTipoInput"
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TipoPratica"
+  /allegati-tipo/{id}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    delete:
+      operationId: deleteAllegatoTipo
+      tags: [configurazione]
+      summary: Toglie un documento dagli allegati dell'operatore
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TipoPratica"
   /province:
     get:
       operationId: listProvince
@@ -2073,64 +2223,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PraticaBackoffice"
-  /categorie-allegato:
-    get:
-      operationId: listCategorieAllegato
-      tags: [gestione-pratiche]
-      summary: Categorie degli allegati dell'operatore
-      responses:
-        "200":
-          description: Categorie in ordine alfabetico
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/CategoriaAllegato"
-    post:
-      operationId: createCategoriaAllegato
-      tags: [configurazione]
-      summary: Crea una categoria di allegato (admin)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CategoriaAllegatoInput"
-      responses:
-        "201":
-          description: Categoria creata
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CategoriaAllegato"
-  /categorie-allegato/{id}:
-    parameters:
-      - $ref: "#/components/parameters/IdPath"
-    put:
-      operationId: updateCategoriaAllegato
-      tags: [configurazione]
-      summary: Rinomina una categoria di allegato (admin)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CategoriaAllegatoInput"
-      responses:
-        "200":
-          description: Categoria aggiornata
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CategoriaAllegato"
-    delete:
-      operationId: deleteCategoriaAllegato
-      tags: [configurazione]
-      summary: Elimina una categoria non usata (admin)
-      responses:
-        "204":
-          description: Eseguito
   /avvisi:
     get:
       operationId: getAvvisi
@@ -3346,7 +3438,7 @@ components:
 
     TipoPratica:
       type: object
-      required: [id, nome, attivo, pagabile, punti, valoreEuro, documenti, moduli, creatoIl]
+      required: [id, nome, attivo, pagabile, punti, valoreEuro, documenti, moduli, compensiCollaboratori, normative, allegatiOperatore, creatoIl]
       properties:
         id: { type: integer }
         nome: { type: string }
@@ -3363,6 +3455,71 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ModuloTipo"
+        compensiCollaboratori:
+          type: array
+          items:
+            $ref: "#/components/schemas/CompensoCollaboratore"
+        normative:
+          type: array
+          items:
+            $ref: "#/components/schemas/NormativaTipo"
+        allegatiOperatore:
+          type: array
+          items:
+            $ref: "#/components/schemas/AllegatoTipo"
+    DocumentoNoto:
+      type: object
+      required: [nome]
+      properties:
+        nome: { type: string }
+    DocumentoNotoInput:
+      type: object
+      required: [nome]
+      properties:
+        nome: { type: string }
+    CompensoCollaboratore:
+      type: object
+      required: [id, collaboratoreId, collaboratoreNome, numeroSportello, pagabile, punti, valoreEuro]
+      properties:
+        id: { type: integer }
+        collaboratoreId: { type: integer }
+        collaboratoreNome: { type: string }
+        numeroSportello: { type: string }
+        pagabile: { type: boolean }
+        punti: { type: integer }
+        valoreEuro: { type: number }
+    CompensoCollaboratoreInput:
+      type: object
+      required: [collaboratoreId, pagabile, punti, valoreEuro]
+      properties:
+        collaboratoreId: { type: integer }
+        pagabile: { type: boolean }
+        punti: { type: integer, minimum: 0 }
+        valoreEuro: { type: number, minimum: 0 }
+    NormativaTipo:
+      type: object
+      required: [id, titolo, url]
+      properties:
+        id: { type: integer }
+        titolo: { type: string }
+        url: { type: string }
+    NormativaTipoInput:
+      type: object
+      required: [titolo, url]
+      properties:
+        titolo: { type: string }
+        url: { type: string }
+    AllegatoTipo:
+      type: object
+      required: [id, nome]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+    AllegatoTipoInput:
+      type: object
+      required: [nome]
+      properties:
+        nome: { type: string }
     TipoPraticaInput:
       type: object
       required: [nome, pagabile, punti, valoreEuro]
@@ -3388,10 +3545,11 @@ components:
         mandato: { type: boolean }
     ModuloTipo:
       type: object
-      required: [id, nome, fileNome, fileTipo, dimensione, caricatoIl]
+      required: [id, nome, fileNome, fileTipo, dimensione, compilazioneAutomatica, caricatoIl]
       properties:
         id: { type: integer }
         nome: { type: string }
+        compilazioneAutomatica: { type: boolean, description: "Il modulo scaricato dal collaboratore e' compilato con i dati dell'assistito" }
         fileNome: { type: string }
         fileTipo: { type: string }
         dimensione: { type: integer }
@@ -3401,6 +3559,7 @@ components:
       required: [nome]
       properties:
         nome: { type: string }
+        compilazioneAutomatica: { type: boolean }
     OrdineInput:
       type: object
       required: [ids]
@@ -3613,10 +3772,11 @@ components:
         messaggio: { type: [string, "null"], description: "Spiegazione in italiano quando l'invio e' bloccato" }
     ModuloPratica:
       type: object
-      required: [id, nome, fileNome, dimensione]
+      required: [id, nome, fileNome, dimensione, compilato]
       properties:
         id: { type: integer }
         nome: { type: string }
+        compilato: { type: boolean, description: "Il file scaricato e' compilato con i dati dell'assistito (PDF generato al momento)" }
         fileNome: { type: string }
         dimensione: { type: integer }
     FirmaMandato:
@@ -3660,7 +3820,7 @@ components:
         nome: { type: string }
     DocumentoPratica:
       type: object
-      required: [id, documentoTipoId, nome, fileNome, fileTipo, dimensione, caricatoIl, caricatoDa, dopoInvio, daUfficio, categoria]
+      required: [id, documentoTipoId, nome, fileNome, fileTipo, dimensione, caricatoIl, caricatoDa, dopoInvio, daUfficio]
       properties:
         id: { type: integer }
         documentoTipoId: { type: [integer, "null"], description: "Vuoto per gli allegati aggiuntivi" }
@@ -3672,7 +3832,6 @@ components:
         caricatoDa: { type: string }
         dopoInvio: { type: boolean }
         daUfficio: { type: boolean, description: "Allegato aggiunto da un operatore del back office" }
-        categoria: { type: [string, "null"], description: "Categoria degli allegati dell'ufficio" }
     CommentoPratica:
       type: object
       required: [id, testo, autore, ruolo, creatoIl, mio]
@@ -3697,6 +3856,7 @@ components:
         - collaboratore
         - tipo
         - moduli
+        - normative
         - mandato
         - mandatoMancante
         - richiesti
@@ -3729,6 +3889,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ModuloPratica"
+        normative:
+          type: array
+          items:
+            $ref: "#/components/schemas/NormativaTipo"
         mandato:
           oneOf:
             - $ref: "#/components/schemas/MandatoPratica"
@@ -3859,17 +4023,6 @@ components:
         testo: { type: string }
         pubblicata: { type: boolean }
         inEvidenza: { type: boolean }
-    CategoriaAllegato:
-      type: object
-      required: [id, nome]
-      properties:
-        id: { type: integer }
-        nome: { type: string }
-    CategoriaAllegatoInput:
-      type: object
-      required: [nome]
-      properties:
-        nome: { type: string }
     CambioStatoInput:
       type: object
       required: [statoId]
@@ -4018,6 +4171,7 @@ components:
         - mandato
         - documenti
         - allegatiUfficio
+        - allegatiOperatore
         - messaggio
         - commenti
         - cronologia
@@ -4051,6 +4205,11 @@ components:
           description: Allegati aggiunti dagli operatori
           items:
             $ref: "#/components/schemas/DocumentoPratica"
+        allegatiOperatore:
+          type: array
+          description: Documenti che l'operatore puo' allegare, secondo il tipo di pratica
+          items:
+            $ref: "#/components/schemas/AllegatoTipo"
         messaggio: { type: string, description: "Messaggio iniziale scritto dal collaboratore" }
         commenti:
           type: array

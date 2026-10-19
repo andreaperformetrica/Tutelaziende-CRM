@@ -255,3 +255,79 @@ export async function mandatoCompilatoPdf(
   const pdf = await convertiInPdf(await compilaModello(modello, dati));
   return { pdf, nomeFile: nomePdfMandato(p) };
 }
+
+// ---------------------------------------------------------------------------------------------
+// Moduli compilati in automatico
+// ---------------------------------------------------------------------------------------------
+
+const eDocx = (nomeFile: string) => /\.docx$/i.test(nomeFile);
+const ePdf = (nomeFile: string) => /\.pdf$/i.test(nomeFile);
+
+/** Valori dei campi, per nome in minuscolo: sia completo (cliente.cognome) sia abbreviato per i dati del cliente (cognome). */
+function valoriCampi(dati: DatiMandato): Map<string, string> {
+  const m = new Map<string, string>();
+  for (const [gruppo, valori] of Object.entries(dati) as [string, Record<string, string>][]) {
+    for (const [k, v] of Object.entries(valori)) {
+      m.set(`${gruppo}.${k}`.toLowerCase(), v);
+      if (gruppo === "cliente") m.set(k.toLowerCase(), v);
+    }
+  }
+  return m;
+}
+
+const nomeCampoPdf = (nome: string) => nome.trim().replace(/^@/, "").toLowerCase();
+
+async function campiPdf(file: Buffer) {
+  const { PDFDocument } = await import("pdf-lib");
+  let doc;
+  try {
+    doc = await PDFDocument.load(file);
+  } catch {
+    throw new HttpError(400, "Il file PDF non è leggibile.", "DATI_NON_VALIDI");
+  }
+  return { doc, campi: doc.getForm().getFields() };
+}
+
+/** Controlla che il modulo caricato si possa compilare: Word con campi @cliente.* oppure PDF con campi modulo dai nomi riconosciuti. */
+export async function controllaModuloCompilabile(file: Buffer, nomeFile: string): Promise<void> {
+  const elenco = "cliente.cognome, cliente.nome, cliente.cf, cliente.nascita, ...";
+  if (eDocx(nomeFile)) {
+    const { trovati } = await controllaModello(file);
+    if (!trovati.length) throw new HttpError(400, `Il modulo Word non contiene nessun campo da compilare (es. @cliente.cognome).`, "MODULO_NON_COMPILABILE");
+    return;
+  }
+  if (ePdf(nomeFile)) {
+    const { campi } = await campiPdf(file);
+    const chiavi = new Set([...CAMPI_MANDATO.map((c) => c.toLowerCase()), ...CAMPI_MANDATO.filter((c) => c.startsWith("cliente.")).map((c) => c.slice(8).toLowerCase())]);
+    if (!campi.some((c) => chiavi.has(nomeCampoPdf(c.getName())))) {
+      throw new HttpError(400, `Il PDF non ha campi modulo con nomi riconosciuti (${elenco}).`, "MODULO_NON_COMPILABILE");
+    }
+    return;
+  }
+  throw new HttpError(400, "La compilazione automatica è possibile solo per file Word (.docx) o PDF con campi modulo.", "MODULO_NON_COMPILABILE");
+}
+
+export const nomePdfModulo = (nomeModulo: string, p: { assNome: string; assCognome: string }) =>
+  `${nomeModulo} - ${p.assCognome} ${p.assNome}.pdf`.replace(/[\\/:*?"<>|]/g, "_");
+
+/** Modulo compilato con i dati dell'assistito della pratica: sempre in PDF. */
+export async function moduloCompilato(
+  p: { assistitoId: number; tipoNome: string; assNome: string; assCognome: string },
+  modulo: { nome: string; fileChiave: string; fileNome: string },
+): Promise<{ pdf: Buffer; nomeFile: string }> {
+  const [file, dati] = await Promise.all([leggiFile(modulo.fileChiave).then((f) => inBuffer(f.stream)), datiMandato(p.assistitoId, p.tipoNome)]);
+  const nomeFile = nomePdfModulo(modulo.nome, p);
+  if (eDocx(modulo.fileNome)) return { pdf: await convertiInPdf(await compilaModello(file, dati)), nomeFile };
+  if (ePdf(modulo.fileNome)) {
+    const { PDFTextField } = await import("pdf-lib");
+    const { doc, campi } = await campiPdf(file);
+    const valori = valoriCampi(dati);
+    for (const c of campi) {
+      const v = valori.get(nomeCampoPdf(c.getName()));
+      if (v !== undefined && c instanceof PDFTextField) c.setText(v);
+    }
+    doc.getForm().flatten();
+    return { pdf: Buffer.from(await doc.save({ useObjectStreams: false })), nomeFile };
+  }
+  throw new HttpError(400, "Questo modulo non si può compilare in automatico.", "MODULO_NON_COMPILABILE");
+}

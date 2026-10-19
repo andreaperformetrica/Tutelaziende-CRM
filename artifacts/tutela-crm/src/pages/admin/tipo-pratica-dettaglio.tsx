@@ -14,6 +14,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState, FieldError, PageHeader } from "@/components/common";
 import { CampiTipo, leggiTipo, type ValoriTipo } from "@/components/pratiche/campi-tipo";
+import { AllegatiOperatoreTipo, CompensiCollaboratoreTipo, NormativeTipo } from "@/components/pratiche/sezioni-tipo";
+import { SelettoreDocumento } from "@/components/pratiche/selettore-documento";
 import { ConfermaElimina } from "@/components/pratiche/conferma-elimina";
 import { SelettoreFile } from "@/components/pratiche/selettore-file";
 import { useToast } from "@/hooks/use-toast";
@@ -76,7 +78,7 @@ function DocumentiTipo({ tipo }: { tipo: TipoPratica }) {
   const onError = (e: unknown) => setErr(parseApiError(e).message);
 
   const aggiungi = () => {
-    if (!nome.trim()) return setErr("Inserisci il nome del documento");
+    if (!nome.trim()) return setErr("Scegli il documento");
     setErr(null);
     create.mutate({ id: tipo.id, data: { nome: nome.trim(), mandato } }, {
       onSuccess: (t) => { aggiorna(t); setNome(""); setMandato(false); toast({ title: "Documento aggiunto" }); }, onError,
@@ -100,7 +102,7 @@ function DocumentiTipo({ tipo }: { tipo: TipoPratica }) {
     <section className="rounded-lg border border-border bg-card p-5 space-y-4 rise" data-testid="sezione-documenti">
       <div>
         <h2 className="text-lg font-bold">Documenti obbligatori</h2>
-        <p className="text-sm text-muted-foreground">Il documento segnato come mandato viene preso dal mandato assegnato al collaboratore (pagina Mandati).</p>
+        <p className="text-sm text-muted-foreground">Scegli i documenti dall'elenco di quelli già noti; se manca, puoi crearlo dalla stessa tendina. Il documento segnato come mandato viene preso dal mandato assegnato al collaboratore (pagina Mandati).</p>
       </div>
       {!tipo.documenti.length ? <p className="text-sm text-muted-foreground" data-testid="nessun-documento">Nessun documento obbligatorio.</p> : (
         <ul className="divide-y divide-border rounded-md border border-border">
@@ -135,10 +137,7 @@ function DocumentiTipo({ tipo }: { tipo: TipoPratica }) {
         </ul>
       )}
       <div className="flex flex-wrap items-end gap-3">
-        <div className="min-w-56 flex-1 max-w-sm">
-          <Label htmlFor="nuovo-doc">Nuovo documento</Label>
-          <Input id="nuovo-doc" value={nome} onChange={(e) => setNome(e.target.value)} maxLength={100} placeholder="Es. SR156" data-testid="input-nuovo-documento" onKeyDown={(e) => { if (e.key === "Enter") aggiungi(); }} />
-        </div>
+        <SelettoreDocumento id="nuovo-doc" etichetta="Aggiungi un documento" valore={nome} onChange={setNome} esclusi={tipo.documenti.map((d) => d.nome)} testId="documento" />
         <label className="flex items-center gap-2 text-sm pb-2"><Checkbox checked={mandato} onCheckedChange={(c) => setMandato(c === true)} data-testid="check-nuovo-mandato" /> È il mandato</label>
         <Button onClick={aggiungi} disabled={create.isPending} data-testid="button-aggiungi-documento"><Plus className="size-4 mr-2" /> Aggiungi</Button>
       </div>
@@ -184,7 +183,7 @@ function ModuliTipo({ tipo }: { tipo: TipoPratica }) {
     <section className="rounded-lg border border-border bg-card p-5 space-y-4 rise" data-testid="sezione-moduli">
       <div>
         <h2 className="text-lg font-bold">Moduli scaricabili</h2>
-        <p className="text-sm text-muted-foreground">File che i collaboratori possono scaricare, compilare e allegare. Formati: PDF, Word, Excel, OpenDocument, RTF, TXT, PNG, JPG. Massimo 15 MB.</p>
+        <p className="text-sm text-muted-foreground">File che i collaboratori possono scaricare, compilare e allegare. Formati: PDF, Word, Excel, OpenDocument, RTF, TXT, PNG, JPG. Massimo 15 MB. Con «Compila in automatico» il modulo (Word con campi come @cliente.cognome, oppure PDF con campi modulo dello stesso nome) viene scaricato dal collaboratore già compilato con i dati dell'assistito, in PDF.</p>
       </div>
       {!tipo.moduli.length ? <p className="text-sm text-muted-foreground" data-testid="nessun-modulo">Nessun modulo caricato.</p> : (
         <ul className="divide-y divide-border rounded-md border border-border">
@@ -195,13 +194,19 @@ function ModuliTipo({ tipo }: { tipo: TipoPratica }) {
                   <div className="flex items-center gap-1">
                     <Input className="h-8 max-w-xs" value={modNome} onChange={(e) => setModNome(e.target.value)} maxLength={100} autoFocus data-testid={`input-nome-modulo-${m.id}`} />
                     <Button size="icon" variant="ghost" className="size-8" aria-label="Conferma" data-testid={`button-conferma-nome-modulo-${m.id}`}
-                      onClick={() => { if (!modNome.trim()) return setErr("Inserisci il nome del modulo"); setErr(null); rename.mutate({ id: m.id, data: { nome: modNome.trim() } }, { onSuccess: (t) => { aggiorna(t); setModId(null); }, onError }); }}><Check className="size-4" /></Button>
+                      onClick={() => { if (!modNome.trim()) return setErr("Inserisci il nome del modulo"); setErr(null); rename.mutate({ id: m.id, data: { nome: modNome.trim(), compilazioneAutomatica: m.compilazioneAutomatica } }, { onSuccess: (t) => { aggiorna(t); setModId(null); }, onError }); }}><Check className="size-4" /></Button>
                     <Button size="icon" variant="ghost" className="size-8" onClick={() => setModId(null)} aria-label="Annulla"><X className="size-4" /></Button>
                   </div>
                 ) : <div className="font-medium" data-testid={`nome-modulo-${m.id}`}>{m.nome}</div>}
                 <div className="text-xs text-muted-foreground truncate" data-testid={`file-modulo-${m.id}`}>{m.fileNome} · {formatoDimensione(m.dimensione)} · caricato il {fmtIstante(m.caricatoIl)}</div>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex flex-wrap items-center gap-1">
+                <label className="flex items-center gap-1.5 text-xs text-muted-foreground mr-2" title="Il collaboratore scarica il modulo già compilato con i dati dell'assistito (file Word con campi @cliente.cognome, @cliente.nome... oppure PDF con campi modulo dello stesso nome)">
+                  <Checkbox checked={m.compilazioneAutomatica} disabled={rename.isPending}
+                    onCheckedChange={(c) => { setErr(null); rename.mutate({ id: m.id, data: { nome: m.nome, compilazioneAutomatica: c === true } }, { onSuccess: aggiorna, onError }); }}
+                    data-testid={`check-compilazione-modulo-${m.id}`} />
+                  Compila in automatico con i dati dell&apos;assistito
+                </label>
                 <Button asChild size="sm" variant="outline"><a href={urlModulo(m.id)} download data-testid={`link-scarica-modulo-${m.id}`}><Download className="size-4 mr-1.5" /> Scarica</a></Button>
                 <SelettoreFile onFile={(f) => sostituisci(m.id, f)} disabled={occupato !== null} testId={`button-sostituisci-modulo-${m.id}`}>
                   {occupato === m.id ? <Loader2 className="size-4 mr-1.5 animate-spin" /> : <RefreshCw className="size-4 mr-1.5" />} Sostituisci file
@@ -248,6 +253,9 @@ export default function TipoPraticaDettaglioPage() {
               <div className="space-y-5">
                 <DocumentiTipo tipo={tipo} />
                 <ModuliTipo tipo={tipo} />
+                <AllegatiOperatoreTipo tipo={tipo} />
+                <CompensiCollaboratoreTipo tipo={tipo} />
+                <NormativeTipo tipo={tipo} />
               </div>
             </div>
           </>

@@ -8,4 +8,5 @@
 
 export interface ModuloTipoInput {
   nome: string;
+  compilazioneAutomatica?: boolean;
 }

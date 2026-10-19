@@ -39,6 +39,7 @@ export async function inviaFile<T>(metodo: "POST" | "PUT", percorso: string, que
 }
 
 export const urlModulo = (id: number) => `${BASE}/moduli-tipo/${id}/file`;
+export const urlModuloPratica = (praticaId: number, moduloId: number) => `${BASE}/pratiche/${praticaId}/moduli/${moduloId}/file`;
 export const urlAllegatoNewsBackoffice = (newsId: number, allegatoId: number) => `${BASE}/backoffice/news/${newsId}/allegati/${allegatoId}/file`;
 export const urlAllegatoNews = (newsId: number, allegatoId: number) => `${BASE}/news/${newsId}/allegati/${allegatoId}/file`;
 export const urlMandato = (id: number) => `${BASE}/mandati/${id}/file`;

@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './allegatoTipo';
+export * from './allegatoTipoInput';
 export * from './archiviaSegnalazioneInput';
 export * from './assistitiPagina';
 export * from './assistito';
@@ -18,8 +20,6 @@ export * from './avvisoPratica';
 export * from './avvisoPraticaAggiornamento';
 export * from './cambioPasswordInput';
 export * from './cambioStatoInput';
-export * from './categoriaAllegato';
-export * from './categoriaAllegatoInput';
 export * from './cercaLuoghiParams';
 export * from './cercaLuoghiTipo';
 export * from './checkInEsito';
@@ -44,6 +44,8 @@ export * from './commentoPraticaBackofficeCanaleAvviso';
 export * from './commentoPraticaBackofficeRuolo';
 export * from './commentoPraticaInput';
 export * from './commentoPraticaRuolo';
+export * from './compensoCollaboratore';
+export * from './compensoCollaboratoreInput';
 export * from './confermaFirmaMandato';
 export * from './confermaImportazioneInput';
 export * from './conteggiGruppiPratiche';
@@ -52,6 +54,8 @@ export * from './conteggioSegnalazioni';
 export * from './creaEstrattiInput';
 export * from './dareAvere';
 export * from './datiSede';
+export * from './documentoNoto';
+export * from './documentoNotoInput';
 export * from './documentoPratica';
 export * from './documentoRichiesto';
 export * from './documentoTipo';
@@ -139,6 +143,8 @@ export * from './news';
 export * from './newsAllegato';
 export * from './newsBackoffice';
 export * from './newsInput';
+export * from './normativaTipo';
+export * from './normativaTipoInput';
 export * from './notifica';
 export * from './notificaCanale';
 export * from './notificaEsito';

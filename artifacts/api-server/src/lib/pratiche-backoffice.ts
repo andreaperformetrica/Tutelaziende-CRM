@@ -5,6 +5,7 @@ import type { Request } from "express";
 import { and, asc, eq, isNotNull, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import {
+  allegatiTipoTable,
   assistitiTable,
   collaboratoriTable,
   commentiPraticaTable,
@@ -17,7 +18,7 @@ import {
 } from "@workspace/db";
 import { mappaAssistito, selezionaAssistiti } from "./assistiti";
 import { nonTrovato } from "./errori";
-import { mandatoDellaPratica, mappaCategorieAllegato, mappaDocumentoPratica, selezionaPratiche, type RigaPratica } from "./pratiche";
+import { mandatoDellaPratica, mappaDocumentoPratica, selezionaPratiche, type RigaPratica } from "./pratiche";
 
 const utenteAutore = alias(utentiTable, "utente_autore_bo");
 
@@ -74,7 +75,6 @@ export async function dettaglioBackoffice(req: Request, id: number) {
     .where(eq(collaboratoriTable.id, p.collaboratoreId));
   const mandato = await mandatoDellaPratica(p);
   const firma = await firmaDellaPratica(p.id);
-  const categorie = await mappaCategorieAllegato();
   const documenti = await db
     .select({ d: documentiPraticaTable, nome: utenteAutore.nome, cognome: utenteAutore.cognome })
     .from(documentiPraticaTable)
@@ -118,7 +118,7 @@ export async function dettaglioBackoffice(req: Request, id: number) {
       creatoIl: d.caricatoIl,
       autore: cognome ? `${cognome} ${nome}` : "—",
       descrizione: d.daBackoffice
-        ? `Allegato dell'ufficio: "${d.nome}"${d.categoriaId ? ` (${categorie.get(d.categoriaId) ?? "categoria eliminata"})` : ""}`
+        ? `Allegato dell'ufficio: "${d.nome}"`
         : `Allegato aggiunto dal collaboratore: "${d.nome}"`,
     });
   }
@@ -140,7 +140,7 @@ export async function dettaglioBackoffice(req: Request, id: number) {
   }
   cron.sort((a, b) => b.creatoIl.getTime() - a.creatoIl.getTime());
 
-  const mappati = documenti.map(({ d, nome, cognome }) => mappaDocumentoPratica(d, nome, cognome, categorie));
+  const mappati = documenti.map(({ d, nome, cognome }) => mappaDocumentoPratica(d, nome, cognome));
   const u = req.utente!;
   return {
     id: p.id,
@@ -161,6 +161,9 @@ export async function dettaglioBackoffice(req: Request, id: number) {
     mandato: mandato ? { id: mandato.id, nome: mandato.nome, fileNome: nomePdfMandato(p), firma: firma ? mappaFirma(firma) : null } : null,
     documenti: mappati.filter((d) => !d.daUfficio),
     allegatiUfficio: mappati.filter((d) => d.daUfficio),
+    allegatiOperatore: (
+      await db.select().from(allegatiTipoTable).where(eq(allegatiTipoTable.tipoPraticaId, p.tipoPraticaId)).orderBy(asc(allegatiTipoTable.ordine), asc(allegatiTipoTable.id))
+    ).map((a) => ({ id: a.id, nome: a.nome })),
     messaggio: p.messaggio,
     commenti: commenti.map(({ c, nome, cognome, ruolo }) => ({
       id: c.id,

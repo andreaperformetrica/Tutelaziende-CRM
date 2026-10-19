@@ -1,11 +1,7 @@
 import { eq } from "drizzle-orm";
-import { categorieAllegatoTable, db, finestreBloccoTable, impostazioniTable, statiPraticaTable } from "@workspace/db";
+import { db, finestreBloccoTable, impostazioniTable, statiPraticaTable } from "@workspace/db";
 
 const MARCATORE = "configurazione_pratiche_iniziale";
-const MARCATORE_CATEGORIE = "categorie_allegato_iniziali";
-
-/** Categorie iniziali degli allegati dell'operatore: l'admin le puo' cambiare. */
-const CATEGORIE_INIZIALI = ["Estratto contributivo", "Ricevuta", "Certificazione", "Altro"];
 
 /** Stati iniziali: tutti modificabili dall'admin. Chiusa positivamente, Da pagare e Pagata contano come chiuse. */
 const STATI_INIZIALI = [
@@ -23,12 +19,6 @@ const STATI_INIZIALI = [
  * li ha modificati o eliminati. Eseguibile piu volte e in sicurezza.
  */
 export async function inizializzaConfigurazionePratiche(): Promise<boolean> {
-  await db.transaction(async (tx) => {
-    const [gia] = await tx.select().from(impostazioniTable).where(eq(impostazioniTable.chiave, MARCATORE_CATEGORIE));
-    if (gia) return;
-    await tx.insert(categorieAllegatoTable).values(CATEGORIE_INIZIALI.map((nome) => ({ nome }))).onConflictDoNothing();
-    await tx.insert(impostazioniTable).values({ chiave: MARCATORE_CATEGORIE, valore: new Date().toISOString() });
-  });
   return db.transaction(async (tx) => {
     const [gia] = await tx.select().from(impostazioniTable).where(eq(impostazioniTable.chiave, MARCATORE));
     if (gia) return false;

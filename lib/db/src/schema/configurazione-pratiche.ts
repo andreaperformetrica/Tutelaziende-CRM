@@ -48,6 +48,8 @@ export const moduliTipoTable = pgTable(
     fileNome: text("file_nome").notNull(),
     fileTipo: text("file_tipo").notNull(),
     fileDimensione: integer("file_dimensione").notNull(),
+    /** Se vero, quando il collaboratore lo scarica dalla pratica viene compilato con i dati dell'assistito (.docx o .pdf). */
+    compilazioneAutomatica: boolean("compilazione_automatica").notNull().default(false),
     caricatoIl: timestamp("caricato_il", { withTimezone: true }).notNull().defaultNow(),
     caricatoDaUtenteId: integer("caricato_da_utente_id").references(() => utentiTable.id),
   },
@@ -112,15 +114,62 @@ export const statiPraticaTable = pgTable(
   (t) => [uniqueIndex("stati_pratica_nome_uq").on(sql`lower(${t.nome})`)],
 );
 
-/** Categoria degli allegati che l'operatore aggiunge a una pratica (es. Estratto contributivo): gestita dall'admin. */
-export const categorieAllegatoTable = pgTable(
-  "categorie_allegato",
+/** Catalogo dei documenti noti: elenco da cui l'admin sceglie i documenti obbligatori e gli allegati dell'operatore. */
+export const documentiNotiTable = pgTable(
+  "documenti_noti",
   {
     id: serial("id").primaryKey(),
     nome: text("nome").notNull(),
     creatoIl: timestamp("creato_il", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("categorie_allegato_nome_uq").on(sql`lower(${t.nome})`)],
+  (t) => [uniqueIndex("documenti_noti_nome_uq").on(sql`lower(${t.nome})`)],
+);
+
+/** Documento che l'operatore puo' allegare alla pratica durante la lavorazione (non obbligatorio). */
+export const allegatiTipoTable = pgTable(
+  "allegati_tipo",
+  {
+    id: serial("id").primaryKey(),
+    tipoPraticaId: integer("tipo_pratica_id")
+      .notNull()
+      .references(() => tipiPraticaTable.id, { onDelete: "cascade" }),
+    nome: text("nome").notNull(),
+    ordine: integer("ordine").notNull().default(0),
+  },
+  (t) => [uniqueIndex("allegati_tipo_nome_uq").on(t.tipoPraticaId, sql`lower(${t.nome})`)],
+);
+
+/** Link alle normative mostrati al collaboratore in fondo alla pratica. */
+export const normativeTipoTable = pgTable(
+  "normative_tipo",
+  {
+    id: serial("id").primaryKey(),
+    tipoPraticaId: integer("tipo_pratica_id")
+      .notNull()
+      .references(() => tipiPraticaTable.id, { onDelete: "cascade" }),
+    titolo: text("titolo").notNull(),
+    url: text("url").notNull(),
+    ordine: integer("ordine").notNull().default(0),
+  },
+  (t) => [index("normative_tipo_tipo_idx").on(t.tipoPraticaId)],
+);
+
+/** Eccezione ai compensi di default del tipo per un collaboratore: vince sul default. Importi in centesimi. */
+export const compensiCollaboratoreTable = pgTable(
+  "compensi_collaboratore",
+  {
+    id: serial("id").primaryKey(),
+    tipoPraticaId: integer("tipo_pratica_id")
+      .notNull()
+      .references(() => tipiPraticaTable.id, { onDelete: "cascade" }),
+    collaboratoreId: integer("collaboratore_id")
+      .notNull()
+      .references(() => collaboratoriTable.id),
+    pagabile: boolean("pagabile").notNull().default(false),
+    punti: integer("punti").notNull().default(0),
+    valoreCentesimi: integer("valore_centesimi").notNull().default(0),
+  },
+  (t) => [uniqueIndex("compensi_collaboratore_uq").on(t.tipoPraticaId, t.collaboratoreId)],
 );
 
 /**

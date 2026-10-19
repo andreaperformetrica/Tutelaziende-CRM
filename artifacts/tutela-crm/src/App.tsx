@@ -28,7 +28,6 @@ import AssistitoDettaglioBackoffice from '@/pages/admin/assistito-dettaglio';
 import PraticheBackoffice from '@/pages/admin/pratiche';
 import LeMiePraticheBackoffice from '@/pages/admin/le-mie-pratiche';
 import PraticaDettaglioBackoffice from '@/pages/admin/pratica-dettaglio';
-import CategorieAllegatoPage from '@/pages/admin/categorie-allegato';
 import SegnalazioniPage from '@/pages/admin/segnalazioni';
 import PraticheCollaboratore from '@/pages/collaboratore/pratiche';
 import PraticaDettaglioCollaboratore from '@/pages/collaboratore/pratica-dettaglio';
@@ -85,7 +84,6 @@ function Router() {
         <Route path="/admin/pratiche" component={g(<PraticheBackoffice />, 'backoffice', TUTTI_BO)} />
         <Route path="/admin/le-mie-pratiche" component={g(<LeMiePraticheBackoffice />, 'backoffice', TUTTI_BO)} />
         <Route path="/admin/pratiche/:id" component={g(<PraticaDettaglioBackoffice />, 'backoffice', TUTTI_BO)} />
-        <Route path="/admin/categorie-allegato" component={g(<CategorieAllegatoPage />, 'backoffice', ADMIN)} />
         <Route path="/admin/collaboratori" component={g(<CollaboratoriPage />, 'backoffice', TUTTI_BO)} />
         <Route path="/admin/collaboratori/nuovo" component={g(<CollaboratoreNuovo />, 'backoffice', ADMIN)} />
         <Route path="/admin/collaboratori/:id" component={g(<CollaboratoreDettaglioPage />, 'backoffice', TUTTI_BO)} />

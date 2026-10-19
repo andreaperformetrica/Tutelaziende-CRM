@@ -3169,10 +3169,29 @@ export const ListTipiPraticaResponseItem = zod.object({
   "moduli": zod.array(zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
+  "compilazioneAutomatica": zod.boolean().describe('Il modulo scaricato dal collaboratore e\' compilato con i dati dell\'assistito'),
   "fileNome": zod.string(),
   "fileTipo": zod.string(),
   "dimensione": zod.number().int(),
   "caricatoIl": zod.coerce.date()
+})),
+  "compensiCollaboratori": zod.array(zod.object({
+  "id": zod.number().int(),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number()
+})),
+  "normative": zod.array(zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "url": zod.string()
+})),
+  "allegatiOperatore": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
 }))
 })
 export const ListTipiPraticaResponse = zod.array(ListTipiPraticaResponseItem)
@@ -3212,10 +3231,29 @@ export const CreateTipoPraticaResponse = zod.object({
   "moduli": zod.array(zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
+  "compilazioneAutomatica": zod.boolean().describe('Il modulo scaricato dal collaboratore e\' compilato con i dati dell\'assistito'),
   "fileNome": zod.string(),
   "fileTipo": zod.string(),
   "dimensione": zod.number().int(),
   "caricatoIl": zod.coerce.date()
+})),
+  "compensiCollaboratori": zod.array(zod.object({
+  "id": zod.number().int(),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number()
+})),
+  "normative": zod.array(zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "url": zod.string()
+})),
+  "allegatiOperatore": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
 }))
 })
 
@@ -3244,10 +3282,29 @@ export const GetTipoPraticaResponse = zod.object({
   "moduli": zod.array(zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
+  "compilazioneAutomatica": zod.boolean().describe('Il modulo scaricato dal collaboratore e\' compilato con i dati dell\'assistito'),
   "fileNome": zod.string(),
   "fileTipo": zod.string(),
   "dimensione": zod.number().int(),
   "caricatoIl": zod.coerce.date()
+})),
+  "compensiCollaboratori": zod.array(zod.object({
+  "id": zod.number().int(),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number()
+})),
+  "normative": zod.array(zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "url": zod.string()
+})),
+  "allegatiOperatore": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
 }))
 })
 
@@ -3290,10 +3347,29 @@ export const UpdateTipoPraticaResponse = zod.object({
   "moduli": zod.array(zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
+  "compilazioneAutomatica": zod.boolean().describe('Il modulo scaricato dal collaboratore e\' compilato con i dati dell\'assistito'),
   "fileNome": zod.string(),
   "fileTipo": zod.string(),
   "dimensione": zod.number().int(),
   "caricatoIl": zod.coerce.date()
+})),
+  "compensiCollaboratori": zod.array(zod.object({
+  "id": zod.number().int(),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number()
+})),
+  "normative": zod.array(zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "url": zod.string()
+})),
+  "allegatiOperatore": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
 }))
 })
 
@@ -3327,10 +3403,29 @@ export const CreateDocumentoTipoResponse = zod.object({
   "moduli": zod.array(zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
+  "compilazioneAutomatica": zod.boolean().describe('Il modulo scaricato dal collaboratore e\' compilato con i dati dell\'assistito'),
   "fileNome": zod.string(),
   "fileTipo": zod.string(),
   "dimensione": zod.number().int(),
   "caricatoIl": zod.coerce.date()
+})),
+  "compensiCollaboratori": zod.array(zod.object({
+  "id": zod.number().int(),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number()
+})),
+  "normative": zod.array(zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "url": zod.string()
+})),
+  "allegatiOperatore": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
 }))
 })
 
@@ -3363,10 +3458,29 @@ export const OrdinaDocumentiTipoResponse = zod.object({
   "moduli": zod.array(zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
+  "compilazioneAutomatica": zod.boolean().describe('Il modulo scaricato dal collaboratore e\' compilato con i dati dell\'assistito'),
   "fileNome": zod.string(),
   "fileTipo": zod.string(),
   "dimensione": zod.number().int(),
   "caricatoIl": zod.coerce.date()
+})),
+  "compensiCollaboratori": zod.array(zod.object({
+  "id": zod.number().int(),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number()
+})),
+  "normative": zod.array(zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "url": zod.string()
+})),
+  "allegatiOperatore": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
 }))
 })
 
@@ -3400,10 +3514,29 @@ export const UpdateDocumentoTipoResponse = zod.object({
   "moduli": zod.array(zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
+  "compilazioneAutomatica": zod.boolean().describe('Il modulo scaricato dal collaboratore e\' compilato con i dati dell\'assistito'),
   "fileNome": zod.string(),
   "fileTipo": zod.string(),
   "dimensione": zod.number().int(),
   "caricatoIl": zod.coerce.date()
+})),
+  "compensiCollaboratori": zod.array(zod.object({
+  "id": zod.number().int(),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number()
+})),
+  "normative": zod.array(zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "url": zod.string()
+})),
+  "allegatiOperatore": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
 }))
 })
 
@@ -3432,10 +3565,29 @@ export const DeleteDocumentoTipoResponse = zod.object({
   "moduli": zod.array(zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
+  "compilazioneAutomatica": zod.boolean().describe('Il modulo scaricato dal collaboratore e\' compilato con i dati dell\'assistito'),
   "fileNome": zod.string(),
   "fileTipo": zod.string(),
   "dimensione": zod.number().int(),
   "caricatoIl": zod.coerce.date()
+})),
+  "compensiCollaboratori": zod.array(zod.object({
+  "id": zod.number().int(),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number()
+})),
+  "normative": zod.array(zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "url": zod.string()
+})),
+  "allegatiOperatore": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
 }))
 })
 
@@ -3448,7 +3600,8 @@ export const RenameModuloTipoParams = zod.object({
 })
 
 export const RenameModuloTipoBody = zod.object({
-  "nome": zod.string()
+  "nome": zod.string(),
+  "compilazioneAutomatica": zod.boolean().optional()
 })
 
 export const RenameModuloTipoResponse = zod.object({
@@ -3468,10 +3621,29 @@ export const RenameModuloTipoResponse = zod.object({
   "moduli": zod.array(zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
+  "compilazioneAutomatica": zod.boolean().describe('Il modulo scaricato dal collaboratore e\' compilato con i dati dell\'assistito'),
   "fileNome": zod.string(),
   "fileTipo": zod.string(),
   "dimensione": zod.number().int(),
   "caricatoIl": zod.coerce.date()
+})),
+  "compensiCollaboratori": zod.array(zod.object({
+  "id": zod.number().int(),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number()
+})),
+  "normative": zod.array(zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "url": zod.string()
+})),
+  "allegatiOperatore": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
 }))
 })
 
@@ -3500,10 +3672,434 @@ export const DeleteModuloTipoResponse = zod.object({
   "moduli": zod.array(zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
+  "compilazioneAutomatica": zod.boolean().describe('Il modulo scaricato dal collaboratore e\' compilato con i dati dell\'assistito'),
   "fileNome": zod.string(),
   "fileTipo": zod.string(),
   "dimensione": zod.number().int(),
   "caricatoIl": zod.coerce.date()
+})),
+  "compensiCollaboratori": zod.array(zod.object({
+  "id": zod.number().int(),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number()
+})),
+  "normative": zod.array(zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "url": zod.string()
+})),
+  "allegatiOperatore": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+}))
+})
+
+
+/**
+ * @summary Documenti noti (admin)
+ */
+export const ListDocumentiNotiResponseItem = zod.object({
+  "nome": zod.string()
+})
+export const ListDocumentiNotiResponse = zod.array(ListDocumentiNotiResponseItem)
+
+
+/**
+ * @summary Crea un documento noto (admin)
+ */
+export const CreateDocumentoNotoBody = zod.object({
+  "nome": zod.string()
+})
+
+export const CreateDocumentoNotoResponse = zod.object({
+  "nome": zod.string()
+})
+
+
+/**
+ * @summary Imposta l'eccezione di compenso per un collaboratore
+ */
+export const SaveCompensoCollaboratoreParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const saveCompensoCollaboratoreBodyPuntiMin = 0;
+
+export const saveCompensoCollaboratoreBodyValoreEuroMin = 0;
+
+
+
+export const SaveCompensoCollaboratoreBody = zod.object({
+  "collaboratoreId": zod.number().int(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int().min(saveCompensoCollaboratoreBodyPuntiMin),
+  "valoreEuro": zod.number().min(saveCompensoCollaboratoreBodyValoreEuroMin)
+})
+
+export const SaveCompensoCollaboratoreResponse = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "attivo": zod.boolean(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "creatoIl": zod.coerce.date(),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "mandato": zod.boolean().describe('Se vero e\' il mandato del collaboratore, caricato dal back office'),
+  "ordine": zod.number().int()
+})),
+  "moduli": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "compilazioneAutomatica": zod.boolean().describe('Il modulo scaricato dal collaboratore e\' compilato con i dati dell\'assistito'),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date()
+})),
+  "compensiCollaboratori": zod.array(zod.object({
+  "id": zod.number().int(),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number()
+})),
+  "normative": zod.array(zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "url": zod.string()
+})),
+  "allegatiOperatore": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+}))
+})
+
+
+/**
+ * @summary Toglie l'eccezione di compenso
+ */
+export const DeleteCompensoCollaboratoreParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const DeleteCompensoCollaboratoreResponse = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "attivo": zod.boolean(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "creatoIl": zod.coerce.date(),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "mandato": zod.boolean().describe('Se vero e\' il mandato del collaboratore, caricato dal back office'),
+  "ordine": zod.number().int()
+})),
+  "moduli": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "compilazioneAutomatica": zod.boolean().describe('Il modulo scaricato dal collaboratore e\' compilato con i dati dell\'assistito'),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date()
+})),
+  "compensiCollaboratori": zod.array(zod.object({
+  "id": zod.number().int(),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number()
+})),
+  "normative": zod.array(zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "url": zod.string()
+})),
+  "allegatiOperatore": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+}))
+})
+
+
+/**
+ * @summary Aggiunge un link a una normativa
+ */
+export const CreateNormativaTipoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const CreateNormativaTipoBody = zod.object({
+  "titolo": zod.string(),
+  "url": zod.string()
+})
+
+export const CreateNormativaTipoResponse = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "attivo": zod.boolean(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "creatoIl": zod.coerce.date(),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "mandato": zod.boolean().describe('Se vero e\' il mandato del collaboratore, caricato dal back office'),
+  "ordine": zod.number().int()
+})),
+  "moduli": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "compilazioneAutomatica": zod.boolean().describe('Il modulo scaricato dal collaboratore e\' compilato con i dati dell\'assistito'),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date()
+})),
+  "compensiCollaboratori": zod.array(zod.object({
+  "id": zod.number().int(),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number()
+})),
+  "normative": zod.array(zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "url": zod.string()
+})),
+  "allegatiOperatore": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+}))
+})
+
+
+/**
+ * @summary Modifica un link a una normativa
+ */
+export const UpdateNormativaTipoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const UpdateNormativaTipoBody = zod.object({
+  "titolo": zod.string(),
+  "url": zod.string()
+})
+
+export const UpdateNormativaTipoResponse = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "attivo": zod.boolean(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "creatoIl": zod.coerce.date(),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "mandato": zod.boolean().describe('Se vero e\' il mandato del collaboratore, caricato dal back office'),
+  "ordine": zod.number().int()
+})),
+  "moduli": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "compilazioneAutomatica": zod.boolean().describe('Il modulo scaricato dal collaboratore e\' compilato con i dati dell\'assistito'),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date()
+})),
+  "compensiCollaboratori": zod.array(zod.object({
+  "id": zod.number().int(),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number()
+})),
+  "normative": zod.array(zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "url": zod.string()
+})),
+  "allegatiOperatore": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+}))
+})
+
+
+/**
+ * @summary Elimina un link a una normativa
+ */
+export const DeleteNormativaTipoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const DeleteNormativaTipoResponse = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "attivo": zod.boolean(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "creatoIl": zod.coerce.date(),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "mandato": zod.boolean().describe('Se vero e\' il mandato del collaboratore, caricato dal back office'),
+  "ordine": zod.number().int()
+})),
+  "moduli": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "compilazioneAutomatica": zod.boolean().describe('Il modulo scaricato dal collaboratore e\' compilato con i dati dell\'assistito'),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date()
+})),
+  "compensiCollaboratori": zod.array(zod.object({
+  "id": zod.number().int(),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number()
+})),
+  "normative": zod.array(zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "url": zod.string()
+})),
+  "allegatiOperatore": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+}))
+})
+
+
+/**
+ * @summary Aggiunge un documento che l'operatore puo' allegare
+ */
+export const CreateAllegatoTipoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const CreateAllegatoTipoBody = zod.object({
+  "nome": zod.string()
+})
+
+export const CreateAllegatoTipoResponse = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "attivo": zod.boolean(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "creatoIl": zod.coerce.date(),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "mandato": zod.boolean().describe('Se vero e\' il mandato del collaboratore, caricato dal back office'),
+  "ordine": zod.number().int()
+})),
+  "moduli": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "compilazioneAutomatica": zod.boolean().describe('Il modulo scaricato dal collaboratore e\' compilato con i dati dell\'assistito'),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date()
+})),
+  "compensiCollaboratori": zod.array(zod.object({
+  "id": zod.number().int(),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number()
+})),
+  "normative": zod.array(zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "url": zod.string()
+})),
+  "allegatiOperatore": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+}))
+})
+
+
+/**
+ * @summary Toglie un documento dagli allegati dell'operatore
+ */
+export const DeleteAllegatoTipoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const DeleteAllegatoTipoResponse = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "attivo": zod.boolean(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "creatoIl": zod.coerce.date(),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "mandato": zod.boolean().describe('Se vero e\' il mandato del collaboratore, caricato dal back office'),
+  "ordine": zod.number().int()
+})),
+  "moduli": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "compilazioneAutomatica": zod.boolean().describe('Il modulo scaricato dal collaboratore e\' compilato con i dati dell\'assistito'),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date()
+})),
+  "compensiCollaboratori": zod.array(zod.object({
+  "id": zod.number().int(),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number()
+})),
+  "normative": zod.array(zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "url": zod.string()
+})),
+  "allegatiOperatore": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
 }))
 })
 
@@ -3706,8 +4302,14 @@ export const CreatePraticaResponse = zod.object({
   "moduli": zod.array(zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
+  "compilato": zod.boolean().describe('Il file scaricato e\' compilato con i dati dell\'assistito (PDF generato al momento)'),
   "fileNome": zod.string(),
   "dimensione": zod.number().int()
+})),
+  "normative": zod.array(zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "url": zod.string()
 })),
   "mandato": zod.union([zod.object({
   "id": zod.number().int(),
@@ -3736,8 +4338,7 @@ export const CreatePraticaResponse = zod.object({
   "caricatoIl": zod.coerce.date(),
   "caricatoDa": zod.string(),
   "dopoInvio": zod.boolean(),
-  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office'),
-  "categoria": zod.string().nullable().describe('Categoria degli allegati dell\'ufficio')
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office')
 })),
   "messaggio": zod.string(),
   "commenti": zod.array(zod.object({
@@ -3845,8 +4446,14 @@ export const GetPraticaResponse = zod.object({
   "moduli": zod.array(zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
+  "compilato": zod.boolean().describe('Il file scaricato e\' compilato con i dati dell\'assistito (PDF generato al momento)'),
   "fileNome": zod.string(),
   "dimensione": zod.number().int()
+})),
+  "normative": zod.array(zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "url": zod.string()
 })),
   "mandato": zod.union([zod.object({
   "id": zod.number().int(),
@@ -3875,8 +4482,7 @@ export const GetPraticaResponse = zod.object({
   "caricatoIl": zod.coerce.date(),
   "caricatoDa": zod.string(),
   "dopoInvio": zod.boolean(),
-  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office'),
-  "categoria": zod.string().nullable().describe('Categoria degli allegati dell\'ufficio')
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office')
 })),
   "messaggio": zod.string(),
   "commenti": zod.array(zod.object({
@@ -3982,8 +4588,14 @@ export const SalvaMessaggioPraticaResponse = zod.object({
   "moduli": zod.array(zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
+  "compilato": zod.boolean().describe('Il file scaricato e\' compilato con i dati dell\'assistito (PDF generato al momento)'),
   "fileNome": zod.string(),
   "dimensione": zod.number().int()
+})),
+  "normative": zod.array(zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "url": zod.string()
 })),
   "mandato": zod.union([zod.object({
   "id": zod.number().int(),
@@ -4012,8 +4624,7 @@ export const SalvaMessaggioPraticaResponse = zod.object({
   "caricatoIl": zod.coerce.date(),
   "caricatoDa": zod.string(),
   "dopoInvio": zod.boolean(),
-  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office'),
-  "categoria": zod.string().nullable().describe('Categoria degli allegati dell\'ufficio')
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office')
 })),
   "messaggio": zod.string(),
   "commenti": zod.array(zod.object({
@@ -4102,8 +4713,14 @@ export const DeleteDocumentoPraticaResponse = zod.object({
   "moduli": zod.array(zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
+  "compilato": zod.boolean().describe('Il file scaricato e\' compilato con i dati dell\'assistito (PDF generato al momento)'),
   "fileNome": zod.string(),
   "dimensione": zod.number().int()
+})),
+  "normative": zod.array(zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "url": zod.string()
 })),
   "mandato": zod.union([zod.object({
   "id": zod.number().int(),
@@ -4132,8 +4749,7 @@ export const DeleteDocumentoPraticaResponse = zod.object({
   "caricatoIl": zod.coerce.date(),
   "caricatoDa": zod.string(),
   "dopoInvio": zod.boolean(),
-  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office'),
-  "categoria": zod.string().nullable().describe('Categoria degli allegati dell\'ufficio')
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office')
 })),
   "messaggio": zod.string(),
   "commenti": zod.array(zod.object({
@@ -4263,8 +4879,14 @@ export const InviaPraticaResponse = zod.object({
   "moduli": zod.array(zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
+  "compilato": zod.boolean().describe('Il file scaricato e\' compilato con i dati dell\'assistito (PDF generato al momento)'),
   "fileNome": zod.string(),
   "dimensione": zod.number().int()
+})),
+  "normative": zod.array(zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "url": zod.string()
 })),
   "mandato": zod.union([zod.object({
   "id": zod.number().int(),
@@ -4293,8 +4915,7 @@ export const InviaPraticaResponse = zod.object({
   "caricatoIl": zod.coerce.date(),
   "caricatoDa": zod.string(),
   "dopoInvio": zod.boolean(),
-  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office'),
-  "categoria": zod.string().nullable().describe('Categoria degli allegati dell\'ufficio')
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office')
 })),
   "messaggio": zod.string(),
   "commenti": zod.array(zod.object({
@@ -4390,8 +5011,14 @@ export const CreateCommentoPraticaResponse = zod.object({
   "moduli": zod.array(zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
+  "compilato": zod.boolean().describe('Il file scaricato e\' compilato con i dati dell\'assistito (PDF generato al momento)'),
   "fileNome": zod.string(),
   "dimensione": zod.number().int()
+})),
+  "normative": zod.array(zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "url": zod.string()
 })),
   "mandato": zod.union([zod.object({
   "id": zod.number().int(),
@@ -4420,8 +5047,7 @@ export const CreateCommentoPraticaResponse = zod.object({
   "caricatoIl": zod.coerce.date(),
   "caricatoDa": zod.string(),
   "dopoInvio": zod.boolean(),
-  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office'),
-  "categoria": zod.string().nullable().describe('Categoria degli allegati dell\'ufficio')
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office')
 })),
   "messaggio": zod.string(),
   "commenti": zod.array(zod.object({
@@ -4794,8 +5420,7 @@ export const GetPraticaBackofficeResponse = zod.object({
   "caricatoIl": zod.coerce.date(),
   "caricatoDa": zod.string(),
   "dopoInvio": zod.boolean(),
-  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office'),
-  "categoria": zod.string().nullable().describe('Categoria degli allegati dell\'ufficio')
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office')
 })).describe('Documenti e allegati caricati dal collaboratore'),
   "allegatiUfficio": zod.array(zod.object({
   "id": zod.number().int(),
@@ -4807,9 +5432,12 @@ export const GetPraticaBackofficeResponse = zod.object({
   "caricatoIl": zod.coerce.date(),
   "caricatoDa": zod.string(),
   "dopoInvio": zod.boolean(),
-  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office'),
-  "categoria": zod.string().nullable().describe('Categoria degli allegati dell\'ufficio')
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office')
 })).describe('Allegati aggiunti dagli operatori'),
+  "allegatiOperatore": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+})).describe('Documenti che l\'operatore puo\' allegare, secondo il tipo di pratica'),
   "messaggio": zod.string().describe('Messaggio iniziale scritto dal collaboratore'),
   "commenti": zod.array(zod.object({
   "id": zod.number().int(),
@@ -4936,8 +5564,7 @@ export const PrendiInCaricoPraticaResponse = zod.object({
   "caricatoIl": zod.coerce.date(),
   "caricatoDa": zod.string(),
   "dopoInvio": zod.boolean(),
-  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office'),
-  "categoria": zod.string().nullable().describe('Categoria degli allegati dell\'ufficio')
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office')
 })).describe('Documenti e allegati caricati dal collaboratore'),
   "allegatiUfficio": zod.array(zod.object({
   "id": zod.number().int(),
@@ -4949,9 +5576,12 @@ export const PrendiInCaricoPraticaResponse = zod.object({
   "caricatoIl": zod.coerce.date(),
   "caricatoDa": zod.string(),
   "dopoInvio": zod.boolean(),
-  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office'),
-  "categoria": zod.string().nullable().describe('Categoria degli allegati dell\'ufficio')
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office')
 })).describe('Allegati aggiunti dagli operatori'),
+  "allegatiOperatore": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+})).describe('Documenti che l\'operatore puo\' allegare, secondo il tipo di pratica'),
   "messaggio": zod.string().describe('Messaggio iniziale scritto dal collaboratore'),
   "commenti": zod.array(zod.object({
   "id": zod.number().int(),
@@ -5072,8 +5702,7 @@ export const CambiaStatoPraticaResponse = zod.object({
   "caricatoIl": zod.coerce.date(),
   "caricatoDa": zod.string(),
   "dopoInvio": zod.boolean(),
-  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office'),
-  "categoria": zod.string().nullable().describe('Categoria degli allegati dell\'ufficio')
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office')
 })).describe('Documenti e allegati caricati dal collaboratore'),
   "allegatiUfficio": zod.array(zod.object({
   "id": zod.number().int(),
@@ -5085,9 +5714,12 @@ export const CambiaStatoPraticaResponse = zod.object({
   "caricatoIl": zod.coerce.date(),
   "caricatoDa": zod.string(),
   "dopoInvio": zod.boolean(),
-  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office'),
-  "categoria": zod.string().nullable().describe('Categoria degli allegati dell\'ufficio')
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office')
 })).describe('Allegati aggiunti dagli operatori'),
+  "allegatiOperatore": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+})).describe('Documenti che l\'operatore puo\' allegare, secondo il tipo di pratica'),
   "messaggio": zod.string().describe('Messaggio iniziale scritto dal collaboratore'),
   "commenti": zod.array(zod.object({
   "id": zod.number().int(),
@@ -5209,8 +5841,7 @@ export const CreateCommentoPraticaBackofficeResponse = zod.object({
   "caricatoIl": zod.coerce.date(),
   "caricatoDa": zod.string(),
   "dopoInvio": zod.boolean(),
-  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office'),
-  "categoria": zod.string().nullable().describe('Categoria degli allegati dell\'ufficio')
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office')
 })).describe('Documenti e allegati caricati dal collaboratore'),
   "allegatiUfficio": zod.array(zod.object({
   "id": zod.number().int(),
@@ -5222,9 +5853,12 @@ export const CreateCommentoPraticaBackofficeResponse = zod.object({
   "caricatoIl": zod.coerce.date(),
   "caricatoDa": zod.string(),
   "dopoInvio": zod.boolean(),
-  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office'),
-  "categoria": zod.string().nullable().describe('Categoria degli allegati dell\'ufficio')
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office')
 })).describe('Allegati aggiunti dagli operatori'),
+  "allegatiOperatore": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+})).describe('Documenti che l\'operatore puo\' allegare, secondo il tipo di pratica'),
   "messaggio": zod.string().describe('Messaggio iniziale scritto dal collaboratore'),
   "commenti": zod.array(zod.object({
   "id": zod.number().int(),
@@ -5253,56 +5887,6 @@ export const CreateCommentoPraticaBackofficeResponse = zod.object({
   "mieInCarico": zod.boolean().describe('La pratica e\' gia\' in carico all\'utente che la sta guardando'),
   "puoEliminare": zod.boolean().describe('Solo il super admin puo\' cancellare una pratica')
 })
-
-
-/**
- * @summary Categorie degli allegati dell'operatore
- */
-export const ListCategorieAllegatoResponseItem = zod.object({
-  "id": zod.number().int(),
-  "nome": zod.string()
-})
-export const ListCategorieAllegatoResponse = zod.array(ListCategorieAllegatoResponseItem)
-
-
-/**
- * @summary Crea una categoria di allegato (admin)
- */
-export const CreateCategoriaAllegatoBody = zod.object({
-  "nome": zod.string()
-})
-
-export const CreateCategoriaAllegatoResponse = zod.object({
-  "id": zod.number().int(),
-  "nome": zod.string()
-})
-
-
-/**
- * @summary Rinomina una categoria di allegato (admin)
- */
-export const UpdateCategoriaAllegatoParams = zod.object({
-  "id": zod.coerce.number().int()
-})
-
-export const UpdateCategoriaAllegatoBody = zod.object({
-  "nome": zod.string()
-})
-
-export const UpdateCategoriaAllegatoResponse = zod.object({
-  "id": zod.number().int(),
-  "nome": zod.string()
-})
-
-
-/**
- * @summary Elimina una categoria non usata (admin)
- */
-export const DeleteCategoriaAllegatoParams = zod.object({
-  "id": zod.coerce.number().int()
-})
-
-export const DeleteCategoriaAllegatoResponse = zod.void()
 
 
 /**

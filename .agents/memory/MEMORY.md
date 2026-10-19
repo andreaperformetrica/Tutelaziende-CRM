@@ -16,3 +16,4 @@
 - [Avvisi home collaboratore](tutela-crm-avvisi-home.md) — "Novità per te": inviti evento + aggiornamenti pratica calcolati al volo, letto = vista_dal_collaboratore_il
 - [Back-office responsive](tutela-crm-responsive-backoffice.md) — drawer menu on phones, tables-as-cards CSS pattern (tabella-schede + data-label)
 - [Aggiornamento 1](tutela-crm-aggiornamento1.md) — sede fields, ENTRAMBI, mandati per provincia+tipo, firma OTP SMS, assistiti uppercase/edit rights (supersedes per-sede mandati)
+- [Aggiornamento 2](tutela-crm-aggiornamento2.md) — documenti noti, moduli auto-compilati, eccezioni compenso per collaboratore, normative, allegati operatore per tipo; categorie allegato removed

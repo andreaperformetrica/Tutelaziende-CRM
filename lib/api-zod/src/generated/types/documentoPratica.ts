@@ -22,9 +22,4 @@ export interface DocumentoPratica {
   dopoInvio: boolean;
   /** Allegato aggiunto da un operatore del back office */
   daUfficio: boolean;
-  /**
-     * Categoria degli allegati dell'ufficio
-     * @nullable
-     */
-  categoria: string | null;
 }

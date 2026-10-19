@@ -12,6 +12,7 @@ import type { DocumentoRichiesto } from './documentoRichiesto';
 import type { InvioPratiche } from './invioPratiche';
 import type { MandatoPratica } from './mandatoPratica';
 import type { ModuloPratica } from './moduloPratica';
+import type { NormativaTipo } from './normativaTipo';
 import type { PraticaCollaboratoreRiepilogo } from './praticaCollaboratoreRiepilogo';
 import type { PraticaTipoRiepilogo } from './praticaTipoRiepilogo';
 
@@ -30,6 +31,7 @@ export interface PraticaDettaglio {
   collaboratore: PraticaCollaboratoreRiepilogo;
   tipo: PraticaTipoRiepilogo;
   moduli: ModuloPratica[];
+  normative: NormativaTipo[];
   mandato: MandatoPratica | null;
   /** Il tipo richiede il mandato ma al collaboratore non e' stato assegnato */
   mandatoMancante: boolean;

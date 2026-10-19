@@ -5,8 +5,11 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { AllegatoTipo } from './allegatoTipo';
+import type { CompensoCollaboratore } from './compensoCollaboratore';
 import type { DocumentoTipo } from './documentoTipo';
 import type { ModuloTipo } from './moduloTipo';
+import type { NormativaTipo } from './normativaTipo';
 
 export interface TipoPratica {
   id: number;
@@ -19,4 +22,7 @@ export interface TipoPratica {
   creatoIl: Date;
   documenti: DocumentoTipo[];
   moduli: ModuloTipo[];
+  compensiCollaboratori: CompensoCollaboratore[];
+  normative: NormativaTipo[];
+  allegatiOperatore: AllegatoTipo[];
 }

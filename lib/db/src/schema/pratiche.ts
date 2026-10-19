@@ -2,7 +2,7 @@ import { boolean, index, integer, pgTable, serial, text, timestamp, uniqueIndex 
 import { sql } from "drizzle-orm";
 import { assistitiTable } from "./assistiti";
 import { collaboratoriTable } from "./collaboratori";
-import { categorieAllegatoTable, documentiTipoTable, mandatiTable, statiPraticaTable, tipiPraticaTable } from "./configurazione-pratiche";
+import { documentiTipoTable, mandatiTable, statiPraticaTable, tipiPraticaTable } from "./configurazione-pratiche";
 import { utentiTable } from "./utenti";
 
 /**
@@ -78,8 +78,6 @@ export const documentiPraticaTable = pgTable(
     dopoInvio: boolean("dopo_invio").notNull().default(false),
     /** Vero se e' un allegato aggiunto dall'operatore del back office (`nome` e' la sua descrizione). */
     daBackoffice: boolean("da_backoffice").notNull().default(false),
-    /** Categoria dell'allegato dell'operatore. */
-    categoriaId: integer("categoria_id").references(() => categorieAllegatoTable.id, { onDelete: "restrict" }),
   },
   (t) => [
     index("documenti_pratica_pratica_idx").on(t.praticaId),

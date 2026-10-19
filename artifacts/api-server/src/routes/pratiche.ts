@@ -1,5 +1,5 @@
 import { Readable } from "node:stream";
-import { mandatoCompilatoPdf } from "../lib/mandato-compilato";
+import { mandatoCompilatoPdf, moduloCompilato } from "../lib/mandato-compilato";
 import { chiaveFirmaPratica, confermaFirma, leggiPdfFirmato, richiediFirma } from "../lib/firma-mandato";
 import express, { Router, type IRouter } from "express";
 import { and, asc, count, eq, isNotNull, isNull, sql } from "drizzle-orm";
@@ -25,6 +25,7 @@ import {
   db,
   documentiPraticaTable,
   documentiTipoTable,
+  moduliTipoTable,
   personeTable,
   praticheTable,
   statiPraticaTable,
@@ -321,6 +322,18 @@ router.get("/pratiche/:id/documenti/:docId/file", async (req, res) => {
   if (!d) throw nonTrovato("Documento non trovato.");
   const { stream } = await leggiFile(d.fileChiave);
   inviaFile(res, stream, d.fileNome, d.fileTipo, d.fileDimensione);
+});
+
+/** Modulo del tipo di pratica compilato con i dati dell'assistito (solo per i moduli con la compilazione automatica). */
+router.get("/pratiche/:id/moduli/:moduloId/file", async (req, res) => {
+  const p = await caricaPraticaVisibile(req, intero(req.params["id"], "id"));
+  const [m] = await db
+    .select()
+    .from(moduliTipoTable)
+    .where(and(eq(moduliTipoTable.id, intero(req.params["moduloId"], "moduloId")), eq(moduliTipoTable.tipoPraticaId, p.tipoPraticaId)));
+  if (!m || !m.compilazioneAutomatica) throw nonTrovato("Modulo non trovato.");
+  const { pdf, nomeFile } = await moduloCompilato(p, m);
+  inviaFile(res, Readable.from(pdf), nomeFile, "application/pdf", pdf.length);
 });
 
 router.get("/pratiche/:id/mandato/file", async (req, res) => {

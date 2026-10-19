@@ -1,11 +1,10 @@
 /** Accesso e composizione delle pratiche per il Web Collaboratore. */
-import { nomePdfMandato } from "./mandato-compilato";
+import { nomePdfMandato, nomePdfModulo } from "./mandato-compilato";
 import type { Request } from "express";
 import { and, asc, desc, eq, or, sql, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import {
   assistitiTable,
-  categorieAllegatoTable,
   collaboratoriTable,
   commentiPraticaTable,
   db,
@@ -13,6 +12,7 @@ import {
   documentiTipoTable,
   mandatiTable,
   moduliTipoTable,
+  normativeTipoTable,
   personeTable,
   praticheTable,
   statiPraticaTable,
@@ -252,7 +252,6 @@ export function mappaDocumentoPratica(
   d: typeof documentiPraticaTable.$inferSelect,
   nome: string | null,
   cognome: string | null,
-  categorie: Map<number, string>,
 ) {
   return {
     id: d.id,
@@ -265,14 +264,7 @@ export function mappaDocumentoPratica(
     caricatoDa: cognome ? `${cognome} ${nome}` : "—",
     dopoInvio: d.dopoInvio,
     daUfficio: d.daBackoffice,
-    categoria: d.categoriaId ? (categorie.get(d.categoriaId) ?? null) : null,
   };
-}
-
-/** Nomi delle categorie degli allegati, per id. */
-export async function mappaCategorieAllegato(): Promise<Map<number, string>> {
-  const righe = await db.select({ id: categorieAllegatoTable.id, nome: categorieAllegatoTable.nome }).from(categorieAllegatoTable);
-  return new Map(righe.map((r) => [r.id, r.nome]));
 }
 
 /** Dettaglio completo della pratica per la scheda del collaboratore. */
@@ -283,6 +275,7 @@ export async function dettaglioPratica(req: Request, id: number) {
   const propria = p.collaboratoreId === mio;
   const [ass] = await selezionaAssistiti(eq(assistitiTable.id, p.assistitoId));
   const moduli = await db.select().from(moduliTipoTable).where(eq(moduliTipoTable.tipoPraticaId, p.tipoPraticaId)).orderBy(asc(moduliTipoTable.id));
+  const normative = await db.select().from(normativeTipoTable).where(eq(normativeTipoTable.tipoPraticaId, p.tipoPraticaId)).orderBy(asc(normativeTipoTable.ordine), asc(normativeTipoTable.id));
   const mandato = await mandatoDellaPratica(p);
   const firma = await firmaDellaPratica(p.id);
   const documenti = await db
@@ -297,16 +290,22 @@ export async function dettaglioPratica(req: Request, id: number) {
     .innerJoin(utentiTable, eq(utentiTable.id, commentiPraticaTable.utenteId))
     .where(eq(commentiPraticaTable.praticaId, id))
     .orderBy(asc(commentiPraticaTable.creatoIl), asc(commentiPraticaTable.id));
-  const categorie = await mappaCategorieAllegato();
   const completezza = bozza ? await verificaCompletezza(p, mandato) : { mancanti: [], richiesti: [], mandatoMancante: false };
   return {
     ...mappaRiepilogo(p, mio),
     assistito: mappaAssistito(ass!, req),
-    moduli: moduli.map((m) => ({ id: m.id, nome: m.nome, fileNome: m.fileNome, dimensione: m.fileDimensione })),
+    moduli: moduli.map((m) => ({
+      id: m.id,
+      nome: m.nome,
+      fileNome: m.compilazioneAutomatica ? nomePdfModulo(m.nome, p) : m.fileNome,
+      dimensione: m.fileDimensione,
+      compilato: m.compilazioneAutomatica,
+    })),
+    normative: normative.map((n) => ({ id: n.id, titolo: n.titolo, url: n.url })),
     mandato: mandato ? { id: mandato.id, nome: mandato.nome, fileNome: nomePdfMandato(p), firma: firma ? mappaFirma(firma) : null } : null,
     mandatoMancante: completezza.mandatoMancante,
     richiesti: completezza.richiesti,
-    documenti: documenti.map(({ d, nome, cognome }) => mappaDocumentoPratica(d, nome, cognome, categorie)),
+    documenti: documenti.map(({ d, nome, cognome }) => mappaDocumentoPratica(d, nome, cognome)),
     messaggio: p.messaggio,
     commenti: commenti.map(({ c, nome, cognome, ruolo }) => ({
       id: c.id,

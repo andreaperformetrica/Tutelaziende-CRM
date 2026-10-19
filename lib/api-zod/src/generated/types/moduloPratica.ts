@@ -9,6 +9,8 @@
 export interface ModuloPratica {
   id: number;
   nome: string;
+  /** Il file scaricato e' compilato con i dati dell'assistito (PDF generato al momento) */
+  compilato: boolean;
   fileNome: string;
   dimensione: number;
 }

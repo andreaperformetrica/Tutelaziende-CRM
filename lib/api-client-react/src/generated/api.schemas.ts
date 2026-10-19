@@ -1051,10 +1051,33 @@ export interface DocumentoTipo {
 export interface ModuloTipo {
   id: number;
   nome: string;
+  /** Il modulo scaricato dal collaboratore e' compilato con i dati dell'assistito */
+  compilazioneAutomatica: boolean;
   fileNome: string;
   fileTipo: string;
   dimensione: number;
   caricatoIl: string;
+}
+
+export interface CompensoCollaboratore {
+  id: number;
+  collaboratoreId: number;
+  collaboratoreNome: string;
+  numeroSportello: string;
+  pagabile: boolean;
+  punti: number;
+  valoreEuro: number;
+}
+
+export interface NormativaTipo {
+  id: number;
+  titolo: string;
+  url: string;
+}
+
+export interface AllegatoTipo {
+  id: number;
+  nome: string;
 }
 
 export interface TipoPratica {
@@ -1068,6 +1091,35 @@ export interface TipoPratica {
   creatoIl: string;
   documenti: DocumentoTipo[];
   moduli: ModuloTipo[];
+  compensiCollaboratori: CompensoCollaboratore[];
+  normative: NormativaTipo[];
+  allegatiOperatore: AllegatoTipo[];
+}
+
+export interface DocumentoNoto {
+  nome: string;
+}
+
+export interface DocumentoNotoInput {
+  nome: string;
+}
+
+export interface CompensoCollaboratoreInput {
+  collaboratoreId: number;
+  pagabile: boolean;
+  /** @minimum 0 */
+  punti: number;
+  /** @minimum 0 */
+  valoreEuro: number;
+}
+
+export interface NormativaTipoInput {
+  titolo: string;
+  url: string;
+}
+
+export interface AllegatoTipoInput {
+  nome: string;
 }
 
 export interface TipoPraticaInput {
@@ -1087,6 +1139,7 @@ export interface DocumentoTipoInput {
 
 export interface ModuloTipoInput {
   nome: string;
+  compilazioneAutomatica?: boolean;
 }
 
 export interface OrdineInput {
@@ -1350,6 +1403,8 @@ export interface InvioPratiche {
 export interface ModuloPratica {
   id: number;
   nome: string;
+  /** Il file scaricato e' compilato con i dati dell'assistito (PDF generato al momento) */
+  compilato: boolean;
   fileNome: string;
   dimensione: number;
 }
@@ -1406,11 +1461,6 @@ export interface DocumentoPratica {
   dopoInvio: boolean;
   /** Allegato aggiunto da un operatore del back office */
   daUfficio: boolean;
-  /**
-     * Categoria degli allegati dell'ufficio
-     * @nullable
-     */
-  categoria: string | null;
 }
 
 export type CommentoPraticaRuolo = typeof CommentoPraticaRuolo[keyof typeof CommentoPraticaRuolo];
@@ -1445,6 +1495,7 @@ export interface PraticaDettaglio {
   collaboratore: PraticaCollaboratoreRiepilogo;
   tipo: PraticaTipoRiepilogo;
   moduli: ModuloPratica[];
+  normative: NormativaTipo[];
   mandato: MandatoPratica | null;
   /** Il tipo richiede il mandato ma al collaboratore non e' stato assegnato */
   mandatoMancante: boolean;
@@ -1572,15 +1623,6 @@ export interface NewsInput {
   testo: string;
   pubblicata: boolean;
   inEvidenza: boolean;
-}
-
-export interface CategoriaAllegato {
-  id: number;
-  nome: string;
-}
-
-export interface CategoriaAllegatoInput {
-  nome: string;
 }
 
 export interface CambioStatoInput {
@@ -1753,6 +1795,8 @@ export interface PraticaBackoffice {
   documenti: DocumentoPratica[];
   /** Allegati aggiunti dagli operatori */
   allegatiUfficio: DocumentoPratica[];
+  /** Documenti che l'operatore puo' allegare, secondo il tipo di pratica */
+  allegatiOperatore: AllegatoTipo[];
   /** Messaggio iniziale scritto dal collaboratore */
   messaggio: string;
   commenti: CommentoPraticaBackoffice[];

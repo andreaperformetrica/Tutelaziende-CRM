@@ -6,7 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface CategoriaAllegato {
+export interface AllegatoTipo {
   id: number;
   nome: string;
 }

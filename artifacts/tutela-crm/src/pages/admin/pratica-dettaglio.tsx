@@ -5,7 +5,7 @@ import { Link, useLocation, useParams } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   getGetPraticaBackofficeQueryKey, useCambiaStatoPratica, useCreateCommentoPraticaBackoffice, useDeletePraticaBackoffice,
-  useGetFiltriPraticheBackoffice, useGetPraticaBackoffice, useListCategorieAllegato, usePrendiInCaricoPratica,
+  useGetFiltriPraticheBackoffice, useGetPraticaBackoffice, usePrendiInCaricoPratica,
   type DocumentoPratica, type PraticaBackoffice,
 } from "@workspace/api-client-react";
 import { AlertTriangle, ArrowLeft, Download, Eye, FileText, HandHelping, Loader2, Mail, MessageCircle, MessageSquareText, Paperclip, Phone, Send, Trash2, Upload, X } from "lucide-react";
@@ -27,6 +27,7 @@ import {
   ErroreUpload, FORMATI_DOCUMENTI, formatoDimensione, inviaFile, urlDocumentoBackoffice, urlMandatoBackoffice,
 } from "@/lib/upload";
 
+const ALTRO = "altro";
 type Canale = "email" | "whatsapp" | "chiamata" | "entrambi" | "tutti";
 const CANALI: { value: Canale; label: string }[] = [
   { value: "email", label: "Email" },
@@ -68,7 +69,6 @@ function RigaFile({ d, praticaId, onAnteprima, testId }: { d: DocumentoPratica; 
         <div className="font-semibold text-sm">
           {d.nome}
           {d.daUfficio && <Badge variant="outline" className="ml-2">Ufficio</Badge>}
-          {d.categoria && <Badge variant="secondary" className="ml-1">{d.categoria}</Badge>}
           {d.dopoInvio && !d.daUfficio && <Badge variant="secondary" className="ml-1">Aggiunto dopo l'invio</Badge>}
         </div>
         <div className="text-xs text-muted-foreground break-all">{d.fileNome} ({formatoDimensione(d.dimensione)}) · caricato il {fmtIstante(d.caricatoIl)} da {d.caricatoDa}</div>
@@ -89,7 +89,6 @@ export default function PraticaDettaglioBackoffice() {
   const valido = Number.isInteger(id) && id > 0;
   const q = useGetPraticaBackoffice(id, { query: { enabled: valido, queryKey: getGetPraticaBackofficeQueryKey(id) } });
   const filtri = useGetFiltriPraticheBackoffice();
-  const categorie = useListCategorieAllegato();
   const presa = usePrendiInCaricoPratica();
   const cambiaStato = useCambiaStatoPratica();
   const commenta = useCreateCommentoPraticaBackoffice();
@@ -105,7 +104,7 @@ export default function PraticaDettaglioBackoffice() {
   const [testo, setTesto] = useState("");
   const [canale, setCanale] = useState<Canale>("email");
   const [descrizione, setDescrizione] = useState("");
-  const [categoriaId, setCategoriaId] = useState("");
+  const [voce, setVoce] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [caricando, setCaricando] = useState(false);
 
@@ -128,13 +127,13 @@ export default function PraticaDettaglioBackoffice() {
 
   const allega = async () => {
     setErrore(null);
-    if (!descrizione.trim()) return setErrore("Inserisci la descrizione dell'allegato.");
-    if (!categoriaId) return setErrore("Scegli la categoria dell'allegato.");
+    if (!voce) return setErrore("Scegli il documento da allegare.");
+    if (voce === ALTRO && !descrizione.trim()) return setErrore("Scrivi il nome dell'allegato.");
     if (!file) return setErrore("Scegli il file da allegare.");
     setCaricando(true);
     try {
-      aggiorna(await inviaFile<PraticaBackoffice>("POST", `/backoffice/pratiche/${id}/allegati/file`, { descrizione: descrizione.trim(), categoriaId }, file));
-      setDescrizione(""); setCategoriaId(""); setFile(null);
+      aggiorna(await inviaFile<PraticaBackoffice>("POST", `/backoffice/pratiche/${id}/allegati/file`, voce === ALTRO ? { descrizione: descrizione.trim() } : { allegatoTipoId: voce }, file));
+      setDescrizione(""); setVoce(""); setFile(null);
       toast({ title: "Allegato aggiunto" });
     } catch (e) { fallita(e); } finally { setCaricando(false); }
   };
@@ -233,16 +232,21 @@ export default function PraticaDettaglioBackoffice() {
           <h3 className="font-bold flex items-center gap-2 text-sm"><Paperclip className="size-4" /> Aggiungi un allegato</h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <Label htmlFor="allegato-descrizione">Descrizione</Label>
-              <Input id="allegato-descrizione" value={descrizione} maxLength={200} onChange={(e) => setDescrizione(e.target.value)} placeholder="Es. Estratto contributivo aggiornato" data-testid="input-allegato-descrizione" />
-            </div>
-            <div>
-              <Label htmlFor="allegato-categoria">Categoria</Label>
-              <Select value={categoriaId} onValueChange={setCategoriaId}>
-                <SelectTrigger id="allegato-categoria" className="bg-card w-full" data-testid="select-allegato-categoria"><SelectValue placeholder="Scegli la categoria" /></SelectTrigger>
-                <SelectContent>{(categorie.data ?? []).map((c) => <SelectItem key={c.id} value={String(c.id)}>{c.nome}</SelectItem>)}</SelectContent>
+              <Label htmlFor="allegato-voce">Documento</Label>
+              <Select value={voce} onValueChange={setVoce}>
+                <SelectTrigger id="allegato-voce" className="bg-card w-full" data-testid="select-allegato-voce"><SelectValue placeholder="Scegli il documento" /></SelectTrigger>
+                <SelectContent>
+                  {p.allegatiOperatore.map((v) => <SelectItem key={v.id} value={String(v.id)}>{v.nome}</SelectItem>)}
+                  <SelectItem value={ALTRO}>Altro</SelectItem>
+                </SelectContent>
               </Select>
             </div>
+            {voce === ALTRO && (
+              <div>
+                <Label htmlFor="allegato-descrizione">Nome dell&apos;allegato</Label>
+                <Input id="allegato-descrizione" value={descrizione} maxLength={200} onChange={(e) => setDescrizione(e.target.value)} placeholder="Es. Estratto contributivo aggiornato" data-testid="input-allegato-descrizione" />
+              </div>
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <SelettoreFile accept={FORMATI_DOCUMENTI} testId="scegli-allegato" onFile={setFile}><Upload className="size-4 mr-1.5" /> Scegli file</SelettoreFile>
