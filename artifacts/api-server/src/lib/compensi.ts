@@ -10,6 +10,7 @@ import {
   compensiCollaboratoreTable,
   compensiRigheTable,
   db,
+  estrattiEsclusioniTable,
   estrattiRigheTable,
   estrattiTable,
   eventiPraticaTable,
@@ -17,6 +18,7 @@ import {
   notificheTable,
   personeTable,
   praticheTable,
+  ricevuteTable,
   statiPraticaTable,
   tipiPraticaTable,
   utentiTable,
@@ -31,9 +33,9 @@ export const GIORNI_PROPOSTI = 60;
 export const NOME_STATO_PAGATA = "pagata";
 
 export const ETICHETTA_METODO = { bonifico: "Bonifico", contanti: "Contanti", assegno: "Assegno", altro: "Altro" } as const;
-export const TITOLO_SEZIONE = { naspi: "Naspi", pensionati: "Pensionati", patronato: "Patronato", caf: "CAF", debiti: "Debiti" } as const;
+export const TITOLO_SEZIONE = { naspi: "Naspi", pensionati: "Pensionati", patronato: "Patronato", caf: "CAF", crediti: "Crediti", debiti: "Debiti" } as const;
 export type Sezione = keyof typeof TITOLO_SEZIONE;
-const ORDINE_SEZIONI: Sezione[] = ["naspi", "pensionati", "patronato", "caf", "debiti"];
+const ORDINE_SEZIONI: Sezione[] = ["naspi", "pensionati", "patronato", "caf", "crediti", "debiti"];
 
 export const euro = (centesimi: number) => centesimi / 100;
 
@@ -233,13 +235,18 @@ export function dataRoma(d: Date): string {
 // Estratti
 // ---------------------------------------------------------------------------------------------
 
-function mappaRiepilogo(r: {
-  e: typeof estrattiTable.$inferSelect;
-  cognome: string;
-  nome: string;
-  sportello: string;
-  numeroPratiche: number;
-}) {
+type UltimoInvio = { creatoIl: Date; esito: keyof typeof ESITI_NOTIFICA };
+
+function mappaRiepilogo(
+  r: {
+    e: typeof estrattiTable.$inferSelect;
+    cognome: string;
+    nome: string;
+    sportello: string;
+    numeroPratiche: number;
+  },
+  ultimo?: UltimoInvio,
+) {
   return {
     id: r.e.id,
     collaboratoreId: r.e.collaboratoreId,
@@ -253,6 +260,8 @@ function mappaRiepilogo(r: {
     pagatoIl: r.e.pagatoIl,
     pagamentoEuro: r.e.pagamentoCentesimi === null ? null : euro(r.e.pagamentoCentesimi),
     pagamentoMetodo: r.e.pagamentoMetodo,
+    ultimoInvioIl: ultimo?.creatoIl.toISOString() ?? null,
+    ultimoInvioEtichetta: ultimo ? ESITI_NOTIFICA[ultimo.esito] : null,
   };
 }
 
@@ -277,7 +286,43 @@ export async function elencoEstratti(filtri: { collaboratoreId?: number; stato?:
       ),
     )
     .orderBy(desc(estrattiTable.dataEstratto), desc(estrattiTable.id));
-  return righe.map(mappaRiepilogo);
+  const ultimi = new Map<number, UltimoInvio>();
+  if (righe.length) {
+    const invii = await db
+      .select({ estrattoId: notificheTable.estrattoId, creatoIl: notificheTable.creatoIl, esito: notificheTable.esito })
+      .from(notificheTable)
+      .where(and(eq(notificheTable.evento, "estratto_inviato"), inArray(notificheTable.estrattoId, righe.map((r) => r.e.id))))
+      .orderBy(asc(notificheTable.creatoIl), asc(notificheTable.id));
+    for (const n of invii) if (n.estrattoId !== null) ultimi.set(n.estrattoId, { creatoIl: n.creatoIl, esito: n.esito });
+  }
+  return righe.map((r) => mappaRiepilogo(r, ultimi.get(r.e.id)));
+}
+
+/** Tutti gli invii degli estratti per email, dal piu recente. */
+export async function registroInviiEstratti(limite = 300) {
+  const righe = await db
+    .select({
+      n: notificheTable,
+      cognome: personeTable.cognome,
+      nome: personeTable.nome,
+    })
+    .from(notificheTable)
+    .innerJoin(estrattiTable, eq(estrattiTable.id, notificheTable.estrattoId))
+    .innerJoin(collaboratoriTable, eq(collaboratoriTable.id, estrattiTable.collaboratoreId))
+    .innerJoin(personeTable, eq(personeTable.id, collaboratoriTable.personaId))
+    .where(eq(notificheTable.evento, "estratto_inviato"))
+    .orderBy(desc(notificheTable.creatoIl), desc(notificheTable.id))
+    .limit(limite);
+  return righe.map(({ n, cognome, nome }) => ({
+    id: n.id,
+    estrattoId: n.estrattoId!,
+    collaboratoreNome: nomeCompleto(cognome, nome),
+    destinatarioContatto: n.destinatarioContatto,
+    creatoIl: n.creatoIl.toISOString(),
+    esito: n.esito,
+    esitoEtichetta: ESITI_NOTIFICA[n.esito],
+    dettaglioEsito: n.dettaglioEsito,
+  }));
 }
 
 export async function emailCollaboratore(collaboratoreId: number): Promise<{ nome: string; email: string | null; utenteId: number } | null> {
@@ -302,8 +347,13 @@ export async function estrattoDettaglio(id: number) {
   };
   const invii = await db.select().from(notificheTable).where(eq(notificheTable.estrattoId, id)).orderBy(desc(notificheTable.creatoIl), desc(notificheTable.id));
   const dest = await emailCollaboratore(e!.collaboratoreId);
+  const esclusioni = await db.select().from(estrattiEsclusioniTable).where(eq(estrattiEsclusioniTable.estrattoId, id)).orderBy(asc(estrattiEsclusioniTable.numeroPratica));
   return {
     estratto: riepilogo,
+    esclusioni: esclusioni.map((x) => ({ praticaId: x.praticaId, numeroPratica: x.numeroPratica, assistito: x.assistito, tipoPratica: x.tipoPratica, motivo: x.motivo })),
+    allegato: e!.allegatoChiave
+      ? { nome: e!.allegatoNome ?? "allegato", dimensione: e!.allegatoDimensione ?? 0, caricatoIl: (e!.allegatoCaricatoIl ?? e!.pagamentoRegistratoIl ?? e!.creatoIl).toISOString() }
+      : null,
     righe: righe.map((r) => ({
       praticaId: r.praticaId,
       assistito: r.assistito,
@@ -400,6 +450,14 @@ export async function dareAvere(collaboratoreId: number, anno: number) {
     .orderBy(asc(estrattiTable.dataEstratto), asc(estrattiTable.id));
 
   const importate = await righeImportateDareAvere(collaboratoreId, anno);
+  const ricevute = await db
+    .select({ id: ricevuteTable.id, numero: ricevuteTable.numero, anno: ricevuteTable.anno, pagata: ricevuteTable.pagatoIl, tipo: ricevuteTable.origineTipo, origineId: ricevuteTable.origineId })
+    .from(ricevuteTable)
+    .where(and(eq(ricevuteTable.collaboratoreId, collaboratoreId), eq(ricevuteTable.annoDareAvere, anno)));
+  const ricevutaDi = (tipo: string, id: number | null) => {
+    const r = id === null ? undefined : ricevute.find((x) => x.tipo === tipo && x.origineId === id);
+    return r ? { id: r.id, numero: r.numero, anno: r.anno, pagata: r.pagata !== null } : null;
+  };
   const sezioni = ORDINE_SEZIONI.map((sezione) => {
     const righe =
       sezione === "patronato"
@@ -412,6 +470,7 @@ export async function dareAvere(collaboratoreId: number, anno: number) {
             nota: e.pagatoIl ? `Pagato il ${formattaData(e.pagatoIl)}` : "Non ancora pagato",
             estrattoId: e.id as number | null,
             importazioneId: null as number | null,
+            ricevuta: ricevutaDi("estratto", e.id),
             centesimi: e.totaleCentesimi,
           }))
         : manuali
@@ -425,6 +484,7 @@ export async function dareAvere(collaboratoreId: number, anno: number) {
               nota: r.nota,
               estrattoId: null as number | null,
               importazioneId: null as number | null,
+              ricevuta: ricevutaDi("riga", r.id),
               centesimi: r.importoCentesimi,
             }))
             .concat(
@@ -439,6 +499,7 @@ export async function dareAvere(collaboratoreId: number, anno: number) {
                   nota: r.nota,
                   estrattoId: null as number | null,
                   importazioneId: r.importazioneId as number | null,
+                  ricevuta: ricevutaDi("importazione", r.importazioneId),
                   centesimi: r.centesimi,
                 })),
             );

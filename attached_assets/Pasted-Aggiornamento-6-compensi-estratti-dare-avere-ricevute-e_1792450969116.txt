@@ -1,0 +1,29 @@
+Aggiornamento 6: compensi, estratti, dare/avere, ricevute e pagamenti. Non toccare altre aree.
+
+ESTRATTI
+- Elenco degli estratti con selezione multipla: invio per email massivo o singolo, con registro degli invii.
+- Nella creazione dell'estratto l'admin può escludere una o più pratiche dal pagamento, con motivo; restano disponibili per un estratto futuro.
+- Nel riepilogo (PDF e schermata) mostra "Totale pratiche" accanto a "Totale punti".
+
+PAGAMENTO
+- Quando si registra un pagamento si può allegare un documento (esempio: contabile del bonifico), visibile nel dettaglio.
+
+DARE/AVERE
+- Aggiungi la sezione "Crediti" accanto a "Debiti". Totale avere = importi + crediti - debiti.
+
+RICEVUTE
+- Bottone "Crea ricevuta" nel dare/avere, per super admin e operatori, per conto del collaboratore. Genera un PDF con questa struttura:
+  - in alto a sinistra: denominazione, indirizzo, CAP e comune, codice fiscale del collaboratore;
+  - a destra: dati del patronato (denominazione, indirizzo, CAP e città, codice fiscale) presi dalle impostazioni;
+  - titolo in rosso "Ricevuta N del gg/mm/aaaa" con numero progressivo annuale;
+  - testo: "[denominazione collaboratore] riceve dal [patronato] la somma di euro X (importo in lettere/00) relativa a [causale]", con la causale testo fisso modificabile dall'admin;
+  - "Tale somma viene liquidata mediante bonifico bancario alle seguenti coordinate" con banca, filiale e IBAN del collaboratore;
+  - in fondo a destra lo spazio per la firma "Il Presidente".
+- La ricevuta resta collegata al collaboratore e alla riga del dare/avere da cui nasce.
+
+SEZIONE PAGAMENTI E FATTURE
+- Pagina con tutte le ricevute e i pagamenti: filtri per periodo, numero, collaboratore e stato; contatore dei documenti; colonne numero, data, collaboratore (nome e denominazione sede), imponibile, IVA, totale, stato con etichetta verde quando pagato.
+- Per i collaboratori con partita IVA si gestiscono imponibile e IVA; per le associazioni l'IVA non c'è.
+- Dal dettaglio si allega il bonifico eseguito e si scarica il PDF della ricevuta.
+
+A fine lavoro prova nel browser e dimmi cosa hai provato.

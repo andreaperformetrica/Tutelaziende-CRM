@@ -24,6 +24,8 @@ export function ResocontoTab() {
   const [giorni, setGiorni] = useState("60");
   const [scelte, setScelte] = useState<Set<number>>(new Set());
   const [err, setErr] = useState<string | null>(null);
+  /** Pratiche scelte ma lasciate fuori dal pagamento: identificativo -> motivo (la presenza della chiave vuol dire "esclusa"). */
+  const [escluse, setEscluse] = useState<Record<number, string>>({});
 
   const params: GetResocontoCompensiParams = {
     ...(coll !== "all" ? { collaboratoreId: Number(coll) } : {}),
@@ -34,25 +36,35 @@ export function ResocontoTab() {
   const dati = useGetResocontoCompensi(params);
   const crea = useCreateEstratti();
   const righe = dati.data?.righe ?? [];
-  const selezionate = useMemo(() => righe.filter((r) => scelte.has(r.praticaId)), [righe, scelte]);
+  const scelteRighe = useMemo(() => righe.filter((r) => scelte.has(r.praticaId)), [righe, scelte]);
+  const selezionate = useMemo(() => scelteRighe.filter((r) => !(r.praticaId in escluse)), [scelteRighe, escluse]);
+  const nEscluse = scelteRighe.length - selezionate.length;
   const totPunti = selezionate.reduce((t, r) => t + r.punti, 0);
   const totEuro = selezionate.reduce((t, r) => t + r.valoreEuro, 0);
-  const tutte = righe.length > 0 && selezionate.length === righe.length;
+  const tutte = righe.length > 0 && scelteRighe.length === righe.length;
 
-  const alternaRiga = (id: number, v: boolean) => setScelte((s) => { const n = new Set(s); if (v) n.add(id); else n.delete(id); return n; });
+  const alternaRiga = (id: number, v: boolean) => {
+    setScelte((s) => { const n = new Set(s); if (v) n.add(id); else n.delete(id); return n; });
+    if (!v) setEscluse((e) => { const n = { ...e }; delete n[id]; return n; });
+  };
+  const alternaEsclusa = (id: number, v: boolean) => setEscluse((e) => { const n = { ...e }; if (v) n[id] = n[id] ?? ""; else delete n[id]; return n; });
 
   const conferma = () => {
     setErr(null);
-    crea.mutate({ data: { praticaIds: selezionate.map((r) => r.praticaId) } }, {
+    const escluseScelte = scelteRighe.filter((r) => r.praticaId in escluse);
+    const senzaMotivo = escluseScelte.find((r) => !escluse[r.praticaId]?.trim());
+    if (senzaMotivo) return setErr(`Scrivi il motivo dell'esclusione della pratica ${senzaMotivo.numero}.`);
+    crea.mutate({ data: { praticaIds: selezionate.map((r) => r.praticaId), escluse: escluseScelte.map((r) => ({ praticaId: r.praticaId, motivo: escluse[r.praticaId]!.trim() })) } }, {
       onSuccess: (estratti) => {
         qc.invalidateQueries({ queryKey: getGetResocontoCompensiQueryKey() });
         qc.invalidateQueries({ queryKey: getListEstrattiQueryKey() });
         setScelte(new Set());
-        toast({ title: estratti.length === 1 ? "Estratto creato" : `${estratti.length} estratti creati`, description: "Le pratiche scelte non compaiono più nel resoconto." });
+        setEscluse({});
+        toast({ title: estratti.length === 1 ? "Estratto creato" : `${estratti.length} estratti creati`, description: escluseScelte.length ? "Le pratiche escluse restano nel resoconto, disponibili per un estratto futuro." : "Le pratiche scelte non compaiono più nel resoconto." });
         if (estratti.length === 1) nav(`/admin/compensi/estratti/${estratti[0]!.id}`);
         else nav("/admin/compensi?tab=estratti");
       },
-      onError: (e) => { setErr(parseApiError(e).message); dati.refetch(); setScelte(new Set()); },
+      onError: (e) => { setErr(parseApiError(e).message); dati.refetch(); setScelte(new Set()); setEscluse({}); },
     });
   };
 
@@ -82,10 +94,11 @@ export function ResocontoTab() {
             <Table className="tabella-schede">
               <TableHeader>
                 <TableRow className="bg-muted/60 hover:bg-muted/60">
-                  <TableHead className="w-10"><Checkbox checked={tutte} onCheckedChange={(v) => setScelte(v ? new Set(righe.map((r) => r.praticaId)) : new Set())} aria-label="Seleziona tutte" data-testid="seleziona-tutte" /></TableHead>
+                  <TableHead className="w-10"><Checkbox checked={tutte} onCheckedChange={(v) => { setScelte(v ? new Set(righe.map((r) => r.praticaId)) : new Set()); if (!v) setEscluse({}); }} aria-label="Seleziona tutte" data-testid="seleziona-tutte" /></TableHead>
                   {["Collaboratore", "Assistito", "Pratica", "Tipo", "Data pratica", "Chiusa il", "Giorni", "Punti", "Ristorno"].map((h, i) => (
                     <TableHead key={h} className={`text-[11px] uppercase tracking-wider font-semibold h-10 whitespace-nowrap ${i >= 7 ? "text-right" : ""}`}>{h}</TableHead>
                   ))}
+                  <TableHead className="text-[11px] uppercase tracking-wider font-semibold h-10 whitespace-nowrap">Escludi dal pagamento</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -101,6 +114,20 @@ export function ResocontoTab() {
                     <TableCell data-label="Giorni" className="tabular-nums">{r.giorniDallaChiusura}</TableCell>
                     <TableCell data-label="Punti" className="text-right tabular-nums">{r.punti}</TableCell>
                     <TableCell data-label="Ristorno" className="text-right tabular-nums">{fmtEuro(r.valoreEuro)}</TableCell>
+                    <TableCell data-label="Escludi dal pagamento" className="min-w-52">
+                      {scelte.has(r.praticaId) ? (
+                        <div className="space-y-1.5">
+                          <label className="flex items-center gap-2 text-sm cursor-pointer">
+                            <Checkbox checked={r.praticaId in escluse} onCheckedChange={(v) => alternaEsclusa(r.praticaId, v === true)} aria-label={`Escludi la pratica ${r.numero}`} data-testid={`check-escludi-${r.praticaId}`} />
+                            Escludi
+                          </label>
+                          {r.praticaId in escluse && (
+                            <Input value={escluse[r.praticaId]} maxLength={300} placeholder="Motivo (obbligatorio)" aria-label={`Motivo dell'esclusione della pratica ${r.numero}`}
+                              onChange={(e) => setEscluse((x) => ({ ...x, [r.praticaId]: e.target.value }))} data-testid={`input-motivo-${r.praticaId}`} />
+                          )}
+                        </div>
+                      ) : <span className="text-xs text-muted-foreground">Seleziona prima la pratica</span>}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -108,7 +135,7 @@ export function ResocontoTab() {
           </div>
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3">
             <div className="text-sm" data-testid="riepilogo-selezione">
-              {selezionate.length === 0 ? "Nessuna pratica selezionata." : <><strong>{selezionate.length}</strong> {selezionate.length === 1 ? "pratica" : "pratiche"} · <strong>{totPunti}</strong> punti · ristorno <strong>{fmtEuro(totEuro)}</strong></>}
+              {scelteRighe.length === 0 ? "Nessuna pratica selezionata." : <>Totale pratiche <strong>{selezionate.length}</strong> · Totale punti <strong>{totPunti}</strong> · ristorno <strong>{fmtEuro(totEuro)}</strong>{nEscluse > 0 && <span className="text-muted-foreground"> · {nEscluse} {nEscluse === 1 ? "esclusa" : "escluse"}</span>}</>}
             </div>
             <Button disabled={selezionate.length === 0 || crea.isPending} onClick={conferma} data-testid="button-crea-estratti">
               {crea.isPending ? "Creazione…" : "Conferma e crea estratto"}

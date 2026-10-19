@@ -10,6 +10,8 @@ export interface DatiSedeInput {
   sedeComuneCodice?: string | null;
   sedeCap?: string | null;
   iban?: string | null;
+  banca?: string | null;
+  filiale?: string | null;
   codiceFiscaleAssociazione?: string | null;
 }
 
@@ -23,6 +25,8 @@ export type SedeNormalizzata = {
   sedeProvincia: string | null;
   sedeCap: string | null;
   iban: string | null;
+  banca: string | null;
+  filiale: string | null;
   codiceFiscaleAssociazione: string | null;
 };
 
@@ -94,6 +98,8 @@ export function normalizzaSede(d: DatiSedeInput, partitaIvaPersona: string | nul
     sedeProvincia,
     sedeCap,
     iban: ibanGrezzo || null,
+    banca: vuoto(d.banca),
+    filiale: vuoto(d.filiale),
     codiceFiscaleAssociazione,
   };
 }

@@ -260,6 +260,8 @@ export const ListCollaboratoriResponseItem = zod.object({
   "sedeProvincia": zod.string().nullish().describe('Sigla, ricavata dal comune'),
   "sedeCap": zod.string().nullish(),
   "iban": zod.string().nullish(),
+  "banca": zod.string().nullish().describe('Nome della banca (stampato sulle ricevute)'),
+  "filiale": zod.string().nullish().describe('Filiale della banca (stampata sulle ricevute)'),
   "codiceFiscaleAssociazione": zod.string().max(listCollaboratoriResponseOneCodiceFiscaleAssociazioneMax).nullish()
 }).describe('Dati della sede del collaboratore (facoltativi per i collaboratori inseriti prima)').and(zod.object({
   "id": zod.number().int(),
@@ -320,6 +322,8 @@ export const CreateCollaboratoreBody = zod.object({
   "sedeProvincia": zod.string().nullish().describe('Sigla, ricavata dal comune'),
   "sedeCap": zod.string().nullish(),
   "iban": zod.string().nullish(),
+  "banca": zod.string().nullish().describe('Nome della banca (stampato sulle ricevute)'),
+  "filiale": zod.string().nullish().describe('Filiale della banca (stampata sulle ricevute)'),
   "codiceFiscaleAssociazione": zod.string().max(createCollaboratoreBodyOneCodiceFiscaleAssociazioneMax).nullish()
 }).describe('Dati della sede del collaboratore (facoltativi per i collaboratori inseriti prima)').and(zod.object({
   "nome": zod.string().min(1),
@@ -353,6 +357,8 @@ export const CreateCollaboratoreResponse = zod.object({
   "sedeProvincia": zod.string().nullish().describe('Sigla, ricavata dal comune'),
   "sedeCap": zod.string().nullish(),
   "iban": zod.string().nullish(),
+  "banca": zod.string().nullish().describe('Nome della banca (stampato sulle ricevute)'),
+  "filiale": zod.string().nullish().describe('Filiale della banca (stampata sulle ricevute)'),
   "codiceFiscaleAssociazione": zod.string().max(createCollaboratoreResponseOneOneCodiceFiscaleAssociazioneMax).nullish()
 }).describe('Dati della sede del collaboratore (facoltativi per i collaboratori inseriti prima)').and(zod.object({
   "id": zod.number().int(),
@@ -417,6 +423,8 @@ export const GetCollaboratoreResponse = zod.object({
   "sedeProvincia": zod.string().nullish().describe('Sigla, ricavata dal comune'),
   "sedeCap": zod.string().nullish(),
   "iban": zod.string().nullish(),
+  "banca": zod.string().nullish().describe('Nome della banca (stampato sulle ricevute)'),
+  "filiale": zod.string().nullish().describe('Filiale della banca (stampata sulle ricevute)'),
   "codiceFiscaleAssociazione": zod.string().max(getCollaboratoreResponseOneOneCodiceFiscaleAssociazioneMax).nullish()
 }).describe('Dati della sede del collaboratore (facoltativi per i collaboratori inseriti prima)').and(zod.object({
   "id": zod.number().int(),
@@ -488,6 +496,8 @@ export const UpdateCollaboratoreBody = zod.object({
   "sedeProvincia": zod.string().nullish().describe('Sigla, ricavata dal comune'),
   "sedeCap": zod.string().nullish(),
   "iban": zod.string().nullish(),
+  "banca": zod.string().nullish().describe('Nome della banca (stampato sulle ricevute)'),
+  "filiale": zod.string().nullish().describe('Filiale della banca (stampata sulle ricevute)'),
   "codiceFiscaleAssociazione": zod.string().max(updateCollaboratoreBodyOneCodiceFiscaleAssociazioneMax).nullish()
 }).describe('Dati della sede del collaboratore (facoltativi per i collaboratori inseriti prima)').and(zod.object({
   "nome": zod.string().min(1),
@@ -521,6 +531,8 @@ export const UpdateCollaboratoreResponse = zod.object({
   "sedeProvincia": zod.string().nullish().describe('Sigla, ricavata dal comune'),
   "sedeCap": zod.string().nullish(),
   "iban": zod.string().nullish(),
+  "banca": zod.string().nullish().describe('Nome della banca (stampato sulle ricevute)'),
+  "filiale": zod.string().nullish().describe('Filiale della banca (stampata sulle ricevute)'),
   "codiceFiscaleAssociazione": zod.string().max(updateCollaboratoreResponseOneOneCodiceFiscaleAssociazioneMax).nullish()
 }).describe('Dati della sede del collaboratore (facoltativi per i collaboratori inseriti prima)').and(zod.object({
   "id": zod.number().int(),
@@ -599,6 +611,8 @@ export const ImpostaRuoloCapogruppoResponse = zod.object({
   "sedeProvincia": zod.string().nullish().describe('Sigla, ricavata dal comune'),
   "sedeCap": zod.string().nullish(),
   "iban": zod.string().nullish(),
+  "banca": zod.string().nullish().describe('Nome della banca (stampato sulle ricevute)'),
+  "filiale": zod.string().nullish().describe('Filiale della banca (stampata sulle ricevute)'),
   "codiceFiscaleAssociazione": zod.string().max(impostaRuoloCapogruppoResponseOneOneCodiceFiscaleAssociazioneMax).nullish()
 }).describe('Dati della sede del collaboratore (facoltativi per i collaboratori inseriti prima)').and(zod.object({
   "id": zod.number().int(),
@@ -670,6 +684,8 @@ export const AggiungiMembriGruppoResponse = zod.object({
   "sedeProvincia": zod.string().nullish().describe('Sigla, ricavata dal comune'),
   "sedeCap": zod.string().nullish(),
   "iban": zod.string().nullish(),
+  "banca": zod.string().nullish().describe('Nome della banca (stampato sulle ricevute)'),
+  "filiale": zod.string().nullish().describe('Filiale della banca (stampata sulle ricevute)'),
   "codiceFiscaleAssociazione": zod.string().max(aggiungiMembriGruppoResponseOneOneCodiceFiscaleAssociazioneMax).nullish()
 }).describe('Dati della sede del collaboratore (facoltativi per i collaboratori inseriti prima)').and(zod.object({
   "id": zod.number().int(),
@@ -735,6 +751,8 @@ export const RimuoviMembroGruppoResponse = zod.object({
   "sedeProvincia": zod.string().nullish().describe('Sigla, ricavata dal comune'),
   "sedeCap": zod.string().nullish(),
   "iban": zod.string().nullish(),
+  "banca": zod.string().nullish().describe('Nome della banca (stampato sulle ricevute)'),
+  "filiale": zod.string().nullish().describe('Filiale della banca (stampata sulle ricevute)'),
   "codiceFiscaleAssociazione": zod.string().max(rimuoviMembroGruppoResponseOneOneCodiceFiscaleAssociazioneMax).nullish()
 }).describe('Dati della sede del collaboratore (facoltativi per i collaboratori inseriti prima)').and(zod.object({
   "id": zod.number().int(),
@@ -842,6 +860,8 @@ export const ImpostaPasswordProvvisoriaCollaboratoreResponse = zod.object({
   "sedeProvincia": zod.string().nullish().describe('Sigla, ricavata dal comune'),
   "sedeCap": zod.string().nullish(),
   "iban": zod.string().nullish(),
+  "banca": zod.string().nullish().describe('Nome della banca (stampato sulle ricevute)'),
+  "filiale": zod.string().nullish().describe('Filiale della banca (stampata sulle ricevute)'),
   "codiceFiscaleAssociazione": zod.string().max(impostaPasswordProvvisoriaCollaboratoreResponseOneOneCodiceFiscaleAssociazioneMax).nullish()
 }).describe('Dati della sede del collaboratore (facoltativi per i collaboratori inseriti prima)').and(zod.object({
   "id": zod.number().int(),
@@ -3747,7 +3767,9 @@ export const ListEstrattiResponseItem = zod.object({
   "pagato": zod.boolean(),
   "pagatoIl": zod.string().nullable().describe('Data del pagamento (AAAA-MM-GG)'),
   "pagamentoEuro": zod.number().nullable(),
-  "pagamentoMetodo": zod.union([zod.enum(['bonifico', 'contanti', 'assegno', 'altro']),zod.null()])
+  "pagamentoMetodo": zod.union([zod.enum(['bonifico', 'contanti', 'assegno', 'altro']),zod.null()]),
+  "ultimoInvioIl": zod.string().nullable().describe('Data e ora dell\'ultimo invio per email'),
+  "ultimoInvioEtichetta": zod.string().nullable().describe('Esito dell\'ultimo invio')
 })
 export const ListEstrattiResponse = zod.array(ListEstrattiResponseItem)
 
@@ -3757,10 +3779,18 @@ export const ListEstrattiResponse = zod.array(ListEstrattiResponseItem)
  */
 export const createEstrattiBodyPraticaIdsMax = 2000;
 
+export const createEstrattiBodyEscluseItemMotivoMax = 300;
+
+export const createEstrattiBodyEscluseMax = 2000;
+
 
 
 export const CreateEstrattiBody = zod.object({
-  "praticaIds": zod.array(zod.number().int()).min(1).max(createEstrattiBodyPraticaIdsMax)
+  "praticaIds": zod.array(zod.number().int()).min(1).max(createEstrattiBodyPraticaIdsMax),
+  "escluse": zod.array(zod.object({
+  "praticaId": zod.number().int(),
+  "motivo": zod.string().min(1).max(createEstrattiBodyEscluseItemMotivoMax)
+})).max(createEstrattiBodyEscluseMax).optional().describe('Pratiche scelte ma lasciate fuori dal pagamento, con il motivo; restano disponibili nel resoconto')
 })
 
 export const CreateEstrattiResponseItem = zod.object({
@@ -3775,9 +3805,49 @@ export const CreateEstrattiResponseItem = zod.object({
   "pagato": zod.boolean(),
   "pagatoIl": zod.string().nullable().describe('Data del pagamento (AAAA-MM-GG)'),
   "pagamentoEuro": zod.number().nullable(),
-  "pagamentoMetodo": zod.union([zod.enum(['bonifico', 'contanti', 'assegno', 'altro']),zod.null()])
+  "pagamentoMetodo": zod.union([zod.enum(['bonifico', 'contanti', 'assegno', 'altro']),zod.null()]),
+  "ultimoInvioIl": zod.string().nullable().describe('Data e ora dell\'ultimo invio per email'),
+  "ultimoInvioEtichetta": zod.string().nullable().describe('Esito dell\'ultimo invio')
 })
 export const CreateEstrattiResponse = zod.array(CreateEstrattiResponseItem)
+
+
+/**
+ * @summary Registro di tutti gli invii degli estratti per email, dal piu recente
+ */
+export const GetRegistroInviiEstrattiResponseItem = zod.object({
+  "id": zod.number().int(),
+  "estrattoId": zod.number().int(),
+  "collaboratoreNome": zod.string(),
+  "destinatarioContatto": zod.string(),
+  "creatoIl": zod.string(),
+  "esito": zod.enum(['in_coda', 'inviata', 'non_inviata', 'errore']),
+  "esitoEtichetta": zod.string(),
+  "dettaglioEsito": zod.string().nullable()
+})
+export const GetRegistroInviiEstrattiResponse = zod.array(GetRegistroInviiEstrattiResponseItem)
+
+
+/**
+ * @summary Invia per email gli estratti scelti, ciascuno al proprio collaboratore
+ */
+export const inviaEstrattiMultiploBodyIdsMax = 200;
+
+
+
+export const InviaEstrattiMultiploBody = zod.object({
+  "ids": zod.array(zod.number().int()).min(1).max(inviaEstrattiMultiploBodyIdsMax)
+})
+
+export const InviaEstrattiMultiploResponse = zod.object({
+  "risultati": zod.array(zod.object({
+  "id": zod.number().int(),
+  "collaboratoreNome": zod.string(),
+  "esito": zod.enum(['in_coda', 'inviata', 'non_inviata', 'errore']),
+  "esitoEtichetta": zod.string(),
+  "dettaglio": zod.string().nullable()
+}))
+})
 
 
 /**
@@ -3800,7 +3870,9 @@ export const GetEstrattoResponse = zod.object({
   "pagato": zod.boolean(),
   "pagatoIl": zod.string().nullable().describe('Data del pagamento (AAAA-MM-GG)'),
   "pagamentoEuro": zod.number().nullable(),
-  "pagamentoMetodo": zod.union([zod.enum(['bonifico', 'contanti', 'assegno', 'altro']),zod.null()])
+  "pagamentoMetodo": zod.union([zod.enum(['bonifico', 'contanti', 'assegno', 'altro']),zod.null()]),
+  "ultimoInvioIl": zod.string().nullable().describe('Data e ora dell\'ultimo invio per email'),
+  "ultimoInvioEtichetta": zod.string().nullable().describe('Esito dell\'ultimo invio')
 }),
   "righe": zod.array(zod.object({
   "praticaId": zod.number().int(),
@@ -3816,6 +3888,18 @@ export const GetEstrattoResponse = zod.object({
   "pagamentoRegistratoIl": zod.string().nullable(),
   "pagamentoRegistratoDa": zod.string().nullable(),
   "emailDestinatario": zod.string().nullable().describe('Indirizzo del collaboratore a cui va l\'estratto'),
+  "esclusioni": zod.array(zod.object({
+  "praticaId": zod.number().int(),
+  "numeroPratica": zod.number().int(),
+  "assistito": zod.string(),
+  "tipoPratica": zod.string(),
+  "motivo": zod.string()
+})).describe('Pratiche lasciate fuori alla creazione, con il motivo'),
+  "allegato": zod.union([zod.object({
+  "nome": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
   "invii": zod.array(zod.object({
   "id": zod.number().int(),
   "creatoIl": zod.string(),
@@ -3868,7 +3952,9 @@ export const RegistraPagamentoEstrattoResponse = zod.object({
   "pagato": zod.boolean(),
   "pagatoIl": zod.string().nullable().describe('Data del pagamento (AAAA-MM-GG)'),
   "pagamentoEuro": zod.number().nullable(),
-  "pagamentoMetodo": zod.union([zod.enum(['bonifico', 'contanti', 'assegno', 'altro']),zod.null()])
+  "pagamentoMetodo": zod.union([zod.enum(['bonifico', 'contanti', 'assegno', 'altro']),zod.null()]),
+  "ultimoInvioIl": zod.string().nullable().describe('Data e ora dell\'ultimo invio per email'),
+  "ultimoInvioEtichetta": zod.string().nullable().describe('Esito dell\'ultimo invio')
 }),
   "righe": zod.array(zod.object({
   "praticaId": zod.number().int(),
@@ -3884,6 +3970,18 @@ export const RegistraPagamentoEstrattoResponse = zod.object({
   "pagamentoRegistratoIl": zod.string().nullable(),
   "pagamentoRegistratoDa": zod.string().nullable(),
   "emailDestinatario": zod.string().nullable().describe('Indirizzo del collaboratore a cui va l\'estratto'),
+  "esclusioni": zod.array(zod.object({
+  "praticaId": zod.number().int(),
+  "numeroPratica": zod.number().int(),
+  "assistito": zod.string(),
+  "tipoPratica": zod.string(),
+  "motivo": zod.string()
+})).describe('Pratiche lasciate fuori alla creazione, con il motivo'),
+  "allegato": zod.union([zod.object({
+  "nome": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
   "invii": zod.array(zod.object({
   "id": zod.number().int(),
   "creatoIl": zod.string(),
@@ -3916,7 +4014,9 @@ export const InviaEstrattoResponse = zod.object({
   "pagato": zod.boolean(),
   "pagatoIl": zod.string().nullable().describe('Data del pagamento (AAAA-MM-GG)'),
   "pagamentoEuro": zod.number().nullable(),
-  "pagamentoMetodo": zod.union([zod.enum(['bonifico', 'contanti', 'assegno', 'altro']),zod.null()])
+  "pagamentoMetodo": zod.union([zod.enum(['bonifico', 'contanti', 'assegno', 'altro']),zod.null()]),
+  "ultimoInvioIl": zod.string().nullable().describe('Data e ora dell\'ultimo invio per email'),
+  "ultimoInvioEtichetta": zod.string().nullable().describe('Esito dell\'ultimo invio')
 }),
   "righe": zod.array(zod.object({
   "praticaId": zod.number().int(),
@@ -3932,6 +4032,18 @@ export const InviaEstrattoResponse = zod.object({
   "pagamentoRegistratoIl": zod.string().nullable(),
   "pagamentoRegistratoDa": zod.string().nullable(),
   "emailDestinatario": zod.string().nullable().describe('Indirizzo del collaboratore a cui va l\'estratto'),
+  "esclusioni": zod.array(zod.object({
+  "praticaId": zod.number().int(),
+  "numeroPratica": zod.number().int(),
+  "assistito": zod.string(),
+  "tipoPratica": zod.string(),
+  "motivo": zod.string()
+})).describe('Pratiche lasciate fuori alla creazione, con il motivo'),
+  "allegato": zod.union([zod.object({
+  "nome": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
   "invii": zod.array(zod.object({
   "id": zod.number().int(),
   "creatoIl": zod.string(),
@@ -3944,6 +4056,289 @@ export const InviaEstrattoResponse = zod.object({
   "esito": zod.enum(['in_coda', 'inviata', 'non_inviata', 'errore']),
   "esitoEtichetta": zod.string(),
   "dettaglio": zod.string().nullable()
+})
+
+
+/**
+ * @summary Dati del patronato, causale e frase del bonifico stampati sulle ricevute
+ */
+export const getImpostazioniRicevuteResponsePatronatoNomeMax = 120;
+
+export const getImpostazioniRicevuteResponsePatronatoIndirizzoMax = 160;
+
+export const getImpostazioniRicevuteResponsePatronatoCapCittaMax = 120;
+
+export const getImpostazioniRicevuteResponsePatronatoCodiceFiscaleMax = 30;
+
+export const getImpostazioniRicevuteResponseCausaleMax = 400;
+
+export const getImpostazioniRicevuteResponseFraseBonificoMax = 300;
+
+export const getImpostazioniRicevuteResponseAliquotaIvaMin = 0;
+export const getImpostazioniRicevuteResponseAliquotaIvaMax = 100;
+
+
+
+export const GetImpostazioniRicevuteResponse = zod.object({
+  "patronatoNome": zod.string().max(getImpostazioniRicevuteResponsePatronatoNomeMax),
+  "patronatoIndirizzo": zod.string().max(getImpostazioniRicevuteResponsePatronatoIndirizzoMax),
+  "patronatoCapCitta": zod.string().max(getImpostazioniRicevuteResponsePatronatoCapCittaMax).describe('CAP e citta, es. 80021 Afragola'),
+  "patronatoCodiceFiscale": zod.string().max(getImpostazioniRicevuteResponsePatronatoCodiceFiscaleMax),
+  "causale": zod.string().max(getImpostazioniRicevuteResponseCausaleMax).describe('Testo fisso dopo "relativa a"'),
+  "fraseBonifico": zod.string().max(getImpostazioniRicevuteResponseFraseBonificoMax),
+  "aliquotaIva": zod.number().min(getImpostazioniRicevuteResponseAliquotaIvaMin).max(getImpostazioniRicevuteResponseAliquotaIvaMax).describe('Aliquota IVA proposta per i collaboratori con partita IVA')
+})
+
+
+/**
+ * @summary Modifica i dati stampati sulle ricevute
+ */
+export const updateImpostazioniRicevuteBodyPatronatoNomeMax = 120;
+
+export const updateImpostazioniRicevuteBodyPatronatoIndirizzoMax = 160;
+
+export const updateImpostazioniRicevuteBodyPatronatoCapCittaMax = 120;
+
+export const updateImpostazioniRicevuteBodyPatronatoCodiceFiscaleMax = 30;
+
+export const updateImpostazioniRicevuteBodyCausaleMax = 400;
+
+export const updateImpostazioniRicevuteBodyFraseBonificoMax = 300;
+
+export const updateImpostazioniRicevuteBodyAliquotaIvaMin = 0;
+export const updateImpostazioniRicevuteBodyAliquotaIvaMax = 100;
+
+
+
+export const UpdateImpostazioniRicevuteBody = zod.object({
+  "patronatoNome": zod.string().max(updateImpostazioniRicevuteBodyPatronatoNomeMax),
+  "patronatoIndirizzo": zod.string().max(updateImpostazioniRicevuteBodyPatronatoIndirizzoMax),
+  "patronatoCapCitta": zod.string().max(updateImpostazioniRicevuteBodyPatronatoCapCittaMax).describe('CAP e citta, es. 80021 Afragola'),
+  "patronatoCodiceFiscale": zod.string().max(updateImpostazioniRicevuteBodyPatronatoCodiceFiscaleMax),
+  "causale": zod.string().max(updateImpostazioniRicevuteBodyCausaleMax).describe('Testo fisso dopo "relativa a"'),
+  "fraseBonifico": zod.string().max(updateImpostazioniRicevuteBodyFraseBonificoMax),
+  "aliquotaIva": zod.number().min(updateImpostazioniRicevuteBodyAliquotaIvaMin).max(updateImpostazioniRicevuteBodyAliquotaIvaMax).describe('Aliquota IVA proposta per i collaboratori con partita IVA')
+})
+
+export const updateImpostazioniRicevuteResponsePatronatoNomeMax = 120;
+
+export const updateImpostazioniRicevuteResponsePatronatoIndirizzoMax = 160;
+
+export const updateImpostazioniRicevuteResponsePatronatoCapCittaMax = 120;
+
+export const updateImpostazioniRicevuteResponsePatronatoCodiceFiscaleMax = 30;
+
+export const updateImpostazioniRicevuteResponseCausaleMax = 400;
+
+export const updateImpostazioniRicevuteResponseFraseBonificoMax = 300;
+
+export const updateImpostazioniRicevuteResponseAliquotaIvaMin = 0;
+export const updateImpostazioniRicevuteResponseAliquotaIvaMax = 100;
+
+
+
+export const UpdateImpostazioniRicevuteResponse = zod.object({
+  "patronatoNome": zod.string().max(updateImpostazioniRicevuteResponsePatronatoNomeMax),
+  "patronatoIndirizzo": zod.string().max(updateImpostazioniRicevuteResponsePatronatoIndirizzoMax),
+  "patronatoCapCitta": zod.string().max(updateImpostazioniRicevuteResponsePatronatoCapCittaMax).describe('CAP e citta, es. 80021 Afragola'),
+  "patronatoCodiceFiscale": zod.string().max(updateImpostazioniRicevuteResponsePatronatoCodiceFiscaleMax),
+  "causale": zod.string().max(updateImpostazioniRicevuteResponseCausaleMax).describe('Testo fisso dopo "relativa a"'),
+  "fraseBonifico": zod.string().max(updateImpostazioniRicevuteResponseFraseBonificoMax),
+  "aliquotaIva": zod.number().min(updateImpostazioniRicevuteResponseAliquotaIvaMin).max(updateImpostazioniRicevuteResponseAliquotaIvaMax).describe('Aliquota IVA proposta per i collaboratori con partita IVA')
+})
+
+
+/**
+ * @summary Ricevute e pagamenti, con filtri
+ */
+export const ListRicevuteQueryParams = zod.object({
+  "dal": zod.coerce.string().optional().describe('Data ricevuta dal (AAAA-MM-GG)'),
+  "al": zod.coerce.string().optional().describe('Data ricevuta fino al (AAAA-MM-GG)'),
+  "numero": zod.coerce.number().int().optional().describe('Numero della ricevuta'),
+  "collaboratoreId": zod.coerce.number().int().optional(),
+  "stato": zod.enum(['da_pagare', 'pagata']).optional()
+})
+
+export const ListRicevuteResponse = zod.object({
+  "righe": zod.array(zod.object({
+  "id": zod.number().int(),
+  "anno": zod.number().int(),
+  "numero": zod.number().int(),
+  "dataRicevuta": zod.string().describe('AAAA-MM-GG'),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string().describe('Cognome e nome'),
+  "denominazione": zod.string().nullable().describe('Denominazione della sede'),
+  "tipoSoggetto": zod.union([zod.enum(['PARTITA_IVA', 'ASSOCIAZIONE']),zod.null()]),
+  "imponibileEuro": zod.number(),
+  "aliquotaIva": zod.number().nullable(),
+  "ivaEuro": zod.number(),
+  "totaleEuro": zod.number(),
+  "pagata": zod.boolean(),
+  "pagatoIl": zod.string().nullable(),
+  "origineDescrizione": zod.string()
+})),
+  "totale": zod.number().int().describe('Numero di documenti trovati'),
+  "daPagare": zod.number().int(),
+  "pagate": zod.number().int(),
+  "totaleEuro": zod.number()
+})
+
+
+/**
+ * @summary Crea la ricevuta di un collaboratore da una riga del dare/avere
+ */
+export const createRicevutaBodyAnnoMin = 2000;
+export const createRicevutaBodyAnnoMax = 2100;
+
+export const createRicevutaBodyImportoEuroExclusiveMin = 0;
+export const createRicevutaBodyImportoEuroMax = 10000000;
+
+export const createRicevutaBodyAliquotaIvaMin = 0;
+export const createRicevutaBodyAliquotaIvaMax = 100;
+
+
+
+export const CreateRicevutaBody = zod.object({
+  "collaboratoreId": zod.number().int(),
+  "anno": zod.number().int().min(createRicevutaBodyAnnoMin).max(createRicevutaBodyAnnoMax).describe('Anno del dare/avere'),
+  "origineTipo": zod.enum(['riga', 'estratto', 'importazione']),
+  "origineId": zod.number().int(),
+  "importoEuro": zod.number().gt(createRicevutaBodyImportoEuroExclusiveMin).max(createRicevutaBodyImportoEuroMax).describe('Importo; per i collaboratori con partita IVA e\' l\'imponibile'),
+  "aliquotaIva": zod.number().min(createRicevutaBodyAliquotaIvaMin).max(createRicevutaBodyAliquotaIvaMax).nullish(),
+  "dataRicevuta": zod.string().nullish().describe('AAAA-MM-GG, di default oggi')
+})
+
+export const CreateRicevutaResponse = zod.object({
+  "ricevuta": zod.object({
+  "id": zod.number().int(),
+  "anno": zod.number().int(),
+  "numero": zod.number().int(),
+  "dataRicevuta": zod.string().describe('AAAA-MM-GG'),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string().describe('Cognome e nome'),
+  "denominazione": zod.string().nullable().describe('Denominazione della sede'),
+  "tipoSoggetto": zod.union([zod.enum(['PARTITA_IVA', 'ASSOCIAZIONE']),zod.null()]),
+  "imponibileEuro": zod.number(),
+  "aliquotaIva": zod.number().nullable(),
+  "ivaEuro": zod.number(),
+  "totaleEuro": zod.number(),
+  "pagata": zod.boolean(),
+  "pagatoIl": zod.string().nullable(),
+  "origineDescrizione": zod.string()
+}),
+  "annoDareAvere": zod.number().int(),
+  "origineTipo": zod.enum(['riga', 'estratto', 'importazione']),
+  "origineId": zod.number().int(),
+  "creatoIl": zod.string(),
+  "creatoDa": zod.string().nullable(),
+  "pagamentoMetodo": zod.union([zod.enum(['bonifico', 'contanti', 'assegno', 'altro']),zod.null()]),
+  "pagamentoRegistratoIl": zod.string().nullable(),
+  "pagamentoRegistratoDa": zod.string().nullable(),
+  "allegato": zod.union([zod.object({
+  "nome": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "eliminabile": zod.boolean().describe('Vero se e\' l\'ultima dell\'anno e non e\' stata pagata')
+})
+
+
+/**
+ * @summary Dettaglio di una ricevuta
+ */
+export const GetRicevutaParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const GetRicevutaResponse = zod.object({
+  "ricevuta": zod.object({
+  "id": zod.number().int(),
+  "anno": zod.number().int(),
+  "numero": zod.number().int(),
+  "dataRicevuta": zod.string().describe('AAAA-MM-GG'),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string().describe('Cognome e nome'),
+  "denominazione": zod.string().nullable().describe('Denominazione della sede'),
+  "tipoSoggetto": zod.union([zod.enum(['PARTITA_IVA', 'ASSOCIAZIONE']),zod.null()]),
+  "imponibileEuro": zod.number(),
+  "aliquotaIva": zod.number().nullable(),
+  "ivaEuro": zod.number(),
+  "totaleEuro": zod.number(),
+  "pagata": zod.boolean(),
+  "pagatoIl": zod.string().nullable(),
+  "origineDescrizione": zod.string()
+}),
+  "annoDareAvere": zod.number().int(),
+  "origineTipo": zod.enum(['riga', 'estratto', 'importazione']),
+  "origineId": zod.number().int(),
+  "creatoIl": zod.string(),
+  "creatoDa": zod.string().nullable(),
+  "pagamentoMetodo": zod.union([zod.enum(['bonifico', 'contanti', 'assegno', 'altro']),zod.null()]),
+  "pagamentoRegistratoIl": zod.string().nullable(),
+  "pagamentoRegistratoDa": zod.string().nullable(),
+  "allegato": zod.union([zod.object({
+  "nome": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "eliminabile": zod.boolean().describe('Vero se e\' l\'ultima dell\'anno e non e\' stata pagata')
+})
+
+
+/**
+ * @summary Elimina l'ultima ricevuta dell'anno, se non e' stata pagata
+ */
+export const DeleteRicevutaParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const DeleteRicevutaResponse = zod.void()
+
+
+/**
+ * @summary Registra il pagamento della ricevuta
+ */
+export const RegistraPagamentoRicevutaParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const RegistraPagamentoRicevutaBody = zod.object({
+  "data": zod.string().describe('Data del pagamento (AAAA-MM-GG)'),
+  "metodo": zod.enum(['bonifico', 'contanti', 'assegno', 'altro'])
+})
+
+export const RegistraPagamentoRicevutaResponse = zod.object({
+  "ricevuta": zod.object({
+  "id": zod.number().int(),
+  "anno": zod.number().int(),
+  "numero": zod.number().int(),
+  "dataRicevuta": zod.string().describe('AAAA-MM-GG'),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string().describe('Cognome e nome'),
+  "denominazione": zod.string().nullable().describe('Denominazione della sede'),
+  "tipoSoggetto": zod.union([zod.enum(['PARTITA_IVA', 'ASSOCIAZIONE']),zod.null()]),
+  "imponibileEuro": zod.number(),
+  "aliquotaIva": zod.number().nullable(),
+  "ivaEuro": zod.number(),
+  "totaleEuro": zod.number(),
+  "pagata": zod.boolean(),
+  "pagatoIl": zod.string().nullable(),
+  "origineDescrizione": zod.string()
+}),
+  "annoDareAvere": zod.number().int(),
+  "origineTipo": zod.enum(['riga', 'estratto', 'importazione']),
+  "origineId": zod.number().int(),
+  "creatoIl": zod.string(),
+  "creatoDa": zod.string().nullable(),
+  "pagamentoMetodo": zod.union([zod.enum(['bonifico', 'contanti', 'assegno', 'altro']),zod.null()]),
+  "pagamentoRegistratoIl": zod.string().nullable(),
+  "pagamentoRegistratoDa": zod.string().nullable(),
+  "allegato": zod.union([zod.object({
+  "nome": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "eliminabile": zod.boolean().describe('Vero se e\' l\'ultima dell\'anno e non e\' stata pagata')
 })
 
 
@@ -4033,7 +4428,7 @@ export const DeleteLogoStampaResponse = zod.object({
 export const ListServiziImportResponseItem = zod.object({
   "servizio": zod.enum(['mod730', 'isee', 'naspi', 'pensionati']),
   "etichetta": zod.string(),
-  "sezione": zod.enum(['naspi', 'pensionati', 'patronato', 'caf', 'debiti']),
+  "sezione": zod.enum(['naspi', 'pensionati', 'patronato', 'caf', 'crediti', 'debiti']),
   "regola": zod.union([zod.literal('fisso'),zod.literal('percentuale'),zod.literal(null)]).nullable().describe('fisso = importo in euro per ogni riga valida; percentuale = percentuale della colonna importo'),
   "valore": zod.number().nullable().describe('Euro per riga (regola fisso) oppure percentuale, es. 12,5 (regola percentuale)'),
   "colonnaChiave": zod.string().nullable().describe('Intestazione della colonna che identifica il collaboratore'),
@@ -4071,7 +4466,7 @@ export const UpdateServizioImportBody = zod.object({
 export const UpdateServizioImportResponse = zod.object({
   "servizio": zod.enum(['mod730', 'isee', 'naspi', 'pensionati']),
   "etichetta": zod.string(),
-  "sezione": zod.enum(['naspi', 'pensionati', 'patronato', 'caf', 'debiti']),
+  "sezione": zod.enum(['naspi', 'pensionati', 'patronato', 'caf', 'crediti', 'debiti']),
   "regola": zod.union([zod.literal('fisso'),zod.literal('percentuale'),zod.literal(null)]).nullable().describe('fisso = importo in euro per ogni riga valida; percentuale = percentuale della colonna importo'),
   "valore": zod.number().nullable().describe('Euro per riga (regola fisso) oppure percentuale, es. 12,5 (regola percentuale)'),
   "colonnaChiave": zod.string().nullable().describe('Intestazione della colonna che identifica il collaboratore'),
@@ -4131,7 +4526,7 @@ export const GetImportazioneResponse = zod.object({
   "configurazione": zod.object({
   "servizio": zod.enum(['mod730', 'isee', 'naspi', 'pensionati']),
   "etichetta": zod.string(),
-  "sezione": zod.enum(['naspi', 'pensionati', 'patronato', 'caf', 'debiti']),
+  "sezione": zod.enum(['naspi', 'pensionati', 'patronato', 'caf', 'crediti', 'debiti']),
   "regola": zod.union([zod.literal('fisso'),zod.literal('percentuale'),zod.literal(null)]).nullable().describe('fisso = importo in euro per ogni riga valida; percentuale = percentuale della colonna importo'),
   "valore": zod.number().nullable().describe('Euro per riga (regola fisso) oppure percentuale, es. 12,5 (regola percentuale)'),
   "colonnaChiave": zod.string().nullable().describe('Intestazione della colonna che identifica il collaboratore'),
@@ -4203,7 +4598,7 @@ export const ConfermaImportazioneResponse = zod.object({
   "configurazione": zod.object({
   "servizio": zod.enum(['mod730', 'isee', 'naspi', 'pensionati']),
   "etichetta": zod.string(),
-  "sezione": zod.enum(['naspi', 'pensionati', 'patronato', 'caf', 'debiti']),
+  "sezione": zod.enum(['naspi', 'pensionati', 'patronato', 'caf', 'crediti', 'debiti']),
   "regola": zod.union([zod.literal('fisso'),zod.literal('percentuale'),zod.literal(null)]).nullable().describe('fisso = importo in euro per ogni riga valida; percentuale = percentuale della colonna importo'),
   "valore": zod.number().nullable().describe('Euro per riga (regola fisso) oppure percentuale, es. 12,5 (regola percentuale)'),
   "colonnaChiave": zod.string().nullable().describe('Intestazione della colonna che identifica il collaboratore'),
@@ -4255,7 +4650,7 @@ export const GetDareAvereResponse = zod.object({
   "numeroSportello": zod.string(),
   "anno": zod.number().int(),
   "sezioni": zod.array(zod.object({
-  "sezione": zod.enum(['naspi', 'pensionati', 'patronato', 'caf', 'debiti']),
+  "sezione": zod.enum(['naspi', 'pensionati', 'patronato', 'caf', 'crediti', 'debiti']),
   "titolo": zod.string(),
   "automatica": zod.boolean().describe('Vero se le righe arrivano dagli estratti e non si modificano qui'),
   "righe": zod.array(zod.object({
@@ -4266,11 +4661,17 @@ export const GetDareAvereResponse = zod.object({
   "riferimento": zod.string().nullable().describe('Solo Patronato: es. Estratto 03/08/2026'),
   "nota": zod.string(),
   "estrattoId": zod.number().int().nullable(),
-  "importazioneId": zod.number().int().nullable().describe('Riga riportata da un\'importazione Excel (non modificabile qui)')
+  "importazioneId": zod.number().int().nullable().describe('Riga riportata da un\'importazione Excel (non modificabile qui)'),
+  "ricevuta": zod.union([zod.object({
+  "id": zod.number().int(),
+  "numero": zod.number().int(),
+  "anno": zod.number().int(),
+  "pagata": zod.boolean()
+}),zod.null()])
 })),
   "totaleEuro": zod.number()
 })),
-  "totaleAvereEuro": zod.number().describe('Somma degli importi delle sezioni meno i debiti')
+  "totaleAvereEuro": zod.number().describe('Importi delle sezioni e crediti, meno i debiti')
 })
 
 
@@ -4292,7 +4693,7 @@ export const createRigaDareAvereBodyNotaMax = 300;
 export const CreateRigaDareAvereBody = zod.object({
   "collaboratoreId": zod.number().int(),
   "anno": zod.number().int().min(createRigaDareAvereBodyAnnoMin).max(createRigaDareAvereBodyAnnoMax),
-  "sezione": zod.enum(['naspi', 'pensionati', 'caf', 'debiti']),
+  "sezione": zod.enum(['naspi', 'pensionati', 'caf', 'crediti', 'debiti']),
   "descrizione": zod.string().min(1).max(createRigaDareAvereBodyDescrizioneMax),
   "importoEuro": zod.number().gt(createRigaDareAvereBodyImportoEuroExclusiveMin).max(createRigaDareAvereBodyImportoEuroMax),
   "dataPagamento": zod.string().nullish(),
@@ -4305,7 +4706,7 @@ export const CreateRigaDareAvereResponse = zod.object({
   "numeroSportello": zod.string(),
   "anno": zod.number().int(),
   "sezioni": zod.array(zod.object({
-  "sezione": zod.enum(['naspi', 'pensionati', 'patronato', 'caf', 'debiti']),
+  "sezione": zod.enum(['naspi', 'pensionati', 'patronato', 'caf', 'crediti', 'debiti']),
   "titolo": zod.string(),
   "automatica": zod.boolean().describe('Vero se le righe arrivano dagli estratti e non si modificano qui'),
   "righe": zod.array(zod.object({
@@ -4316,11 +4717,17 @@ export const CreateRigaDareAvereResponse = zod.object({
   "riferimento": zod.string().nullable().describe('Solo Patronato: es. Estratto 03/08/2026'),
   "nota": zod.string(),
   "estrattoId": zod.number().int().nullable(),
-  "importazioneId": zod.number().int().nullable().describe('Riga riportata da un\'importazione Excel (non modificabile qui)')
+  "importazioneId": zod.number().int().nullable().describe('Riga riportata da un\'importazione Excel (non modificabile qui)'),
+  "ricevuta": zod.union([zod.object({
+  "id": zod.number().int(),
+  "numero": zod.number().int(),
+  "anno": zod.number().int(),
+  "pagata": zod.boolean()
+}),zod.null()])
 })),
   "totaleEuro": zod.number()
 })),
-  "totaleAvereEuro": zod.number().describe('Somma degli importi delle sezioni meno i debiti')
+  "totaleAvereEuro": zod.number().describe('Importi delle sezioni e crediti, meno i debiti')
 })
 
 
@@ -4353,7 +4760,7 @@ export const UpdateRigaDareAvereResponse = zod.object({
   "numeroSportello": zod.string(),
   "anno": zod.number().int(),
   "sezioni": zod.array(zod.object({
-  "sezione": zod.enum(['naspi', 'pensionati', 'patronato', 'caf', 'debiti']),
+  "sezione": zod.enum(['naspi', 'pensionati', 'patronato', 'caf', 'crediti', 'debiti']),
   "titolo": zod.string(),
   "automatica": zod.boolean().describe('Vero se le righe arrivano dagli estratti e non si modificano qui'),
   "righe": zod.array(zod.object({
@@ -4364,11 +4771,17 @@ export const UpdateRigaDareAvereResponse = zod.object({
   "riferimento": zod.string().nullable().describe('Solo Patronato: es. Estratto 03/08/2026'),
   "nota": zod.string(),
   "estrattoId": zod.number().int().nullable(),
-  "importazioneId": zod.number().int().nullable().describe('Riga riportata da un\'importazione Excel (non modificabile qui)')
+  "importazioneId": zod.number().int().nullable().describe('Riga riportata da un\'importazione Excel (non modificabile qui)'),
+  "ricevuta": zod.union([zod.object({
+  "id": zod.number().int(),
+  "numero": zod.number().int(),
+  "anno": zod.number().int(),
+  "pagata": zod.boolean()
+}),zod.null()])
 })),
   "totaleEuro": zod.number()
 })),
-  "totaleAvereEuro": zod.number().describe('Somma degli importi delle sezioni meno i debiti')
+  "totaleAvereEuro": zod.number().describe('Importi delle sezioni e crediti, meno i debiti')
 })
 
 
@@ -4385,7 +4798,7 @@ export const DeleteRigaDareAvereResponse = zod.object({
   "numeroSportello": zod.string(),
   "anno": zod.number().int(),
   "sezioni": zod.array(zod.object({
-  "sezione": zod.enum(['naspi', 'pensionati', 'patronato', 'caf', 'debiti']),
+  "sezione": zod.enum(['naspi', 'pensionati', 'patronato', 'caf', 'crediti', 'debiti']),
   "titolo": zod.string(),
   "automatica": zod.boolean().describe('Vero se le righe arrivano dagli estratti e non si modificano qui'),
   "righe": zod.array(zod.object({
@@ -4396,11 +4809,17 @@ export const DeleteRigaDareAvereResponse = zod.object({
   "riferimento": zod.string().nullable().describe('Solo Patronato: es. Estratto 03/08/2026'),
   "nota": zod.string(),
   "estrattoId": zod.number().int().nullable(),
-  "importazioneId": zod.number().int().nullable().describe('Riga riportata da un\'importazione Excel (non modificabile qui)')
+  "importazioneId": zod.number().int().nullable().describe('Riga riportata da un\'importazione Excel (non modificabile qui)'),
+  "ricevuta": zod.union([zod.object({
+  "id": zod.number().int(),
+  "numero": zod.number().int(),
+  "anno": zod.number().int(),
+  "pagata": zod.boolean()
+}),zod.null()])
 })),
   "totaleEuro": zod.number()
 })),
-  "totaleAvereEuro": zod.number().describe('Somma degli importi delle sezioni meno i debiti')
+  "totaleAvereEuro": zod.number().describe('Importi delle sezioni e crediti, meno i debiti')
 })
 
 

@@ -56,7 +56,7 @@ class Scrittore {
   }
 }
 
-async function nuovoDocumento() {
+export async function nuovoDocumento() {
   const doc = await PDFDocument.create();
   const f = { r: await doc.embedFont(StandardFonts.Helvetica), b: await doc.embedFont(StandardFonts.HelveticaBold) };
   return { doc, w: new Scrittore(doc, f) };
@@ -165,7 +165,8 @@ export async function pdfEstratto(id: number): Promise<{ pdf: Buffer; nomeFile: 
   y -= 6;
   p.drawLine({ start: { x: M, y }, end: { x: L - M, y }, thickness: 1, color: NERO });
   y -= 24;
-  w.testo(p, `Totale Punti ${e!.totalePunti}`, X.assistito, y, 14, { bold: true });
+  const wPratiche = w.testo(p, `Totale Pratiche ${righe.length}`, X.assistito, y, 14, { bold: true });
+  w.testo(p, `Totale Punti ${e!.totalePunti}`, X.assistito + wPratiche + 36, y, 14, { bold: true });
   const testoTot = `Totale Ristorno ${formatoEuro(e!.totaleCentesimi / 100)}`;
   const wTot = w.testo(p, testoTot, L - M - 2, y, 14, { bold: true, align: "right" });
   p.drawLine({ start: { x: L - M - 2 - wTot, y: y - 3 }, end: { x: L - M - 2, y: y - 3 }, thickness: 1, color: NERO });

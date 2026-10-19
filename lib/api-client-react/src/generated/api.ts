@@ -54,12 +54,14 @@ import type {
   ConteggioAlert,
   ConteggioSegnalazioni,
   CreaEstrattiInput,
+  CreaRicevutaInput,
   DareAvere,
   DashboardOperatore,
   DocumentiInvioInput,
   DocumentoNoto,
   DocumentoNotoInput,
   DocumentoTipoInput,
+  ElencoRicevute,
   EsitoReinvioCredenziali,
   EstrattoDettaglio,
   EstrattoRiepilogo,
@@ -80,10 +82,13 @@ import type {
   ImportazioneDettaglio,
   ImpostazioniNotifiche,
   ImpostazioniNotificheInput,
+  ImpostazioniRicevute,
   ImpostazioniStampa,
   ImpostazioniStampaInput,
   InvioEstrattoEsito,
   InvioEventoEsito,
+  InvioMultiploEstrattiEsito,
+  InvioMultiploEstrattiInput,
   InvioPraticaInput,
   InvioPratiche,
   InvitiEventoInput,
@@ -96,6 +101,7 @@ import type {
   ListNotificheParams,
   ListPraticheBackofficeParams,
   ListPraticheParams,
+  ListRicevuteParams,
   ListSegnalazioniDuplicatiParams,
   LogOperazioniPagina,
   LoginInput,
@@ -117,6 +123,7 @@ import type {
   OrariPartecipanteInput,
   OrdineInput,
   PagamentoEstrattoInput,
+  PagamentoRicevutaInput,
   PartecipanteEventoInput,
   PasswordProvvisoriaInput,
   PraticaBackoffice,
@@ -132,7 +139,9 @@ import type {
   QuizInvioInput,
   QuizPubblico,
   QuizRisposteInput,
+  RegistroInvioEstratto,
   ResocontoCompensi,
+  RicevutaDettaglio,
   RichiestaFirmaMandato,
   RigaDareAvereInput,
   RigaDareAvereModificaInput,
@@ -6640,6 +6649,171 @@ export const useCreateEstratti = <TError = ErrorType<unknown>,
       return useMutation(getCreateEstrattiMutationOptions(options));
     }
 
+export const getGetRegistroInviiEstrattiUrl = () => {
+
+
+
+
+  return `/api/backoffice/compensi/estratti/registro-invii`
+}
+
+/**
+ * @summary Registro di tutti gli invii degli estratti per email, dal piu recente
+ */
+export const getRegistroInviiEstratti = async ( options?: Parameters<typeof customFetch>[1]): Promise<RegistroInvioEstratto[]> => {
+
+  return customFetch<RegistroInvioEstratto[]>(getGetRegistroInviiEstrattiUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetRegistroInviiEstrattiQueryKey = () => {
+    return [
+    `/api/backoffice/compensi/estratti/registro-invii`
+    ] as const;
+    }
+
+
+export const getGetRegistroInviiEstrattiQueryOptions = <TData = Awaited<ReturnType<typeof getRegistroInviiEstratti>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRegistroInviiEstratti>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetRegistroInviiEstrattiQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRegistroInviiEstratti>>> = ({ signal }) => getRegistroInviiEstratti({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRegistroInviiEstratti>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetRegistroInviiEstrattiQueryResult = NonNullable<Awaited<ReturnType<typeof getRegistroInviiEstratti>>>
+export type GetRegistroInviiEstrattiQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Registro di tutti gli invii degli estratti per email, dal piu recente
+ */
+
+export function useGetRegistroInviiEstratti<TData = Awaited<ReturnType<typeof getRegistroInviiEstratti>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRegistroInviiEstratti>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetRegistroInviiEstrattiQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getInviaEstrattiMultiploUrl = () => {
+
+
+
+
+  return `/api/backoffice/compensi/estratti/invio-multiplo`
+}
+
+/**
+ * @summary Invia per email gli estratti scelti, ciascuno al proprio collaboratore
+ */
+export const inviaEstrattiMultiplo = async (invioMultiploEstrattiInput: InvioMultiploEstrattiInput, options?: Parameters<typeof customFetch>[1]): Promise<InvioMultiploEstrattiEsito> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<InvioMultiploEstrattiEsito>(getInviaEstrattiMultiploUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(invioMultiploEstrattiInput)
+  }
+);}
+
+
+
+
+
+export const getInviaEstrattiMultiploMutationKey = () => ['inviaEstrattiMultiplo'] as const;
+
+export const getInviaEstrattiMultiploMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inviaEstrattiMultiplo>>, TError,InviaEstrattiMultiploMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof inviaEstrattiMultiplo>>, TError,InviaEstrattiMultiploMutationVariables, TContext> => {
+
+const mutationKey = getInviaEstrattiMultiploMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof inviaEstrattiMultiplo>>, InviaEstrattiMultiploMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  inviaEstrattiMultiplo(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InviaEstrattiMultiploMutationResult = NonNullable<Awaited<ReturnType<typeof inviaEstrattiMultiplo>>>
+    export type InviaEstrattiMultiploMutationBody = BodyType<InvioMultiploEstrattiInput>
+    export type InviaEstrattiMultiploMutationError = ErrorType<unknown>
+    export type InviaEstrattiMultiploMutationVariables = {data: BodyType<InvioMultiploEstrattiInput>}
+
+    /**
+ * @summary Invia per email gli estratti scelti, ciascuno al proprio collaboratore
+ */
+export const useInviaEstrattiMultiplo = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inviaEstrattiMultiplo>>, TError,InviaEstrattiMultiploMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof inviaEstrattiMultiplo>>,
+        TError,
+        InviaEstrattiMultiploMutationVariables,
+        TContext
+      > => {
+      return useMutation(getInviaEstrattiMultiploMutationOptions(options));
+    }
+
 export const getGetEstrattoUrl = (id: number,) => {
 
 
@@ -6952,6 +7126,583 @@ export const useInviaEstratto = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getInviaEstrattoMutationOptions(options));
+    }
+
+export const getGetImpostazioniRicevuteUrl = () => {
+
+
+
+
+  return `/api/backoffice/compensi/impostazioni-ricevute`
+}
+
+/**
+ * @summary Dati del patronato, causale e frase del bonifico stampati sulle ricevute
+ */
+export const getImpostazioniRicevute = async ( options?: Parameters<typeof customFetch>[1]): Promise<ImpostazioniRicevute> => {
+
+  return customFetch<ImpostazioniRicevute>(getGetImpostazioniRicevuteUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetImpostazioniRicevuteQueryKey = () => {
+    return [
+    `/api/backoffice/compensi/impostazioni-ricevute`
+    ] as const;
+    }
+
+
+export const getGetImpostazioniRicevuteQueryOptions = <TData = Awaited<ReturnType<typeof getImpostazioniRicevute>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getImpostazioniRicevute>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetImpostazioniRicevuteQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getImpostazioniRicevute>>> = ({ signal }) => getImpostazioniRicevute({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getImpostazioniRicevute>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetImpostazioniRicevuteQueryResult = NonNullable<Awaited<ReturnType<typeof getImpostazioniRicevute>>>
+export type GetImpostazioniRicevuteQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Dati del patronato, causale e frase del bonifico stampati sulle ricevute
+ */
+
+export function useGetImpostazioniRicevute<TData = Awaited<ReturnType<typeof getImpostazioniRicevute>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getImpostazioniRicevute>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetImpostazioniRicevuteQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateImpostazioniRicevuteUrl = () => {
+
+
+
+
+  return `/api/backoffice/compensi/impostazioni-ricevute`
+}
+
+/**
+ * @summary Modifica i dati stampati sulle ricevute
+ */
+export const updateImpostazioniRicevute = async (impostazioniRicevute: ImpostazioniRicevute, options?: Parameters<typeof customFetch>[1]): Promise<ImpostazioniRicevute> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ImpostazioniRicevute>(getUpdateImpostazioniRicevuteUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(impostazioniRicevute)
+  }
+);}
+
+
+
+
+
+export const getUpdateImpostazioniRicevuteMutationKey = () => ['updateImpostazioniRicevute'] as const;
+
+export const getUpdateImpostazioniRicevuteMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateImpostazioniRicevute>>, TError,UpdateImpostazioniRicevuteMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateImpostazioniRicevute>>, TError,UpdateImpostazioniRicevuteMutationVariables, TContext> => {
+
+const mutationKey = getUpdateImpostazioniRicevuteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateImpostazioniRicevute>>, UpdateImpostazioniRicevuteMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateImpostazioniRicevute(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateImpostazioniRicevuteMutationResult = NonNullable<Awaited<ReturnType<typeof updateImpostazioniRicevute>>>
+    export type UpdateImpostazioniRicevuteMutationBody = BodyType<ImpostazioniRicevute>
+    export type UpdateImpostazioniRicevuteMutationError = ErrorType<unknown>
+    export type UpdateImpostazioniRicevuteMutationVariables = {data: BodyType<ImpostazioniRicevute>}
+
+    /**
+ * @summary Modifica i dati stampati sulle ricevute
+ */
+export const useUpdateImpostazioniRicevute = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateImpostazioniRicevute>>, TError,UpdateImpostazioniRicevuteMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateImpostazioniRicevute>>,
+        TError,
+        UpdateImpostazioniRicevuteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateImpostazioniRicevuteMutationOptions(options));
+    }
+
+export const getListRicevuteUrl = (params?: ListRicevuteParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/backoffice/ricevute?${stringifiedParams}` : `/api/backoffice/ricevute`
+}
+
+/**
+ * @summary Ricevute e pagamenti, con filtri
+ */
+export const listRicevute = async (params?: ListRicevuteParams, options?: Parameters<typeof customFetch>[1]): Promise<ElencoRicevute> => {
+
+  return customFetch<ElencoRicevute>(getListRicevuteUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListRicevuteQueryKey = (params?: ListRicevuteParams,) => {
+    return [
+    `/api/backoffice/ricevute`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListRicevuteQueryOptions = <TData = Awaited<ReturnType<typeof listRicevute>>, TError = ErrorType<unknown>>(params?: ListRicevuteParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listRicevute>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListRicevuteQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listRicevute>>> = ({ signal }) => listRicevute(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listRicevute>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListRicevuteQueryResult = NonNullable<Awaited<ReturnType<typeof listRicevute>>>
+export type ListRicevuteQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Ricevute e pagamenti, con filtri
+ */
+
+export function useListRicevute<TData = Awaited<ReturnType<typeof listRicevute>>, TError = ErrorType<unknown>>(
+ params?: ListRicevuteParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listRicevute>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListRicevuteQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateRicevutaUrl = () => {
+
+
+
+
+  return `/api/backoffice/ricevute`
+}
+
+/**
+ * @summary Crea la ricevuta di un collaboratore da una riga del dare/avere
+ */
+export const createRicevuta = async (creaRicevutaInput: CreaRicevutaInput, options?: Parameters<typeof customFetch>[1]): Promise<RicevutaDettaglio> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<RicevutaDettaglio>(getCreateRicevutaUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(creaRicevutaInput)
+  }
+);}
+
+
+
+
+
+export const getCreateRicevutaMutationKey = () => ['createRicevuta'] as const;
+
+export const getCreateRicevutaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRicevuta>>, TError,CreateRicevutaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createRicevuta>>, TError,CreateRicevutaMutationVariables, TContext> => {
+
+const mutationKey = getCreateRicevutaMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createRicevuta>>, CreateRicevutaMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createRicevuta(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateRicevutaMutationResult = NonNullable<Awaited<ReturnType<typeof createRicevuta>>>
+    export type CreateRicevutaMutationBody = BodyType<CreaRicevutaInput>
+    export type CreateRicevutaMutationError = ErrorType<unknown>
+    export type CreateRicevutaMutationVariables = {data: BodyType<CreaRicevutaInput>}
+
+    /**
+ * @summary Crea la ricevuta di un collaboratore da una riga del dare/avere
+ */
+export const useCreateRicevuta = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRicevuta>>, TError,CreateRicevutaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createRicevuta>>,
+        TError,
+        CreateRicevutaMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateRicevutaMutationOptions(options));
+    }
+
+export const getGetRicevutaUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/ricevute/${id}`
+}
+
+/**
+ * @summary Dettaglio di una ricevuta
+ */
+export const getRicevuta = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<RicevutaDettaglio> => {
+
+  return customFetch<RicevutaDettaglio>(getGetRicevutaUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetRicevutaQueryKey = (id: number,) => {
+    return [
+    `/api/backoffice/ricevute/${id}`
+    ] as const;
+    }
+
+
+export const getGetRicevutaQueryOptions = <TData = Awaited<ReturnType<typeof getRicevuta>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRicevuta>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetRicevutaQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getRicevuta>>> = ({ signal }) => getRicevuta(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRicevuta>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetRicevutaQueryResult = NonNullable<Awaited<ReturnType<typeof getRicevuta>>>
+export type GetRicevutaQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Dettaglio di una ricevuta
+ */
+
+export function useGetRicevuta<TData = Awaited<ReturnType<typeof getRicevuta>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRicevuta>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetRicevutaQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getDeleteRicevutaUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/ricevute/${id}`
+}
+
+/**
+ * @summary Elimina l'ultima ricevuta dell'anno, se non e' stata pagata
+ */
+export const deleteRicevuta = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteRicevutaUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteRicevutaMutationKey = () => ['deleteRicevuta'] as const;
+
+export const getDeleteRicevutaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRicevuta>>, TError,DeleteRicevutaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteRicevuta>>, TError,DeleteRicevutaMutationVariables, TContext> => {
+
+const mutationKey = getDeleteRicevutaMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteRicevuta>>, DeleteRicevutaMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteRicevuta(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteRicevutaMutationResult = NonNullable<Awaited<ReturnType<typeof deleteRicevuta>>>
+
+    export type DeleteRicevutaMutationError = ErrorType<unknown>
+    export type DeleteRicevutaMutationVariables = {id: number}
+
+    /**
+ * @summary Elimina l'ultima ricevuta dell'anno, se non e' stata pagata
+ */
+export const useDeleteRicevuta = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRicevuta>>, TError,DeleteRicevutaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteRicevuta>>,
+        TError,
+        DeleteRicevutaMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteRicevutaMutationOptions(options));
+    }
+
+export const getRegistraPagamentoRicevutaUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/ricevute/${id}/pagamento`
+}
+
+/**
+ * @summary Registra il pagamento della ricevuta
+ */
+export const registraPagamentoRicevuta = async (id: number,
+    pagamentoRicevutaInput: PagamentoRicevutaInput, options?: Parameters<typeof customFetch>[1]): Promise<RicevutaDettaglio> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<RicevutaDettaglio>(getRegistraPagamentoRicevutaUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(pagamentoRicevutaInput)
+  }
+);}
+
+
+
+
+
+export const getRegistraPagamentoRicevutaMutationKey = () => ['registraPagamentoRicevuta'] as const;
+
+export const getRegistraPagamentoRicevutaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registraPagamentoRicevuta>>, TError,RegistraPagamentoRicevutaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof registraPagamentoRicevuta>>, TError,RegistraPagamentoRicevutaMutationVariables, TContext> => {
+
+const mutationKey = getRegistraPagamentoRicevutaMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof registraPagamentoRicevuta>>, RegistraPagamentoRicevutaMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  registraPagamentoRicevuta(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RegistraPagamentoRicevutaMutationResult = NonNullable<Awaited<ReturnType<typeof registraPagamentoRicevuta>>>
+    export type RegistraPagamentoRicevutaMutationBody = BodyType<PagamentoRicevutaInput>
+    export type RegistraPagamentoRicevutaMutationError = ErrorType<unknown>
+    export type RegistraPagamentoRicevutaMutationVariables = {id: number;data: BodyType<PagamentoRicevutaInput>}
+
+    /**
+ * @summary Registra il pagamento della ricevuta
+ */
+export const useRegistraPagamentoRicevuta = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registraPagamentoRicevuta>>, TError,RegistraPagamentoRicevutaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof registraPagamentoRicevuta>>,
+        TError,
+        RegistraPagamentoRicevutaMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRegistraPagamentoRicevutaMutationOptions(options));
     }
 
 export const getGetImpostazioniStampaUrl = () => {

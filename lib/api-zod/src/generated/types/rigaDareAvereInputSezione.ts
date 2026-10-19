@@ -13,5 +13,6 @@ export const RigaDareAvereInputSezione = {
   naspi: 'naspi',
   pensionati: 'pensionati',
   caf: 'caf',
+  crediti: 'crediti',
   debiti: 'debiti',
 } as const;

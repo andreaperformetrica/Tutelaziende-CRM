@@ -1489,6 +1489,38 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/EstrattoRiepilogo"
+  /backoffice/compensi/estratti/registro-invii:
+    get:
+      operationId: getRegistroInviiEstratti
+      tags: [compensi]
+      summary: Registro di tutti gli invii degli estratti per email, dal piu recente
+      responses:
+        "200":
+          description: Invii
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RegistroInvioEstratto"
+  /backoffice/compensi/estratti/invio-multiplo:
+    post:
+      operationId: inviaEstrattiMultiplo
+      tags: [compensi]
+      summary: Invia per email gli estratti scelti, ciascuno al proprio collaboratore
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvioMultiploEstrattiInput"
+      responses:
+        "200":
+          description: Esito per ogni estratto
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvioMultiploEstrattiEsito"
   /backoffice/compensi/estratti/{id}:
     parameters:
       - $ref: "#/components/parameters/IdPath"
@@ -1544,6 +1576,111 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/InvioEstrattoEsito"
+  /backoffice/compensi/impostazioni-ricevute:
+    get:
+      operationId: getImpostazioniRicevute
+      tags: [compensi]
+      summary: Dati del patronato, causale e frase del bonifico stampati sulle ricevute
+      responses:
+        "200":
+          description: Impostazioni
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImpostazioniRicevute"
+    put:
+      operationId: updateImpostazioniRicevute
+      tags: [compensi]
+      summary: Modifica i dati stampati sulle ricevute
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImpostazioniRicevute"
+      responses:
+        "200":
+          description: Impostazioni aggiornate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImpostazioniRicevute"
+  /backoffice/ricevute:
+    get:
+      operationId: listRicevute
+      tags: [compensi]
+      summary: Ricevute e pagamenti, con filtri
+      parameters:
+        - { name: dal, in: query, required: false, description: "Data ricevuta dal (AAAA-MM-GG)", schema: { type: string } }
+        - { name: al, in: query, required: false, description: "Data ricevuta fino al (AAAA-MM-GG)", schema: { type: string } }
+        - { name: numero, in: query, required: false, description: "Numero della ricevuta", schema: { type: integer } }
+        - { name: collaboratoreId, in: query, required: false, schema: { type: integer } }
+        - { name: stato, in: query, required: false, schema: { type: string, enum: [da_pagare, pagata] } }
+      responses:
+        "200":
+          description: Ricevute
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ElencoRicevute"
+    post:
+      operationId: createRicevuta
+      tags: [compensi]
+      summary: Crea la ricevuta di un collaboratore da una riga del dare/avere
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreaRicevutaInput"
+      responses:
+        "201":
+          description: Ricevuta creata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RicevutaDettaglio"
+  /backoffice/ricevute/{id}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    get:
+      operationId: getRicevuta
+      tags: [compensi]
+      summary: Dettaglio di una ricevuta
+      responses:
+        "200":
+          description: Ricevuta
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RicevutaDettaglio"
+    delete:
+      operationId: deleteRicevuta
+      tags: [compensi]
+      summary: Elimina l'ultima ricevuta dell'anno, se non e' stata pagata
+      responses:
+        "204":
+          description: Eseguito
+  /backoffice/ricevute/{id}/pagamento:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    post:
+      operationId: registraPagamentoRicevuta
+      tags: [compensi]
+      summary: Registra il pagamento della ricevuta
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PagamentoRicevutaInput"
+      responses:
+        "200":
+          description: Ricevuta aggiornata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RicevutaDettaglio"
   /backoffice/compensi/impostazioni-stampa:
     get:
       operationId: getImpostazioniStampa
@@ -2788,6 +2925,8 @@ components:
         sedeProvincia: { type: ["string", "null"], description: "Sigla, ricavata dal comune" }
         sedeCap: { type: ["string", "null"] }
         iban: { type: ["string", "null"] }
+        banca: { type: ["string", "null"], description: "Nome della banca (stampato sulle ricevute)" }
+        filiale: { type: ["string", "null"], description: "Filiale della banca (stampata sulle ricevute)" }
         codiceFiscaleAssociazione: { type: ["string", "null"], maxLength: 11 }
     Sesso:
       type: string
@@ -5013,6 +5152,12 @@ components:
             $ref: "#/components/schemas/RigaResoconto"
         totalePunti: { type: integer }
         totaleEuro: { type: number }
+    EsclusionePratica:
+      type: object
+      required: [praticaId, motivo]
+      properties:
+        praticaId: { type: integer }
+        motivo: { type: string, minLength: 1, maxLength: 300 }
     CreaEstrattiInput:
       type: object
       required: [praticaIds]
@@ -5022,9 +5167,15 @@ components:
           minItems: 1
           maxItems: 2000
           items: { type: integer }
+        escluse:
+          type: array
+          description: "Pratiche scelte ma lasciate fuori dal pagamento, con il motivo; restano disponibili nel resoconto"
+          maxItems: 2000
+          items:
+            $ref: "#/components/schemas/EsclusionePratica"
     EstrattoRiepilogo:
       type: object
-      required: [id, collaboratoreId, collaboratoreNome, numeroSportello, dataEstratto, numeroPratiche, totalePunti, totaleEuro, pagato, pagatoIl, pagamentoEuro, pagamentoMetodo]
+      required: [id, collaboratoreId, collaboratoreNome, numeroSportello, dataEstratto, numeroPratiche, totalePunti, totaleEuro, pagato, pagatoIl, pagamentoEuro, pagamentoMetodo, ultimoInvioIl, ultimoInvioEtichetta]
       properties:
         id: { type: integer }
         collaboratoreId: { type: integer }
@@ -5041,6 +5192,60 @@ components:
           oneOf:
             - $ref: "#/components/schemas/MetodoPagamento"
             - type: "null"
+        ultimoInvioIl: { type: [string, "null"], description: Data e ora dell'ultimo invio per email }
+        ultimoInvioEtichetta: { type: [string, "null"], description: Esito dell'ultimo invio }
+    AllegatoPagamento:
+      type: object
+      required: [nome, dimensione, caricatoIl]
+      properties:
+        nome: { type: string }
+        dimensione: { type: integer }
+        caricatoIl: { type: string }
+    EsclusioneEstratto:
+      type: object
+      required: [praticaId, numeroPratica, assistito, tipoPratica, motivo]
+      properties:
+        praticaId: { type: integer }
+        numeroPratica: { type: integer }
+        assistito: { type: string }
+        tipoPratica: { type: string }
+        motivo: { type: string }
+    RegistroInvioEstratto:
+      type: object
+      required: [id, estrattoId, collaboratoreNome, destinatarioContatto, creatoIl, esito, esitoEtichetta, dettaglioEsito]
+      properties:
+        id: { type: integer }
+        estrattoId: { type: integer }
+        collaboratoreNome: { type: string }
+        destinatarioContatto: { type: string }
+        creatoIl: { type: string }
+        esito: { type: string, enum: [in_coda, inviata, non_inviata, errore] }
+        esitoEtichetta: { type: string }
+        dettaglioEsito: { type: [string, "null"] }
+    InvioMultiploEstrattiInput:
+      type: object
+      required: [ids]
+      properties:
+        ids:
+          type: array
+          minItems: 1
+          maxItems: 200
+          items: { type: integer }
+    InvioMultiploEstrattiEsito:
+      type: object
+      required: [risultati]
+      properties:
+        risultati:
+          type: array
+          items:
+            type: object
+            required: [id, collaboratoreNome, esito, esitoEtichetta, dettaglio]
+            properties:
+              id: { type: integer }
+              collaboratoreNome: { type: string }
+              esito: { type: string, enum: [in_coda, inviata, non_inviata, errore] }
+              esitoEtichetta: { type: string }
+              dettaglio: { type: [string, "null"] }
     MetodoPagamento:
       type: string
       enum: [bonifico, contanti, assegno, altro]
@@ -5067,7 +5272,7 @@ components:
         dettaglioEsito: { type: [string, "null"] }
     EstrattoDettaglio:
       type: object
-      required: [estratto, righe, creatoIl, creatoDa, pagamentoRegistratoIl, pagamentoRegistratoDa, emailDestinatario, invii]
+      required: [estratto, righe, creatoIl, creatoDa, pagamentoRegistratoIl, pagamentoRegistratoDa, emailDestinatario, invii, esclusioni, allegato]
       properties:
         estratto: { $ref: "#/components/schemas/EstrattoRiepilogo" }
         righe:
@@ -5079,6 +5284,15 @@ components:
         pagamentoRegistratoIl: { type: [string, "null"] }
         pagamentoRegistratoDa: { type: [string, "null"] }
         emailDestinatario: { type: [string, "null"], description: Indirizzo del collaboratore a cui va l'estratto }
+        esclusioni:
+          type: array
+          description: Pratiche lasciate fuori alla creazione, con il motivo
+          items:
+            $ref: "#/components/schemas/EsclusioneEstratto"
+        allegato:
+          oneOf:
+            - $ref: "#/components/schemas/AllegatoPagamento"
+            - type: "null"
         invii:
           type: array
           description: Invii per email, dal piu recente
@@ -5099,6 +5313,89 @@ components:
         esito: { type: string, enum: [in_coda, inviata, non_inviata, errore] }
         esitoEtichetta: { type: string }
         dettaglio: { type: [string, "null"] }
+    ImpostazioniRicevute:
+      type: object
+      required: [patronatoNome, patronatoIndirizzo, patronatoCapCitta, patronatoCodiceFiscale, causale, fraseBonifico, aliquotaIva]
+      properties:
+        patronatoNome: { type: string, maxLength: 120 }
+        patronatoIndirizzo: { type: string, maxLength: 160 }
+        patronatoCapCitta: { type: string, maxLength: 120, description: "CAP e citta, es. 80021 Afragola" }
+        patronatoCodiceFiscale: { type: string, maxLength: 30 }
+        causale: { type: string, maxLength: 400, description: "Testo fisso dopo \"relativa a\"" }
+        fraseBonifico: { type: string, maxLength: 300 }
+        aliquotaIva: { type: number, minimum: 0, maximum: 100, description: "Aliquota IVA proposta per i collaboratori con partita IVA" }
+    RicevutaRiepilogo:
+      type: object
+      required: [id, anno, numero, dataRicevuta, collaboratoreId, collaboratoreNome, denominazione, tipoSoggetto, imponibileEuro, aliquotaIva, ivaEuro, totaleEuro, pagata, pagatoIl, origineDescrizione]
+      properties:
+        id: { type: integer }
+        anno: { type: integer }
+        numero: { type: integer }
+        dataRicevuta: { type: string, description: AAAA-MM-GG }
+        collaboratoreId: { type: integer }
+        collaboratoreNome: { type: string, description: Cognome e nome }
+        denominazione: { type: [string, "null"], description: Denominazione della sede }
+        tipoSoggetto:
+          oneOf:
+            - $ref: "#/components/schemas/TipoSoggetto"
+            - type: "null"
+        imponibileEuro: { type: number }
+        aliquotaIva: { type: [number, "null"] }
+        ivaEuro: { type: number }
+        totaleEuro: { type: number }
+        pagata: { type: boolean }
+        pagatoIl: { type: [string, "null"] }
+        origineDescrizione: { type: string }
+    ElencoRicevute:
+      type: object
+      required: [righe, totale, daPagare, pagate, totaleEuro]
+      properties:
+        righe:
+          type: array
+          items:
+            $ref: "#/components/schemas/RicevutaRiepilogo"
+        totale: { type: integer, description: Numero di documenti trovati }
+        daPagare: { type: integer }
+        pagate: { type: integer }
+        totaleEuro: { type: number }
+    RicevutaDettaglio:
+      type: object
+      required: [ricevuta, annoDareAvere, origineTipo, origineId, creatoIl, creatoDa, pagamentoMetodo, pagamentoRegistratoIl, pagamentoRegistratoDa, allegato, eliminabile]
+      properties:
+        ricevuta: { $ref: "#/components/schemas/RicevutaRiepilogo" }
+        annoDareAvere: { type: integer }
+        origineTipo: { type: string, enum: [riga, estratto, importazione] }
+        origineId: { type: integer }
+        creatoIl: { type: string }
+        creatoDa: { type: [string, "null"] }
+        pagamentoMetodo:
+          oneOf:
+            - $ref: "#/components/schemas/MetodoPagamento"
+            - type: "null"
+        pagamentoRegistratoIl: { type: [string, "null"] }
+        pagamentoRegistratoDa: { type: [string, "null"] }
+        allegato:
+          oneOf:
+            - $ref: "#/components/schemas/AllegatoPagamento"
+            - type: "null"
+        eliminabile: { type: boolean, description: "Vero se e' l'ultima dell'anno e non e' stata pagata" }
+    CreaRicevutaInput:
+      type: object
+      required: [collaboratoreId, anno, origineTipo, origineId, importoEuro]
+      properties:
+        collaboratoreId: { type: integer }
+        anno: { type: integer, minimum: 2000, maximum: 2100, description: "Anno del dare/avere" }
+        origineTipo: { type: string, enum: [riga, estratto, importazione] }
+        origineId: { type: integer }
+        importoEuro: { type: number, exclusiveMinimum: 0, maximum: 10000000, description: "Importo; per i collaboratori con partita IVA e' l'imponibile" }
+        aliquotaIva: { type: [number, "null"], minimum: 0, maximum: 100 }
+        dataRicevuta: { type: [string, "null"], description: "AAAA-MM-GG, di default oggi" }
+    PagamentoRicevutaInput:
+      type: object
+      required: [data, metodo]
+      properties:
+        data: { type: string, description: "Data del pagamento (AAAA-MM-GG)" }
+        metodo: { $ref: "#/components/schemas/MetodoPagamento" }
     LogoStampa:
       type: object
       required: [nome, dimensione]
@@ -5213,10 +5510,18 @@ components:
         soloValide: { type: boolean, description: Vero per salvare solo le righe senza errori quando ce ne sono con errori }
     SezioneDareAvereCodice:
       type: string
-      enum: [naspi, pensionati, patronato, caf, debiti]
+      enum: [naspi, pensionati, patronato, caf, crediti, debiti]
+    RicevutaRigaRiferimento:
+      type: object
+      required: [id, numero, anno, pagata]
+      properties:
+        id: { type: integer }
+        numero: { type: integer }
+        anno: { type: integer }
+        pagata: { type: boolean }
     RigaDareAvere:
       type: object
-      required: [id, descrizione, importoEuro, dataPagamento, riferimento, nota, estrattoId, importazioneId]
+      required: [id, descrizione, importoEuro, dataPagamento, riferimento, nota, estrattoId, importazioneId, ricevuta]
       properties:
         id: { type: [integer, "null"], description: "Vuoto per le righe del Patronato, che arrivano dagli estratti" }
         descrizione: { type: string }
@@ -5226,6 +5531,10 @@ components:
         nota: { type: string }
         estrattoId: { type: [integer, "null"] }
         importazioneId: { type: [integer, "null"], description: "Riga riportata da un'importazione Excel (non modificabile qui)" }
+        ricevuta:
+          oneOf:
+            - $ref: "#/components/schemas/RicevutaRigaRiferimento"
+            - type: "null"
     SezioneDareAvere:
       type: object
       required: [sezione, titolo, automatica, righe, totaleEuro]
@@ -5250,14 +5559,14 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/SezioneDareAvere"
-        totaleAvereEuro: { type: number, description: "Somma degli importi delle sezioni meno i debiti" }
+        totaleAvereEuro: { type: number, description: "Importi delle sezioni e crediti, meno i debiti" }
     RigaDareAvereInput:
       type: object
       required: [collaboratoreId, anno, sezione, descrizione, importoEuro]
       properties:
         collaboratoreId: { type: integer }
         anno: { type: integer, minimum: 2000, maximum: 2100 }
-        sezione: { type: string, enum: [naspi, pensionati, caf, debiti] }
+        sezione: { type: string, enum: [naspi, pensionati, caf, crediti, debiti] }
         descrizione: { type: string, minLength: 1, maxLength: 120 }
         importoEuro: { type: number, exclusiveMinimum: 0, maximum: 10000000 }
         dataPagamento: { type: [string, "null"] }

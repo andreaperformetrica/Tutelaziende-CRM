@@ -14,5 +14,6 @@ export const SezioneDareAvereCodice = {
   pensionati: 'pensionati',
   patronato: 'patronato',
   caf: 'caf',
+  crediti: 'crediti',
   debiti: 'debiti',
 } as const;

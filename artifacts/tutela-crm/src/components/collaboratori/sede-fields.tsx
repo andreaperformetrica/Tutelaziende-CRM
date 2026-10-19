@@ -32,6 +32,8 @@ export const sedeSchema = z.object({
   sedeComuneCodice: z.string().optional(),
   sedeProvincia: z.string().optional(),
   sedeCap: z.string().optional().refine((v) => !v || /^\d{5}$/.test(v.trim()), "Il CAP deve essere di 5 cifre"),
+  banca: z.string().optional(),
+  filiale: z.string().optional(),
   iban: z.string().optional().refine((v) => !v || !v.trim() || ibanValido(v), "IBAN non valido (controlla le cifre)"),
 });
 export type SedeValues = z.infer<typeof sedeSchema>;
@@ -115,6 +117,12 @@ export function SedeFields() {
         ) : <div />}
         <Campo label="IBAN" name="iban" err={errors.iban?.message}>
           <Input id="input-iban" autoComplete="off" placeholder="IT00 X000 0000 0000 0000 0000 000" className={cn("uppercase", errors.iban && "border-destructive")} {...register("iban")} data-testid="input-iban" />
+        </Campo>
+        <Campo label="Banca" name="banca">
+          <Input id="input-banca" autoComplete="off" maxLength={120} placeholder="Nome della banca" {...register("banca")} data-testid="input-banca" />
+        </Campo>
+        <Campo label="Filiale" name="filiale">
+          <Input id="input-filiale" autoComplete="off" maxLength={120} placeholder="Filiale di…" {...register("filiale")} data-testid="input-filiale" />
         </Campo>
       </div>
       <div className="grid gap-4 sm:grid-cols-6">

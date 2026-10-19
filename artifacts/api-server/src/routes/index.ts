@@ -25,6 +25,7 @@ import dashboardRouter from "./dashboard";
 import chatRouter from "./chat";
 import statisticheOperatoriRouter from "./statistiche-operatori";
 import importazioniRouter from "./importazioni";
+import ricevuteRouter from "./ricevute";
 import { caricaUtente, controlloOrigine, richiediLogin, richiediPasswordCambiata } from "../middlewares/auth";
 
 const router: IRouter = Router();
@@ -56,6 +57,7 @@ router.use(notificheRouter);
 router.use(eventiBackofficeRouter);
 router.use(eventiRouter);
 router.use(compensiRouter);
+router.use(ricevuteRouter);
 router.use(importazioniRouter);
 router.use(newsRouter);
 router.use(avvisiRouter);

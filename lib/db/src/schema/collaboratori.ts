@@ -28,6 +28,8 @@ export const collaboratoriTable = pgTable("collaboratori", {
   sedeProvincia: text("sede_provincia"),
   sedeCap: text("sede_cap"),
   iban: text("iban"),
+  banca: text("banca"),
+  filiale: text("filiale"),
   codiceFiscaleAssociazione: text("codice_fiscale_associazione"),
   creatoIl: timestamp("creato_il", { withTimezone: true }).notNull().defaultNow(),
 });

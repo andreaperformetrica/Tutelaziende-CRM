@@ -78,3 +78,6 @@ export const urlEstrattoPdf = (id: number) => `${BASE}/backoffice/compensi/estra
 export const urlDareAverePdf = (collaboratoreId: number, anno: number) => `${BASE}/backoffice/compensi/dare-avere/pdf?collaboratoreId=${collaboratoreId}&anno=${anno}`;
 export const urlLogoStampa = (versione: string = "") => `${BASE}/backoffice/compensi/impostazioni-stampa/logo?v=${encodeURIComponent(versione)}`;
 export const urlEsportaStatisticheOperatori = (dal: string, al: string) => `${BASE}/backoffice/statistiche-operatori/esporta?${new URLSearchParams({ dal, al }).toString()}`;
+export const urlAllegatoPagamentoEstratto = (id: number, anteprima = false) => `${BASE}/backoffice/compensi/estratti/${id}/pagamento/allegato/file${anteprima ? "?anteprima=1" : ""}`;
+export const urlRicevutaPdf = (id: number) => `${BASE}/backoffice/ricevute/${id}/pdf`;
+export const urlAllegatoRicevuta = (id: number, anteprima = false) => `${BASE}/backoffice/ricevute/${id}/allegato/file${anteprima ? "?anteprima=1" : ""}`;

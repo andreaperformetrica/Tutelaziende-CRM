@@ -1,6 +1,7 @@
 /** Compensi ai collaboratori: resoconto, estratti, pagamenti, stampati e dare/avere. Solo admin e super admin. */
 import express, { Router, type IRouter, type Response } from "express";
 import { and, desc, eq, inArray } from "drizzle-orm";
+import type { NextFunction, Request } from "express";
 import { PDFDocument } from "pdf-lib";
 import {
   CreateEstrattiBody,
@@ -8,6 +9,8 @@ import {
   DeleteEstrattoParams,
   DeleteRigaDareAvereParams,
   GetDareAvereQueryParams,
+  InviaEstrattiMultiploBody,
+  UpdateImpostazioniRicevuteBody,
   GetEstrattoParams,
   GetResocontoCompensiQueryParams,
   InviaEstrattoParams,
@@ -18,7 +21,7 @@ import {
   UpdateRigaDareAvereBody,
   UpdateRigaDareAvereParams,
 } from "@workspace/api-zod";
-import { compensiRigheTable, db, estrattiRigheTable, estrattiTable, notificheTable, praticheTable, statiPraticaTable } from "@workspace/db";
+import { compensiRigheTable, db, estrattiEsclusioniTable, estrattiRigheTable, estrattiTable, notificheTable, praticheTable, ricevuteTable, statiPraticaTable } from "@workspace/db";
 import {
   CAMPI_STAMPA,
   ETICHETTA_METODO,
@@ -34,11 +37,14 @@ import {
   mappaImpostazioniStampa,
   nomeCompleto,
   registraCambioStatoPagata,
+  registroInviiEstratti,
   resoconto,
   scriviImpostazioni,
   statoPagata,
 } from "../lib/compensi";
+import { salvaAllegatoPagamento } from "../lib/allegato-pagamento";
 import { pdfDareAvere, pdfEstratto } from "../lib/compensi-pdf";
+import { leggiImpostazioniRicevute, scriviImpostazioniRicevute } from "../lib/ricevute";
 import { HttpError, nonTrovato } from "../lib/errori";
 import { formattaData, oggiRoma } from "../lib/eventi";
 import { contestoDa, registraLog } from "../lib/log";
@@ -50,7 +56,12 @@ import { richiediRuolo } from "../middlewares/auth";
 import { inviaFile } from "./tipi-pratica";
 
 const router: IRouter = Router();
-router.use("/backoffice/compensi", richiediRuolo("super_admin", "admin"));
+const soloAdmin = richiediRuolo("super_admin", "admin");
+// L'operatore vede solo il dare/avere (in lettura), per poter creare le ricevute: il resto dei compensi e' di admin e super admin.
+router.use("/backoffice/compensi", (req: Request, res, next: NextFunction) => {
+  if (req.utente?.ruolo === "operatore" && req.method === "GET" && req.path.startsWith("/dare-avere")) return next();
+  return soloAdmin(req, res, next);
+});
 
 const corpoFile = express.raw({ type: () => true, limit: DIMENSIONE_MASSIMA_FILE });
 const euroTesto = (c: number) => `€ ${(c / 100).toFixed(2).replace(".", ",")}`;
@@ -87,17 +98,33 @@ router.get("/backoffice/compensi/estratti", async (req, res) => {
 });
 
 router.post("/backoffice/compensi/estratti", async (req, res) => {
-  const { praticaIds } = valida(CreateEstrattiBody, req.body);
-  const ids = [...new Set(praticaIds)];
+  const b = valida(CreateEstrattiBody, req.body);
+  const ids = [...new Set(b.praticaIds)];
+  const escluse = new Map<number, string>();
+  for (const x of b.escluse ?? []) {
+    const motivo = x.motivo.trim();
+    if (!motivo) throw new HttpError(400, "Per ogni pratica esclusa scrivi il motivo.", "DATI_NON_VALIDI", "escluse");
+    if (ids.includes(x.praticaId)) throw new HttpError(400, "Una pratica non può essere insieme inclusa ed esclusa.", "DATI_NON_VALIDI", "escluse");
+    escluse.set(x.praticaId, motivo);
+  }
   const creati = await db.transaction(async (tx) => {
+    const tutte = [...ids, ...escluse.keys()];
     // Si bloccano le pratiche scelte: un secondo estratto in parallelo sulle stesse pratiche aspetta e poi le trova gia' usate.
-    await tx.select({ id: praticheTable.id }).from(praticheTable).where(inArray(praticheTable.id, ids)).for("update");
-    const valide = await resoconto({ ids });
-    if (valide.righe.length !== ids.length) {
+    await tx.select({ id: praticheTable.id }).from(praticheTable).where(inArray(praticheTable.id, tutte)).for("update");
+    const valide = await resoconto({ ids: tutte });
+    if (valide.righe.length !== tutte.length) {
       throw new HttpError(409, "Alcune pratiche non sono più disponibili (già in un estratto, riaperte o non più chiuse). Aggiorna il resoconto e riprova.", "PRATICHE_NON_DISPONIBILI");
     }
     const perCollaboratore = new Map<number, typeof valide.righe>();
-    for (const r of valide.righe) perCollaboratore.set(r.collaboratoreId, [...(perCollaboratore.get(r.collaboratoreId) ?? []), r]);
+    const escluseValide = valide.righe.filter((r) => escluse.has(r.praticaId));
+    for (const r of valide.righe) {
+      if (!escluse.has(r.praticaId)) perCollaboratore.set(r.collaboratoreId, [...(perCollaboratore.get(r.collaboratoreId) ?? []), r]);
+    }
+    for (const r of escluseValide) {
+      if (!perCollaboratore.has(r.collaboratoreId)) {
+        throw new HttpError(400, `La pratica ${r.numero} è esclusa, ma di ${r.collaboratoreNome} non resta nessuna pratica da pagare: toglila dalla selezione.`, "DATI_NON_VALIDI", "escluse");
+      }
+    }
     const risultato: number[] = [];
     for (const [collaboratoreId, righe] of perCollaboratore) {
       righe.sort((a, b) => a.numero - b.numero);
@@ -120,12 +147,20 @@ router.post("/backoffice/compensi/estratti", async (req, res) => {
           valoreCentesimi: Math.round(r.valoreEuro * 100),
         })),
       );
+      const sue = escluseValide.filter((r) => r.collaboratoreId === collaboratoreId);
+      if (sue.length) {
+        await tx.insert(estrattiEsclusioniTable).values(
+          sue.map((r) => ({ estrattoId: e!.id, praticaId: r.praticaId, numeroPratica: r.numero, assistito: r.assistito, tipoPratica: r.tipoNome, motivo: escluse.get(r.praticaId)! })),
+        );
+      }
       await registraLog(tx, contestoDa(req), {
         azione: "estratto.crea",
         entita: "estratto",
         entitaId: e!.id,
-        descrizione: `Creato l'estratto n. ${e!.id} di ${righe[0]!.collaboratoreNome} (sportello ${righe[0]!.numeroSportello}): ${righe.length} pratiche, ${totalePunti} punti, ${euroTesto(totaleCentesimi)}`,
-        dettagli: { collaboratoreId, pratiche: righe.map((r) => r.numero), totalePunti, totaleCentesimi },
+        descrizione: `Creato l'estratto n. ${e!.id} di ${righe[0]!.collaboratoreNome} (sportello ${righe[0]!.numeroSportello}): ${righe.length} pratiche, ${totalePunti} punti, ${euroTesto(totaleCentesimi)}${
+          sue.length ? `; escluse ${sue.length} pratiche (${sue.map((r) => `${r.numero}: ${escluse.get(r.praticaId)}`).join("; ")})` : ""
+        }`,
+        dettagli: { collaboratoreId, pratiche: righe.map((r) => r.numero), totalePunti, totaleCentesimi, escluse: sue.map((r) => ({ numero: r.numero, motivo: escluse.get(r.praticaId) })) },
       });
       risultato.push(e!.id);
     }
@@ -133,6 +168,10 @@ router.post("/backoffice/compensi/estratti", async (req, res) => {
   });
   const elenco = (await elencoEstratti({})).filter((e) => creati.includes(e.id));
   res.status(201).json(elenco);
+});
+
+router.get("/backoffice/compensi/estratti/registro-invii", async (_req, res) => {
+  res.json(await registroInviiEstratti());
 });
 
 router.get("/backoffice/compensi/estratti/:id", async (req, res) => {
@@ -152,6 +191,8 @@ router.delete("/backoffice/compensi/estratti/:id", async (req, res) => {
     const [e] = await tx.select().from(estrattiTable).where(eq(estrattiTable.id, id)).for("update");
     if (!e) throw nonTrovato("Estratto non trovato.");
     if (e.pagatoIl) throw new HttpError(409, "L'estratto è già stato pagato e non si può eliminare.", "ESTRATTO_PAGATO");
+    const [conRicevuta] = await tx.select({ id: ricevuteTable.id }).from(ricevuteTable).where(and(eq(ricevuteTable.origineTipo, "estratto"), eq(ricevuteTable.origineId, id)));
+    if (conRicevuta) throw new HttpError(409, "Per questo estratto è stata emessa una ricevuta: eliminala prima di eliminare l'estratto.", "ESTRATTO_CON_RICEVUTA");
     const righe = await tx.select({ numero: estrattiRigheTable.numeroPratica }).from(estrattiRigheTable).where(eq(estrattiRigheTable.estrattoId, id));
     const coll = await controllaCollaboratore(e.collaboratoreId);
     await tx.delete(estrattiTable).where(eq(estrattiTable.id, id));
@@ -205,8 +246,8 @@ router.post("/backoffice/compensi/estratti/:id/pagamento", async (req, res) => {
   res.json(await estrattoDettaglio(id));
 });
 
-router.post("/backoffice/compensi/estratti/:id/invio", async (req, res) => {
-  const { id } = valida(InviaEstrattoParams, req.params);
+/** Accoda e recapita l'email di un estratto al suo collaboratore; restituisce l'esito dell'invio. */
+async function inviaEstrattoPerEmail(req: Request, id: number) {
   const [e] = await db.select().from(estrattiTable).where(eq(estrattiTable.id, id));
   if (!e) throw nonTrovato("Estratto non trovato.");
   const coll = await controllaCollaboratore(e.collaboratoreId);
@@ -223,12 +264,68 @@ router.post("/backoffice/compensi/estratti/:id/invio", async (req, res) => {
   });
   await recapitaNotifiche(ids);
   const [n] = await db.select().from(notificheTable).where(and(eq(notificheTable.estrattoId, id), eq(notificheTable.evento, "estratto_inviato"))).orderBy(desc(notificheTable.id)).limit(1);
-  res.json({
-    estratto: await estrattoDettaglio(id),
-    esito: n?.esito ?? "errore",
+  return {
+    collaboratoreNome: nomeCompleto(coll.cognome, coll.nome),
+    esito: n?.esito ?? ("errore" as const),
     esitoEtichetta: n ? ESITI_NOTIFICA[n.esito] : ESITI_NOTIFICA.errore,
     dettaglio: n?.dettaglioEsito ?? null,
+  };
+}
+
+router.post("/backoffice/compensi/estratti/invio-multiplo", async (req, res) => {
+  const { ids } = valida(InviaEstrattiMultiploBody, req.body);
+  const unici = [...new Set(ids)];
+  const esistenti = await db.select({ id: estrattiTable.id }).from(estrattiTable).where(inArray(estrattiTable.id, unici));
+  if (esistenti.length !== unici.length) throw nonTrovato("Alcuni estratti non esistono più. Aggiorna l'elenco e riprova.");
+  const risultati = [];
+  for (const id of unici) {
+    try {
+      risultati.push({ id, ...(await inviaEstrattoPerEmail(req, id)) });
+    } catch (err) {
+      req.log.error({ err, estrattoId: id }, "Invio dell'estratto non riuscito");
+      risultati.push({ id, collaboratoreNome: "", esito: "errore" as const, esitoEtichetta: ESITI_NOTIFICA.errore, dettaglio: err instanceof Error ? err.message : "Invio non riuscito" });
+    }
+  }
+  res.json({ risultati });
+});
+
+router.post("/backoffice/compensi/estratti/:id/invio", async (req, res) => {
+  const { id } = valida(InviaEstrattoParams, req.params);
+  const esito = await inviaEstrattoPerEmail(req, id);
+  res.json({ estratto: await estrattoDettaglio(id), esito: esito.esito, esitoEtichetta: esito.esitoEtichetta, dettaglio: esito.dettaglio });
+});
+
+// Allegato al pagamento (contabile del bonifico): si carica dopo aver registrato il pagamento e si puo' sostituire.
+router.put("/backoffice/compensi/estratti/:id/pagamento/allegato", corpoFile, async (req, res) => {
+  const { id } = valida(GetEstrattoParams, req.params);
+  const [e] = await db.select().from(estrattiTable).where(eq(estrattiTable.id, id));
+  if (!e) throw nonTrovato("Estratto non trovato.");
+  if (!e.pagatoIl) throw new HttpError(409, "Registra prima il pagamento dell'estratto: poi potrai allegare la contabile.", "ESTRATTO_NON_PAGATO");
+  const coll = await controllaCollaboratore(e.collaboratoreId);
+  await salvaAllegatoPagamento(req, async (tx, a) => {
+    const [att] = await tx.select({ chiave: estrattiTable.allegatoChiave }).from(estrattiTable).where(eq(estrattiTable.id, id)).for("update");
+    await tx
+      .update(estrattiTable)
+      .set({ allegatoChiave: a.chiave, allegatoNome: a.nome, allegatoTipo: a.tipo, allegatoDimensione: a.dimensione, allegatoCaricatoIl: new Date() })
+      .where(eq(estrattiTable.id, id));
+    await registraLog(tx, contestoDa(req), {
+      azione: "estratto.allegato_pagamento",
+      entita: "estratto",
+      entitaId: id,
+      descrizione: `${att?.chiave ? "Sostituito" : "Allegato"} il documento "${a.nome}" al pagamento dell'estratto n. ${id} di ${nomeCompleto(coll.cognome, coll.nome)}`,
+      dettagli: { fileNome: a.nome, dimensione: a.dimensione },
+    });
+    return att?.chiave ?? null;
   });
+  res.json(await estrattoDettaglio(id));
+});
+
+router.get("/backoffice/compensi/estratti/:id/pagamento/allegato/file", async (req, res) => {
+  const { id } = valida(GetEstrattoParams, req.params);
+  const [e] = await db.select().from(estrattiTable).where(eq(estrattiTable.id, id));
+  if (!e?.allegatoChiave) throw nonTrovato("Nessun documento allegato al pagamento.");
+  const { stream } = await leggiFile(e.allegatoChiave);
+  inviaFile(res, stream, e.allegatoNome ?? "allegato", e.allegatoTipo ?? "application/octet-stream", e.allegatoDimensione ?? 0, req.query["anteprima"] === "1");
 });
 
 // ---------------------------------------------------------------------------------------------
@@ -307,6 +404,41 @@ router.delete("/backoffice/compensi/impostazioni-stampa/logo", async (req, res) 
 });
 
 // ---------------------------------------------------------------------------------------------
+// Impostazioni delle ricevute
+// ---------------------------------------------------------------------------------------------
+
+router.get("/backoffice/compensi/impostazioni-ricevute", async (_req, res) => {
+  res.json(await leggiImpostazioniRicevute());
+});
+
+router.put("/backoffice/compensi/impostazioni-ricevute", async (req, res) => {
+  const b = valida(UpdateImpostazioniRicevuteBody, req.body);
+  const nuovi = {
+    patronatoNome: b.patronatoNome.trim(),
+    patronatoIndirizzo: b.patronatoIndirizzo.trim(),
+    patronatoCapCitta: b.patronatoCapCitta.trim(),
+    patronatoCodiceFiscale: b.patronatoCodiceFiscale.trim(),
+    causale: b.causale.replace(/\s+/g, " ").trim(),
+    fraseBonifico: b.fraseBonifico.replace(/\s+/g, " ").trim(),
+    aliquotaIva: b.aliquotaIva,
+  };
+  if (!nuovi.patronatoNome) throw new HttpError(400, "Inserisci il nome del patronato.", "DATI_NON_VALIDI", "patronatoNome");
+  if (!nuovi.causale) throw new HttpError(400, "Inserisci la causale.", "DATI_NON_VALIDI", "causale");
+  if (!nuovi.fraseBonifico) throw new HttpError(400, "Inserisci la frase sul bonifico.", "DATI_NON_VALIDI", "fraseBonifico");
+  await db.transaction(async (tx) => {
+    const prima = await leggiImpostazioniRicevute(tx);
+    const cambiati = (Object.keys(nuovi) as (keyof typeof nuovi)[]).filter((k) => prima[k] !== nuovi[k]);
+    await scriviImpostazioniRicevute(tx, nuovi);
+    await registraLog(tx, contestoDa(req), {
+      azione: "ricevute.impostazioni_modifica",
+      descrizione: cambiati.length ? `Modificati i dati stampati sulle ricevute (${cambiati.join(", ")})` : "Salvati i dati stampati sulle ricevute senza modifiche",
+      dettagli: { campi: cambiati },
+    });
+  });
+  res.json(await leggiImpostazioniRicevute());
+});
+
+// ---------------------------------------------------------------------------------------------
 // Dare/avere
 // ---------------------------------------------------------------------------------------------
 
@@ -362,10 +494,16 @@ async function caricaRiga(id: number) {
   return r;
 }
 
+async function impedisciSeConRicevuta(rigaId: number, azione: string) {
+  const [r] = await db.select({ numero: ricevuteTable.numero, anno: ricevuteTable.anno }).from(ricevuteTable).where(and(eq(ricevuteTable.origineTipo, "riga"), eq(ricevuteTable.origineId, rigaId)));
+  if (r) throw new HttpError(409, `Per questa riga è stata emessa la ricevuta n. ${r.numero}/${r.anno}: non si può ${azione}. Elimina prima la ricevuta.`, "RIGA_CON_RICEVUTA");
+}
+
 router.put("/backoffice/compensi/dare-avere/righe/:id", async (req, res) => {
   const { id } = valida(UpdateRigaDareAvereParams, req.params);
   const b = valida(UpdateRigaDareAvereBody, req.body);
   const prima = await caricaRiga(id);
+  await impedisciSeConRicevuta(id, "modificare");
   const coll = await controllaCollaboratore(prima.collaboratoreId);
   const importo = centesimiDaEuro(b.importoEuro, "importoEuro");
   const data = dataFacoltativa(b.dataPagamento);
@@ -391,6 +529,7 @@ router.put("/backoffice/compensi/dare-avere/righe/:id", async (req, res) => {
 router.delete("/backoffice/compensi/dare-avere/righe/:id", async (req, res) => {
   const { id } = valida(DeleteRigaDareAvereParams, req.params);
   const r = await caricaRiga(id);
+  await impedisciSeConRicevuta(id, "eliminare");
   const coll = await controllaCollaboratore(r.collaboratoreId);
   await db.transaction(async (tx) => {
     await tx.delete(compensiRigheTable).where(eq(compensiRigheTable.id, id));

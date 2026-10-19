@@ -1,11 +1,11 @@
-import { date, index, integer, pgTable, serial, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { date, index, integer, pgTable, real, serial, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { collaboratoriTable } from "./collaboratori";
 import { praticheTable } from "./pratiche";
 import { utentiTable } from "./utenti";
 
 export const METODI_PAGAMENTO = ["bonifico", "contanti", "assegno", "altro"] as const;
-export const SEZIONI_DARE_AVERE = ["naspi", "pensionati", "patronato", "caf", "debiti"] as const;
+export const SEZIONI_DARE_AVERE = ["naspi", "pensionati", "patronato", "caf", "crediti", "debiti"] as const;
 
 /**
  * Estratto delle pratiche chiuse di un collaboratore. Gli importi sono in centesimi. Le righe sono una copia
@@ -30,8 +30,36 @@ export const estrattiTable = pgTable(
     pagamentoMetodo: text("pagamento_metodo", { enum: METODI_PAGAMENTO }),
     pagamentoRegistratoIl: timestamp("pagamento_registrato_il", { withTimezone: true }),
     pagamentoUtenteId: integer("pagamento_utente_id").references(() => utentiTable.id),
+    /** Documento allegato al pagamento (esempio: contabile del bonifico). */
+    allegatoChiave: text("allegato_chiave"),
+    allegatoNome: text("allegato_nome"),
+    allegatoTipo: text("allegato_tipo"),
+    allegatoDimensione: integer("allegato_dimensione"),
+    allegatoCaricatoIl: timestamp("allegato_caricato_il", { withTimezone: true }),
   },
   (t) => [index("estratti_collaboratore_idx").on(t.collaboratoreId)],
+);
+
+/**
+ * Pratica lasciata fuori da un estratto al momento della creazione, con il motivo. La pratica resta disponibile nel
+ * resoconto per un estratto futuro: qui rimane solo la traccia dell'esclusione.
+ */
+export const estrattiEsclusioniTable = pgTable(
+  "estratti_esclusioni",
+  {
+    id: serial("id").primaryKey(),
+    estrattoId: integer("estratto_id")
+      .notNull()
+      .references(() => estrattiTable.id, { onDelete: "cascade" }),
+    praticaId: integer("pratica_id")
+      .notNull()
+      .references(() => praticheTable.id, { onDelete: "cascade" }),
+    numeroPratica: integer("numero_pratica").notNull(),
+    assistito: text("assistito").notNull(),
+    tipoPratica: text("tipo_pratica").notNull(),
+    motivo: text("motivo").notNull(),
+  },
+  (t) => [index("estratti_esclusioni_estratto_idx").on(t.estrattoId)],
 );
 
 /** Pratica inclusa in un estratto. Una pratica puo' stare in un solo estratto (indice univoco). */
@@ -129,4 +157,53 @@ export const importazioniRigheTable = pgTable(
     compensoCentesimi: integer("compenso_centesimi").notNull(),
   },
   (t) => [index("importazioni_righe_imp_idx").on(t.importazioneId), index("importazioni_righe_coll_idx").on(t.collaboratoreId)],
+);
+
+export const ORIGINI_RICEVUTA = ["riga", "estratto", "importazione"] as const;
+
+/**
+ * Ricevuta emessa a nome di un collaboratore, a partire da una riga del suo dare/avere. I dati stampati (denominazione,
+ * indirizzo, banca, patronato, causale...) sono copiati in "dati" al momento della creazione, cosi' il PDF resta uguale
+ * anche se poi cambiano le anagrafiche o le impostazioni. Importi in centesimi.
+ */
+export const ricevuteTable = pgTable(
+  "ricevute",
+  {
+    id: serial("id").primaryKey(),
+    anno: integer("anno").notNull(),
+    /** Progressivo dentro l'anno. */
+    numero: integer("numero").notNull(),
+    dataRicevuta: date("data_ricevuta", { mode: "string" }).notNull(),
+    collaboratoreId: integer("collaboratore_id")
+      .notNull()
+      .references(() => collaboratoriTable.id),
+    /** Anno del dare/avere da cui nasce. */
+    annoDareAvere: integer("anno_dare_avere").notNull(),
+    origineTipo: text("origine_tipo", { enum: ORIGINI_RICEVUTA }).notNull(),
+    origineId: integer("origine_id").notNull(),
+    origineDescrizione: text("origine_descrizione").notNull(),
+    imponibileCentesimi: integer("imponibile_centesimi").notNull(),
+    aliquotaIva: real("aliquota_iva"),
+    ivaCentesimi: integer("iva_centesimi").notNull().default(0),
+    totaleCentesimi: integer("totale_centesimi").notNull(),
+    /** Testi stampati, in JSON. */
+    dati: text("dati").notNull(),
+    creatoIl: timestamp("creato_il", { withTimezone: true }).notNull().defaultNow(),
+    creatoDaUtenteId: integer("creato_da_utente_id").references(() => utentiTable.id),
+    pagatoIl: date("pagato_il", { mode: "string" }),
+    pagamentoMetodo: text("pagamento_metodo", { enum: METODI_PAGAMENTO }),
+    pagamentoRegistratoIl: timestamp("pagamento_registrato_il", { withTimezone: true }),
+    pagamentoUtenteId: integer("pagamento_utente_id").references(() => utentiTable.id),
+    allegatoChiave: text("allegato_chiave"),
+    allegatoNome: text("allegato_nome"),
+    allegatoTipo: text("allegato_tipo"),
+    allegatoDimensione: integer("allegato_dimensione"),
+    allegatoCaricatoIl: timestamp("allegato_caricato_il", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("ricevute_anno_numero_uq").on(t.anno, t.numero),
+    uniqueIndex("ricevute_origine_uq").on(t.collaboratoreId, t.origineTipo, t.origineId),
+    index("ricevute_collaboratore_idx").on(t.collaboratoreId),
+    index("ricevute_data_idx").on(t.dataRicevuta),
+  ],
 );

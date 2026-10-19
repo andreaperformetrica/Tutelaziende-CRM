@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link, useLocation, useParams } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetEstrattoQueryKey, getListEstrattiQueryKey, getGetResocontoCompensiQueryKey, useDeleteEstratto, useGetEstratto, useInviaEstratto, useRegistraPagamentoEstratto } from "@workspace/api-client-react";
-import { ArrowLeft, Banknote, Mail, Printer, Trash2 } from "lucide-react";
+import { ArrowLeft, Banknote, Mail, Paperclip, Printer, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -15,7 +15,7 @@ import { ErrorState, PageHeader } from "@/components/common";
 import { ConfermaElimina } from "@/components/pratiche/conferma-elimina";
 import { useToast } from "@/hooks/use-toast";
 import { fmtData, fmtEuro, fmtIstante, parseApiError } from "@/lib/format";
-import { urlEstrattoPdf } from "@/lib/upload";
+import { FORMATI_DOCUMENTI, formatoDimensione, inviaFile, messaggioErrore, urlAllegatoPagamentoEstratto, urlEstrattoPdf } from "@/lib/upload";
 
 const METODI = { bonifico: "Bonifico", contanti: "Contanti", assegno: "Assegno", altro: "Altro" } as const;
 const oggi = () => new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Rome" }).format(new Date());
@@ -30,12 +30,15 @@ export default function EstrattoDettaglioPage() {
   const paga = useRegistraPagamentoEstratto();
   const elimina = useDeleteEstratto();
   const [pagamento, setPagamento] = useState<{ data: string; importo: string; metodo: keyof typeof METODI } | null>(null);
+  const [fileContabile, setFileContabile] = useState<File | null>(null);
+  const [carica, setCarica] = useState(false);
+  const inputAllegato = useRef<HTMLInputElement>(null);
   const [err, setErr] = useState<string | null>(null);
   const [conferma, setConferma] = useState(false);
 
   if (q.isLoading) return <Skeleton className="h-64 w-full" />;
   if (q.isError || !q.data) return <ErrorState message={parseApiError(q.error).message} onRetry={() => q.refetch()} />;
-  const { estratto: e, righe, invii } = q.data;
+  const { estratto: e, righe, invii, esclusioni, allegato } = q.data;
   const aggiorna = () => {
     qc.invalidateQueries({ queryKey: getGetEstrattoQueryKey(id) });
     qc.invalidateQueries({ queryKey: getListEstrattiQueryKey() });
@@ -48,16 +51,34 @@ export default function EstrattoDettaglioPage() {
     if (!Number.isFinite(importoEuro) || importoEuro <= 0) return setErr("Inserisci un importo maggiore di zero.");
     setErr(null);
     paga.mutate({ id, data: { data: pagamento.data, importoEuro, metodo: pagamento.metodo } }, {
-      onSuccess: () => { aggiorna(); setPagamento(null); toast({ title: "Pagamento registrato", description: "Le pratiche dell'estratto sono ora nello stato Pagata." }); },
+      onSuccess: async () => {
+        aggiorna();
+        setPagamento(null);
+        const file = fileContabile;
+        setFileContabile(null);
+        if (file) {
+          // Il pagamento e' gia' registrato: se il documento non parte, si puo' riallegare dal riquadro del pagamento.
+          try { await inviaFile("PUT", `/backoffice/compensi/estratti/${id}/pagamento/allegato`, {}, file); aggiorna(); toast({ title: "Pagamento registrato", description: "Documento allegato. Le pratiche sono ora nello stato Pagata." }); }
+          catch (x) { toast({ variant: "destructive", title: "Pagamento registrato, documento non allegato", description: messaggioErrore(x) }); }
+        } else toast({ title: "Pagamento registrato", description: "Le pratiche dell'estratto sono ora nello stato Pagata." });
+      },
       onError: (x) => setErr(parseApiError(x).message),
     });
+  };
+
+  const allega = async (file: File | undefined) => {
+    if (!file) return;
+    setCarica(true);
+    try { await inviaFile("PUT", `/backoffice/compensi/estratti/${id}/pagamento/allegato`, {}, file); aggiorna(); toast({ title: "Documento allegato al pagamento" }); }
+    catch (x) { toast({ variant: "destructive", title: "Caricamento non riuscito", description: messaggioErrore(x) }); }
+    finally { setCarica(false); if (inputAllegato.current) inputAllegato.current.value = ""; }
   };
 
   return (
     <div>
       <Link href="/admin/compensi?tab=estratti" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-3"><ArrowLeft className="size-4 mr-1" />Compensi</Link>
       <PageHeader title={`Estratto n. ${e.id}`} kicker={`${e.collaboratoreNome} · sportello ${e.numeroSportello}`}
-        subtitle={<>del {fmtData(e.dataEstratto)} · {e.numeroPratiche} {e.numeroPratiche === 1 ? "pratica" : "pratiche"} · {e.totalePunti} punti · ristorno {fmtEuro(e.totaleEuro)}</>}
+        subtitle={<>del {fmtData(e.dataEstratto)} · Totale pratiche {e.numeroPratiche} · Totale punti {e.totalePunti} · ristorno {fmtEuro(e.totaleEuro)}</>}
         actions={
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" asChild><a href={urlEstrattoPdf(id)} target="_blank" rel="noreferrer" data-testid="button-pdf-estratto"><Printer className="size-4 mr-2" />Stampa PDF</a></Button>
@@ -66,7 +87,7 @@ export default function EstrattoDettaglioPage() {
                 onSuccess: (r) => { aggiorna(); toast({ title: r.esitoEtichetta, description: r.dettaglio ?? undefined }); },
                 onError: (x) => toast({ title: "Invio non riuscito", description: parseApiError(x).message, variant: "destructive" }),
               })}><Mail className="size-4 mr-2" />{invia.isPending ? "Invio…" : "Invia per email"}</Button>
-            {!e.pagato && <Button onClick={() => { setErr(null); setPagamento({ data: oggi(), importo: String(e.totaleEuro.toFixed(2)).replace(".", ","), metodo: "bonifico" }); }} data-testid="button-registra-pagamento"><Banknote className="size-4 mr-2" />Registra pagamento</Button>}
+            {!e.pagato && <Button onClick={() => { setErr(null); setFileContabile(null); setPagamento({ data: oggi(), importo: String(e.totaleEuro.toFixed(2)).replace(".", ","), metodo: "bonifico" }); }} data-testid="button-registra-pagamento"><Banknote className="size-4 mr-2" />Registra pagamento</Button>}
             {!e.pagato && <Button variant="outline" onClick={() => setConferma(true)} data-testid="button-elimina-estratto"><Trash2 className="size-4 mr-2" />Elimina</Button>}
           </div>
         } />
@@ -74,7 +95,15 @@ export default function EstrattoDettaglioPage() {
       <div className="mb-6 rounded-lg border border-border bg-card px-4 py-3 text-sm" data-testid="stato-pagamento">
         {e.pagato ? (
           <><Badge className="bg-primary text-primary-foreground mr-2">Pagato</Badge>il {fmtData(e.pagatoIl)} · {fmtEuro(e.pagamentoEuro ?? 0)} · {METODI[e.pagamentoMetodo as keyof typeof METODI] ?? e.pagamentoMetodo}
-            {q.data.pagamentoRegistratoDa && <span className="text-muted-foreground"> · registrato da {q.data.pagamentoRegistratoDa} il {fmtIstante(q.data.pagamentoRegistratoIl)}</span>}</>
+            {q.data.pagamentoRegistratoDa && <span className="text-muted-foreground"> · registrato da {q.data.pagamentoRegistratoDa} il {fmtIstante(q.data.pagamentoRegistratoIl)}</span>}
+            <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-border pt-3" data-testid="allegato-pagamento">
+              <Paperclip className="size-4 text-muted-foreground" />
+              {allegato ? (
+                <span>Documento allegato: <a href={urlAllegatoPagamentoEstratto(id, true)} target="_blank" rel="noreferrer" className="underline font-medium" data-testid="link-allegato-pagamento">{allegato.nome}</a> <span className="text-muted-foreground">({formatoDimensione(allegato.dimensione)}, caricato il {fmtIstante(allegato.caricatoIl)})</span></span>
+              ) : <span className="text-muted-foreground">Nessun documento allegato (per esempio la contabile del bonifico).</span>}
+              <input ref={inputAllegato} type="file" accept={FORMATI_DOCUMENTI} className="hidden" onChange={(x) => allega(x.target.files?.[0])} data-testid="input-allegato-pagamento" />
+              <Button size="sm" variant="outline" disabled={carica} onClick={() => inputAllegato.current?.click()} data-testid="button-allega-pagamento">{carica ? "Caricamento…" : allegato ? "Sostituisci documento" : "Allega documento"}</Button>
+            </div></>
         ) : <><Badge variant="outline" className="mr-2">Da pagare</Badge>Le pratiche si possono ancora liberare eliminando l'estratto.</>}
       </div>
 
@@ -95,11 +124,25 @@ export default function EstrattoDettaglioPage() {
               </TableRow>
             ))}
             <TableRow className="bg-secondary/40 hover:bg-secondary/40 font-semibold">
-              <TableCell colSpan={4}>Totale</TableCell><TableCell className="text-right tabular-nums">{e.totalePunti}</TableCell><TableCell className="text-right tabular-nums">{fmtEuro(e.totaleEuro)}</TableCell>
+              <TableCell colSpan={4}>Totale pratiche {e.numeroPratiche}</TableCell><TableCell className="text-right tabular-nums">{e.totalePunti}</TableCell><TableCell className="text-right tabular-nums">{fmtEuro(e.totaleEuro)}</TableCell>
             </TableRow>
           </TableBody>
         </Table>
       </div>
+
+      {esclusioni.length > 0 && (
+        <div className="mb-8" data-testid="esclusioni-estratto">
+          <h3 className="font-serif text-lg font-semibold mb-1">Pratiche escluse da questo estratto</h3>
+          <p className="text-sm text-muted-foreground mb-2">Sono rimaste nel resoconto e si potranno pagare con un estratto futuro.</p>
+          <ul className="space-y-1.5 text-sm">
+            {esclusioni.map((x) => (
+              <li key={x.praticaId} className="rounded-md border border-border bg-card px-3 py-2" data-testid={`esclusione-${x.praticaId}`}>
+                <Link href={`/admin/pratiche/${x.praticaId}`} className="underline tabular-nums">Pratica {x.numeroPratica}</Link> · {x.assistito} · {x.tipoPratica} — <strong>Motivo:</strong> {x.motivo}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <h3 className="font-serif text-lg font-semibold mb-2">Invii per email</h3>
       <p className="text-sm text-muted-foreground mb-3">Destinatario: {q.data.emailDestinatario ?? "il collaboratore non ha un indirizzo email"}.</p>
@@ -122,6 +165,10 @@ export default function EstrattoDettaglioPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5"><Label htmlFor="p-data">Data</Label><Input id="p-data" type="date" value={pagamento.data} onChange={(x) => setPagamento({ ...pagamento, data: x.target.value })} data-testid="input-pagamento-data" /></div>
                 <div className="space-y-1.5"><Label htmlFor="p-imp">Importo (euro)</Label><Input id="p-imp" inputMode="decimal" value={pagamento.importo} onChange={(x) => setPagamento({ ...pagamento, importo: x.target.value })} data-testid="input-pagamento-importo" /></div>
+              </div>
+              <div className="space-y-1.5"><Label htmlFor="p-file">Documento di pagamento (facoltativo)</Label>
+                <Input id="p-file" type="file" accept={FORMATI_DOCUMENTI} onChange={(x) => setFileContabile(x.target.files?.[0] ?? null)} data-testid="input-pagamento-file" />
+                <p className="text-xs text-muted-foreground">Per esempio la contabile del bonifico: PDF o immagine.</p>
               </div>
               <div className="space-y-1.5"><Label>Metodo</Label>
                 <Select value={pagamento.metodo} onValueChange={(v) => setPagamento({ ...pagamento, metodo: v as keyof typeof METODI })}>

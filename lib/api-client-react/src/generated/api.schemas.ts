@@ -89,6 +89,16 @@ export interface DatiSede {
   /** @nullable */
   iban?: string | null;
   /**
+     * Nome della banca (stampato sulle ricevute)
+     * @nullable
+     */
+  banca?: string | null;
+  /**
+     * Filiale della banca (stampata sulle ricevute)
+     * @nullable
+     */
+  filiale?: string | null;
+  /**
      * @maxLength 11
      * @nullable
      */
@@ -2285,12 +2295,26 @@ export interface ResocontoCompensi {
   totaleEuro: number;
 }
 
+export interface EsclusionePratica {
+  praticaId: number;
+  /**
+     * @minLength 1
+     * @maxLength 300
+     */
+  motivo: string;
+}
+
 export interface CreaEstrattiInput {
   /**
      * @minItems 1
      * @maxItems 2000
      */
   praticaIds: number[];
+  /**
+     * Pratiche scelte ma lasciate fuori dal pagamento, con il motivo; restano disponibili nel resoconto
+     * @maxItems 2000
+     */
+  escluse?: EsclusionePratica[];
 }
 
 export type MetodoPagamento = typeof MetodoPagamento[keyof typeof MetodoPagamento];
@@ -2323,6 +2347,83 @@ export interface EstrattoRiepilogo {
   /** @nullable */
   pagamentoEuro: number | null;
   pagamentoMetodo: MetodoPagamento | null;
+  /**
+     * Data e ora dell'ultimo invio per email
+     * @nullable
+     */
+  ultimoInvioIl: string | null;
+  /**
+     * Esito dell'ultimo invio
+     * @nullable
+     */
+  ultimoInvioEtichetta: string | null;
+}
+
+export interface AllegatoPagamento {
+  nome: string;
+  dimensione: number;
+  caricatoIl: string;
+}
+
+export interface EsclusioneEstratto {
+  praticaId: number;
+  numeroPratica: number;
+  assistito: string;
+  tipoPratica: string;
+  motivo: string;
+}
+
+export type RegistroInvioEstrattoEsito = typeof RegistroInvioEstrattoEsito[keyof typeof RegistroInvioEstrattoEsito];
+
+
+export const RegistroInvioEstrattoEsito = {
+  in_coda: 'in_coda',
+  inviata: 'inviata',
+  non_inviata: 'non_inviata',
+  errore: 'errore',
+} as const;
+
+export interface RegistroInvioEstratto {
+  id: number;
+  estrattoId: number;
+  collaboratoreNome: string;
+  destinatarioContatto: string;
+  creatoIl: string;
+  esito: RegistroInvioEstrattoEsito;
+  esitoEtichetta: string;
+  /** @nullable */
+  dettaglioEsito: string | null;
+}
+
+export interface InvioMultiploEstrattiInput {
+  /**
+     * @minItems 1
+     * @maxItems 200
+     */
+  ids: number[];
+}
+
+export type InvioMultiploEstrattiEsitoRisultatiItemEsito = typeof InvioMultiploEstrattiEsitoRisultatiItemEsito[keyof typeof InvioMultiploEstrattiEsitoRisultatiItemEsito];
+
+
+export const InvioMultiploEstrattiEsitoRisultatiItemEsito = {
+  in_coda: 'in_coda',
+  inviata: 'inviata',
+  non_inviata: 'non_inviata',
+  errore: 'errore',
+} as const;
+
+export type InvioMultiploEstrattiEsitoRisultatiItem = {
+  id: number;
+  collaboratoreNome: string;
+  esito: InvioMultiploEstrattiEsitoRisultatiItemEsito;
+  esitoEtichetta: string;
+  /** @nullable */
+  dettaglio: string | null;
+};
+
+export interface InvioMultiploEstrattiEsito {
+  risultati: InvioMultiploEstrattiEsitoRisultatiItem[];
 }
 
 export interface RigaEstratto {
@@ -2371,6 +2472,9 @@ export interface EstrattoDettaglio {
      * @nullable
      */
   emailDestinatario: string | null;
+  /** Pratiche lasciate fuori alla creazione, con il motivo */
+  esclusioni: EsclusioneEstratto[];
+  allegato: AllegatoPagamento | null;
   /** Invii per email, dal piu recente */
   invii: InvioEstratto[];
 }
@@ -2402,6 +2506,139 @@ export interface InvioEstrattoEsito {
   esitoEtichetta: string;
   /** @nullable */
   dettaglio: string | null;
+}
+
+export interface ImpostazioniRicevute {
+  /** @maxLength 120 */
+  patronatoNome: string;
+  /** @maxLength 160 */
+  patronatoIndirizzo: string;
+  /**
+     * CAP e citta, es. 80021 Afragola
+     * @maxLength 120
+     */
+  patronatoCapCitta: string;
+  /** @maxLength 30 */
+  patronatoCodiceFiscale: string;
+  /**
+     * Testo fisso dopo "relativa a"
+     * @maxLength 400
+     */
+  causale: string;
+  /** @maxLength 300 */
+  fraseBonifico: string;
+  /**
+     * Aliquota IVA proposta per i collaboratori con partita IVA
+     * @minimum 0
+     * @maximum 100
+     */
+  aliquotaIva: number;
+}
+
+export interface RicevutaRiepilogo {
+  id: number;
+  anno: number;
+  numero: number;
+  /** AAAA-MM-GG */
+  dataRicevuta: string;
+  collaboratoreId: number;
+  /** Cognome e nome */
+  collaboratoreNome: string;
+  /**
+     * Denominazione della sede
+     * @nullable
+     */
+  denominazione: string | null;
+  tipoSoggetto: TipoSoggetto | null;
+  imponibileEuro: number;
+  /** @nullable */
+  aliquotaIva: number | null;
+  ivaEuro: number;
+  totaleEuro: number;
+  pagata: boolean;
+  /** @nullable */
+  pagatoIl: string | null;
+  origineDescrizione: string;
+}
+
+export interface ElencoRicevute {
+  righe: RicevutaRiepilogo[];
+  /** Numero di documenti trovati */
+  totale: number;
+  daPagare: number;
+  pagate: number;
+  totaleEuro: number;
+}
+
+export type RicevutaDettaglioOrigineTipo = typeof RicevutaDettaglioOrigineTipo[keyof typeof RicevutaDettaglioOrigineTipo];
+
+
+export const RicevutaDettaglioOrigineTipo = {
+  riga: 'riga',
+  estratto: 'estratto',
+  importazione: 'importazione',
+} as const;
+
+export interface RicevutaDettaglio {
+  ricevuta: RicevutaRiepilogo;
+  annoDareAvere: number;
+  origineTipo: RicevutaDettaglioOrigineTipo;
+  origineId: number;
+  creatoIl: string;
+  /** @nullable */
+  creatoDa: string | null;
+  pagamentoMetodo: MetodoPagamento | null;
+  /** @nullable */
+  pagamentoRegistratoIl: string | null;
+  /** @nullable */
+  pagamentoRegistratoDa: string | null;
+  allegato: AllegatoPagamento | null;
+  /** Vero se e' l'ultima dell'anno e non e' stata pagata */
+  eliminabile: boolean;
+}
+
+export type CreaRicevutaInputOrigineTipo = typeof CreaRicevutaInputOrigineTipo[keyof typeof CreaRicevutaInputOrigineTipo];
+
+
+export const CreaRicevutaInputOrigineTipo = {
+  riga: 'riga',
+  estratto: 'estratto',
+  importazione: 'importazione',
+} as const;
+
+export interface CreaRicevutaInput {
+  collaboratoreId: number;
+  /**
+     * Anno del dare/avere
+     * @minimum 2000
+     * @maximum 2100
+     */
+  anno: number;
+  origineTipo: CreaRicevutaInputOrigineTipo;
+  origineId: number;
+  /**
+     * Importo; per i collaboratori con partita IVA e' l'imponibile
+     * @maximum 10000000
+     * @exclusiveMinimum 0
+     */
+  importoEuro: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     * @nullable
+     */
+  aliquotaIva?: number | null;
+  /**
+     * AAAA-MM-GG, di default oggi
+     * @nullable
+     */
+  dataRicevuta?: string | null;
+}
+
+export interface PagamentoRicevutaInput {
+  /** Data del pagamento (AAAA-MM-GG) */
+  data: string;
+  metodo: MetodoPagamento;
 }
 
 export interface LogoStampa {
@@ -2476,6 +2713,7 @@ export const SezioneDareAvereCodice = {
   pensionati: 'pensionati',
   patronato: 'patronato',
   caf: 'caf',
+  crediti: 'crediti',
   debiti: 'debiti',
 } as const;
 
@@ -2616,6 +2854,13 @@ export interface ConfermaImportazioneInput {
   soloValide: boolean;
 }
 
+export interface RicevutaRigaRiferimento {
+  id: number;
+  numero: number;
+  anno: number;
+  pagata: boolean;
+}
+
 export interface RigaDareAvere {
   /**
      * Vuoto per le righe del Patronato, che arrivano dagli estratti
@@ -2642,6 +2887,7 @@ export interface RigaDareAvere {
      * @nullable
      */
   importazioneId: number | null;
+  ricevuta: RicevutaRigaRiferimento | null;
 }
 
 export interface SezioneDareAvere {
@@ -2660,7 +2906,7 @@ export interface DareAvere {
   numeroSportello: string;
   anno: number;
   sezioni: SezioneDareAvere[];
-  /** Somma degli importi delle sezioni meno i debiti */
+  /** Importi delle sezioni e crediti, meno i debiti */
   totaleAvereEuro: number;
 }
 
@@ -2671,6 +2917,7 @@ export const RigaDareAvereInputSezione = {
   naspi: 'naspi',
   pensionati: 'pensionati',
   caf: 'caf',
+  crediti: 'crediti',
   debiti: 'debiti',
 } as const;
 
@@ -2906,6 +3153,31 @@ export type ListEstrattiStato = typeof ListEstrattiStato[keyof typeof ListEstrat
 export const ListEstrattiStato = {
   da_pagare: 'da_pagare',
   pagato: 'pagato',
+} as const;
+
+export type ListRicevuteParams = {
+/**
+ * Data ricevuta dal (AAAA-MM-GG)
+ */
+dal?: string;
+/**
+ * Data ricevuta fino al (AAAA-MM-GG)
+ */
+al?: string;
+/**
+ * Numero della ricevuta
+ */
+numero?: number;
+collaboratoreId?: number;
+stato?: ListRicevuteStato;
+};
+
+export type ListRicevuteStato = typeof ListRicevuteStato[keyof typeof ListRicevuteStato];
+
+
+export const ListRicevuteStato = {
+  da_pagare: 'da_pagare',
+  pagata: 'pagata',
 } as const;
 
 export type ListImportazioniParams = {

@@ -38,6 +38,16 @@ export interface DatiSede {
   /** @nullable */
   iban?: string | null;
   /**
+     * Nome della banca (stampato sulle ricevute)
+     * @nullable
+     */
+  banca?: string | null;
+  /**
+     * Filiale della banca (stampata sulle ricevute)
+     * @nullable
+     */
+  filiale?: string | null;
+  /**
      * @maxLength 11
      * @nullable
      */

@@ -110,7 +110,7 @@ export default function CollaboratoreDettaglioPage() {
         codiceFiscale: c.codiceFiscale, email: c.email, telefono: c.telefono, partitaIva: c.partitaIva, cellulare: c.cellulare, numeroSportello: c.numeroSportello,
         tipologia: c.tipologia, capogruppoId: c.capogruppoId, attivo: !c.attivo,
         denominazione: c.denominazione, ragioneSociale: c.ragioneSociale, tipoSoggetto: c.tipoSoggetto, sedeIndirizzo: c.sedeIndirizzo,
-        sedeComuneCodice: c.sedeComuneCodice, sedeCap: c.sedeCap, iban: c.iban, codiceFiscaleAssociazione: c.codiceFiscaleAssociazione,
+        sedeComuneCodice: c.sedeComuneCodice, sedeCap: c.sedeCap, iban: c.iban, banca: c.banca, filiale: c.filiale, codiceFiscaleAssociazione: c.codiceFiscaleAssociazione,
       },
     }, {
       onSuccess: () => { invalida(); toast({ title: c.attivo ? "Collaboratore disattivato" : "Collaboratore riattivato" }); },
@@ -185,6 +185,8 @@ export default function CollaboratoreDettaglioPage() {
             <Dato k="Provincia" mono>{c.sedeProvincia ?? "—"}</Dato>
             <Dato k="CAP" mono>{c.sedeCap ?? "—"}</Dato>
             <Dato k="IBAN" mono>{c.iban ?? "—"}</Dato>
+            <Dato k="Banca">{c.banca ?? "—"}</Dato>
+            <Dato k="Filiale">{c.filiale ?? "—"}</Dato>
           </dl>
           <div className="mt-5 pt-3 border-t border-border" data-testid="sezione-mandati-sede">
             <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">

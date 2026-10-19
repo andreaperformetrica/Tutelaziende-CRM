@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { RicevutaRigaRiferimento } from './ricevutaRigaRiferimento';
 
 export interface RigaDareAvere {
   /**
@@ -32,4 +33,5 @@ export interface RigaDareAvere {
      * @nullable
      */
   importazioneId: number | null;
+  ricevuta: RicevutaRigaRiferimento | null;
 }

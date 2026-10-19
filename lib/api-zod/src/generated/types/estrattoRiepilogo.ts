@@ -27,4 +27,14 @@ export interface EstrattoRiepilogo {
   /** @nullable */
   pagamentoEuro: number | null;
   pagamentoMetodo: MetodoPagamento | null;
+  /**
+     * Data e ora dell'ultimo invio per email
+     * @nullable
+     */
+  ultimoInvioIl: string | null;
+  /**
+     * Esito dell'ultimo invio
+     * @nullable
+     */
+  ultimoInvioEtichetta: string | null;
 }

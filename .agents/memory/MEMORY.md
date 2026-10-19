@@ -20,3 +20,4 @@
 - [Aggiornamento 3](tutela-crm-aggiornamento3.md) — priorità, scadenze+solleciti email, Scarica tutto, export Excel, filtri date sargable (indici), data e ora
 - [Aggiornamento 4](tutela-crm-aggiornamento4.md) — canale default, base URL link email, alert collaboratori, dashboard, chat interna, statistiche operatori
 - [Aggiornamento 5](tutela-crm-aggiornamento5.md) — eventi: email partecipanti+QR, check-out/ore, soglia attestato, documenti ai presenti, questionario online monouso
+- [Aggiornamento 6](tutela-crm-aggiornamento6.md) — ricevute/pagamenti e fatture, crediti, esclusioni estratti, invio massivo, allegato pagamento, ruolo operatore

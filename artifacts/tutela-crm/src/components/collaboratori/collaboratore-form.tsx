@@ -46,13 +46,13 @@ export function CollaboratoreForm({ initial, onSaved, onCancel }: { initial?: Co
       cellulare: initial.cellulare, numeroSportello: initial.numeroSportello, tipologia: initial.tipologia,
       denominazione: initial.denominazione ?? "", ragioneSociale: initial.ragioneSociale ?? "", tipoSoggetto: initial.tipoSoggetto ?? "none",
       codiceFiscaleAssociazione: initial.codiceFiscaleAssociazione ?? "", sedeIndirizzo: initial.sedeIndirizzo ?? "", sedeComune: initial.sedeComune ?? "",
-      sedeComuneCodice: initial.sedeComuneCodice ?? "", sedeProvincia: initial.sedeProvincia ?? "", sedeCap: initial.sedeCap ?? "", iban: initial.iban ?? "",
+      sedeComuneCodice: initial.sedeComuneCodice ?? "", sedeProvincia: initial.sedeProvincia ?? "", sedeCap: initial.sedeCap ?? "", iban: initial.iban ?? "", banca: initial.banca ?? "", filiale: initial.filiale ?? "",
       capogruppoId: initial.capogruppoId ? String(initial.capogruppoId) : "none", attivo: initial.attivo, passwordProvvisoria: "",
     } : {
       nome: "", cognome: "", sesso: undefined as unknown as "M", dataNascita: "", luogoNascitaCodice: "", luogoNascitaEtichetta: "",
       nazionalita: "IT", codiceFiscale: "", email: "", telefono: "", partitaIva: "", cellulare: "", numeroSportello: "",
       denominazione: "", ragioneSociale: "", tipoSoggetto: "none" as const, codiceFiscaleAssociazione: "", sedeIndirizzo: "", sedeComune: "",
-      sedeComuneCodice: "", sedeProvincia: "", sedeCap: "", iban: "",
+      sedeComuneCodice: "", sedeProvincia: "", sedeCap: "", iban: "", banca: "", filiale: "",
       tipologia: undefined as unknown as "CAF", capogruppoId: "none", attivo: true, passwordProvvisoria: "",
     },
   });
@@ -86,6 +86,7 @@ export function CollaboratoreForm({ initial, onSaved, onCancel }: { initial?: Co
       codiceFiscaleAssociazione: v.tipoSoggetto === "ASSOCIAZIONE" ? (v.codiceFiscaleAssociazione ?? "").replace(/\s+/g, "") : null,
       sedeIndirizzo: v.sedeIndirizzo?.trim() || null, sedeComuneCodice: v.sedeComuneCodice || null, sedeCap: v.sedeCap?.trim() || null,
       iban: v.iban?.replace(/\s+/g, "").toUpperCase() || null,
+      banca: v.banca?.trim() || null, filiale: v.filiale?.trim() || null,
       capogruppoId: v.capogruppoId === "none" ? null : Number(v.capogruppoId),
     };
     const onError = (err: unknown) => {

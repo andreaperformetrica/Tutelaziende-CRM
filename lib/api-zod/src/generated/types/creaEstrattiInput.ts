@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { EsclusionePratica } from './esclusionePratica';
 
 export interface CreaEstrattiInput {
   /**
@@ -12,4 +13,9 @@ export interface CreaEstrattiInput {
      * @maxItems 2000
      */
   praticaIds: number[];
+  /**
+     * Pratiche scelte ma lasciate fuori dal pagamento, con il motivo; restano disponibili nel resoconto
+     * @maxItems 2000
+     */
+  escluse?: EsclusionePratica[];
 }

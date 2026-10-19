@@ -73,6 +73,8 @@ const colonne = {
   sedeProvincia: collaboratoriTable.sedeProvincia,
   sedeCap: collaboratoriTable.sedeCap,
   iban: collaboratoriTable.iban,
+  banca: collaboratoriTable.banca,
+  filiale: collaboratoriTable.filiale,
   codiceFiscaleAssociazione: collaboratoriTable.codiceFiscaleAssociazione,
   capogruppoId: collaboratoriTable.capogruppoId,
   eCapogruppo: collaboratoriTable.eCapogruppo,
@@ -367,10 +369,12 @@ const ETICHETTE_CAMPI: Record<string, string> = {
   sedeProvincia: "provincia della sede",
   sedeCap: "CAP della sede",
   iban: "IBAN",
+  banca: "banca",
+  filiale: "filiale della banca",
   codiceFiscaleAssociazione: "codice fiscale dell'associazione",
 };
 
-const CAMPI_SEDE = ["denominazione", "ragioneSociale", "tipoSoggetto", "sedeIndirizzo", "sedeComune", "sedeProvincia", "sedeCap", "iban", "codiceFiscaleAssociazione"] as const;
+const CAMPI_SEDE = ["denominazione", "ragioneSociale", "tipoSoggetto", "sedeIndirizzo", "sedeComune", "sedeProvincia", "sedeCap", "iban", "banca", "filiale", "codiceFiscaleAssociazione"] as const;
 const soloSede = (o: Record<string, unknown>) => Object.fromEntries(CAMPI_SEDE.map((k) => [k, o[k] ?? null]));
 
 router.put("/collaboratori/:id", soloBackofficeScrittura, async (req, res) => {

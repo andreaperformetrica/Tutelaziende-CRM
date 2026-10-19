@@ -14,6 +14,6 @@ export interface DareAvere {
   numeroSportello: string;
   anno: number;
   sezioni: SezioneDareAvere[];
-  /** Somma degli importi delle sezioni meno i debiti */
+  /** Importi delle sezioni e crediti, meno i debiti */
   totaleAvereEuro: number;
 }

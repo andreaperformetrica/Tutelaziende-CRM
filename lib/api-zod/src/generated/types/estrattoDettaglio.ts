@@ -5,6 +5,8 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { AllegatoPagamento } from './allegatoPagamento';
+import type { EsclusioneEstratto } from './esclusioneEstratto';
 import type { EstrattoRiepilogo } from './estrattoRiepilogo';
 import type { InvioEstratto } from './invioEstratto';
 import type { RigaEstratto } from './rigaEstratto';
@@ -24,6 +26,9 @@ export interface EstrattoDettaglio {
      * @nullable
      */
   emailDestinatario: string | null;
+  /** Pratiche lasciate fuori alla creazione, con il motivo */
+  esclusioni: EsclusioneEstratto[];
+  allegato: AllegatoPagamento | null;
   /** Invii per email, dal piu recente */
   invii: InvioEstratto[];
 }
