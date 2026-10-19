@@ -7,5 +7,11 @@
  */
 
 export interface MandatoInput {
-  nome: string;
+  /** Sigla della provincia */
+  provincia: string;
+  /**
+     * Vuoto = tutti i tipi di pratica
+     * @nullable
+     */
+  tipoPraticaId: number | null;
 }

@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { DialogCollaboratore } from "@/components/assistiti/dialog-collaboratore";
 import { EmptyState, ErrorState, PageHeader } from "@/components/common";
 import { useToast } from "@/hooks/use-toast";
-import { fmtCellulare, fmtData, fmtIstante, parseApiError, tipologiaLabel } from "@/lib/format";
+import { fmtCellulare, fmtData, fmtIstante, parseApiError, tipologiaLabel, nomeCollaboratore } from "@/lib/format";
 
 const CAMPI: Record<string, string> = { codice_fiscale: "Codice fiscale", cellulare: "Cellulare" };
 
@@ -46,7 +46,7 @@ function Scheda({ s, onAssocia, onArchivia }: { s: SegnalazioneDuplicato; onAsso
             <Riga k="Codice fiscale"><span className="font-mono">{e.codiceFiscale}</span></Riga>
             <Riga k="Cellulare"><span className="font-mono">{fmtCellulare(e.cellulare)}</span></Riga>
             <Riga k={eAssistito ? "Appartiene a" : "Collaboratore"}>
-              {e.collaboratore ? <>{e.collaboratore.cognome} {e.collaboratore.nome} <span className="font-mono text-xs text-muted-foreground">· sportello {e.collaboratore.numeroSportello} · {tipologiaLabel(e.collaboratore.tipologia)}</span></> : "—"}
+              {e.collaboratore ? <>{nomeCollaboratore(e.collaboratore)} <span className="font-mono text-xs text-muted-foreground">· sportello {e.collaboratore.numeroSportello} · {tipologiaLabel(e.collaboratore.tipologia)}</span></> : "—"}
             </Riga>
             {eAssistito && e.assistitoId && <Riga k="Scheda"><Link href={`/admin/assistiti/${e.assistitoId}`} className="underline text-primary" data-testid={`link-scheda-${s.id}`}>Apri assistito</Link></Riga>}
           </dl>
@@ -54,7 +54,7 @@ function Scheda({ s, onAssocia, onArchivia }: { s: SegnalazioneDuplicato; onAsso
         <section>
           <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Richiesto da</h3>
           <dl className="space-y-1.5">
-            <Riga k="Collaboratore">{s.richiedente.cognome} {s.richiedente.nome}</Riga>
+            <Riga k="Collaboratore">{nomeCollaboratore(s.richiedente)}</Riga>
             <Riga k="Sportello"><span className="font-mono">{s.richiedente.numeroSportello}</span> · {tipologiaLabel(s.richiedente.tipologia)}</Riga>
             <Riga k="Prima segnalazione">{fmtIstante(s.creataIl)}</Riga>
           </dl>

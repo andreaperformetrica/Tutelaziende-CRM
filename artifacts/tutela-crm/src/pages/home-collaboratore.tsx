@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { ErrorState } from "@/components/common";
 import { useSession } from "@/lib/auth";
-import { fmtData, fmtIstante, fmtOrarioEvento, parseApiError, tipologiaLabel } from "@/lib/format";
+import { fmtData, fmtIstante, fmtOrarioEvento, parseApiError, tipologiaLabel, nomeCollaboratore } from "@/lib/format";
 import { formatoDimensione, urlAllegatoNews } from "@/lib/upload";
 
 function testoAggiornamento(a: AvvisoPratica): string {
@@ -160,7 +160,7 @@ export default function HomeCollaboratore() {
               <ul className="divide-y divide-border">
                 {q.data.membri.map((m) => (
                   <li key={m.id} className="flex items-center justify-between py-2.5" data-testid={`membro-${m.id}`}>
-                    <span className="font-semibold text-sm">{m.cognome} {m.nome}</span>
+                    <span className="font-semibold text-sm">{nomeCollaboratore(m)}</span>
                     <span className="flex items-center gap-3 text-xs text-muted-foreground"><span className="font-mono">Sportello {m.numeroSportello}</span>{tipologiaLabel(m.tipologia)}{!m.attivo && <Badge variant="outline">Disattivato</Badge>}</span>
                   </li>
                 ))}

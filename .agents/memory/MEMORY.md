@@ -10,8 +10,9 @@
 - [Phase 9 import decisions](tutela-crm-phase9-decisions.md) — generic admin-configured Excel import, duplicate rule, section mapping assumptions awaiting user confirmation
 - [Tutela CRM branding](tutela-crm-branding.md) — Tutelaziende logo files, blue palette, PDF logo is a setting
 - [Colori utenti interni](tutela-crm-colori-utenti.md) — chosen color per internal user, automatic fallback computed in frontend, where it is shown
-- [Mandati per sede](tutela-crm-mandati-per-sede.md) — mandato is a per-sede docx template, one per collaboratore, compiled to PDF in the pratica (supersedes per-tipo notes)
+- [Mandati per sede (superseded)](tutela-crm-mandati-per-sede.md) — mandato is a per-sede docx template, one per collaboratore, compiled to PDF in the pratica (supersedes per-tipo notes)
 - [Colori stati pratica](tutela-crm-colori-stati.md) — optional chosen color + frontend fallback, StatoBadge, riepilogo per stato in collaboratore pratiche
 - [News home collaboratore](tutela-crm-news.md) — news (with downloadable attachments) managed by admin/operatore, published-only for collaboratori
 - [Avvisi home collaboratore](tutela-crm-avvisi-home.md) — "Novità per te": inviti evento + aggiornamenti pratica calcolati al volo, letto = vista_dal_collaboratore_il
 - [Back-office responsive](tutela-crm-responsive-backoffice.md) — drawer menu on phones, tables-as-cards CSS pattern (tabella-schede + data-label)
+- [Aggiornamento 1](tutela-crm-aggiornamento1.md) — sede fields, ENTRAMBI, mandati per provincia+tipo, firma OTP SMS, assistiti uppercase/edit rights (supersedes per-sede mandati)

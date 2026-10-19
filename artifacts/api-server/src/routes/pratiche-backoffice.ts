@@ -1,5 +1,6 @@
 import { Readable } from "node:stream";
 import { mandatoCompilatoPdf } from "../lib/mandato-compilato";
+import { chiaveFirmaPratica, leggiPdfFirmato } from "../lib/firma-mandato";
 import { NOME_STATO_PAGATA, aggiornaMaturazione, estrattoDellaPratica } from "../lib/compensi";
 import express, { Router, type IRouter } from "express";
 import { and, asc, desc, eq, isNotNull, isNull, ne, sql, type SQL } from "drizzle-orm";
@@ -337,6 +338,8 @@ router.get("/backoffice/pratiche/:id/documenti/:docId/file", async (req, res) =>
 
 router.get("/backoffice/pratiche/:id/mandato/file", async (req, res) => {
   const p = await caricaPraticaInviata(intero(req.params["id"], "id"));
+  const firmato = await leggiPdfFirmato(p.id);
+  if (firmato) return inviaFile(res, Readable.from(firmato.pdf), firmato.fileNome, "application/pdf", firmato.pdf.length, req.query["anteprima"] === "1");
   const m = await mandatoDellaPratica(p);
   if (!m) throw nonTrovato("Nessun mandato assegnato per questa pratica.");
   const { pdf, nomeFile } = await mandatoCompilatoPdf(p, m.fileChiave);
@@ -353,6 +356,8 @@ router.delete("/backoffice/pratiche/:id", richiediRuolo("super_admin"), async (r
   const inEstratto = await estrattoDellaPratica(db, id);
   if (inEstratto) throw new HttpError(409, `La pratica è nell'estratto n. ${inEstratto} e non si può cancellare.`, "PRATICA_IN_ESTRATTO");
   const file = await db.select({ chiave: documentiPraticaTable.fileChiave }).from(documentiPraticaTable).where(eq(documentiPraticaTable.praticaId, id));
+  const chiaveFirma = await chiaveFirmaPratica(id);
+  if (chiaveFirma) file.push({ chiave: chiaveFirma });
   await db.transaction(async (tx) => {
     const [commenti] = await tx.select({ n: sql<number>`count(*)::int` }).from(commentiPraticaTable).where(eq(commentiPraticaTable.praticaId, id));
     const [r] = await tx.delete(praticheTable).where(eq(praticheTable.id, id)).returning({ id: praticheTable.id });

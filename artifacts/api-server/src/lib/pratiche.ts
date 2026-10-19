@@ -4,7 +4,6 @@ import type { Request } from "express";
 import { and, asc, desc, eq, or, sql, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import {
-  assegnazioniMandatoTable,
   assistitiTable,
   categorieAllegatoTable,
   collaboratoriTable,
@@ -21,6 +20,7 @@ import {
   utentiTable,
 } from "@workspace/db";
 import { mappaAssistito, selezionaAssistiti } from "./assistiti";
+import { firmaDellaPratica, mandatoPerTipo, mappaFirma } from "./mandati-sede";
 import { HttpError } from "./errori";
 import { FUSO, statoInvioPratiche, type StatoInvio } from "./orari";
 
@@ -77,6 +77,7 @@ export function selezionaPratiche(where: SQL | undefined, ordine?: SQL[]) {
       collNome: personaCollaboratore.nome,
       collCognome: personaCollaboratore.cognome,
       collSportello: collaboratoriTable.numeroSportello,
+      collDenominazione: collaboratoriTable.denominazione,
       collCapogruppoId: collaboratoriTable.capogruppoId,
       gestoreNome: utenteGestore.nome,
       gestoreCognome: utenteGestore.cognome,
@@ -160,8 +161,8 @@ export function mappaRiepilogo(r: RigaPratica, mio: number) {
     statoChiuso: r.statoChiuso,
     statoId: r.statoId,
     statoColore: r.statoColore,
-    assistito: { id: r.assistitoId, nome: r.assNome, cognome: r.assCognome, codiceFiscale: r.assCf },
-    collaboratore: { id: r.collaboratoreId, nome: r.collNome, cognome: r.collCognome, numeroSportello: r.collSportello },
+    assistito: { id: r.assistitoId, nome: r.assNome.toUpperCase(), cognome: r.assCognome.toUpperCase(), codiceFiscale: r.assCf },
+    collaboratore: { id: r.collaboratoreId, nome: r.collNome, cognome: r.collCognome, numeroSportello: r.collSportello, denominazione: r.collDenominazione },
     tipo: { id: r.tipoPraticaId, nome: r.tipoNome },
     dataRichiesta: r.inviataIl?.toISOString() ?? null,
     creataIl: r.creataIl.toISOString(),
@@ -191,19 +192,16 @@ export const ERRORE_PRATICA_INVIATA = (azione: string) =>
 
 export const ERRORE_PRATICA_BOZZA = new HttpError(409, "La pratica non è ancora stata inviata.", "PRATICA_IN_BOZZA");
 
-/** Mandato (modello della sede) del collaboratore: quello fissato all'invio, altrimenti quello attualmente assegnato. */
-export async function mandatoDellaPratica(p: Pick<RigaPratica, "mandatoId" | "collaboratoreId">) {
-  const base = db
-    .select({ id: mandatiTable.id, nome: mandatiTable.nome, fileNome: mandatiTable.fileNome, fileChiave: mandatiTable.fileChiave, fileTipo: mandatiTable.fileTipo, dimensione: mandatiTable.fileDimensione })
-    .from(mandatiTable);
-  if (p.mandatoId) return (await base.where(eq(mandatiTable.id, p.mandatoId)))[0] ?? null;
-  return (
-    (
-      await base
-        .innerJoin(assegnazioniMandatoTable, eq(assegnazioniMandatoTable.mandatoId, mandatiTable.id))
-        .where(eq(assegnazioniMandatoTable.collaboratoreId, p.collaboratoreId))
-    )[0] ?? null
-  );
+/** Mandato della pratica: quello fissato all'invio, altrimenti quello della provincia della sede del collaboratore per il tipo di pratica. */
+export async function mandatoDellaPratica(p: Pick<RigaPratica, "mandatoId" | "collaboratoreId" | "tipoPraticaId">) {
+  if (p.mandatoId) {
+    const [m] = await db
+      .select({ id: mandatiTable.id, nome: mandatiTable.nome, fileNome: mandatiTable.fileNome, fileChiave: mandatiTable.fileChiave, fileTipo: mandatiTable.fileTipo, dimensione: mandatiTable.fileDimensione })
+      .from(mandatiTable)
+      .where(eq(mandatiTable.id, p.mandatoId));
+    return m ?? null;
+  }
+  return mandatoPerTipo(p.collaboratoreId, p.tipoPraticaId);
 }
 
 export function formattaIstanteRoma(d: Date): string {
@@ -286,6 +284,7 @@ export async function dettaglioPratica(req: Request, id: number) {
   const [ass] = await selezionaAssistiti(eq(assistitiTable.id, p.assistitoId));
   const moduli = await db.select().from(moduliTipoTable).where(eq(moduliTipoTable.tipoPraticaId, p.tipoPraticaId)).orderBy(asc(moduliTipoTable.id));
   const mandato = await mandatoDellaPratica(p);
+  const firma = await firmaDellaPratica(p.id);
   const documenti = await db
     .select({ d: documentiPraticaTable, nome: utenteAutore.nome, cognome: utenteAutore.cognome })
     .from(documentiPraticaTable)
@@ -304,7 +303,7 @@ export async function dettaglioPratica(req: Request, id: number) {
     ...mappaRiepilogo(p, mio),
     assistito: mappaAssistito(ass!, req),
     moduli: moduli.map((m) => ({ id: m.id, nome: m.nome, fileNome: m.fileNome, dimensione: m.fileDimensione })),
-    mandato: mandato ? { id: mandato.id, nome: mandato.nome, fileNome: nomePdfMandato(p) } : null,
+    mandato: mandato ? { id: mandato.id, nome: mandato.nome, fileNome: nomePdfMandato(p), firma: firma ? mappaFirma(firma) : null } : null,
     mandatoMancante: completezza.mandatoMancante,
     richiesti: completezza.richiesti,
     documenti: documenti.map(({ d, nome, cognome }) => mappaDocumentoPratica(d, nome, cognome, categorie)),

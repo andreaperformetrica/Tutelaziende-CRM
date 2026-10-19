@@ -1,8 +1,12 @@
 import { Readable } from "node:stream";
 import { mandatoCompilatoPdf } from "../lib/mandato-compilato";
+import { chiaveFirmaPratica, confermaFirma, leggiPdfFirmato, richiediFirma } from "../lib/firma-mandato";
 import express, { Router, type IRouter } from "express";
 import { and, asc, count, eq, isNotNull, isNull, sql } from "drizzle-orm";
 import {
+  ConfermaFirmaMandatoBody,
+  ConfermaFirmaMandatoParams,
+  RichiediFirmaMandatoParams,
   CreateCommentoPraticaBody,
   CreateCommentoPraticaParams,
   CreatePraticaBody,
@@ -171,6 +175,8 @@ router.delete("/pratiche/:id", async (req, res) => {
   const p = await caricaPraticaPropria(req, id);
   if (p.inviataIl) throw ERRORE_PRATICA_INVIATA("Non puoi cancellarla");
   const file = await db.select({ chiave: documentiPraticaTable.fileChiave }).from(documentiPraticaTable).where(eq(documentiPraticaTable.praticaId, id));
+  const chiaveFirma = await chiaveFirmaPratica(id);
+  if (chiaveFirma) file.push({ chiave: chiaveFirma });
   await db.transaction(async (tx) => {
     const [r] = await tx.delete(praticheTable).where(and(eq(praticheTable.id, id), isNull(praticheTable.inviataIl))).returning({ id: praticheTable.id });
     if (!r) throw ERRORE_PRATICA_INVIATA("Non puoi cancellarla");
@@ -319,10 +325,23 @@ router.get("/pratiche/:id/documenti/:docId/file", async (req, res) => {
 
 router.get("/pratiche/:id/mandato/file", async (req, res) => {
   const p = await caricaPraticaVisibile(req, intero(req.params["id"], "id"));
+  const firmato = await leggiPdfFirmato(p.id);
+  if (firmato) return inviaFile(res, Readable.from(firmato.pdf), firmato.fileNome, "application/pdf", firmato.pdf.length);
   const m = await mandatoDellaPratica(p);
   if (!m) throw nonTrovato("Nessun mandato assegnato per questa pratica.");
   const { pdf, nomeFile } = await mandatoCompilatoPdf(p, m.fileChiave);
   inviaFile(res, Readable.from(pdf), nomeFile, "application/pdf", pdf.length);
+});
+
+router.post("/pratiche/:id/mandato/firma/richiedi", async (req, res) => {
+  const { id } = valida(RichiediFirmaMandatoParams, req.params);
+  res.json(await richiediFirma(req, id));
+});
+
+router.post("/pratiche/:id/mandato/firma/conferma", async (req, res) => {
+  const { id } = valida(ConfermaFirmaMandatoParams, req.params);
+  const { codice } = valida(ConfermaFirmaMandatoBody, req.body);
+  res.json(await confermaFirma(req, id, codice));
 });
 
 // ---------------------------------------------------------------------------------------------

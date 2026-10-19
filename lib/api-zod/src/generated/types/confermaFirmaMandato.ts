@@ -6,7 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface AssegnazioneMandatoInput {
-  collaboratoreId: number;
-  mandatoId: number;
+export interface ConfermaFirmaMandato {
+  codice: string;
 }

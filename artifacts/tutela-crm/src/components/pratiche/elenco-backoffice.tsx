@@ -18,7 +18,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { EmptyState, ErrorState, FieldError, PageHeader } from "@/components/common";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/lib/auth";
-import { fmtDataIstante, parseApiError, ruoloLabel } from "@/lib/format";
+import { fmtDataIstante, parseApiError, ruoloLabel, nomeCollaboratore } from "@/lib/format";
 
 const PER_PAGINA = 25;
 const TUTTI = "all";
@@ -214,7 +214,7 @@ export function ElencoPraticheBackoffice({ soloMie }: { soloMie?: boolean }) {
                       {p.aggiornata && <Badge className="ml-2 bg-primary text-primary-foreground" data-testid={`badge-aggiornata-${p.id}`}>Aggiornata</Badge>}
                     </TableCell>
                     <TableCell data-label="Numero" className="font-mono text-sm font-semibold">{p.numero}</TableCell>
-                    <TableCell data-label="Collaboratore" className="text-sm whitespace-nowrap">{p.collaboratore.cognome} {p.collaboratore.nome}</TableCell>
+                    <TableCell data-label="Collaboratore" className="text-sm whitespace-nowrap">{nomeCollaboratore(p.collaboratore)}</TableCell>
                     <TableCell data-label="Città" className="text-sm">{p.citta}</TableCell>
                     <TableCell data-label="Richiesta" className="text-sm tabular-nums whitespace-nowrap">{fmtDataIstante(p.dataRichiesta)}</TableCell>
                     <TableCell data-label="Stato"><StatoBadge stato={p.stato} /></TableCell>

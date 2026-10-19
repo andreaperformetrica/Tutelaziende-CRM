@@ -3,7 +3,7 @@ import { collaboratoriTable, db, utentiTable as utentiRef } from "@workspace/db"
 import type { UtenteAutenticato } from "./sessioni";
 
 export async function costruisciSessione(utente: UtenteAutenticato) {
-  let collaboratore: { id: number; numeroSportello: string; tipologia: "CAF" | "PATRONATO"; capogruppo: boolean } | null =
+  let collaboratore: { id: number; numeroSportello: string; tipologia: "CAF" | "PATRONATO" | "ENTRAMBI"; capogruppo: boolean } | null =
     null;
   if (utente.collaboratoreId !== null) {
     const [c] = await db

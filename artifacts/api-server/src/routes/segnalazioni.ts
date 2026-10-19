@@ -64,6 +64,8 @@ const colonne = {
   propNome: personaProprietario.nome,
   propCognome: personaProprietario.cognome,
   propSportello: proprietario.numeroSportello,
+  propDenominazione: proprietario.denominazione,
+  richDenominazione: richiedente.denominazione,
   propTipologia: proprietario.tipologia,
   gestoreNome: gestore.nome,
   gestoreCognome: gestore.cognome,
@@ -88,7 +90,7 @@ type Riga = Awaited<ReturnType<typeof selezione>>[number];
 function mappa(r: Riga) {
   const collaboratore =
     r.tipo === "assistito" && r.propId !== null
-      ? { id: r.propId, nome: r.propNome!, cognome: r.propCognome!, numeroSportello: r.propSportello!, tipologia: r.propTipologia! }
+      ? { id: r.propId, nome: r.propNome!, cognome: r.propCognome!, numeroSportello: r.propSportello!, denominazione: r.propDenominazione, tipologia: r.propTipologia! }
       : r.tipo === "collaboratore" && r.colEsiId !== null
         ? { id: r.colEsiId, nome: r.esiNome, cognome: r.esiCognome, numeroSportello: r.colEsiSportello!, tipologia: r.colEsiTipologia! }
         : null;
@@ -102,6 +104,7 @@ function mappa(r: Riga) {
       nome: r.richNome,
       cognome: r.richCognome,
       numeroSportello: r.richSportello,
+      denominazione: r.richDenominazione,
       tipologia: r.richTipologia,
     },
     esistente: {

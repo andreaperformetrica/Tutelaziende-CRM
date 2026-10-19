@@ -15,13 +15,14 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AnagraficaFields, anagraficaSchema, type AnagraficaValues } from "@/components/anagrafica/anagrafica-fields";
+import { SedeFields, sedeSchema, controllaSede } from "@/components/collaboratori/sede-fields";
 import { PasswordProvvisoria } from "@/components/password-provvisoria";
 import { FieldError } from "@/components/common";
-import { parseApiError, type ParsedError } from "@/lib/format";
+import { nomeCollaboratore, parseApiError, type ParsedError } from "@/lib/format";
 
-const schema = anagraficaSchema.extend({
+const schema = anagraficaSchema.merge(sedeSchema).extend({
   numeroSportello: z.string().trim().min(1, "Inserisci il numero di sportello"),
-  tipologia: z.enum(["CAF", "PATRONATO"], { errorMap: () => ({ message: "Seleziona la tipologia" }) }),
+  tipologia: z.enum(["CAF", "PATRONATO", "ENTRAMBI"], { errorMap: () => ({ message: "Seleziona la tipologia" }) }),
   capogruppoId: z.string(),
   attivo: z.boolean(),
   passwordProvvisoria: z.string(),
@@ -43,10 +44,15 @@ export function CollaboratoreForm({ initial, onSaved, onCancel }: { initial?: Co
       luogoNascitaEtichetta: initial.luogoNascitaProvincia ? `${initial.luogoNascitaNome} (${initial.luogoNascitaProvincia})` : initial.luogoNascitaNome,
       nazionalita: initial.nazionalita, codiceFiscale: initial.codiceFiscale, email: initial.email, telefono: initial.telefono ?? "", partitaIva: initial.partitaIva ?? "",
       cellulare: initial.cellulare, numeroSportello: initial.numeroSportello, tipologia: initial.tipologia,
+      denominazione: initial.denominazione ?? "", ragioneSociale: initial.ragioneSociale ?? "", tipoSoggetto: initial.tipoSoggetto ?? "none",
+      codiceFiscaleAssociazione: initial.codiceFiscaleAssociazione ?? "", sedeIndirizzo: initial.sedeIndirizzo ?? "", sedeComune: initial.sedeComune ?? "",
+      sedeComuneCodice: initial.sedeComuneCodice ?? "", sedeProvincia: initial.sedeProvincia ?? "", sedeCap: initial.sedeCap ?? "", iban: initial.iban ?? "",
       capogruppoId: initial.capogruppoId ? String(initial.capogruppoId) : "none", attivo: initial.attivo, passwordProvvisoria: "",
     } : {
       nome: "", cognome: "", sesso: undefined as unknown as "M", dataNascita: "", luogoNascitaCodice: "", luogoNascitaEtichetta: "",
       nazionalita: "IT", codiceFiscale: "", email: "", telefono: "", partitaIva: "", cellulare: "", numeroSportello: "",
+      denominazione: "", ragioneSociale: "", tipoSoggetto: "none" as const, codiceFiscaleAssociazione: "", sedeIndirizzo: "", sedeComune: "",
+      sedeComuneCodice: "", sedeProvincia: "", sedeCap: "", iban: "",
       tipologia: undefined as unknown as "CAF", capogruppoId: "none", attivo: true, passwordProvvisoria: "",
     },
   });
@@ -55,7 +61,7 @@ export function CollaboratoreForm({ initial, onSaved, onCancel }: { initial?: Co
 
   const opzioni = useMemo(() => {
     const l = (attivi ?? []).filter((c) => c.attivo && c.capogruppoId === null && c.id !== initial?.id)
-      .map((c) => ({ id: c.id, label: `${c.cognome} ${c.nome} · sportello ${c.numeroSportello}` }));
+      .map((c) => ({ id: c.id, label: `${nomeCollaboratore(c)} · sportello ${c.numeroSportello}` }));
     if (initial?.capogruppoId && !l.some((o) => o.id === initial.capogruppoId)) l.push({ id: initial.capogruppoId, label: initial.capogruppoNome ?? `Collaboratore ${initial.capogruppoId}` });
     return l.sort((a, b) => a.label.localeCompare(b.label, "it"));
   }, [attivi, initial]);
@@ -66,11 +72,20 @@ export function CollaboratoreForm({ initial, onSaved, onCancel }: { initial?: Co
       form.setError("passwordProvvisoria", { message: "La password provvisoria deve avere almeno 8 caratteri" });
       return;
     }
+    if (!controllaSede(v, (campo, message) => form.setError(campo as keyof Values, { message }))) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
     const base = {
       nome: v.nome.trim(), cognome: v.cognome.trim(), sesso: v.sesso, dataNascita: v.dataNascita,
       luogoNascitaCodice: v.luogoNascitaCodice, nazionalita: v.nazionalita, codiceFiscale: normalizzaCodiceFiscale(v.codiceFiscale),
       email: v.email.trim(), telefono: v.telefono?.trim() || null, partitaIva: v.partitaIva?.trim() || null, cellulare: v.cellulare.trim(),
-      numeroSportello: v.numeroSportello.trim(), tipologia: v.tipologia,
+      numeroSportello: v.numeroSportello.trim().toUpperCase(), tipologia: v.tipologia,
+      denominazione: v.denominazione?.trim() || null, ragioneSociale: v.ragioneSociale?.trim() || null,
+      tipoSoggetto: v.tipoSoggetto === "none" ? null : v.tipoSoggetto,
+      codiceFiscaleAssociazione: v.tipoSoggetto === "ASSOCIAZIONE" ? (v.codiceFiscaleAssociazione ?? "").replace(/\s+/g, "") : null,
+      sedeIndirizzo: v.sedeIndirizzo?.trim() || null, sedeComuneCodice: v.sedeComuneCodice || null, sedeCap: v.sedeCap?.trim() || null,
+      iban: v.iban?.replace(/\s+/g, "").toUpperCase() || null,
       capogruppoId: v.capogruppoId === "none" ? null : Number(v.capogruppoId),
     };
     const onError = (err: unknown) => {
@@ -116,7 +131,7 @@ export function CollaboratoreForm({ initial, onSaved, onCancel }: { initial?: Co
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="space-y-1.5">
               <Label htmlFor="input-numeroSportello" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Numero di sportello *</Label>
-              <Input id="input-numeroSportello" autoComplete="off" {...form.register("numeroSportello")} className={errors.numeroSportello ? "border-destructive" : ""} data-testid="input-numero-sportello" />
+              <Input id="input-numeroSportello" autoComplete="off" {...form.register("numeroSportello", { setValueAs: (x: string) => (x ?? "").toUpperCase() })} className={`uppercase ${errors.numeroSportello ? "border-destructive" : ""}`} data-testid="input-numero-sportello" />
               <FieldError id="error-numeroSportello">{errors.numeroSportello?.message}</FieldError>
             </div>
             <div className="space-y-1.5">
@@ -124,7 +139,7 @@ export function CollaboratoreForm({ initial, onSaved, onCancel }: { initial?: Co
               <Controller control={form.control} name="tipologia" render={({ field }) => (
                 <Select value={field.value ?? ""} onValueChange={field.onChange}>
                   <SelectTrigger className={errors.tipologia ? "border-destructive" : ""} data-testid="select-tipologia"><SelectValue placeholder="Seleziona" /></SelectTrigger>
-                  <SelectContent><SelectItem value="CAF">CAF</SelectItem><SelectItem value="PATRONATO">Patronato</SelectItem></SelectContent>
+                  <SelectContent><SelectItem value="CAF">CAF</SelectItem><SelectItem value="PATRONATO">Patronato</SelectItem><SelectItem value="ENTRAMBI">Entrambi</SelectItem></SelectContent>
                 </Select>
               )} />
               <FieldError>{errors.tipologia?.message}</FieldError>
@@ -152,6 +167,7 @@ export function CollaboratoreForm({ initial, onSaved, onCancel }: { initial?: Co
             </label>
           )}
         </Sezione>
+        <Sezione t="Dati della sede"><SedeFields /></Sezione>
         {!initial && (
           <Sezione t="Accesso">
             <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1.5 block">Password provvisoria *</Label>

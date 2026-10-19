@@ -38,11 +38,12 @@ function dataValida(valore: string): boolean {
  */
 export function normalizzaAnagrafica(
   dati: DatiAnagrafica,
-  opzioni: { emailObbligatoria?: boolean } = {},
+  opzioni: { emailObbligatoria?: boolean; maiuscolo?: boolean } = {},
 ): AnagraficaNormalizzata {
   const emailObbligatoria = opzioni.emailObbligatoria ?? true;
-  const nome = dati.nome.trim();
-  const cognome = dati.cognome.trim();
+  const maiuscolo = (t: string) => (opzioni.maiuscolo ? t.toUpperCase() : t);
+  const nome = maiuscolo(dati.nome.trim());
+  const cognome = maiuscolo(dati.cognome.trim());
   if (!nome) throw new HttpError(400, "Il nome e' obbligatorio.", "DATI_NON_VALIDI", "nome");
   if (!cognome) throw new HttpError(400, "Il cognome e' obbligatorio.", "DATI_NON_VALIDI", "cognome");
   if (!dataValida(dati.dataNascita)) {
@@ -85,11 +86,11 @@ export function normalizzaAnagrafica(
     sesso: dati.sesso,
     dataNascita: dati.dataNascita,
     luogoNascitaCodice: luogo.codice,
-    luogoNascitaNome: luogo.nome,
+    luogoNascitaNome: maiuscolo(luogo.nome),
     luogoNascitaProvincia: luogo.provincia,
     luogoNascitaEstero: luogo.tipo === "stato",
     nazionalita: nazionalita.codice,
-    nazionalitaNome: nazionalita.nome,
+    nazionalitaNome: maiuscolo(nazionalita.nome),
     codiceFiscale,
     email,
     telefono,

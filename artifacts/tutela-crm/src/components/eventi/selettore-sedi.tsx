@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/common";
-import { parseApiError, tipologiaLabel } from "@/lib/format";
+import { parseApiError, tipologiaLabel, nomeCollaboratore } from "@/lib/format";
 
 /** Elenco delle sedi attive con caselle di selezione, ricerca e "seleziona tutte". */
 export function SelettoreSedi({ selezionate, onChange, escludi = [] }: { selezionate: number[]; onChange: (ids: number[]) => void; escludi?: number[] }) {
@@ -44,7 +44,7 @@ export function SelettoreSedi({ selezionate, onChange, escludi = [] }: { selezio
         ) : visibili.map((c) => (
           <label key={c.id} className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-secondary/50" data-testid={`sede-${c.id}`}>
             <Checkbox checked={selezionate.includes(c.id)} onCheckedChange={() => alterna(c.id)} />
-            <span className="text-sm font-medium">{c.cognome} {c.nome}</span>
+            <span className="text-sm font-medium">{nomeCollaboratore(c)}</span>
             <span className="text-xs text-muted-foreground ml-auto whitespace-nowrap">sportello {c.numeroSportello} · {tipologiaLabel(c.tipologia)}</span>
           </label>
         ))}

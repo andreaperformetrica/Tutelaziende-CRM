@@ -47,7 +47,53 @@ export type Tipologia = typeof Tipologia[keyof typeof Tipologia];
 export const Tipologia = {
   CAF: 'CAF',
   PATRONATO: 'PATRONATO',
+  ENTRAMBI: 'ENTRAMBI',
 } as const;
+
+export type TipoSoggetto = typeof TipoSoggetto[keyof typeof TipoSoggetto];
+
+
+export const TipoSoggetto = {
+  PARTITA_IVA: 'PARTITA_IVA',
+  ASSOCIAZIONE: 'ASSOCIAZIONE',
+} as const;
+
+/**
+ * Dati della sede del collaboratore (facoltativi per i collaboratori inseriti prima)
+ */
+export interface DatiSede {
+  /** @nullable */
+  denominazione?: string | null;
+  /** @nullable */
+  ragioneSociale?: string | null;
+  tipoSoggetto?: TipoSoggetto | null;
+  /**
+     * Via e numero civico
+     * @nullable
+     */
+  sedeIndirizzo?: string | null;
+  /**
+     * Codice del comune scelto con la ricerca luoghi
+     * @nullable
+     */
+  sedeComuneCodice?: string | null;
+  /** @nullable */
+  sedeComune?: string | null;
+  /**
+     * Sigla, ricavata dal comune
+     * @nullable
+     */
+  sedeProvincia?: string | null;
+  /** @nullable */
+  sedeCap?: string | null;
+  /** @nullable */
+  iban?: string | null;
+  /**
+     * @maxLength 11
+     * @nullable
+     */
+  codiceFiscaleAssociazione?: string | null;
+}
 
 export type Sesso = typeof Sesso[keyof typeof Sesso];
 
@@ -219,9 +265,11 @@ export interface CollaboratoreRiepilogo {
   numeroSportello: string;
   tipologia: Tipologia;
   attivo: boolean;
+  /** @nullable */
+  denominazione?: string | null;
 }
 
-export interface Collaboratore {
+export interface CollaboratoreBase {
   id: number;
   utenteId: number;
   nome: string;
@@ -270,6 +318,8 @@ export interface Collaboratore {
   creatoIl: string;
 }
 
+export type Collaboratore = DatiSede & CollaboratoreBase;
+
 export interface RuoloCapogruppoInput {
   capogruppo: boolean;
 }
@@ -284,7 +334,7 @@ export type CollaboratoreDettaglio = Collaboratore & {
   membri: CollaboratoreRiepilogo[];
 };
 
-export interface CollaboratoreInput {
+export interface CollaboratoreInputBase {
   /** @minLength 1 */
   nome: string;
   /** @minLength 1 */
@@ -319,7 +369,9 @@ export interface CollaboratoreInput {
   passwordProvvisoria: string;
 }
 
-export interface CollaboratoreUpdate {
+export type CollaboratoreInput = DatiSede & CollaboratoreInputBase;
+
+export interface CollaboratoreUpdateBase {
   /** @minLength 1 */
   nome: string;
   /** @minLength 1 */
@@ -350,6 +402,8 @@ export interface CollaboratoreUpdate {
   capogruppoId?: number | null;
   attivo: boolean;
 }
+
+export type CollaboratoreUpdate = DatiSede & CollaboratoreUpdateBase;
 
 export interface AssistitoInput {
   /** @minLength 1 */
@@ -396,6 +450,8 @@ export interface CollaboratoreAssistito {
   id: number;
   nome: string;
   cognome: string;
+  /** @nullable */
+  denominazione?: string | null;
   numeroSportello: string;
   tipologia: Tipologia;
 }
@@ -437,8 +493,10 @@ export interface Assistito {
   /** @nullable */
   indirizzo?: string | null;
   collaboratore: CollaboratoreAssistito;
-  /** Vero solo per il collaboratore a cui l'assistito e' associato */
+  /** Vero solo per il collaboratore a cui l'assistito e' associato (puo' aprire pratiche) */
   modificabile: boolean;
+  /** Vero per super admin, admin e operatori; il collaboratore vede l'anagrafica in sola lettura */
+  anagraficaModificabile: boolean;
   creatoIl: string;
   modificatoIl: string;
 }
@@ -719,6 +777,8 @@ export interface InvitoEvento {
   collaboratoreId: number;
   /** Cognome e nome */
   nome: string;
+  /** @nullable */
+  denominazione?: string | null;
   numeroSportello: string;
   tipologia: string;
   attivo: boolean;
@@ -1036,27 +1096,75 @@ export interface OrdineInput {
 export interface Mandato {
   id: number;
   nome: string;
+  /**
+     * Sigla; vuota per i mandati caricati prima, non ancora collegati a una provincia
+     * @nullable
+     */
+  provincia: string | null;
+  /**
+     * Vuoto = vale per tutti i tipi di pratica
+     * @nullable
+     */
+  tipoPraticaId: number | null;
+  /** @nullable */
+  tipoPraticaNome: string | null;
   fileNome: string;
   fileTipo: string;
   dimensione: number;
   caricatoIl: string;
   /** @nullable */
   caricatoDa: string | null;
+  /** Sedi che ricevono questo mandato */
   collaboratoriAssegnati: number;
 }
 
 export interface MandatoInput {
+  /** Sigla della provincia */
+  provincia: string;
+  /**
+     * Vuoto = tutti i tipi di pratica
+     * @nullable
+     */
+  tipoPraticaId: number | null;
+}
+
+export interface ProvinciaMandati {
+  sigla: string;
   nome: string;
+  /** Collaboratori attivi la cui sede e' in questa provincia */
+  sedi: number;
 }
 
-export interface AssegnazioneMandato {
-  collaboratoreId: number;
+export type MandatoCollaboratoreOrigine = typeof MandatoCollaboratoreOrigine[keyof typeof MandatoCollaboratoreOrigine];
+
+
+export const MandatoCollaboratoreOrigine = {
+  provincia: 'provincia',
+  precedente: 'precedente',
+} as const;
+
+export interface MandatoCollaboratore {
   mandatoId: number;
+  nome: string;
+  /** @nullable */
+  provincia: string | null;
+  /** @nullable */
+  tipoPraticaId: number | null;
+  /** @nullable */
+  tipoPraticaNome: string | null;
+  fileNome: string;
+  origine: MandatoCollaboratoreOrigine;
 }
 
-export interface AssegnazioneMandatoInput {
-  collaboratoreId: number;
-  mandatoId: number;
+export interface MandatiCollaboratore {
+  /**
+     * Provincia della sede
+     * @nullable
+     */
+  provincia: string | null;
+  /** @nullable */
+  provinciaNome: string | null;
+  mandati: MandatoCollaboratore[];
 }
 
 export interface StatoPratica {
@@ -1246,11 +1354,34 @@ export interface ModuloPratica {
   dimensione: number;
 }
 
+export interface FirmaMandato {
+  firmatoIl: string;
+  firmatario: string;
+  codiceFiscale: string;
+  cellulare: string;
+  /** Nome del PDF firmato */
+  fileNome: string;
+}
+
+export interface RichiestaFirmaMandato {
+  /** Numero a cui e' stato inviato il codice, con le cifre centrali nascoste */
+  cellulare: string;
+  scadeIl: string;
+  /** Falso se l'SMS non e' configurato: il codice e' solo nel log del server */
+  inviato: boolean;
+}
+
+export interface ConfermaFirmaMandato {
+  codice: string;
+}
+
 export interface MandatoPratica {
   id: number;
   nome: string;
   /** Nome del PDF compilato con i dati dell'assistito */
   fileNome: string;
+  /** Presente se il mandato e' stato firmato con il codice SMS */
+  firma?: FirmaMandato | null;
 }
 
 export interface DocumentoRichiesto {
@@ -1601,6 +1732,8 @@ export interface CollaboratorePratica {
   id: number;
   nome: string;
   cognome: string;
+  /** @nullable */
+  denominazione?: string | null;
   numeroSportello: string;
   tipologia: string;
   /** @nullable */
@@ -2274,14 +2407,6 @@ collaboratoreId: number;
  * @maximum 2100
  */
 anno: number;
-};
-
-export type ListAssegnazioniMandatoParams = {
-collaboratoreId?: number;
-};
-
-export type RimuoviAssegnazioneMandatoParams = {
-collaboratoreId: number;
 };
 
 export type ListPraticheParams = {

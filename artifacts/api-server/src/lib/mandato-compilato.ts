@@ -228,9 +228,9 @@ export async function datiMandato(assistitoId: number, tipoPratica: string): Pro
   const ind = dividiIndirizzo(r.indirizzo);
   return {
     cliente: {
-      cognome: r.cognome, nome: r.nome, nascita: dataIt(String(r.nascita)), sesso: r.sesso, luogoNascita: r.luogoNascita, cf: r.cf,
-      tel: r.tel ?? "", cell: r.cell, email: r.email ?? "", indirizzo: ind.via, civico: ind.civico, cap: r.cap ?? "", citta: r.citta, provincia: r.provincia ?? "",
-      nazione: r.nazione,
+      cognome: r.cognome.toUpperCase(), nome: r.nome.toUpperCase(), nascita: dataIt(String(r.nascita)), sesso: r.sesso, luogoNascita: r.luogoNascita.toUpperCase(), cf: r.cf,
+      tel: r.tel ?? "", cell: r.cell, email: r.email ?? "", indirizzo: ind.via.toUpperCase(), civico: ind.civico.toUpperCase(), cap: r.cap ?? "", citta: r.citta.toUpperCase(), provincia: (r.provincia ?? "").toUpperCase(),
+      nazione: r.nazione.toUpperCase(),
     },
     richiesta: { tipo: tipoPratica },
     polizza: { tipo: "" },

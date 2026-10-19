@@ -5,10 +5,13 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { FirmaMandato } from './firmaMandato';
 
 export interface MandatoPratica {
   id: number;
   nome: string;
   /** Nome del PDF compilato con i dati dell'assistito */
   fileNome: string;
+  /** Presente se il mandato e' stato firmato con il codice SMS */
+  firma?: FirmaMandato | null;
 }

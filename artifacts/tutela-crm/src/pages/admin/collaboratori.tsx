@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState, ErrorState, PageHeader, StatoBadge } from "@/components/common";
 import { useSession } from "@/lib/auth";
-import { fmtCellulare, parseApiError, tipologiaLabel } from "@/lib/format";
+import { fmtCellulare, nomeCollaboratore, parseApiError, tipologiaLabel } from "@/lib/format";
 
 export default function CollaboratoriPage() {
   const { session } = useSession();
@@ -22,7 +22,7 @@ export default function CollaboratoriPage() {
   const [cap, setCap] = useState("all");
   useEffect(() => { const t = setTimeout(() => setDq(q.trim()), 250); return () => clearTimeout(t); }, [q]);
 
-  const params: ListCollaboratoriParams = { stato, ...(dq ? { q: dq } : {}), ...(tip !== "all" ? { tipologia: tip as "CAF" | "PATRONATO" } : {}), ...(cap !== "all" ? { capogruppoId: Number(cap) } : {}) };
+  const params: ListCollaboratoriParams = { stato, ...(dq ? { q: dq } : {}), ...(tip !== "all" ? { tipologia: tip as "CAF" | "PATRONATO" | "ENTRAMBI" } : {}), ...(cap !== "all" ? { capogruppoId: Number(cap) } : {}) };
   const lista = useListCollaboratori(params);
   const tutti = useListCollaboratori({ stato: "tutti" });
   const capigruppo = useMemo(() => (tutti.data ?? []).filter((c) => c.numeroCollaboratori > 0), [tutti.data]);
@@ -38,11 +38,11 @@ export default function CollaboratoriPage() {
       <div className="flex flex-wrap gap-2 mb-4 rise">
         <div className="relative flex-1 min-w-56">
           <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input autoComplete="off" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Cerca per nome, codice fiscale, cellulare, email, sportello" className="pl-9 bg-card" data-testid="input-ricerca" />
+          <Input autoComplete="off" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Cerca per nome, denominazione, codice fiscale, cellulare, email, sportello" className="pl-9 bg-card" data-testid="input-ricerca" />
         </div>
         <Select value={tip} onValueChange={setTip}>
           <SelectTrigger className="w-40 bg-card" data-testid="filtro-tipologia"><SelectValue /></SelectTrigger>
-          <SelectContent><SelectItem value="all">Ogni tipologia</SelectItem><SelectItem value="CAF">CAF</SelectItem><SelectItem value="PATRONATO">Patronato</SelectItem></SelectContent>
+          <SelectContent><SelectItem value="all">Ogni tipologia</SelectItem><SelectItem value="CAF">CAF</SelectItem><SelectItem value="PATRONATO">Patronato</SelectItem><SelectItem value="ENTRAMBI">Entrambi</SelectItem></SelectContent>
         </Select>
         <Select value={stato} onValueChange={(v) => setStato(v as typeof stato)}>
           <SelectTrigger className="w-40 bg-card" data-testid="filtro-stato"><SelectValue /></SelectTrigger>
@@ -52,7 +52,7 @@ export default function CollaboratoriPage() {
           <SelectTrigger className="w-52 bg-card" data-testid="filtro-capogruppo"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Ogni capogruppo</SelectItem>
-            {capigruppo.map((c) => <SelectItem key={c.id} value={String(c.id)}>{c.cognome} {c.nome}</SelectItem>)}
+            {capigruppo.map((c) => <SelectItem key={c.id} value={String(c.id)}>{nomeCollaboratore(c)}</SelectItem>)}
           </SelectContent>
         </Select>
         {filtrato && <Button variant="ghost" onClick={reset} data-testid="button-reset-filtri"><X className="size-4 mr-1" /> Azzera</Button>}
@@ -71,7 +71,7 @@ export default function CollaboratoriPage() {
           <Table className="tabella-schede">
             <TableHeader>
               <TableRow className="bg-muted/60 hover:bg-muted/60">
-                {["Cognome e nome", "Sportello", "Tipologia", "Capogruppo", "Gruppo", "Cellulare", "Email", "Stato"].map((h) => (
+                {["Collaboratore", "Sportello", "Tipologia", "Capogruppo", "Gruppo", "Cellulare", "Email", "Stato"].map((h) => (
                   <TableHead key={h} className="text-[11px] uppercase tracking-wider font-semibold h-10 whitespace-nowrap">{h}</TableHead>
                 ))}
               </TableRow>
@@ -80,11 +80,11 @@ export default function CollaboratoriPage() {
               {lista.data.map((c) => (
                 <TableRow key={c.id} className="cursor-pointer transition-colors hover:bg-secondary/50" onClick={() => nav(`/admin/collaboratori/${c.id}`)} data-testid={`row-collaboratore-${c.id}`}>
                   <TableCell className="font-semibold whitespace-nowrap">
-                    <Link href={`/admin/collaboratori/${c.id}`} onClick={(e) => e.stopPropagation()} className="hover:underline" data-testid={`link-collaboratore-${c.id}`}>{c.cognome} {c.nome}</Link>
+                    <Link href={`/admin/collaboratori/${c.id}`} onClick={(e) => e.stopPropagation()} className="hover:underline" data-testid={`link-collaboratore-${c.id}`}>{nomeCollaboratore(c)}</Link>
                     {c.straniero && <Globe2 className="inline size-3.5 ml-1.5 text-accent-foreground/70" aria-label="Cittadino straniero" />}
                   </TableCell>
                   <TableCell data-label="Sportello" className="font-mono text-sm">{c.numeroSportello}</TableCell>
-                  <TableCell data-label="Tipologia"><Badge variant="outline" className={c.tipologia === "CAF" ? "border-chart-4/40 text-chart-4" : "border-primary/40 text-primary"}>{tipologiaLabel(c.tipologia)}</Badge></TableCell>
+                  <TableCell data-label="Tipologia"><Badge variant="outline" className={c.tipologia === "CAF" ? "border-chart-4/40 text-chart-4" : c.tipologia === "ENTRAMBI" ? "border-accent text-accent-foreground" : "border-primary/40 text-primary"}>{tipologiaLabel(c.tipologia)}</Badge></TableCell>
                   <TableCell data-label="Capogruppo" className="whitespace-nowrap text-sm">{c.capogruppoNome ?? <span className="text-muted-foreground">—</span>}</TableCell>
                   <TableCell data-label="Gruppo" className="text-sm tabular-nums">{c.numeroCollaboratori > 0 ? <Badge className="bg-accent text-accent-foreground">{c.numeroCollaboratori}</Badge> : <span className="text-muted-foreground">—</span>}</TableCell>
                   <TableCell data-label="Cellulare" className="font-mono text-xs whitespace-nowrap">{fmtCellulare(c.cellulare)}</TableCell>

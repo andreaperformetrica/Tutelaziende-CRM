@@ -1,5 +1,6 @@
 /** Gestione delle pratiche nel back office: elenco, scheda, cronologia. */
 import { nomePdfMandato } from "./mandato-compilato";
+import { firmaDellaPratica, mappaFirma } from "./mandati-sede";
 import type { Request } from "express";
 import { and, asc, eq, isNotNull, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
@@ -41,8 +42,8 @@ export function mappaRiepilogoBackoffice(r: RigaPratica) {
   return {
     id: r.id,
     numero: r.numero!,
-    assistito: { id: r.assistitoId, nome: r.assNome, cognome: r.assCognome, codiceFiscale: r.assCf },
-    collaboratore: { id: r.collaboratoreId, nome: r.collNome, cognome: r.collCognome, numeroSportello: r.collSportello },
+    assistito: { id: r.assistitoId, nome: r.assNome.toUpperCase(), cognome: r.assCognome.toUpperCase(), codiceFiscale: r.assCf },
+    collaboratore: { id: r.collaboratoreId, nome: r.collNome, cognome: r.collCognome, numeroSportello: r.collSportello, denominazione: r.collDenominazione },
     citta: r.assCitta,
     dataRichiesta: r.inviataIl!.toISOString(),
     stato: { id: r.statoId!, nome: r.statoNome, chiuso: r.statoChiuso, colore: r.statoColore },
@@ -72,6 +73,7 @@ export async function dettaglioBackoffice(req: Request, id: number) {
     .innerJoin(personeTable, eq(personeTable.id, collaboratoriTable.personaId))
     .where(eq(collaboratoriTable.id, p.collaboratoreId));
   const mandato = await mandatoDellaPratica(p);
+  const firma = await firmaDellaPratica(p.id);
   const categorie = await mappaCategorieAllegato();
   const documenti = await db
     .select({ d: documentiPraticaTable, nome: utenteAutore.nome, cognome: utenteAutore.cognome })
@@ -151,11 +153,12 @@ export async function dettaglioBackoffice(req: Request, id: number) {
       nome: p.collNome,
       cognome: p.collCognome,
       numeroSportello: p.collSportello,
+      denominazione: p.collDenominazione,
       tipologia: coll?.tipologia ?? "",
       email: coll?.email ?? null,
       cellulare: coll?.cellulare ?? "",
     },
-    mandato: mandato ? { id: mandato.id, nome: mandato.nome, fileNome: nomePdfMandato(p) } : null,
+    mandato: mandato ? { id: mandato.id, nome: mandato.nome, fileNome: nomePdfMandato(p), firma: firma ? mappaFirma(firma) : null } : null,
     documenti: mappati.filter((d) => !d.daUfficio),
     allegatiUfficio: mappati.filter((d) => d.daUfficio),
     messaggio: p.messaggio,

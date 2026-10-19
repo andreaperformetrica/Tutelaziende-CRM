@@ -13,7 +13,7 @@ import { StatoBadge, coloreStato } from "@/components/pratiche/stato-badge";
 import { DialogNuovaPratica } from "@/components/pratiche/dialog-nuova-pratica";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/lib/auth";
-import { fmtDataIstante, parseApiError } from "@/lib/format";
+import { fmtDataIstante, parseApiError, nomeCollaboratore } from "@/lib/format";
 
 const PER_PAGINA = 25;
 
@@ -107,7 +107,7 @@ export default function PraticheCollaboratore() {
             <SelectContent>
               <SelectItem value="all">Ogni collaboratore</SelectItem>
               {session?.collaboratore && <SelectItem value={String(session.collaboratore.id)}>Le mie pratiche</SelectItem>}
-              {(collaboratori.data ?? []).filter((c) => c.id !== session?.collaboratore?.id).map((c) => <SelectItem key={c.id} value={String(c.id)}>{c.cognome} {c.nome} · sportello {c.numeroSportello}</SelectItem>)}
+              {(collaboratori.data ?? []).filter((c) => c.id !== session?.collaboratore?.id).map((c) => <SelectItem key={c.id} value={String(c.id)}>{nomeCollaboratore(c)} · sportello {c.numeroSportello}</SelectItem>)}
             </SelectContent>
           </Select>
         )}
@@ -140,7 +140,7 @@ export default function PraticheCollaboratore() {
                     <span className="tabular-nums">{p.dataRichiesta ? fmtDataIstante(p.dataRichiesta) : "Non inviata"}</span>
                   </div>
                   <div className="mt-1 text-xs text-muted-foreground">Gestita da: {p.gestitaDa ?? (p.bozza ? "—" : "non ancora assegnata")}</div>
-                  {capogruppo && <div className="mt-1 text-xs text-muted-foreground">Collaboratore: {p.collaboratore.cognome} {p.collaboratore.nome} · {p.collaboratore.numeroSportello}</div>}
+                  {capogruppo && <div className="mt-1 text-xs text-muted-foreground">Collaboratore: {nomeCollaboratore(p.collaboratore)} · {p.collaboratore.numeroSportello}</div>}
                 </button>
               </li>
             ))}
@@ -163,7 +163,7 @@ export default function PraticheCollaboratore() {
                     <TableCell className="text-sm whitespace-nowrap">{p.gestitaDa ?? <span className="text-muted-foreground">{p.bozza ? "—" : "Non ancora assegnata"}</span>}</TableCell>
                     {capogruppo && (
                       <TableCell className="text-sm whitespace-nowrap">
-                        {p.collaboratore.cognome} {p.collaboratore.nome} <span className="font-mono text-xs text-muted-foreground">· {p.collaboratore.numeroSportello}</span>
+                        {nomeCollaboratore(p.collaboratore)} <span className="font-mono text-xs text-muted-foreground">· {p.collaboratore.numeroSportello}</span>
                       </TableCell>
                     )}
                   </TableRow>

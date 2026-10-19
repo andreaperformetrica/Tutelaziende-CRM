@@ -23,7 +23,7 @@ import {
 } from "../lib/assistiti";
 import { HttpError, nonAutorizzato } from "../lib/errori";
 import { contestoDa, differenze, registraLog } from "../lib/log";
-import { erroreDuplicatoDb, normalizzaAnagrafica, type AnagraficaNormalizzata } from "../lib/persone";
+import { controllaUnicitaPersona, erroreDuplicatoDb, normalizzaAnagrafica, type AnagraficaNormalizzata } from "../lib/persone";
 import { valida } from "../lib/validazione";
 import { richiediRuolo } from "../middlewares/auth";
 
@@ -32,13 +32,13 @@ const soloCollaboratore = richiediRuolo("collaboratore");
 const soloBackofficeScrittura = richiediRuolo("super_admin", "admin");
 
 function pulisciCitta(valore: string): string {
-  const c = valore.trim();
+  const c = valore.trim().toUpperCase();
   if (!c) throw new HttpError(400, "La città è obbligatoria.", "DATI_NON_VALIDI", "citta");
   return c;
 }
 
 function pulisciIndirizzo(valore: string): string {
-  const i = valore.replace(/\s+/g, " ").trim();
+  const i = valore.replace(/\s+/g, " ").trim().toUpperCase();
   if (!i) throw new HttpError(400, "L'indirizzo è obbligatorio.", "DATI_NON_VALIDI", "indirizzo");
   return i;
 }
@@ -109,7 +109,7 @@ router.get("/assistiti/:id", async (req, res) => {
 
 router.post("/assistiti", soloCollaboratore, async (req, res) => {
   const dati = valida(CreateAssistitoBody, req.body);
-  const anagrafica = normalizzaAnagrafica(dati, { emailObbligatoria: false });
+  const anagrafica = normalizzaAnagrafica(dati, { emailObbligatoria: false, maiuscolo: true });
   const residenza = pulisciResidenza(dati);
   const { citta, indirizzo } = residenza;
   const u = req.utente!;
@@ -143,19 +143,16 @@ router.post("/assistiti", soloCollaboratore, async (req, res) => {
   res.status(201).json(mappaAssistito(await caricaAssistitoVisibile(req, id), req));
 });
 
-router.put("/assistiti/:id", soloCollaboratore, async (req, res) => {
+/** L'anagrafica di un assistito la modificano solo super admin, admin e operatori: il collaboratore la vede in sola lettura. */
+router.put("/assistiti/:id", richiediRuolo("super_admin", "admin", "operatore"), async (req, res) => {
   const { id } = valida(UpdateAssistitoParams, req.params);
   const dati = valida(UpdateAssistitoBody, req.body);
   const prima = await caricaAssistitoVisibile(req, id);
-  const u = req.utente!;
-  if (prima.collaboratoreId !== u.collaboratoreId) {
-    throw nonAutorizzato("Puoi modificare solo i tuoi assistiti.");
-  }
-  const anagrafica: AnagraficaNormalizzata = normalizzaAnagrafica(dati, { emailObbligatoria: false });
+  const anagrafica: AnagraficaNormalizzata = normalizzaAnagrafica(dati, { emailObbligatoria: false, maiuscolo: true });
   const residenza = pulisciResidenza(dati);
   const { citta, indirizzo } = residenza;
 
-  await controllaDuplicatiAssistito(req, anagrafica, { citta, indirizzo }, "modificare", prima.personaId);
+  await controllaUnicitaPersona(anagrafica, prima.personaId);
 
   const diff = differenze(piatto(prima, prima), piatto(anagrafica, residenza), ETICHETTE_CAMPI);
   try {
@@ -176,10 +173,7 @@ router.put("/assistiti/:id", soloCollaboratore, async (req, res) => {
       }
     });
   } catch (err) {
-    if (erroreDuplicatoDb(err)) {
-      await controllaDuplicatiAssistito(req, anagrafica, { citta, indirizzo }, "modificare", prima.personaId);
-    }
-    throw err;
+    throw erroreDuplicatoDb(err) ?? err;
   }
   res.json(mappaAssistito(await caricaAssistitoVisibile(req, id), req));
 });

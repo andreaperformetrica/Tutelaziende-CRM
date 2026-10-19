@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { nomeCollaboratore } from "@/lib/format";
 
 /** Dialogo per scegliere un collaboratore attivo (usato per cambiare collaboratore o associare una segnalazione). */
 export function DialogCollaboratore({ open, onClose, titolo, descrizione, etichettaConferma, iniziale, escludiId, conNota, pending, errore, onConfirm }: {
@@ -30,7 +31,7 @@ export function DialogCollaboratore({ open, onClose, titolo, descrizione, etiche
           <Select value={scelto} onValueChange={setScelto}>
             <SelectTrigger data-testid="select-collaboratore-destinazione"><SelectValue placeholder="Seleziona un collaboratore" /></SelectTrigger>
             <SelectContent>
-              {opzioni.map((c) => <SelectItem key={c.id} value={String(c.id)}>{c.cognome} {c.nome} · sportello {c.numeroSportello}</SelectItem>)}
+              {opzioni.map((c) => <SelectItem key={c.id} value={String(c.id)}>{nomeCollaboratore(c)} · sportello {c.numeroSportello}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>

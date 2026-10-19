@@ -15,7 +15,7 @@ import { DialogApriPratica } from "@/components/pratiche/dialog-apri-pratica";
 import { ErrorState, PageHeader } from "@/components/common";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@/lib/auth";
-import { fmtCellulare, fmtData, fmtIstante, parseApiError, tipologiaLabel } from "@/lib/format";
+import { fmtCellulare, fmtData, fmtIstante, parseApiError, tipologiaLabel, nomeCollaboratore } from "@/lib/format";
 
 function Dato({ k, children, mono }: { k: string; children: ReactNode; mono?: boolean }) {
   return (
@@ -26,7 +26,7 @@ function Dato({ k, children, mono }: { k: string; children: ReactNode; mono?: bo
   );
 }
 
-/** Scheda di un assistito: modificabile solo dal collaboratore proprietario; il back office puo cambiare collaboratore. */
+/** Scheda di un assistito: modificabile solo da super admin, admin e operatori (il collaboratore la vede in sola lettura); il back office puo cambiare collaboratore. */
 export function AssistitoScheda({ base, etichettaIndietro }: { base: string; etichettaIndietro: string }) {
   const params = useParams<{ id: string }>();
   const id = Number(params.id);
@@ -46,7 +46,7 @@ export function AssistitoScheda({ base, etichettaIndietro }: { base: string; eti
   if (q.isError || !q.data) return <ErrorState message={q.error ? parseApiError(q.error).message : "Assistito non trovato."} onRetry={() => q.refetch()} />;
   const a = q.data;
 
-  if (modifica && a.modificabile) {
+  if (modifica && a.anagraficaModificabile) {
     return (
       <div>
         <PageHeader kicker="Modifica assistito" title={`${a.cognome} ${a.nome}`} />
@@ -64,9 +64,9 @@ export function AssistitoScheda({ base, etichettaIndietro }: { base: string; eti
         actions={
           <>
             {a.modificabile && <Button onClick={() => setApriPratica(true)} data-testid="button-apri-pratica"><FilePlus2 className="size-4 mr-1.5" /> Apri pratica</Button>}
-            {a.modificabile && <Button variant="outline" onClick={() => setModifica(true)} data-testid="button-modifica"><Pencil className="size-4 mr-1.5" /> Modifica</Button>}
+            {a.anagraficaModificabile && <Button variant="outline" onClick={() => setModifica(true)} data-testid="button-modifica"><Pencil className="size-4 mr-1.5" /> Modifica</Button>}
             {puoCambiare && <Button variant="outline" onClick={() => { setErrCambio(null); setCambio(true); }} data-testid="button-cambia-collaboratore"><Repeat className="size-4 mr-1.5" /> Cambia collaboratore</Button>}
-            {!a.modificabile && !puoCambiare && <Badge variant="secondary" data-testid="badge-sola-lettura">Sola lettura</Badge>}
+            {!a.anagraficaModificabile && <Badge variant="secondary" data-testid="badge-sola-lettura">Sola lettura</Badge>}
           </>
         } />
       <div className="space-y-5">
@@ -98,7 +98,7 @@ export function AssistitoScheda({ base, etichettaIndietro }: { base: string; eti
           <section className="bg-card border border-border rounded-lg p-5 rise">
             <h2 className="text-lg font-bold mb-4 pb-2 border-b border-border">Collaboratore</h2>
             <dl className="grid gap-4 sm:grid-cols-2">
-              <Dato k="Collaboratore" ><span data-testid="text-collaboratore">{a.collaboratore.cognome} {a.collaboratore.nome}</span></Dato>
+              <Dato k="Collaboratore" ><span data-testid="text-collaboratore">{nomeCollaboratore(a.collaboratore)}</span></Dato>
               <Dato k="Sportello" mono>{a.collaboratore.numeroSportello}</Dato>
               <Dato k="Tipologia">{tipologiaLabel(a.collaboratore.tipologia)}</Dato>
               <Dato k="Registrato il">{fmtIstante(a.creatoIl)}</Dato>

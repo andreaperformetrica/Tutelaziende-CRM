@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState, ErrorState, PageHeader } from "@/components/common";
 import { DialogApriPratica } from "@/components/pratiche/dialog-apri-pratica";
-import { fmtCellulare, fmtData, parseApiError } from "@/lib/format";
+import { fmtCellulare, fmtData, parseApiError, nomeCollaboratore } from "@/lib/format";
 
 const PER_PAGINA = 25;
 
@@ -54,7 +54,7 @@ export function AssistitiLista({ base, backoffice, capogruppo, puoCreare }: { ba
             <SelectTrigger className="w-full sm:w-60 bg-card" data-testid="filtro-collaboratore"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Ogni collaboratore</SelectItem>
-              {(collaboratori.data ?? []).map((c) => <SelectItem key={c.id} value={String(c.id)}>{c.cognome} {c.nome} · {c.numeroSportello}</SelectItem>)}
+              {(collaboratori.data ?? []).map((c) => <SelectItem key={c.id} value={String(c.id)}>{nomeCollaboratore(c)} · {c.numeroSportello}</SelectItem>)}
             </SelectContent>
           </Select>
         )}
@@ -82,7 +82,7 @@ export function AssistitiLista({ base, backoffice, capogruppo, puoCreare }: { ba
                   <div className="font-mono text-xs tracking-wider text-muted-foreground mt-1">{a.codiceFiscale}</div>
                   <div className="mt-2 text-xs text-muted-foreground">Nato il {fmtData(a.dataNascita)} · {a.citta}</div>
                   <div className="mt-0.5 text-xs text-muted-foreground font-mono">{fmtCellulare(a.cellulare)}</div>
-                  {mostraCollaboratore && <div className="mt-1 text-xs text-muted-foreground">Collaboratore: {a.collaboratore.cognome} {a.collaboratore.nome} · {a.collaboratore.numeroSportello}</div>}
+                  {mostraCollaboratore && <div className="mt-1 text-xs text-muted-foreground">Collaboratore: {nomeCollaboratore(a.collaboratore)} · {a.collaboratore.numeroSportello}</div>}
                 </Link>
                 {puoCreare && a.modificabile && (
                   <div className="px-4 pb-4 -mt-1">
@@ -114,7 +114,7 @@ export function AssistitiLista({ base, backoffice, capogruppo, puoCreare }: { ba
                     <TableCell className="text-sm">{a.citta}</TableCell>
                     {mostraCollaboratore && (
                       <TableCell className="text-sm whitespace-nowrap">
-                        {a.collaboratore.cognome} {a.collaboratore.nome} <span className="font-mono text-xs text-muted-foreground">· {a.collaboratore.numeroSportello}</span>
+                        {nomeCollaboratore(a.collaboratore)} <span className="font-mono text-xs text-muted-foreground">· {a.collaboratore.numeroSportello}</span>
                       </TableCell>
                     )}
                     {puoCreare && (

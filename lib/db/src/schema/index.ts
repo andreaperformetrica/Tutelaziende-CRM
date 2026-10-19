@@ -10,3 +10,4 @@ export * from "./notifiche";
 export * from "./eventi";
 export * from "./compensi";
 export * from "./news";
+export * from "./mandati-firma";

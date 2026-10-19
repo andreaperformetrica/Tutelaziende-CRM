@@ -14,6 +14,8 @@ import {
   ImpostaRuoloCapogruppoParams,
   AggiungiMembriGruppoBody,
   AggiungiMembriGruppoParams,
+  RimuoviMembroGruppoParams,
+  ListMandatiCollaboratoreParams,
   UpdateCollaboratoreBody,
   UpdateCollaboratoreParams,
 } from "@workspace/api-zod";
@@ -22,6 +24,8 @@ import { HttpError, nonAutorizzato, nonTrovato } from "../lib/errori";
 import { contestoDa, differenze, registraLog } from "../lib/log";
 import { CODICE_ITALIA } from "../lib/luoghi";
 import { hashPassword } from "../lib/password";
+import { normalizzaSede } from "../lib/sede";
+import { mandatiDellaSede } from "../lib/mandati-sede";
 import {
   controllaUnicitaPersona,
   erroreDuplicatoDb,
@@ -60,6 +64,16 @@ const colonne = {
   cellulare: personeTable.cellulare,
   numeroSportello: collaboratoriTable.numeroSportello,
   tipologia: collaboratoriTable.tipologia,
+  denominazione: collaboratoriTable.denominazione,
+  ragioneSociale: collaboratoriTable.ragioneSociale,
+  tipoSoggetto: collaboratoriTable.tipoSoggetto,
+  sedeIndirizzo: collaboratoriTable.sedeIndirizzo,
+  sedeComuneCodice: collaboratoriTable.sedeComuneCodice,
+  sedeComune: collaboratoriTable.sedeComune,
+  sedeProvincia: collaboratoriTable.sedeProvincia,
+  sedeCap: collaboratoriTable.sedeCap,
+  iban: collaboratoriTable.iban,
+  codiceFiscaleAssociazione: collaboratoriTable.codiceFiscaleAssociazione,
   capogruppoId: collaboratoriTable.capogruppoId,
   eCapogruppo: collaboratoriTable.eCapogruppo,
   capogruppoCognome: personaCapogruppo.cognome,
@@ -90,6 +104,7 @@ function mappa(r: RigaCollaboratore) {
   const { capogruppoCognome, capogruppoNome, personaId: _personaId, eCapogruppo, ...resto } = r;
   return {
     ...resto,
+    numeroSportello: r.numeroSportello.toUpperCase(),
     capogruppo: eCapogruppo || r.numeroCollaboratori > 0,
     straniero: r.nazionalita !== CODICE_ITALIA,
     capogruppoNome: capogruppoCognome ? `${capogruppoCognome} ${capogruppoNome}` : null,
@@ -108,9 +123,10 @@ async function dettaglio(id: number) {
       id: m.id,
       nome: m.nome,
       cognome: m.cognome,
-      numeroSportello: m.numeroSportello,
+      numeroSportello: m.numeroSportello.toUpperCase(),
       tipologia: m.tipologia,
       attivo: m.attivo,
+      denominazione: m.denominazione,
     })),
   };
 }
@@ -179,7 +195,7 @@ async function controllaSportelloEEmail(sportello: string, email: string, esclud
     .from(collaboratoriTable)
     .where(
       and(
-        eq(collaboratoriTable.numeroSportello, sportello),
+        sql`upper(${collaboratoriTable.numeroSportello}) = ${sportello}`,
         escludi ? ne(collaboratoriTable.id, escludi.collaboratoreId) : undefined,
       ),
     )
@@ -198,7 +214,7 @@ async function controllaSportelloEEmail(sportello: string, email: string, esclud
 }
 
 function pulisciSportello(valore: string): string {
-  const s = valore.trim();
+  const s = valore.trim().toUpperCase();
   if (!s) throw new HttpError(400, "Il numero di sportello e' obbligatorio.", "DATI_NON_VALIDI", "numeroSportello");
   return s;
 }
@@ -225,6 +241,9 @@ router.get("/collaboratori", async (req, res) => {
         ilike(personeTable.cellulare, termine),
         ilike(personeTable.email, termine),
         ilike(collaboratoriTable.numeroSportello, termine),
+        ilike(collaboratoriTable.denominazione, termine),
+        ilike(collaboratoriTable.ragioneSociale, termine),
+        ilike(sql`${personeTable.nome} || ' ' || ${personeTable.cognome} || ' (' || coalesce(${collaboratoriTable.denominazione}, '') || ')'`, termine),
       ),
     );
   }
@@ -247,6 +266,7 @@ router.post("/collaboratori", soloBackofficeScrittura, async (req, res) => {
   const dati = valida(CreateCollaboratoreBody, req.body);
   const anagrafica = normalizzaAnagrafica(dati);
   const sportello = pulisciSportello(dati.numeroSportello);
+  const sede = normalizzaSede(dati, anagrafica.partitaIva ?? null);
   await controllaUnicitaPersona(anagrafica);
   await controllaSportelloEEmail(sportello, anagrafica.email!);
   await controllaCapogruppo(dati.capogruppoId);
@@ -274,6 +294,7 @@ router.post("/collaboratori", soloBackofficeScrittura, async (req, res) => {
           numeroSportello: sportello,
           tipologia: dati.tipologia,
           capogruppoId: dati.capogruppoId ?? null,
+          ...sede,
         })
         .returning({ id: collaboratoriTable.id });
       await registraLog(tx, contestoDa(req), {
@@ -281,7 +302,7 @@ router.post("/collaboratori", soloBackofficeScrittura, async (req, res) => {
         entita: "collaboratore",
         entitaId: collaboratore!.id,
         descrizione: `Creato il collaboratore ${anagrafica.cognome} ${anagrafica.nome} (sportello ${sportello}, ${dati.tipologia})`,
-        dettagli: { codiceFiscale: anagrafica.codiceFiscale, numeroSportello: sportello, tipologia: dati.tipologia },
+        dettagli: { codiceFiscale: anagrafica.codiceFiscale, numeroSportello: sportello, tipologia: dati.tipologia, denominazione: sede.denominazione, sedeProvincia: sede.sedeProvincia },
       });
       if (dati.capogruppoId) {
         await registraLog(tx, contestoDa(req), {
@@ -307,7 +328,7 @@ router.post("/collaboratori", soloBackofficeScrittura, async (req, res) => {
   }
 });
 
-function piatto(a: AnagraficaNormalizzata, extra: { numeroSportello: string; tipologia: string }): Record<string, unknown> {
+function piatto(a: AnagraficaNormalizzata, extra: Record<string, unknown>): Record<string, unknown> {
   return {
     nome: a.nome,
     cognome: a.cognome,
@@ -338,7 +359,19 @@ const ETICHETTE_CAMPI: Record<string, string> = {
   cellulare: "cellulare",
   numeroSportello: "numero di sportello",
   tipologia: "tipologia",
+  denominazione: "denominazione",
+  ragioneSociale: "ragione sociale",
+  tipoSoggetto: "tipo di soggetto",
+  sedeIndirizzo: "indirizzo della sede",
+  sedeComune: "comune della sede",
+  sedeProvincia: "provincia della sede",
+  sedeCap: "CAP della sede",
+  iban: "IBAN",
+  codiceFiscaleAssociazione: "codice fiscale dell'associazione",
 };
+
+const CAMPI_SEDE = ["denominazione", "ragioneSociale", "tipoSoggetto", "sedeIndirizzo", "sedeComune", "sedeProvincia", "sedeCap", "iban", "codiceFiscaleAssociazione"] as const;
+const soloSede = (o: Record<string, unknown>) => Object.fromEntries(CAMPI_SEDE.map((k) => [k, o[k] ?? null]));
 
 router.put("/collaboratori/:id", soloBackofficeScrittura, async (req, res) => {
   const { id } = valida(UpdateCollaboratoreParams, req.params);
@@ -348,6 +381,7 @@ router.put("/collaboratori/:id", soloBackofficeScrittura, async (req, res) => {
 
   const anagrafica = normalizzaAnagrafica(dati);
   const sportello = pulisciSportello(dati.numeroSportello);
+  const sede = normalizzaSede(dati, anagrafica.partitaIva ?? null);
   await controllaUnicitaPersona(anagrafica, prima.personaId);
   await controllaSportelloEEmail(sportello, anagrafica.email!, { collaboratoreId: id, utenteId: prima.utenteId });
   const nuovoCapogruppo = dati.capogruppoId ?? null;
@@ -367,9 +401,9 @@ router.put("/collaboratori/:id", soloBackofficeScrittura, async (req, res) => {
       partitaIva: prima.partitaIva,
       cellulare: prima.cellulare,
     } as AnagraficaNormalizzata,
-    { numeroSportello: prima.numeroSportello, tipologia: prima.tipologia },
+    { numeroSportello: prima.numeroSportello, tipologia: prima.tipologia, ...soloSede(prima) },
   );
-  const nuovaAnagrafica = piatto(anagrafica, { numeroSportello: sportello, tipologia: dati.tipologia });
+  const nuovaAnagrafica = piatto(anagrafica, { numeroSportello: sportello, tipologia: dati.tipologia, ...soloSede(sede) });
   const diff = differenze(vecchiaAnagrafica, nuovaAnagrafica, ETICHETTE_CAMPI);
   const nomeCompleto = `${anagrafica.cognome} ${anagrafica.nome}`;
 
@@ -391,7 +425,7 @@ router.put("/collaboratori/:id", soloBackofficeScrittura, async (req, res) => {
         .where(eq(utentiTable.id, prima.utenteId));
       await tx
         .update(collaboratoriTable)
-        .set({ numeroSportello: sportello, tipologia: dati.tipologia, capogruppoId: nuovoCapogruppo })
+        .set({ numeroSportello: sportello, tipologia: dati.tipologia, capogruppoId: nuovoCapogruppo, ...sede })
         .where(eq(collaboratoriTable.id, id));
       if (!dati.attivo) await chiudiSessioniUtente(prima.utenteId, tx);
 
@@ -493,6 +527,34 @@ router.post("/collaboratori/:id/membri", soloBackofficeScrittura, async (req, re
     }
   });
   res.json(await dettaglio(id));
+});
+
+/** Toglie un collaboratore dal gruppo del capogruppo (il collaboratore resta in archivio, senza capogruppo). */
+router.delete("/collaboratori/:id/membri/:membroId", soloBackofficeScrittura, async (req, res) => {
+  const { id, membroId } = valida(RimuoviMembroGruppoParams, req.params);
+  const [c] = await selezionaCollaboratori(eq(collaboratoriTable.id, id));
+  if (!c) throw nonTrovato("Collaboratore non trovato.");
+  const [m] = await selezionaCollaboratori(eq(collaboratoriTable.id, membroId));
+  if (!m) throw nonTrovato("Collaboratore non trovato.");
+  if (m.capogruppoId !== id) throw new HttpError(409, `${m.cognome} ${m.nome} non fa parte del gruppo di questo capogruppo.`, "CAPOGRUPPO_NON_VALIDO");
+  await db.transaction(async (tx) => {
+    await tx.update(collaboratoriTable).set({ capogruppoId: null }).where(eq(collaboratoriTable.id, membroId));
+    await registraLog(tx, contestoDa(req), {
+      azione: "collaboratore.rimosso_dal_gruppo",
+      entita: "collaboratore",
+      entitaId: membroId,
+      descrizione: `Tolto ${m.cognome} ${m.nome} dal gruppo del capogruppo ${c.cognome} ${c.nome}`,
+      dettagli: { prima: { capogruppoId: id }, dopo: { capogruppoId: null } },
+    });
+  });
+  res.json(await dettaglio(id));
+});
+
+/** Mandati che il collaboratore riceve in automatico in base alla provincia della sua sede. */
+router.get("/collaboratori/:id/mandati", async (req, res) => {
+  const { id } = valida(ListMandatiCollaboratoreParams, req.params);
+  await controllaAccessoLettura(req, id);
+  res.json(await mandatiDellaSede(id));
 });
 
 router.post("/collaboratori/:id/password-provvisoria", soloBackofficeScrittura, async (req, res) => {

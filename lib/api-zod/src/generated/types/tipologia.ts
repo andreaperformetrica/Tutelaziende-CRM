@@ -12,4 +12,5 @@ export type Tipologia = typeof Tipologia[keyof typeof Tipologia];
 export const Tipologia = {
   CAF: 'CAF',
   PATRONATO: 'PATRONATO',
+  ENTRAMBI: 'ENTRAMBI',
 } as const;

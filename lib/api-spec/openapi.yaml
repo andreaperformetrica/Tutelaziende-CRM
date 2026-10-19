@@ -328,6 +328,39 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CollaboratoreDettaglio"
+  /collaboratori/{id}/membri/{membroId}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+      - name: membroId
+        in: path
+        required: true
+        schema:
+          type: integer
+    delete:
+      operationId: rimuoviMembroGruppo
+      tags: [collaboratori]
+      summary: Toglie un collaboratore dal gruppo di un capogruppo
+      responses:
+        "200":
+          description: Collaboratore capogruppo aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollaboratoreDettaglio"
+  /collaboratori/{id}/mandati:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    get:
+      operationId: listMandatiCollaboratore
+      tags: [collaboratori]
+      summary: Mandati che il collaboratore riceve in base alla provincia della sua sede
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MandatiCollaboratore"
   /collaboratori/{id}/reinvia-credenziali:
     parameters:
       - $ref: "#/components/parameters/IdPath"
@@ -1530,11 +1563,25 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TipoPratica"
+  /province:
+    get:
+      operationId: listProvince
+      tags: [configurazione]
+      summary: Province con il numero di sedi e i mandati caricati
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProvinciaMandati"
   /mandati:
     get:
       operationId: listMandati
       tags: [configurazione]
-      summary: Raccolta dei mandati (modelli Word per sede)
+      summary: Mandati caricati (per provincia e tipo di pratica) e mandati precedenti da collegare a una provincia
       responses:
         "200":
           description: Esito
@@ -1548,9 +1595,9 @@ paths:
     parameters:
       - $ref: "#/components/parameters/IdPath"
     patch:
-      operationId: rinominaMandato
+      operationId: collegaMandatoProvincia
       tags: [configurazione]
-      summary: Rinomina un mandato della raccolta
+      summary: Collega un mandato (anche uno caricato in precedenza) a una provincia e a un tipo di pratica
       requestBody:
         required: true
         content:
@@ -1567,57 +1614,7 @@ paths:
     delete:
       operationId: deleteMandato
       tags: [configurazione]
-      summary: Elimina un mandato non assegnato a nessun collaboratore
-      responses:
-        "204":
-          description: Eseguito
-  /assegnazioni-mandato:
-    get:
-      operationId: listAssegnazioniMandato
-      tags: [configurazione]
-      summary: Mandato assegnato a ogni collaboratore
-      parameters:
-        - name: collaboratoreId
-          in: query
-          required: false
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Esito
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/AssegnazioneMandato"
-    put:
-      operationId: assegnaMandato
-      tags: [configurazione]
-      summary: Assegna (o cambia) il mandato di un collaboratore
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/AssegnazioneMandatoInput"
-      responses:
-        "200":
-          description: Esito
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AssegnazioneMandato"
-    delete:
-      operationId: rimuoviAssegnazioneMandato
-      tags: [configurazione]
-      summary: Toglie il mandato assegnato a un collaboratore
-      parameters:
-        - name: collaboratoreId
-          in: query
-          required: true
-          schema:
-            type: integer
+      summary: Elimina un mandato non ancora usato in pratiche inviate
       responses:
         "204":
           description: Eseguito
@@ -1779,6 +1776,40 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PraticaDettaglio"
+  /pratiche/{id}/mandato/firma/richiedi:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    post:
+      operationId: richiediFirmaMandato
+      tags: [pratiche]
+      summary: Invia al cellulare del collaboratore il codice SMS per firmare il mandato della pratica
+      responses:
+        "200":
+          description: Codice inviato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RichiestaFirmaMandato"
+  /pratiche/{id}/mandato/firma/conferma:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    post:
+      operationId: confermaFirmaMandato
+      tags: [pratiche]
+      summary: Firma il mandato con il codice ricevuto per SMS e genera il PDF firmato
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfermaFirmaMandato"
+      responses:
+        "200":
+          description: Mandato firmato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FirmaMandato"
   /pratiche/{id}/invio:
     parameters:
       - $ref: "#/components/parameters/IdPath"
@@ -2228,7 +2259,27 @@ components:
       enum: [super_admin, admin, operatore]
     Tipologia:
       type: string
-      enum: [CAF, PATRONATO]
+      enum: [CAF, PATRONATO, ENTRAMBI]
+    TipoSoggetto:
+      type: string
+      enum: [PARTITA_IVA, ASSOCIAZIONE]
+    DatiSede:
+      type: object
+      description: Dati della sede del collaboratore (facoltativi per i collaboratori inseriti prima)
+      properties:
+        denominazione: { type: ["string", "null"] }
+        ragioneSociale: { type: ["string", "null"] }
+        tipoSoggetto:
+          oneOf:
+            - $ref: "#/components/schemas/TipoSoggetto"
+            - type: "null"
+        sedeIndirizzo: { type: ["string", "null"], description: "Via e numero civico" }
+        sedeComuneCodice: { type: ["string", "null"], description: "Codice del comune scelto con la ricerca luoghi" }
+        sedeComune: { type: ["string", "null"] }
+        sedeProvincia: { type: ["string", "null"], description: "Sigla, ricavata dal comune" }
+        sedeCap: { type: ["string", "null"] }
+        iban: { type: ["string", "null"] }
+        codiceFiscaleAssociazione: { type: ["string", "null"], maxLength: 11 }
     Sesso:
       type: string
       enum: [M, F]
@@ -2422,7 +2473,13 @@ components:
           $ref: "#/components/schemas/Tipologia"
         attivo:
           type: boolean
+        denominazione:
+          type: ["string", "null"]
     Collaboratore:
+      allOf:
+        - $ref: "#/components/schemas/DatiSede"
+        - $ref: "#/components/schemas/CollaboratoreBase"
+    CollaboratoreBase:
       type: object
       required:
         - id
@@ -2544,6 +2601,10 @@ components:
               items:
                 $ref: "#/components/schemas/CollaboratoreRiepilogo"
     CollaboratoreInput:
+      allOf:
+        - $ref: "#/components/schemas/DatiSede"
+        - $ref: "#/components/schemas/CollaboratoreInputBase"
+    CollaboratoreInputBase:
       type: object
       required:
         - nome
@@ -2600,6 +2661,10 @@ components:
           type: string
           minLength: 8
     CollaboratoreUpdate:
+      allOf:
+        - $ref: "#/components/schemas/DatiSede"
+        - $ref: "#/components/schemas/CollaboratoreUpdateBase"
+    CollaboratoreUpdateBase:
       type: object
       required:
         - nome
@@ -2721,6 +2786,8 @@ components:
           type: string
         cognome:
           type: string
+        denominazione:
+          type: ["string", "null"]
         numeroSportello:
           type: string
         tipologia:
@@ -2744,6 +2811,7 @@ components:
         - citta
         - collaboratore
         - modificabile
+        - anagraficaModificabile
         - creatoIl
         - modificatoIl
       properties:
@@ -2794,7 +2862,10 @@ components:
           $ref: "#/components/schemas/CollaboratoreAssistito"
         modificabile:
           type: boolean
-          description: Vero solo per il collaboratore a cui l'assistito e' associato
+          description: Vero solo per il collaboratore a cui l'assistito e' associato (puo' aprire pratiche)
+        anagraficaModificabile:
+          type: boolean
+          description: Vero per super admin, admin e operatori; il collaboratore vede l'anagrafica in sola lettura
         creatoIl:
           type: string
           format: date-time
@@ -3092,6 +3163,7 @@ components:
       properties:
         collaboratoreId: { type: integer }
         nome: { type: string, description: "Cognome e nome" }
+        denominazione: { type: ["string", "null"] }
         numeroSportello: { type: string }
         tipologia: { type: string }
         attivo: { type: boolean }
@@ -3338,33 +3410,53 @@ components:
           items: { type: integer }
     Mandato:
       type: object
-      required: [id, nome, fileNome, fileTipo, dimensione, caricatoIl, caricatoDa, collaboratoriAssegnati]
+      required: [id, nome, provincia, tipoPraticaId, tipoPraticaNome, fileNome, fileTipo, dimensione, caricatoIl, caricatoDa, collaboratoriAssegnati]
       properties:
         id: { type: integer }
         nome: { type: string }
+        provincia: { type: [string, "null"], description: "Sigla; vuota per i mandati caricati prima, non ancora collegati a una provincia" }
+        tipoPraticaId: { type: [integer, "null"], description: "Vuoto = vale per tutti i tipi di pratica" }
+        tipoPraticaNome: { type: [string, "null"] }
         fileNome: { type: string }
         fileTipo: { type: string }
         dimensione: { type: integer }
         caricatoIl: { type: string, format: date-time }
         caricatoDa: { type: [string, "null"] }
-        collaboratoriAssegnati: { type: integer }
+        collaboratoriAssegnati: { type: integer, description: "Sedi che ricevono questo mandato" }
     MandatoInput:
       type: object
-      required: [nome]
+      required: [provincia, tipoPraticaId]
       properties:
+        provincia: { type: string, description: "Sigla della provincia" }
+        tipoPraticaId: { type: [integer, "null"], description: "Vuoto = tutti i tipi di pratica" }
+    ProvinciaMandati:
+      type: object
+      required: [sigla, nome, sedi]
+      properties:
+        sigla: { type: string }
         nome: { type: string }
-    AssegnazioneMandato:
+        sedi: { type: integer, description: "Collaboratori attivi la cui sede e' in questa provincia" }
+    MandatoCollaboratore:
       type: object
-      required: [collaboratoreId, mandatoId]
+      required: [mandatoId, nome, provincia, tipoPraticaId, tipoPraticaNome, fileNome, origine]
       properties:
-        collaboratoreId: { type: integer }
         mandatoId: { type: integer }
-    AssegnazioneMandatoInput:
+        nome: { type: string }
+        provincia: { type: [string, "null"] }
+        tipoPraticaId: { type: [integer, "null"] }
+        tipoPraticaNome: { type: [string, "null"] }
+        fileNome: { type: string }
+        origine: { type: string, enum: [provincia, precedente] }
+    MandatiCollaboratore:
       type: object
-      required: [collaboratoreId, mandatoId]
+      required: [provincia, provinciaNome, mandati]
       properties:
-        collaboratoreId: { type: integer }
-        mandatoId: { type: integer }
+        provincia: { type: [string, "null"], description: "Provincia della sede" }
+        provinciaNome: { type: [string, "null"] }
+        mandati:
+          type: array
+          items:
+            $ref: "#/components/schemas/MandatoCollaboratore"
     StatoPratica:
       type: object
       required: [id, nome, ordine, chiuso, colore]
@@ -3527,6 +3619,27 @@ components:
         nome: { type: string }
         fileNome: { type: string }
         dimensione: { type: integer }
+    FirmaMandato:
+      type: object
+      required: [firmatoIl, firmatario, codiceFiscale, cellulare, fileNome]
+      properties:
+        firmatoIl: { type: string, format: date-time }
+        firmatario: { type: string }
+        codiceFiscale: { type: string }
+        cellulare: { type: string }
+        fileNome: { type: string, description: "Nome del PDF firmato" }
+    RichiestaFirmaMandato:
+      type: object
+      required: [cellulare, scadeIl, inviato]
+      properties:
+        cellulare: { type: string, description: "Numero a cui e' stato inviato il codice, con le cifre centrali nascoste" }
+        scadeIl: { type: string, format: date-time }
+        inviato: { type: boolean, description: "Falso se l'SMS non e' configurato: il codice e' solo nel log del server" }
+    ConfermaFirmaMandato:
+      type: object
+      required: [codice]
+      properties:
+        codice: { type: string }
     MandatoPratica:
       type: object
       required: [id, nome, fileNome]
@@ -3534,6 +3647,11 @@ components:
         id: { type: integer }
         nome: { type: string }
         fileNome: { type: string, description: "Nome del PDF compilato con i dati dell'assistito" }
+        firma:
+          oneOf:
+            - $ref: "#/components/schemas/FirmaMandato"
+            - type: "null"
+          description: "Presente se il mandato e' stato firmato con il codice SMS" 
     DocumentoRichiesto:
       type: object
       required: [id, nome]
@@ -3883,6 +4001,7 @@ components:
         id: { type: integer }
         nome: { type: string }
         cognome: { type: string }
+        denominazione: { type: ["string", "null"] }
         numeroSportello: { type: string }
         tipologia: { type: string }
         email: { type: [string, "null"] }

@@ -189,7 +189,7 @@ export async function resoconto(filtri: { collaboratoreId?: number; dal?: string
   const mappate = righe.map((r) => ({
     praticaId: r.praticaId,
     numero: r.numero!,
-    assistito: nomeCompleto(r.assCognome, r.assNome),
+    assistito: nomeCompleto(r.assCognome, r.assNome).toUpperCase(),
     collaboratoreId: r.collaboratoreId,
     collaboratoreNome: nomeCompleto(r.collCognome, r.collNome),
     numeroSportello: r.sportello,

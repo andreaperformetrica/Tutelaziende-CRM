@@ -45,8 +45,10 @@ export interface Assistito {
   /** @nullable */
   indirizzo?: string | null;
   collaboratore: CollaboratoreAssistito;
-  /** Vero solo per il collaboratore a cui l'assistito e' associato */
+  /** Vero solo per il collaboratore a cui l'assistito e' associato (puo' aprire pratiche) */
   modificabile: boolean;
+  /** Vero per super admin, admin e operatori; il collaboratore vede l'anagrafica in sola lettura */
+  anagraficaModificabile: boolean;
   creatoIl: Date;
   modificatoIl: Date;
 }

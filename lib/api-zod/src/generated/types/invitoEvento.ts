@@ -10,6 +10,8 @@ export interface InvitoEvento {
   collaboratoreId: number;
   /** Cognome e nome */
   nome: string;
+  /** @nullable */
+  denominazione?: string | null;
   numeroSportello: string;
   tipologia: string;
   attivo: boolean;

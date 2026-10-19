@@ -14,4 +14,6 @@ export interface CollaboratoreRiepilogo {
   numeroSportello: string;
   tipologia: Tipologia;
   attivo: boolean;
+  /** @nullable */
+  denominazione?: string | null;
 }

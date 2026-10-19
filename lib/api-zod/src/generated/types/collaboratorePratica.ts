@@ -10,6 +10,8 @@ export interface CollaboratorePratica {
   id: number;
   nome: string;
   cognome: string;
+  /** @nullable */
+  denominazione?: string | null;
   numeroSportello: string;
   tipologia: string;
   /** @nullable */

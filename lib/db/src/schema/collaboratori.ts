@@ -13,11 +13,22 @@ export const collaboratoriTable = pgTable("collaboratori", {
     .unique()
     .references(() => personeTable.id),
   numeroSportello: text("numero_sportello").notNull().unique(),
-  tipologia: text("tipologia", { enum: ["CAF", "PATRONATO"] }).notNull(),
+  tipologia: text("tipologia", { enum: ["CAF", "PATRONATO", "ENTRAMBI"] }).notNull(),
   /** Capogruppo del gruppo a cui appartiene (un solo livello). */
   capogruppoId: integer("capogruppo_id").references((): AnyPgColumn => collaboratoriTable.id),
   /** Segnato come capogruppo anche prima di avere collaboratori nel gruppo. */
   eCapogruppo: boolean("e_capogruppo").notNull().default(false),
+  /** Dati della sede (tutti facoltativi: i collaboratori inseriti prima non li hanno). */
+  denominazione: text("denominazione"),
+  ragioneSociale: text("ragione_sociale"),
+  tipoSoggetto: text("tipo_soggetto", { enum: ["PARTITA_IVA", "ASSOCIAZIONE"] }),
+  sedeIndirizzo: text("sede_indirizzo"),
+  sedeComuneCodice: text("sede_comune_codice"),
+  sedeComune: text("sede_comune"),
+  sedeProvincia: text("sede_provincia"),
+  sedeCap: text("sede_cap"),
+  iban: text("iban"),
+  codiceFiscaleAssociazione: text("codice_fiscale_associazione"),
   creatoIl: timestamp("creato_il", { withTimezone: true }).notNull().defaultNow(),
 });
 

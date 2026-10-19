@@ -11,11 +11,12 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { ErrorState, FieldError, PageHeader } from "@/components/common";
+import { DatiFirma, FirmaMandatoBottone } from "@/components/pratiche/firma-mandato";
 import { ConfermaElimina } from "@/components/pratiche/conferma-elimina";
 import { StatoBadge } from "@/components/pratiche/stato-badge";
 import { SelettoreFile } from "@/components/pratiche/selettore-file";
 import { useToast } from "@/hooks/use-toast";
-import { fmtCellulare, fmtData, fmtIstante, parseApiError } from "@/lib/format";
+import { fmtCellulare, fmtData, fmtIstante, parseApiError, nomeCollaboratore } from "@/lib/format";
 import { ErroreUpload, FORMATI_DOCUMENTI, formatoDimensione, inviaFile, urlDocumentoPratica, urlMandatoPratica, urlModulo } from "@/lib/upload";
 
 type Doc = PraticaDettaglio["documenti"][number];
@@ -123,7 +124,7 @@ export default function PraticaDettaglioCollaboratore() {
       )}
       {!p.modificabile && !p.puoAllegare && (
         <div className="flex gap-3 rounded-lg border border-border bg-secondary/60 p-4 text-sm" data-testid="banner-sola-lettura">
-          <Lock className="size-5 shrink-0 mt-0.5" /><div>Pratica di {p.collaboratore.cognome} {p.collaboratore.nome} (sportello {p.collaboratore.numeroSportello}): puoi consultarla ma non modificarla.</div>
+          <Lock className="size-5 shrink-0 mt-0.5" /><div>Pratica di {nomeCollaboratore(p.collaboratore)} (sportello {p.collaboratore.numeroSportello}): puoi consultarla ma non modificarla.</div>
         </div>
       )}
       {errore && <div role="alert" className="flex gap-3 rounded-lg border border-destructive/40 bg-destructive/10 text-destructive p-4 text-sm" data-testid="errore-pratica"><AlertTriangle className="size-5 shrink-0 mt-0.5" /><div>{errore}</div></div>}
@@ -149,10 +150,19 @@ export default function PraticaDettaglioCollaboratore() {
         </Sezione>
         <Sezione titolo="Mandato del tuo sportello" testId="sezione-mandato">
           {p.mandato ? (
-            <div className="text-sm"><div className="font-semibold">{p.mandato.nome}</div><LinkFile href={urlMandatoPratica(id)} nome={`Scarica il mandato compilato (PDF)`} testId="download-mandato" /></div>
+            <div className="text-sm space-y-3">
+              <div className="font-semibold">{p.mandato.nome}</div>
+              <LinkFile href={urlMandatoPratica(id)} nome={p.mandato.firma ? "Scarica il mandato firmato (PDF)" : "Scarica il mandato compilato (PDF)"} testId="download-mandato" />
+              {p.mandato.firma ? <DatiFirma firma={p.mandato.firma} /> : p.modificabile || p.puoAllegare ? (
+                <div className="space-y-1">
+                  <FirmaMandatoBottone praticaId={id} />
+                  <p className="text-xs text-muted-foreground">Ricevi un codice SMS sul tuo cellulare e lo inserisci per firmare il mandato.</p>
+                </div>
+              ) : null}
+            </div>
           ) : p.mandatoMancante ? (
-            <p className="text-sm text-destructive" data-testid="mandato-mancante">Per questo tipo di pratica serve il mandato, ma al tuo sportello non ne è stato assegnato uno. Contatta l'amministrazione.</p>
-          ) : <p className="text-sm text-muted-foreground">Nessun mandato assegnato al tuo sportello.</p>}
+            <p className="text-sm text-destructive" data-testid="mandato-mancante">Per questo tipo di pratica serve il mandato, ma per la provincia del tuo sportello non è stato caricato. Contatta l'amministrazione.</p>
+          ) : <p className="text-sm text-muted-foreground">Nessun mandato disponibile per il tuo sportello.</p>}
         </Sezione>
       </div>
 

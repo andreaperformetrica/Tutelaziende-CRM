@@ -9,11 +9,24 @@
 export interface Mandato {
   id: number;
   nome: string;
+  /**
+     * Sigla; vuota per i mandati caricati prima, non ancora collegati a una provincia
+     * @nullable
+     */
+  provincia: string | null;
+  /**
+     * Vuoto = vale per tutti i tipi di pratica
+     * @nullable
+     */
+  tipoPraticaId: number | null;
+  /** @nullable */
+  tipoPraticaNome: string | null;
   fileNome: string;
   fileTipo: string;
   dimensione: number;
   caricatoIl: Date;
   /** @nullable */
   caricatoDa: string | null;
+  /** Sedi che ricevono questo mandato */
   collaboratoriAssegnati: number;
 }

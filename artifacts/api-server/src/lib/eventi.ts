@@ -128,6 +128,7 @@ export async function schedaBackoffice(id: number) {
     .select({
       collaboratoreId: eventiInvitiTable.collaboratoreId,
       nome: sedeNome,
+      denominazione: collaboratoriTable.denominazione,
       numeroSportello: collaboratoriTable.numeroSportello,
       tipologia: collaboratoriTable.tipologia,
       attivo: utentiTable.attivo,

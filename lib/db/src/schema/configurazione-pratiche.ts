@@ -54,9 +54,18 @@ export const moduliTipoTable = pgTable(
   (t) => [index("moduli_tipo_tipo_idx").on(t.tipoPraticaId)],
 );
 
-/** Mandato della raccolta (es. "Mandato Roma"): modello Word con campi da compilare, caricato una volta e poi assegnato ai collaboratori. Non dipende dal tipo di pratica. */
-export const mandatiTable = pgTable("mandati", {
+/**
+ * Mandato: modello Word con campi da compilare. Quelli caricati per provincia hanno `provincia` (sigla) e, se valgono
+ * per un solo tipo di pratica, `tipoPraticaId` (vuoto = tutti i tipi di quella provincia). I mandati senza provincia sono
+ * quelli caricati prima (per sede): restano disponibili, assegnati ai collaboratori con `assegnazioni_mandato`, finche'
+ * l'amministratore non li collega a una provincia.
+ */
+export const mandatiTable = pgTable(
+  "mandati",
+  {
   id: serial("id").primaryKey(),
+  provincia: text("provincia"),
+  tipoPraticaId: integer("tipo_pratica_id").references(() => tipiPraticaTable.id),
   nome: text("nome").notNull(),
   fileChiave: text("file_chiave").notNull(),
   fileNome: text("file_nome").notNull(),
@@ -64,9 +73,15 @@ export const mandatiTable = pgTable("mandati", {
   fileDimensione: integer("file_dimensione").notNull(),
   caricatoIl: timestamp("caricato_il", { withTimezone: true }).notNull().defaultNow(),
   caricatoDaUtenteId: integer("caricato_da_utente_id").references(() => utentiTable.id),
-});
+  },
+  (t) => [
+    uniqueIndex("mandati_provincia_tipo_uq")
+      .on(t.provincia, sql`coalesce(${t.tipoPraticaId}, 0)`)
+      .where(sql`${t.provincia} is not null`),
+  ],
+);
 
-/** Mandato assegnato a un collaboratore (uno solo per collaboratore, valido per tutti i tipi di pratica). */
+/** Assegnazione per collaboratore del sistema precedente: oggi usata solo come ripiego per chi non ha ancora la provincia della sede. */
 export const assegnazioniMandatoTable = pgTable(
   "assegnazioni_mandato",
   {

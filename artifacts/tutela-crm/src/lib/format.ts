@@ -32,7 +32,11 @@ export const RUOLI: Record<string, string> = {
   collaboratore: "Collaboratore",
 };
 export const ruoloLabel = (r?: string | null) => (r ? RUOLI[r] ?? r : "—");
-export const tipologiaLabel = (t?: string | null) => (t === "CAF" ? "CAF" : t === "PATRONATO" ? "Patronato" : "—");
+export const tipologiaLabel = (t?: string | null) => (t === "CAF" ? "CAF" : t === "PATRONATO" ? "Patronato" : t === "ENTRAMBI" ? "Entrambi" : "—");
+
+/** Come un collaboratore compare in elenchi, ricerche e menu: "Nome Cognome (denominazione sede)". */
+export const nomeCollaboratore = (c: { nome: string; cognome: string; denominazione?: string | null }) =>
+  `${c.nome} ${c.cognome}${c.denominazione ? ` (${c.denominazione})` : ""}`;
 
 export interface ParsedError { message: string; code?: string; campo?: string; status?: number }
 export function parseApiError(err: unknown): ParsedError {

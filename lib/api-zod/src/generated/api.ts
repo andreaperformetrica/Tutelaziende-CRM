@@ -37,7 +37,7 @@ export const LoginResponse = zod.object({
   "collaboratore": zod.union([zod.object({
   "id": zod.number().int(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO']),
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI']),
   "capogruppo": zod.boolean().describe('Vero se ha collaboratori nel proprio gruppo')
 }),zod.null()])
 })
@@ -64,7 +64,7 @@ export const GetSessioneResponse = zod.object({
   "collaboratore": zod.union([zod.object({
   "id": zod.number().int(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO']),
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI']),
   "capogruppo": zod.boolean().describe('Vero se ha collaboratori nel proprio gruppo')
 }),zod.null()])
 })
@@ -94,7 +94,7 @@ export const CambiaPasswordResponse = zod.object({
   "collaboratore": zod.union([zod.object({
   "id": zod.number().int(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO']),
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI']),
   "capogruppo": zod.boolean().describe('Vero se ha collaboratori nel proprio gruppo')
 }),zod.null()])
 })
@@ -241,12 +241,27 @@ export const ImpostaPasswordProvvisoriaUtenteResponse = zod.object({
  */
 export const ListCollaboratoriQueryParams = zod.object({
   "q": zod.coerce.string().optional().describe('Ricerca su nome, cognome, codice fiscale, cellulare, email, numero di sportello'),
-  "tipologia": zod.enum(['CAF', 'PATRONATO']).optional(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI']).optional(),
   "capogruppoId": zod.coerce.number().int().optional().describe('Solo i collaboratori del gruppo di questo capogruppo'),
   "stato": zod.enum(['attivi', 'disattivati', 'tutti']).optional()
 })
 
+export const listCollaboratoriResponseOneCodiceFiscaleAssociazioneMax = 11;
+
+
+
 export const ListCollaboratoriResponseItem = zod.object({
+  "denominazione": zod.string().nullish(),
+  "ragioneSociale": zod.string().nullish(),
+  "tipoSoggetto": zod.union([zod.enum(['PARTITA_IVA', 'ASSOCIAZIONE']),zod.null()]).optional(),
+  "sedeIndirizzo": zod.string().nullish().describe('Via e numero civico'),
+  "sedeComuneCodice": zod.string().nullish().describe('Codice del comune scelto con la ricerca luoghi'),
+  "sedeComune": zod.string().nullish(),
+  "sedeProvincia": zod.string().nullish().describe('Sigla, ricavata dal comune'),
+  "sedeCap": zod.string().nullish(),
+  "iban": zod.string().nullish(),
+  "codiceFiscaleAssociazione": zod.string().max(listCollaboratoriResponseOneCodiceFiscaleAssociazioneMax).nullish()
+}).describe('Dati della sede del collaboratore (facoltativi per i collaboratori inseriti prima)').and(zod.object({
   "id": zod.number().int(),
   "utenteId": zod.number().int(),
   "nome": zod.string(),
@@ -266,7 +281,7 @@ export const ListCollaboratoriResponseItem = zod.object({
   "telefono": zod.string().nullable(),
   "cellulare": zod.string().describe('Formato internazionale, es. +393331234567'),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO']),
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI']),
   "capogruppoId": zod.number().int().nullable(),
   "capogruppoNome": zod.string().nullable().describe('Cognome e nome del capogruppo'),
   "capogruppo": zod.boolean().describe('E\' un capogruppo (segnato come tale oppure con almeno un collaboratore nel gruppo)'),
@@ -275,43 +290,71 @@ export const ListCollaboratoriResponseItem = zod.object({
   "deveCambiarePassword": zod.boolean(),
   "ultimoAccesso": zod.string().nullable(),
   "creatoIl": zod.string()
-})
+}))
 export const ListCollaboratoriResponse = zod.array(ListCollaboratoriResponseItem)
 
 
 /**
  * @summary Crea un collaboratore e il suo accesso con password provvisoria
  */
+export const createCollaboratoreBodyOneCodiceFiscaleAssociazioneMax = 11;
 
 
-export const createCollaboratoreBodyDataNascitaRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
-export const createCollaboratoreBodyCodiceFiscaleMin = 16;
-export const createCollaboratoreBodyCodiceFiscaleMax = 16;
+
+export const createCollaboratoreBodyTwoDataNascitaRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const createCollaboratoreBodyTwoCodiceFiscaleMin = 16;
+export const createCollaboratoreBodyTwoCodiceFiscaleMax = 16;
 
 
-export const createCollaboratoreBodyPasswordProvvisoriaMin = 8;
+export const createCollaboratoreBodyTwoPasswordProvvisoriaMin = 8;
 
 
 
 export const CreateCollaboratoreBody = zod.object({
+  "denominazione": zod.string().nullish(),
+  "ragioneSociale": zod.string().nullish(),
+  "tipoSoggetto": zod.union([zod.enum(['PARTITA_IVA', 'ASSOCIAZIONE']),zod.null()]).optional(),
+  "sedeIndirizzo": zod.string().nullish().describe('Via e numero civico'),
+  "sedeComuneCodice": zod.string().nullish().describe('Codice del comune scelto con la ricerca luoghi'),
+  "sedeComune": zod.string().nullish(),
+  "sedeProvincia": zod.string().nullish().describe('Sigla, ricavata dal comune'),
+  "sedeCap": zod.string().nullish(),
+  "iban": zod.string().nullish(),
+  "codiceFiscaleAssociazione": zod.string().max(createCollaboratoreBodyOneCodiceFiscaleAssociazioneMax).nullish()
+}).describe('Dati della sede del collaboratore (facoltativi per i collaboratori inseriti prima)').and(zod.object({
   "nome": zod.string().min(1),
   "cognome": zod.string().min(1),
   "sesso": zod.enum(['M', 'F']),
-  "dataNascita": zod.string().regex(createCollaboratoreBodyDataNascitaRegExp),
+  "dataNascita": zod.string().regex(createCollaboratoreBodyTwoDataNascitaRegExp),
   "luogoNascitaCodice": zod.string().describe('Codice del comune o dello stato scelto con la ricerca luoghi'),
   "nazionalita": zod.string().describe('Codice restituito da listNazionalita'),
-  "codiceFiscale": zod.string().min(createCollaboratoreBodyCodiceFiscaleMin).max(createCollaboratoreBodyCodiceFiscaleMax),
+  "codiceFiscale": zod.string().min(createCollaboratoreBodyTwoCodiceFiscaleMin).max(createCollaboratoreBodyTwoCodiceFiscaleMax),
   "partitaIva": zod.string().nullish().describe('Facoltativa, 11 cifre'),
   "email": zod.string(),
   "telefono": zod.string().nullish(),
   "cellulare": zod.string(),
   "numeroSportello": zod.string().min(1),
-  "tipologia": zod.enum(['CAF', 'PATRONATO']),
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI']),
   "capogruppoId": zod.number().int().nullish(),
-  "passwordProvvisoria": zod.string().min(createCollaboratoreBodyPasswordProvvisoriaMin)
-})
+  "passwordProvvisoria": zod.string().min(createCollaboratoreBodyTwoPasswordProvvisoriaMin)
+}))
+
+export const createCollaboratoreResponseOneOneCodiceFiscaleAssociazioneMax = 11;
+
+
 
 export const CreateCollaboratoreResponse = zod.object({
+  "denominazione": zod.string().nullish(),
+  "ragioneSociale": zod.string().nullish(),
+  "tipoSoggetto": zod.union([zod.enum(['PARTITA_IVA', 'ASSOCIAZIONE']),zod.null()]).optional(),
+  "sedeIndirizzo": zod.string().nullish().describe('Via e numero civico'),
+  "sedeComuneCodice": zod.string().nullish().describe('Codice del comune scelto con la ricerca luoghi'),
+  "sedeComune": zod.string().nullish(),
+  "sedeProvincia": zod.string().nullish().describe('Sigla, ricavata dal comune'),
+  "sedeCap": zod.string().nullish(),
+  "iban": zod.string().nullish(),
+  "codiceFiscaleAssociazione": zod.string().max(createCollaboratoreResponseOneOneCodiceFiscaleAssociazioneMax).nullish()
+}).describe('Dati della sede del collaboratore (facoltativi per i collaboratori inseriti prima)').and(zod.object({
   "id": zod.number().int(),
   "utenteId": zod.number().int(),
   "nome": zod.string(),
@@ -331,7 +374,7 @@ export const CreateCollaboratoreResponse = zod.object({
   "telefono": zod.string().nullable(),
   "cellulare": zod.string().describe('Formato internazionale, es. +393331234567'),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO']),
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI']),
   "capogruppoId": zod.number().int().nullable(),
   "capogruppoNome": zod.string().nullable().describe('Cognome e nome del capogruppo'),
   "capogruppo": zod.boolean().describe('E\' un capogruppo (segnato come tale oppure con almeno un collaboratore nel gruppo)'),
@@ -340,14 +383,15 @@ export const CreateCollaboratoreResponse = zod.object({
   "deveCambiarePassword": zod.boolean(),
   "ultimoAccesso": zod.string().nullable(),
   "creatoIl": zod.string()
-}).and(zod.object({
+})).and(zod.object({
   "membri": zod.array(zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO']),
-  "attivo": zod.boolean()
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI']),
+  "attivo": zod.boolean(),
+  "denominazione": zod.string().nullish()
 })).describe('Collaboratori che appartengono al gruppo (vuoto se non e\' capogruppo)')
 }))
 
@@ -359,7 +403,22 @@ export const GetCollaboratoreParams = zod.object({
   "id": zod.coerce.number().int()
 })
 
+export const getCollaboratoreResponseOneOneCodiceFiscaleAssociazioneMax = 11;
+
+
+
 export const GetCollaboratoreResponse = zod.object({
+  "denominazione": zod.string().nullish(),
+  "ragioneSociale": zod.string().nullish(),
+  "tipoSoggetto": zod.union([zod.enum(['PARTITA_IVA', 'ASSOCIAZIONE']),zod.null()]).optional(),
+  "sedeIndirizzo": zod.string().nullish().describe('Via e numero civico'),
+  "sedeComuneCodice": zod.string().nullish().describe('Codice del comune scelto con la ricerca luoghi'),
+  "sedeComune": zod.string().nullish(),
+  "sedeProvincia": zod.string().nullish().describe('Sigla, ricavata dal comune'),
+  "sedeCap": zod.string().nullish(),
+  "iban": zod.string().nullish(),
+  "codiceFiscaleAssociazione": zod.string().max(getCollaboratoreResponseOneOneCodiceFiscaleAssociazioneMax).nullish()
+}).describe('Dati della sede del collaboratore (facoltativi per i collaboratori inseriti prima)').and(zod.object({
   "id": zod.number().int(),
   "utenteId": zod.number().int(),
   "nome": zod.string(),
@@ -379,7 +438,7 @@ export const GetCollaboratoreResponse = zod.object({
   "telefono": zod.string().nullable(),
   "cellulare": zod.string().describe('Formato internazionale, es. +393331234567'),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO']),
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI']),
   "capogruppoId": zod.number().int().nullable(),
   "capogruppoNome": zod.string().nullable().describe('Cognome e nome del capogruppo'),
   "capogruppo": zod.boolean().describe('E\' un capogruppo (segnato come tale oppure con almeno un collaboratore nel gruppo)'),
@@ -388,14 +447,15 @@ export const GetCollaboratoreResponse = zod.object({
   "deveCambiarePassword": zod.boolean(),
   "ultimoAccesso": zod.string().nullable(),
   "creatoIl": zod.string()
-}).and(zod.object({
+})).and(zod.object({
   "membri": zod.array(zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO']),
-  "attivo": zod.boolean()
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI']),
+  "attivo": zod.boolean(),
+  "denominazione": zod.string().nullish()
 })).describe('Collaboratori che appartengono al gruppo (vuoto se non e\' capogruppo)')
 }))
 
@@ -407,34 +467,62 @@ export const UpdateCollaboratoreParams = zod.object({
   "id": zod.coerce.number().int()
 })
 
+export const updateCollaboratoreBodyOneCodiceFiscaleAssociazioneMax = 11;
 
 
-export const updateCollaboratoreBodyDataNascitaRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
-export const updateCollaboratoreBodyCodiceFiscaleMin = 16;
-export const updateCollaboratoreBodyCodiceFiscaleMax = 16;
+
+export const updateCollaboratoreBodyTwoDataNascitaRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const updateCollaboratoreBodyTwoCodiceFiscaleMin = 16;
+export const updateCollaboratoreBodyTwoCodiceFiscaleMax = 16;
 
 
 
 
 export const UpdateCollaboratoreBody = zod.object({
+  "denominazione": zod.string().nullish(),
+  "ragioneSociale": zod.string().nullish(),
+  "tipoSoggetto": zod.union([zod.enum(['PARTITA_IVA', 'ASSOCIAZIONE']),zod.null()]).optional(),
+  "sedeIndirizzo": zod.string().nullish().describe('Via e numero civico'),
+  "sedeComuneCodice": zod.string().nullish().describe('Codice del comune scelto con la ricerca luoghi'),
+  "sedeComune": zod.string().nullish(),
+  "sedeProvincia": zod.string().nullish().describe('Sigla, ricavata dal comune'),
+  "sedeCap": zod.string().nullish(),
+  "iban": zod.string().nullish(),
+  "codiceFiscaleAssociazione": zod.string().max(updateCollaboratoreBodyOneCodiceFiscaleAssociazioneMax).nullish()
+}).describe('Dati della sede del collaboratore (facoltativi per i collaboratori inseriti prima)').and(zod.object({
   "nome": zod.string().min(1),
   "cognome": zod.string().min(1),
   "sesso": zod.enum(['M', 'F']),
-  "dataNascita": zod.string().regex(updateCollaboratoreBodyDataNascitaRegExp),
+  "dataNascita": zod.string().regex(updateCollaboratoreBodyTwoDataNascitaRegExp),
   "luogoNascitaCodice": zod.string(),
   "nazionalita": zod.string(),
-  "codiceFiscale": zod.string().min(updateCollaboratoreBodyCodiceFiscaleMin).max(updateCollaboratoreBodyCodiceFiscaleMax),
+  "codiceFiscale": zod.string().min(updateCollaboratoreBodyTwoCodiceFiscaleMin).max(updateCollaboratoreBodyTwoCodiceFiscaleMax),
   "partitaIva": zod.string().nullish().describe('Facoltativa, 11 cifre'),
   "email": zod.string(),
   "telefono": zod.string().nullish(),
   "cellulare": zod.string(),
   "numeroSportello": zod.string().min(1),
-  "tipologia": zod.enum(['CAF', 'PATRONATO']),
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI']),
   "capogruppoId": zod.number().int().nullish(),
   "attivo": zod.boolean()
-})
+}))
+
+export const updateCollaboratoreResponseOneOneCodiceFiscaleAssociazioneMax = 11;
+
+
 
 export const UpdateCollaboratoreResponse = zod.object({
+  "denominazione": zod.string().nullish(),
+  "ragioneSociale": zod.string().nullish(),
+  "tipoSoggetto": zod.union([zod.enum(['PARTITA_IVA', 'ASSOCIAZIONE']),zod.null()]).optional(),
+  "sedeIndirizzo": zod.string().nullish().describe('Via e numero civico'),
+  "sedeComuneCodice": zod.string().nullish().describe('Codice del comune scelto con la ricerca luoghi'),
+  "sedeComune": zod.string().nullish(),
+  "sedeProvincia": zod.string().nullish().describe('Sigla, ricavata dal comune'),
+  "sedeCap": zod.string().nullish(),
+  "iban": zod.string().nullish(),
+  "codiceFiscaleAssociazione": zod.string().max(updateCollaboratoreResponseOneOneCodiceFiscaleAssociazioneMax).nullish()
+}).describe('Dati della sede del collaboratore (facoltativi per i collaboratori inseriti prima)').and(zod.object({
   "id": zod.number().int(),
   "utenteId": zod.number().int(),
   "nome": zod.string(),
@@ -454,7 +542,7 @@ export const UpdateCollaboratoreResponse = zod.object({
   "telefono": zod.string().nullable(),
   "cellulare": zod.string().describe('Formato internazionale, es. +393331234567'),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO']),
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI']),
   "capogruppoId": zod.number().int().nullable(),
   "capogruppoNome": zod.string().nullable().describe('Cognome e nome del capogruppo'),
   "capogruppo": zod.boolean().describe('E\' un capogruppo (segnato come tale oppure con almeno un collaboratore nel gruppo)'),
@@ -463,14 +551,15 @@ export const UpdateCollaboratoreResponse = zod.object({
   "deveCambiarePassword": zod.boolean(),
   "ultimoAccesso": zod.string().nullable(),
   "creatoIl": zod.string()
-}).and(zod.object({
+})).and(zod.object({
   "membri": zod.array(zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO']),
-  "attivo": zod.boolean()
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI']),
+  "attivo": zod.boolean(),
+  "denominazione": zod.string().nullish()
 })).describe('Collaboratori che appartengono al gruppo (vuoto se non e\' capogruppo)')
 }))
 
@@ -496,7 +585,22 @@ export const ImpostaRuoloCapogruppoBody = zod.object({
   "capogruppo": zod.boolean()
 })
 
+export const impostaRuoloCapogruppoResponseOneOneCodiceFiscaleAssociazioneMax = 11;
+
+
+
 export const ImpostaRuoloCapogruppoResponse = zod.object({
+  "denominazione": zod.string().nullish(),
+  "ragioneSociale": zod.string().nullish(),
+  "tipoSoggetto": zod.union([zod.enum(['PARTITA_IVA', 'ASSOCIAZIONE']),zod.null()]).optional(),
+  "sedeIndirizzo": zod.string().nullish().describe('Via e numero civico'),
+  "sedeComuneCodice": zod.string().nullish().describe('Codice del comune scelto con la ricerca luoghi'),
+  "sedeComune": zod.string().nullish(),
+  "sedeProvincia": zod.string().nullish().describe('Sigla, ricavata dal comune'),
+  "sedeCap": zod.string().nullish(),
+  "iban": zod.string().nullish(),
+  "codiceFiscaleAssociazione": zod.string().max(impostaRuoloCapogruppoResponseOneOneCodiceFiscaleAssociazioneMax).nullish()
+}).describe('Dati della sede del collaboratore (facoltativi per i collaboratori inseriti prima)').and(zod.object({
   "id": zod.number().int(),
   "utenteId": zod.number().int(),
   "nome": zod.string(),
@@ -516,7 +620,7 @@ export const ImpostaRuoloCapogruppoResponse = zod.object({
   "telefono": zod.string().nullable(),
   "cellulare": zod.string().describe('Formato internazionale, es. +393331234567'),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO']),
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI']),
   "capogruppoId": zod.number().int().nullable(),
   "capogruppoNome": zod.string().nullable().describe('Cognome e nome del capogruppo'),
   "capogruppo": zod.boolean().describe('E\' un capogruppo (segnato come tale oppure con almeno un collaboratore nel gruppo)'),
@@ -525,14 +629,15 @@ export const ImpostaRuoloCapogruppoResponse = zod.object({
   "deveCambiarePassword": zod.boolean(),
   "ultimoAccesso": zod.string().nullable(),
   "creatoIl": zod.string()
-}).and(zod.object({
+})).and(zod.object({
   "membri": zod.array(zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO']),
-  "attivo": zod.boolean()
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI']),
+  "attivo": zod.boolean(),
+  "denominazione": zod.string().nullish()
 })).describe('Collaboratori che appartengono al gruppo (vuoto se non e\' capogruppo)')
 }))
 
@@ -551,7 +656,22 @@ export const AggiungiMembriGruppoBody = zod.object({
   "collaboratoreIds": zod.array(zod.number().int()).min(1)
 })
 
+export const aggiungiMembriGruppoResponseOneOneCodiceFiscaleAssociazioneMax = 11;
+
+
+
 export const AggiungiMembriGruppoResponse = zod.object({
+  "denominazione": zod.string().nullish(),
+  "ragioneSociale": zod.string().nullish(),
+  "tipoSoggetto": zod.union([zod.enum(['PARTITA_IVA', 'ASSOCIAZIONE']),zod.null()]).optional(),
+  "sedeIndirizzo": zod.string().nullish().describe('Via e numero civico'),
+  "sedeComuneCodice": zod.string().nullish().describe('Codice del comune scelto con la ricerca luoghi'),
+  "sedeComune": zod.string().nullish(),
+  "sedeProvincia": zod.string().nullish().describe('Sigla, ricavata dal comune'),
+  "sedeCap": zod.string().nullish(),
+  "iban": zod.string().nullish(),
+  "codiceFiscaleAssociazione": zod.string().max(aggiungiMembriGruppoResponseOneOneCodiceFiscaleAssociazioneMax).nullish()
+}).describe('Dati della sede del collaboratore (facoltativi per i collaboratori inseriti prima)').and(zod.object({
   "id": zod.number().int(),
   "utenteId": zod.number().int(),
   "nome": zod.string(),
@@ -571,7 +691,7 @@ export const AggiungiMembriGruppoResponse = zod.object({
   "telefono": zod.string().nullable(),
   "cellulare": zod.string().describe('Formato internazionale, es. +393331234567'),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO']),
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI']),
   "capogruppoId": zod.number().int().nullable(),
   "capogruppoNome": zod.string().nullable().describe('Cognome e nome del capogruppo'),
   "capogruppo": zod.boolean().describe('E\' un capogruppo (segnato come tale oppure con almeno un collaboratore nel gruppo)'),
@@ -580,16 +700,104 @@ export const AggiungiMembriGruppoResponse = zod.object({
   "deveCambiarePassword": zod.boolean(),
   "ultimoAccesso": zod.string().nullable(),
   "creatoIl": zod.string()
-}).and(zod.object({
+})).and(zod.object({
   "membri": zod.array(zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO']),
-  "attivo": zod.boolean()
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI']),
+  "attivo": zod.boolean(),
+  "denominazione": zod.string().nullish()
 })).describe('Collaboratori che appartengono al gruppo (vuoto se non e\' capogruppo)')
 }))
+
+
+/**
+ * @summary Toglie un collaboratore dal gruppo di un capogruppo
+ */
+export const RimuoviMembroGruppoParams = zod.object({
+  "id": zod.coerce.number().int(),
+  "membroId": zod.coerce.number().int()
+})
+
+export const rimuoviMembroGruppoResponseOneOneCodiceFiscaleAssociazioneMax = 11;
+
+
+
+export const RimuoviMembroGruppoResponse = zod.object({
+  "denominazione": zod.string().nullish(),
+  "ragioneSociale": zod.string().nullish(),
+  "tipoSoggetto": zod.union([zod.enum(['PARTITA_IVA', 'ASSOCIAZIONE']),zod.null()]).optional(),
+  "sedeIndirizzo": zod.string().nullish().describe('Via e numero civico'),
+  "sedeComuneCodice": zod.string().nullish().describe('Codice del comune scelto con la ricerca luoghi'),
+  "sedeComune": zod.string().nullish(),
+  "sedeProvincia": zod.string().nullish().describe('Sigla, ricavata dal comune'),
+  "sedeCap": zod.string().nullish(),
+  "iban": zod.string().nullish(),
+  "codiceFiscaleAssociazione": zod.string().max(rimuoviMembroGruppoResponseOneOneCodiceFiscaleAssociazioneMax).nullish()
+}).describe('Dati della sede del collaboratore (facoltativi per i collaboratori inseriti prima)').and(zod.object({
+  "id": zod.number().int(),
+  "utenteId": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "sesso": zod.enum(['M', 'F']),
+  "dataNascita": zod.string().describe('AAAA-MM-GG'),
+  "luogoNascitaCodice": zod.string(),
+  "luogoNascitaNome": zod.string(),
+  "luogoNascitaProvincia": zod.string().nullable(),
+  "luogoNascitaEstero": zod.boolean(),
+  "nazionalita": zod.string().describe('IT oppure codice dello stato estero'),
+  "nazionalitaNome": zod.string(),
+  "straniero": zod.boolean().describe('Vero se la nazionalita non e\' italiana'),
+  "codiceFiscale": zod.string(),
+  "partitaIva": zod.string().nullish().describe('Facoltativa, 11 cifre'),
+  "email": zod.string(),
+  "telefono": zod.string().nullable(),
+  "cellulare": zod.string().describe('Formato internazionale, es. +393331234567'),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI']),
+  "capogruppoId": zod.number().int().nullable(),
+  "capogruppoNome": zod.string().nullable().describe('Cognome e nome del capogruppo'),
+  "capogruppo": zod.boolean().describe('E\' un capogruppo (segnato come tale oppure con almeno un collaboratore nel gruppo)'),
+  "numeroCollaboratori": zod.number().int().describe('Quanti collaboratori ha nel proprio gruppo (0 se non e\' capogruppo)'),
+  "attivo": zod.boolean(),
+  "deveCambiarePassword": zod.boolean(),
+  "ultimoAccesso": zod.string().nullable(),
+  "creatoIl": zod.string()
+})).and(zod.object({
+  "membri": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI']),
+  "attivo": zod.boolean(),
+  "denominazione": zod.string().nullish()
+})).describe('Collaboratori che appartengono al gruppo (vuoto se non e\' capogruppo)')
+}))
+
+
+/**
+ * @summary Mandati che il collaboratore riceve in base alla provincia della sua sede
+ */
+export const ListMandatiCollaboratoreParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const ListMandatiCollaboratoreResponse = zod.object({
+  "provincia": zod.string().nullable().describe('Provincia della sede'),
+  "provinciaNome": zod.string().nullable(),
+  "mandati": zod.array(zod.object({
+  "mandatoId": zod.number().int(),
+  "nome": zod.string(),
+  "provincia": zod.string().nullable(),
+  "tipoPraticaId": zod.number().int().nullable(),
+  "tipoPraticaNome": zod.string().nullable(),
+  "fileNome": zod.string(),
+  "origine": zod.enum(['provincia', 'precedente'])
+}))
+})
 
 
 /**
@@ -620,7 +828,22 @@ export const ImpostaPasswordProvvisoriaCollaboratoreBody = zod.object({
   "passwordProvvisoria": zod.string().min(impostaPasswordProvvisoriaCollaboratoreBodyPasswordProvvisoriaMin)
 })
 
+export const impostaPasswordProvvisoriaCollaboratoreResponseOneOneCodiceFiscaleAssociazioneMax = 11;
+
+
+
 export const ImpostaPasswordProvvisoriaCollaboratoreResponse = zod.object({
+  "denominazione": zod.string().nullish(),
+  "ragioneSociale": zod.string().nullish(),
+  "tipoSoggetto": zod.union([zod.enum(['PARTITA_IVA', 'ASSOCIAZIONE']),zod.null()]).optional(),
+  "sedeIndirizzo": zod.string().nullish().describe('Via e numero civico'),
+  "sedeComuneCodice": zod.string().nullish().describe('Codice del comune scelto con la ricerca luoghi'),
+  "sedeComune": zod.string().nullish(),
+  "sedeProvincia": zod.string().nullish().describe('Sigla, ricavata dal comune'),
+  "sedeCap": zod.string().nullish(),
+  "iban": zod.string().nullish(),
+  "codiceFiscaleAssociazione": zod.string().max(impostaPasswordProvvisoriaCollaboratoreResponseOneOneCodiceFiscaleAssociazioneMax).nullish()
+}).describe('Dati della sede del collaboratore (facoltativi per i collaboratori inseriti prima)').and(zod.object({
   "id": zod.number().int(),
   "utenteId": zod.number().int(),
   "nome": zod.string(),
@@ -640,7 +863,7 @@ export const ImpostaPasswordProvvisoriaCollaboratoreResponse = zod.object({
   "telefono": zod.string().nullable(),
   "cellulare": zod.string().describe('Formato internazionale, es. +393331234567'),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO']),
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI']),
   "capogruppoId": zod.number().int().nullable(),
   "capogruppoNome": zod.string().nullable().describe('Cognome e nome del capogruppo'),
   "capogruppo": zod.boolean().describe('E\' un capogruppo (segnato come tale oppure con almeno un collaboratore nel gruppo)'),
@@ -649,14 +872,15 @@ export const ImpostaPasswordProvvisoriaCollaboratoreResponse = zod.object({
   "deveCambiarePassword": zod.boolean(),
   "ultimoAccesso": zod.string().nullable(),
   "creatoIl": zod.string()
-}).and(zod.object({
+})).and(zod.object({
   "membri": zod.array(zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO']),
-  "attivo": zod.boolean()
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI']),
+  "attivo": zod.boolean(),
+  "denominazione": zod.string().nullish()
 })).describe('Collaboratori che appartengono al gruppo (vuoto se non e\' capogruppo)')
 }))
 
@@ -702,10 +926,12 @@ export const ListAssistitiResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI'])
 }).describe('Collaboratore a cui e\' associato l\'assistito'),
-  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato (puo\' aprire pratiche)'),
+  "anagraficaModificabile": zod.boolean().describe('Vero per super admin, admin e operatori; il collaboratore vede l\'anagrafica in sola lettura'),
   "creatoIl": zod.coerce.date(),
   "modificatoIl": zod.coerce.date()
 })),
@@ -771,10 +997,12 @@ export const CreateAssistitoResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI'])
 }).describe('Collaboratore a cui e\' associato l\'assistito'),
-  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato (puo\' aprire pratiche)'),
+  "anagraficaModificabile": zod.boolean().describe('Vero per super admin, admin e operatori; il collaboratore vede l\'anagrafica in sola lettura'),
   "creatoIl": zod.coerce.date(),
   "modificatoIl": zod.coerce.date()
 })
@@ -812,10 +1040,12 @@ export const GetAssistitoResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI'])
 }).describe('Collaboratore a cui e\' associato l\'assistito'),
-  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato (puo\' aprire pratiche)'),
+  "anagraficaModificabile": zod.boolean().describe('Vero per super admin, admin e operatori; il collaboratore vede l\'anagrafica in sola lettura'),
   "creatoIl": zod.coerce.date(),
   "modificatoIl": zod.coerce.date()
 })
@@ -880,10 +1110,12 @@ export const UpdateAssistitoResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI'])
 }).describe('Collaboratore a cui e\' associato l\'assistito'),
-  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato (puo\' aprire pratiche)'),
+  "anagraficaModificabile": zod.boolean().describe('Vero per super admin, admin e operatori; il collaboratore vede l\'anagrafica in sola lettura'),
   "creatoIl": zod.coerce.date(),
   "modificatoIl": zod.coerce.date()
 })
@@ -925,10 +1157,12 @@ export const AssociaAssistitoACollaboratoreResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI'])
 }).describe('Collaboratore a cui e\' associato l\'assistito'),
-  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato (puo\' aprire pratiche)'),
+  "anagraficaModificabile": zod.boolean().describe('Vero per super admin, admin e operatori; il collaboratore vede l\'anagrafica in sola lettura'),
   "creatoIl": zod.coerce.date(),
   "modificatoIl": zod.coerce.date()
 })
@@ -950,8 +1184,9 @@ export const ListSegnalazioniDuplicatiResponseItem = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI'])
 }).describe('Collaboratore a cui e\' associato l\'assistito'),
   "esistente": zod.object({
   "personaId": zod.number().int(),
@@ -965,8 +1200,9 @@ export const ListSegnalazioniDuplicatiResponseItem = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI'])
 }).describe('Collaboratore a cui e\' associato l\'assistito'),zod.null()]).optional().describe('Per un assistito, il collaboratore a cui e\' associato; per un collaboratore, lui stesso')
 }).describe('Persona gia\' registrata (visibile solo al back office)'),
   "campi": zod.array(zod.enum(['codice_fiscale', 'cellulare'])),
@@ -1021,8 +1257,9 @@ export const AssociaSegnalazioneResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI'])
 }).describe('Collaboratore a cui e\' associato l\'assistito'),
   "esistente": zod.object({
   "personaId": zod.number().int(),
@@ -1036,8 +1273,9 @@ export const AssociaSegnalazioneResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI'])
 }).describe('Collaboratore a cui e\' associato l\'assistito'),zod.null()]).optional().describe('Per un assistito, il collaboratore a cui e\' associato; per un collaboratore, lui stesso')
 }).describe('Persona gia\' registrata (visibile solo al back office)'),
   "campi": zod.array(zod.enum(['codice_fiscale', 'cellulare'])),
@@ -1082,8 +1320,9 @@ export const ArchiviaSegnalazioneResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI'])
 }).describe('Collaboratore a cui e\' associato l\'assistito'),
   "esistente": zod.object({
   "personaId": zod.number().int(),
@@ -1097,8 +1336,9 @@ export const ArchiviaSegnalazioneResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI'])
 }).describe('Collaboratore a cui e\' associato l\'assistito'),zod.null()]).optional().describe('Per un assistito, il collaboratore a cui e\' associato; per un collaboratore, lui stesso')
 }).describe('Persona gia\' registrata (visibile solo al back office)'),
   "campi": zod.array(zod.enum(['codice_fiscale', 'cellulare'])),
@@ -1366,6 +1606,7 @@ export const CreateEventoResponse = zod.object({
   "inviti": zod.array(zod.object({
   "collaboratoreId": zod.number().int(),
   "nome": zod.string().describe('Cognome e nome'),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
   "tipologia": zod.string(),
   "attivo": zod.boolean(),
@@ -1431,6 +1672,7 @@ export const GetEventoBackofficeResponse = zod.object({
   "inviti": zod.array(zod.object({
   "collaboratoreId": zod.number().int(),
   "nome": zod.string().describe('Cognome e nome'),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
   "tipologia": zod.string(),
   "attivo": zod.boolean(),
@@ -1520,6 +1762,7 @@ export const UpdateEventoResponse = zod.object({
   "inviti": zod.array(zod.object({
   "collaboratoreId": zod.number().int(),
   "nome": zod.string().describe('Cognome e nome'),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
   "tipologia": zod.string(),
   "attivo": zod.boolean(),
@@ -1602,6 +1845,7 @@ export const AddInvitiEventoResponse = zod.object({
   "inviti": zod.array(zod.object({
   "collaboratoreId": zod.number().int(),
   "nome": zod.string().describe('Cognome e nome'),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
   "tipologia": zod.string(),
   "attivo": zod.boolean(),
@@ -1668,6 +1912,7 @@ export const RemoveInvitoEventoResponse = zod.object({
   "inviti": zod.array(zod.object({
   "collaboratoreId": zod.number().int(),
   "nome": zod.string().describe('Cognome e nome'),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
   "tipologia": zod.string(),
   "attivo": zod.boolean(),
@@ -1743,6 +1988,7 @@ export const UpdateOrariPartecipanteResponse = zod.object({
   "inviti": zod.array(zod.object({
   "collaboratoreId": zod.number().int(),
   "nome": zod.string().describe('Cognome e nome'),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
   "tipologia": zod.string(),
   "attivo": zod.boolean(),
@@ -1840,6 +2086,7 @@ export const DeleteQuestionarioEventoResponse = zod.object({
   "inviti": zod.array(zod.object({
   "collaboratoreId": zod.number().int(),
   "nome": zod.string().describe('Cognome e nome'),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
   "tipologia": zod.string(),
   "attivo": zod.boolean(),
@@ -1926,6 +2173,7 @@ export const SaveQuestionarioEventoResponse = zod.object({
   "inviti": zod.array(zod.object({
   "collaboratoreId": zod.number().int(),
   "nome": zod.string().describe('Cognome e nome'),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
   "tipologia": zod.string(),
   "attivo": zod.boolean(),
@@ -3261,90 +3509,70 @@ export const DeleteModuloTipoResponse = zod.object({
 
 
 /**
- * @summary Raccolta dei mandati (modelli Word per sede)
+ * @summary Province con il numero di sedi e i mandati caricati
+ */
+export const ListProvinceResponseItem = zod.object({
+  "sigla": zod.string(),
+  "nome": zod.string(),
+  "sedi": zod.number().int().describe('Collaboratori attivi la cui sede e\' in questa provincia')
+})
+export const ListProvinceResponse = zod.array(ListProvinceResponseItem)
+
+
+/**
+ * @summary Mandati caricati (per provincia e tipo di pratica) e mandati precedenti da collegare a una provincia
  */
 export const ListMandatiResponseItem = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
+  "provincia": zod.string().nullable().describe('Sigla; vuota per i mandati caricati prima, non ancora collegati a una provincia'),
+  "tipoPraticaId": zod.number().int().nullable().describe('Vuoto = vale per tutti i tipi di pratica'),
+  "tipoPraticaNome": zod.string().nullable(),
   "fileNome": zod.string(),
   "fileTipo": zod.string(),
   "dimensione": zod.number().int(),
   "caricatoIl": zod.coerce.date(),
   "caricatoDa": zod.string().nullable(),
-  "collaboratoriAssegnati": zod.number().int()
+  "collaboratoriAssegnati": zod.number().int().describe('Sedi che ricevono questo mandato')
 })
 export const ListMandatiResponse = zod.array(ListMandatiResponseItem)
 
 
 /**
- * @summary Rinomina un mandato della raccolta
+ * @summary Collega un mandato (anche uno caricato in precedenza) a una provincia e a un tipo di pratica
  */
-export const RinominaMandatoParams = zod.object({
+export const CollegaMandatoProvinciaParams = zod.object({
   "id": zod.coerce.number().int()
 })
 
-export const RinominaMandatoBody = zod.object({
-  "nome": zod.string()
+export const CollegaMandatoProvinciaBody = zod.object({
+  "provincia": zod.string().describe('Sigla della provincia'),
+  "tipoPraticaId": zod.number().int().nullable().describe('Vuoto = tutti i tipi di pratica')
 })
 
-export const RinominaMandatoResponse = zod.object({
+export const CollegaMandatoProvinciaResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
+  "provincia": zod.string().nullable().describe('Sigla; vuota per i mandati caricati prima, non ancora collegati a una provincia'),
+  "tipoPraticaId": zod.number().int().nullable().describe('Vuoto = vale per tutti i tipi di pratica'),
+  "tipoPraticaNome": zod.string().nullable(),
   "fileNome": zod.string(),
   "fileTipo": zod.string(),
   "dimensione": zod.number().int(),
   "caricatoIl": zod.coerce.date(),
   "caricatoDa": zod.string().nullable(),
-  "collaboratoriAssegnati": zod.number().int()
+  "collaboratoriAssegnati": zod.number().int().describe('Sedi che ricevono questo mandato')
 })
 
 
 /**
- * @summary Elimina un mandato non assegnato a nessun collaboratore
+ * @summary Elimina un mandato non ancora usato in pratiche inviate
  */
 export const DeleteMandatoParams = zod.object({
   "id": zod.coerce.number().int()
 })
 
 export const DeleteMandatoResponse = zod.void()
-
-
-/**
- * @summary Mandato assegnato a ogni collaboratore
- */
-export const ListAssegnazioniMandatoQueryParams = zod.object({
-  "collaboratoreId": zod.coerce.number().int().optional()
-})
-
-export const ListAssegnazioniMandatoResponseItem = zod.object({
-  "collaboratoreId": zod.number().int(),
-  "mandatoId": zod.number().int()
-})
-export const ListAssegnazioniMandatoResponse = zod.array(ListAssegnazioniMandatoResponseItem)
-
-
-/**
- * @summary Assegna (o cambia) il mandato di un collaboratore
- */
-export const AssegnaMandatoBody = zod.object({
-  "collaboratoreId": zod.number().int(),
-  "mandatoId": zod.number().int()
-})
-
-export const AssegnaMandatoResponse = zod.object({
-  "collaboratoreId": zod.number().int(),
-  "mandatoId": zod.number().int()
-})
-
-
-/**
- * @summary Toglie il mandato assegnato a un collaboratore
- */
-export const RimuoviAssegnazioneMandatoQueryParams = zod.object({
-  "collaboratoreId": zod.coerce.number().int()
-})
-
-export const RimuoviAssegnazioneMandatoResponse = zod.void()
 
 
 /**
@@ -3456,10 +3684,12 @@ export const CreatePraticaResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI'])
 }).describe('Collaboratore a cui e\' associato l\'assistito'),
-  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato (puo\' aprire pratiche)'),
+  "anagraficaModificabile": zod.boolean().describe('Vero per super admin, admin e operatori; il collaboratore vede l\'anagrafica in sola lettura'),
   "creatoIl": zod.coerce.date(),
   "modificatoIl": zod.coerce.date()
 }),
@@ -3482,7 +3712,14 @@ export const CreatePraticaResponse = zod.object({
   "mandato": zod.union([zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito')
+  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito'),
+  "firma": zod.union([zod.object({
+  "firmatoIl": zod.coerce.date(),
+  "firmatario": zod.string(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "fileNome": zod.string().describe('Nome del PDF firmato')
+}),zod.null()]).optional().describe('Presente se il mandato e\' stato firmato con il codice SMS')
 }),zod.null()]),
   "mandatoMancante": zod.boolean().describe('Il tipo richiede il mandato ma al collaboratore non e\' stato assegnato'),
   "richiesti": zod.array(zod.object({
@@ -3586,10 +3823,12 @@ export const GetPraticaResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI'])
 }).describe('Collaboratore a cui e\' associato l\'assistito'),
-  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato (puo\' aprire pratiche)'),
+  "anagraficaModificabile": zod.boolean().describe('Vero per super admin, admin e operatori; il collaboratore vede l\'anagrafica in sola lettura'),
   "creatoIl": zod.coerce.date(),
   "modificatoIl": zod.coerce.date()
 }),
@@ -3612,7 +3851,14 @@ export const GetPraticaResponse = zod.object({
   "mandato": zod.union([zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito')
+  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito'),
+  "firma": zod.union([zod.object({
+  "firmatoIl": zod.coerce.date(),
+  "firmatario": zod.string(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "fileNome": zod.string().describe('Nome del PDF firmato')
+}),zod.null()]).optional().describe('Presente se il mandato e\' stato firmato con il codice SMS')
 }),zod.null()]),
   "mandatoMancante": zod.boolean().describe('Il tipo richiede il mandato ma al collaboratore non e\' stato assegnato'),
   "richiesti": zod.array(zod.object({
@@ -3714,10 +3960,12 @@ export const SalvaMessaggioPraticaResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI'])
 }).describe('Collaboratore a cui e\' associato l\'assistito'),
-  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato (puo\' aprire pratiche)'),
+  "anagraficaModificabile": zod.boolean().describe('Vero per super admin, admin e operatori; il collaboratore vede l\'anagrafica in sola lettura'),
   "creatoIl": zod.coerce.date(),
   "modificatoIl": zod.coerce.date()
 }),
@@ -3740,7 +3988,14 @@ export const SalvaMessaggioPraticaResponse = zod.object({
   "mandato": zod.union([zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito')
+  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito'),
+  "firma": zod.union([zod.object({
+  "firmatoIl": zod.coerce.date(),
+  "firmatario": zod.string(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "fileNome": zod.string().describe('Nome del PDF firmato')
+}),zod.null()]).optional().describe('Presente se il mandato e\' stato firmato con il codice SMS')
 }),zod.null()]),
   "mandatoMancante": zod.boolean().describe('Il tipo richiede il mandato ma al collaboratore non e\' stato assegnato'),
   "richiesti": zod.array(zod.object({
@@ -3825,10 +4080,12 @@ export const DeleteDocumentoPraticaResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI'])
 }).describe('Collaboratore a cui e\' associato l\'assistito'),
-  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato (puo\' aprire pratiche)'),
+  "anagraficaModificabile": zod.boolean().describe('Vero per super admin, admin e operatori; il collaboratore vede l\'anagrafica in sola lettura'),
   "creatoIl": zod.coerce.date(),
   "modificatoIl": zod.coerce.date()
 }),
@@ -3851,7 +4108,14 @@ export const DeleteDocumentoPraticaResponse = zod.object({
   "mandato": zod.union([zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito')
+  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito'),
+  "firma": zod.union([zod.object({
+  "firmatoIl": zod.coerce.date(),
+  "firmatario": zod.string(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "fileNome": zod.string().describe('Nome del PDF firmato')
+}),zod.null()]).optional().describe('Presente se il mandato e\' stato firmato con il codice SMS')
 }),zod.null()]),
   "mandatoMancante": zod.boolean().describe('Il tipo richiede il mandato ma al collaboratore non e\' stato assegnato'),
   "richiesti": zod.array(zod.object({
@@ -3892,6 +4156,40 @@ export const DeleteDocumentoPraticaResponse = zod.object({
   "bloccatoFinoA": zod.coerce.date().nullable(),
   "messaggio": zod.string().nullable().describe('Spiegazione in italiano quando l\'invio e\' bloccato')
 })
+})
+
+
+/**
+ * @summary Invia al cellulare del collaboratore il codice SMS per firmare il mandato della pratica
+ */
+export const RichiediFirmaMandatoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const RichiediFirmaMandatoResponse = zod.object({
+  "cellulare": zod.string().describe('Numero a cui e\' stato inviato il codice, con le cifre centrali nascoste'),
+  "scadeIl": zod.coerce.date(),
+  "inviato": zod.boolean().describe('Falso se l\'SMS non e\' configurato: il codice e\' solo nel log del server')
+})
+
+
+/**
+ * @summary Firma il mandato con il codice ricevuto per SMS e genera il PDF firmato
+ */
+export const ConfermaFirmaMandatoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const ConfermaFirmaMandatoBody = zod.object({
+  "codice": zod.string()
+})
+
+export const ConfermaFirmaMandatoResponse = zod.object({
+  "firmatoIl": zod.coerce.date(),
+  "firmatario": zod.string(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "fileNome": zod.string().describe('Nome del PDF firmato')
 })
 
 
@@ -3943,10 +4241,12 @@ export const InviaPraticaResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI'])
 }).describe('Collaboratore a cui e\' associato l\'assistito'),
-  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato (puo\' aprire pratiche)'),
+  "anagraficaModificabile": zod.boolean().describe('Vero per super admin, admin e operatori; il collaboratore vede l\'anagrafica in sola lettura'),
   "creatoIl": zod.coerce.date(),
   "modificatoIl": zod.coerce.date()
 }),
@@ -3969,7 +4269,14 @@ export const InviaPraticaResponse = zod.object({
   "mandato": zod.union([zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito')
+  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito'),
+  "firma": zod.union([zod.object({
+  "firmatoIl": zod.coerce.date(),
+  "firmatario": zod.string(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "fileNome": zod.string().describe('Nome del PDF firmato')
+}),zod.null()]).optional().describe('Presente se il mandato e\' stato firmato con il codice SMS')
 }),zod.null()]),
   "mandatoMancante": zod.boolean().describe('Il tipo richiede il mandato ma al collaboratore non e\' stato assegnato'),
   "richiesti": zod.array(zod.object({
@@ -4061,10 +4368,12 @@ export const CreateCommentoPraticaResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI'])
 }).describe('Collaboratore a cui e\' associato l\'assistito'),
-  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato (puo\' aprire pratiche)'),
+  "anagraficaModificabile": zod.boolean().describe('Vero per super admin, admin e operatori; il collaboratore vede l\'anagrafica in sola lettura'),
   "creatoIl": zod.coerce.date(),
   "modificatoIl": zod.coerce.date()
 }),
@@ -4087,7 +4396,14 @@ export const CreateCommentoPraticaResponse = zod.object({
   "mandato": zod.union([zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito')
+  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito'),
+  "firma": zod.union([zod.object({
+  "firmatoIl": zod.coerce.date(),
+  "firmatario": zod.string(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "fileNome": zod.string().describe('Nome del PDF firmato')
+}),zod.null()]).optional().describe('Presente se il mandato e\' stato firmato con il codice SMS')
 }),zod.null()]),
   "mandatoMancante": zod.boolean().describe('Il tipo richiede il mandato ma al collaboratore non e\' stato assegnato'),
   "richiesti": zod.array(zod.object({
@@ -4437,10 +4753,12 @@ export const GetPraticaBackofficeResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI'])
 }).describe('Collaboratore a cui e\' associato l\'assistito'),
-  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato (puo\' aprire pratiche)'),
+  "anagraficaModificabile": zod.boolean().describe('Vero per super admin, admin e operatori; il collaboratore vede l\'anagrafica in sola lettura'),
   "creatoIl": zod.coerce.date(),
   "modificatoIl": zod.coerce.date()
 }),
@@ -4448,6 +4766,7 @@ export const GetPraticaBackofficeResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
   "tipologia": zod.string(),
   "email": zod.string().nullable(),
@@ -4456,7 +4775,14 @@ export const GetPraticaBackofficeResponse = zod.object({
   "mandato": zod.union([zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito')
+  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito'),
+  "firma": zod.union([zod.object({
+  "firmatoIl": zod.coerce.date(),
+  "firmatario": zod.string(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "fileNome": zod.string().describe('Nome del PDF firmato')
+}),zod.null()]).optional().describe('Presente se il mandato e\' stato firmato con il codice SMS')
 }),zod.null()]),
   "documenti": zod.array(zod.object({
   "id": zod.number().int(),
@@ -4569,10 +4895,12 @@ export const PrendiInCaricoPraticaResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI'])
 }).describe('Collaboratore a cui e\' associato l\'assistito'),
-  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato (puo\' aprire pratiche)'),
+  "anagraficaModificabile": zod.boolean().describe('Vero per super admin, admin e operatori; il collaboratore vede l\'anagrafica in sola lettura'),
   "creatoIl": zod.coerce.date(),
   "modificatoIl": zod.coerce.date()
 }),
@@ -4580,6 +4908,7 @@ export const PrendiInCaricoPraticaResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
   "tipologia": zod.string(),
   "email": zod.string().nullable(),
@@ -4588,7 +4917,14 @@ export const PrendiInCaricoPraticaResponse = zod.object({
   "mandato": zod.union([zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito')
+  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito'),
+  "firma": zod.union([zod.object({
+  "firmatoIl": zod.coerce.date(),
+  "firmatario": zod.string(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "fileNome": zod.string().describe('Nome del PDF firmato')
+}),zod.null()]).optional().describe('Presente se il mandato e\' stato firmato con il codice SMS')
 }),zod.null()]),
   "documenti": zod.array(zod.object({
   "id": zod.number().int(),
@@ -4695,10 +5031,12 @@ export const CambiaStatoPraticaResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI'])
 }).describe('Collaboratore a cui e\' associato l\'assistito'),
-  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato (puo\' aprire pratiche)'),
+  "anagraficaModificabile": zod.boolean().describe('Vero per super admin, admin e operatori; il collaboratore vede l\'anagrafica in sola lettura'),
   "creatoIl": zod.coerce.date(),
   "modificatoIl": zod.coerce.date()
 }),
@@ -4706,6 +5044,7 @@ export const CambiaStatoPraticaResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
   "tipologia": zod.string(),
   "email": zod.string().nullable(),
@@ -4714,7 +5053,14 @@ export const CambiaStatoPraticaResponse = zod.object({
   "mandato": zod.union([zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito')
+  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito'),
+  "firma": zod.union([zod.object({
+  "firmatoIl": zod.coerce.date(),
+  "firmatario": zod.string(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "fileNome": zod.string().describe('Nome del PDF firmato')
+}),zod.null()]).optional().describe('Presente se il mandato e\' stato firmato con il codice SMS')
 }),zod.null()]),
   "documenti": zod.array(zod.object({
   "id": zod.number().int(),
@@ -4822,10 +5168,12 @@ export const CreateCommentoPraticaBackofficeResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
-  "tipologia": zod.enum(['CAF', 'PATRONATO'])
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI'])
 }).describe('Collaboratore a cui e\' associato l\'assistito'),
-  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato (puo\' aprire pratiche)'),
+  "anagraficaModificabile": zod.boolean().describe('Vero per super admin, admin e operatori; il collaboratore vede l\'anagrafica in sola lettura'),
   "creatoIl": zod.coerce.date(),
   "modificatoIl": zod.coerce.date()
 }),
@@ -4833,6 +5181,7 @@ export const CreateCommentoPraticaBackofficeResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "denominazione": zod.string().nullish(),
   "numeroSportello": zod.string(),
   "tipologia": zod.string(),
   "email": zod.string().nullable(),
@@ -4841,7 +5190,14 @@ export const CreateCommentoPraticaBackofficeResponse = zod.object({
   "mandato": zod.union([zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
-  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito')
+  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito'),
+  "firma": zod.union([zod.object({
+  "firmatoIl": zod.coerce.date(),
+  "firmatario": zod.string(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "fileNome": zod.string().describe('Nome del PDF firmato')
+}),zod.null()]).optional().describe('Presente se il mandato e\' stato firmato con il codice SMS')
 }),zod.null()]),
   "documenti": zod.array(zod.object({
   "id": zod.number().int(),

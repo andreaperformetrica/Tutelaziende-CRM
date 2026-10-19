@@ -5,40 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { Sesso } from './sesso';
-import type { Tipologia } from './tipologia';
+import type { CollaboratoreInputBase } from './collaboratoreInputBase';
+import type { DatiSede } from './datiSede';
 
-export interface CollaboratoreInput {
-  /** @minLength 1 */
-  nome: string;
-  /** @minLength 1 */
-  cognome: string;
-  sesso: Sesso;
-  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
-  dataNascita: string;
-  /** Codice del comune o dello stato scelto con la ricerca luoghi */
-  luogoNascitaCodice: string;
-  /** Codice restituito da listNazionalita */
-  nazionalita: string;
-  /**
-     * @minLength 16
-     * @maxLength 16
-     */
-  codiceFiscale: string;
-  /**
-     * Facoltativa, 11 cifre
-     * @nullable
-     */
-  partitaIva?: string | null;
-  email: string;
-  /** @nullable */
-  telefono?: string | null;
-  cellulare: string;
-  /** @minLength 1 */
-  numeroSportello: string;
-  tipologia: Tipologia;
-  /** @nullable */
-  capogruppoId?: number | null;
-  /** @minLength 8 */
-  passwordProvvisoria: string;
-}
+export type CollaboratoreInput = DatiSede & CollaboratoreInputBase;

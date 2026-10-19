@@ -14,6 +14,8 @@ export interface CollaboratoreAssistito {
   id: number;
   nome: string;
   cognome: string;
+  /** @nullable */
+  denominazione?: string | null;
   numeroSportello: string;
   tipologia: Tipologia;
 }

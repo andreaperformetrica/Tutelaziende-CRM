@@ -1,3 +1,4 @@
+import { DatiFirma } from "@/components/pratiche/firma-mandato";
 import { StatoBadge } from "@/components/pratiche/stato-badge";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useLocation, useParams } from "wouter";
@@ -21,7 +22,7 @@ import { ConfermaElimina } from "@/components/pratiche/conferma-elimina";
 import { SelettoreFile } from "@/components/pratiche/selettore-file";
 import { useToast } from "@/hooks/use-toast";
 import { UtenteChip } from "@/components/utenti/colore-utente";
-import { fmtCellulare, fmtData, fmtIstante, parseApiError, ruoloLabel } from "@/lib/format";
+import { fmtCellulare, fmtData, fmtIstante, parseApiError, ruoloLabel, nomeCollaboratore } from "@/lib/format";
 import {
   ErroreUpload, FORMATI_DOCUMENTI, formatoDimensione, inviaFile, urlDocumentoBackoffice, urlMandatoBackoffice,
 } from "@/lib/upload";
@@ -194,7 +195,7 @@ export default function PraticaDettaglioBackoffice() {
 
       <Sezione titolo="Collaboratore" testId="sezione-collaboratore">
         <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Dato k="Cognome e nome">{p.collaboratore.cognome} {p.collaboratore.nome}</Dato>
+          <Dato k="Cognome e nome">{nomeCollaboratore(p.collaboratore)}</Dato>
           <Dato k="Sportello" mono>{p.collaboratore.numeroSportello}</Dato>
           <Dato k="Cellulare" mono>{fmtCellulare(p.collaboratore.cellulare)}</Dato>
           <Dato k="Email">{p.collaboratore.email ?? "—"}</Dato>
@@ -204,7 +205,7 @@ export default function PraticaDettaglioBackoffice() {
       <section className="rounded-lg border border-primary/30 border-l-4 border-l-primary bg-primary/5 p-5 rise" data-testid="sezione-messaggio">
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
           <h2 className="text-lg font-bold text-primary flex items-center gap-2"><MessageSquareText className="size-5" /> Messaggio iniziale</h2>
-          <span className="text-xs text-muted-foreground">Scritto da <strong className="text-foreground">{p.collaboratore.cognome} {p.collaboratore.nome}</strong> · {fmtIstante(p.inviataIl)}</span>
+          <span className="text-xs text-muted-foreground">Scritto da <strong className="text-foreground">{nomeCollaboratore(p.collaboratore)}</strong> · {fmtIstante(p.inviataIl)}</span>
         </div>
         <p className="text-base leading-relaxed whitespace-pre-wrap rounded-md bg-card border border-border p-4" data-testid="text-messaggio">{p.messaggio || "Il collaboratore non ha scritto nessun messaggio."}</p>
       </section>
@@ -212,7 +213,7 @@ export default function PraticaDettaglioBackoffice() {
       <Sezione titolo="Documenti del collaboratore" testId="sezione-documenti">
         {p.mandato && (
           <div className="mb-3 pb-3 border-b border-border flex flex-wrap items-center justify-between gap-3" data-testid="riga-mandato">
-            <div className="text-sm"><span className="font-semibold">{p.mandato.nome}</span> <Badge variant="outline" className="ml-1">Mandato</Badge><div className="text-xs text-muted-foreground">{p.mandato.fileNome} (compilato con i dati dell'assistito)</div></div>
+            <div className="text-sm"><span className="font-semibold">{p.mandato.nome}</span> <Badge variant="outline" className="ml-1">Mandato</Badge><div className="text-xs text-muted-foreground">{p.mandato.fileNome} ({p.mandato.firma ? "firmato" : "compilato con i dati dell'assistito"})</div>{p.mandato.firma && <div className="mt-2"><DatiFirma firma={p.mandato.firma} /></div>}</div>
             <div className="flex gap-2">
               <Button size="sm" variant="outline" onClick={() => setAnteprima({ titolo: p.mandato!.nome, url: urlMandatoBackoffice(id, true), scarica: urlMandatoBackoffice(id), immagine: eImmagine(p.mandato!.fileNome) })} data-testid="anteprima-mandato"><Eye className="size-4 mr-1.5" /> Anteprima</Button>
               <Button size="sm" variant="ghost" asChild><a href={urlMandatoBackoffice(id)} download aria-label="Scarica il mandato"><Download className="size-4" /></a></Button>
