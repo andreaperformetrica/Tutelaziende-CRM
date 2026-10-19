@@ -39,6 +39,13 @@ const TIPI_AMMESSI: Record<string, string> = {
   jpeg: "image/jpeg",
 };
 
+/** Presentazioni: ammesse solo per i documenti dei corsi (opzione `conPresentazioni`). */
+const TIPI_PRESENTAZIONI: Record<string, string> = {
+  ppt: "application/vnd.ms-powerpoint",
+  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  odp: "application/vnd.oasis.opendocument.presentation",
+};
+
 /** Per i documenti delle pratiche: solo PDF e immagini. */
 const ESTENSIONI_DOCUMENTI = new Set(["pdf", "png", "jpg", "jpeg"]);
 
@@ -60,7 +67,7 @@ export interface FileValidato {
 export function validaFile(
   nomeGrezzo: unknown,
   corpo: unknown,
-  opzioni: { soloPdfEImmagini?: boolean } = {},
+  opzioni: { soloPdfEImmagini?: boolean; conPresentazioni?: boolean } = {},
 ): FileValidato & { buffer: Buffer } {
   if (!Buffer.isBuffer(corpo) || corpo.length === 0) {
     throw new HttpError(400, "Seleziona un file da caricare.", "FILE_MANCANTE");
@@ -74,13 +81,15 @@ export function validaFile(
     .slice(0, 200);
   if (!nome) throw new HttpError(400, "Nome del file mancante.", "FILE_MANCANTE");
   const estensione = nome.includes(".") ? nome.split(".").pop()!.toLowerCase() : "";
-  const tipo = opzioni.soloPdfEImmagini && !ESTENSIONI_DOCUMENTI.has(estensione) ? undefined : TIPI_AMMESSI[estensione];
+  const tipo = opzioni.soloPdfEImmagini && !ESTENSIONI_DOCUMENTI.has(estensione) ? undefined : (TIPI_AMMESSI[estensione] ?? (opzioni.conPresentazioni ? TIPI_PRESENTAZIONI[estensione] : undefined));
   if (!tipo) {
     throw new HttpError(
       400,
       opzioni.soloPdfEImmagini
         ? "Formato non ammesso. Sono accettati solo PDF e immagini PNG o JPG."
-        : "Formato non ammesso. Sono accettati PDF, documenti Word, Excel, OpenDocument, RTF, TXT e immagini PNG o JPG.",
+        : opzioni.conPresentazioni
+          ? "Formato non ammesso. Sono accettati PDF, PowerPoint, documenti Word, Excel, OpenDocument, RTF, TXT e immagini PNG o JPG."
+          : "Formato non ammesso. Sono accettati PDF, documenti Word, Excel, OpenDocument, RTF, TXT e immagini PNG o JPG.",
       "FILE_FORMATO_NON_AMMESSO",
     );
   }

@@ -67,6 +67,8 @@ export function formatoDimensione(byte: number): string {
 export const urlQuestionarioBackoffice = (eventoId: number) => `${BASE}/backoffice/eventi/${eventoId}/questionario/file`;
 export const urlQuestionarioSede = (eventoId: number) => `${BASE}/eventi/${eventoId}/questionario/file`;
 /** `versione` cambia quando cambiano i dati dell'evento, cosi' l'anteprima non resta quella in cache. */
+export const FORMATI_DOCUMENTI_CORSO = ".pdf,.ppt,.pptx,.odp,.doc,.docx,.xls,.xlsx,.odt,.ods,.rtf,.txt,.png,.jpg,.jpeg";
+export const urlDocumentoEvento = (eventoId: number, documentoId: number) => `${BASE}/backoffice/eventi/${eventoId}/documenti/${documentoId}/file`;
 export const urlAnteprimaAttestato = (eventoId: number, versione: string) =>
   `${BASE}/backoffice/eventi/${eventoId}/attestato/anteprima?v=${encodeURIComponent(versione)}`;
 export const urlAttestatoPartecipante = (eventoId: number, partecipanteId: number) => `${BASE}/backoffice/eventi/${eventoId}/attestato/partecipanti/${partecipanteId}`;

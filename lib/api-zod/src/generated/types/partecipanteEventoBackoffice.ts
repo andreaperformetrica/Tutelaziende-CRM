@@ -5,11 +5,17 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { QuizEsitoPartecipante } from './quizEsitoPartecipante';
 
 export interface PartecipanteEventoBackoffice {
   id: number;
   nome: string;
   cognome: string;
+  /**
+     * Vuota solo per i partecipanti inseriti prima che l'email fosse richiesta
+     * @nullable
+     */
+  email: string | null;
   collaboratoreId: number;
   sedeNome: string;
   numeroSportello: string;
@@ -17,4 +23,12 @@ export interface PartecipanteEventoBackoffice {
   entrataIl: string | null;
   /** @nullable */
   uscitaIl: string | null;
+  /**
+     * Minuti tra entrata e uscita; vuoto se manca uno dei due orari
+     * @nullable
+     */
+  minutiPresenza: number | null;
+  /** Vero se le ore di presenza raggiungono le ore minime del corso */
+  idoneoAttestato: boolean;
+  quiz: QuizEsitoPartecipante | null;
 }

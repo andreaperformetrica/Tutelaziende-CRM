@@ -34,6 +34,9 @@ export const EVENTI_NOTIFICA = {
   estratto_inviato: "Estratto pratiche chiuse (alla sede)",
   alert_collaboratori: "Alert sui collaboratori (agli admin)",
   credenziali_collaboratore: "Credenziali di accesso (al nuovo collaboratore)",
+  evento_qr_partecipante: "QR code del corso (al partecipante)",
+  evento_documenti: "Documenti del corso (ai presenti)",
+  evento_questionario: "Questionario del corso (al partecipante)",
 } as const;
 export type EventoNotifica = keyof typeof EVENTI_NOTIFICA;
 
@@ -64,6 +67,7 @@ export const TESTO_TEMPLATE_WHATSAPP_EVENTO = "Buongiorno {{nome}}, sei invitato
 export const TESTO_CHIAMATA = "Buongiorno {{nome}}, la chiamiamo da Tutela. C'è un aggiornamento sulla pratica numero {{numero}}. Acceda alla piattaforma per leggerlo. Grazie e buona giornata.";
 
 const TIMEOUT_MS = 10_000;
+const TIMEOUT_ALLEGATI_MS = 60_000;
 
 export interface DestinatarioNotifica {
   utenteId: number | null;
@@ -79,6 +83,8 @@ export interface RichiestaNotifica {
   pratica?: { id: number; numero: number };
   /** Estratto pratiche chiuse: l'email porta in allegato il PDF, generato al momento dell'invio. */
   estrattoId?: number;
+  /** Eventi: QR code di un partecipante o documenti del corso in allegato all'email (si generano al momento dell'invio). */
+  allegatiEvento?: { qrPartecipanteId?: number; documentiIds?: number[] };
   /** Invito a un evento: il WhatsApp usa il template degli eventi invece di quello delle pratiche. */
   whatsappEvento?: { titolo: string; data: string };
   /** Percorso della piattaforma a cui punta il link (es. /admin/pratiche/3). */
@@ -208,6 +214,7 @@ export async function accodaNotifiche(executor: Executor, r: RichiestaNotifica):
         praticaId: r.pratica?.id ?? null,
         numeroPratica: r.pratica?.numero ?? null,
         estrattoId: r.estrattoId ?? null,
+        allegatiEvento: canale === "email" ? (r.allegatiEvento ?? null) : null,
       };
       const contatto = canale === "email" ? d.email : d.cellulare;
       if (canale === "chiamata" && !r.pratica) continue; // la chiamata parla sempre di una pratica
@@ -271,13 +278,20 @@ async function leggiErrore(risposta: Response): Promise<string> {
 async function inviaEmail(n: NotificaRow): Promise<EsitoInvio> {
   const { attivo, mancanti } = statoCanali().email;
   if (!attivo) return { esito: "non_inviata", dettaglio: `Chiavi email mancanti: ${mancanti.join(", ")}.` };
-  let allegati: { filename: string; content: string }[] | undefined;
+  let allegati: AllegatoEmail[] | undefined;
   if (n.estrattoId) {
     const { pdfEstratto } = await import("./compensi-pdf");
     const { pdf, nomeFile } = await pdfEstratto(n.estrattoId);
     allegati = [{ filename: nomeFile, content: pdf.toString("base64") }];
   }
-  return spedisciEmail({ a: n.destinatarioContatto, oggetto: n.oggetto ?? "Aggiornamento", testo: n.testo, html: htmlDaTesto(n.testo), allegati });
+  let html = htmlDaTesto(n.testo);
+  if (n.allegatiEvento) {
+    const { allegatiEventoEmail } = await import("./eventi-email");
+    const extra = await allegatiEventoEmail(n.allegatiEvento);
+    allegati = [...(allegati ?? []), ...extra.allegati];
+    html += extra.htmlInCoda;
+  }
+  return spedisciEmail({ a: n.destinatarioContatto, oggetto: n.oggetto ?? "Aggiornamento", testo: n.testo, html, allegati });
 }
 
 export interface AllegatoEmail {
@@ -303,7 +317,7 @@ export async function spedisciEmail(e: { a: string; oggetto: string; testo: stri
         html: e.html,
         ...(e.allegati ? { attachments: e.allegati } : {}),
       }),
-      signal: AbortSignal.timeout(TIMEOUT_MS),
+      signal: AbortSignal.timeout(e.allegati?.length ? TIMEOUT_ALLEGATI_MS : TIMEOUT_MS),
     });
     if (!r.ok) return { esito: "errore", dettaglio: await leggiErrore(r) };
     const j = (await r.json().catch(() => ({}))) as { id?: string };

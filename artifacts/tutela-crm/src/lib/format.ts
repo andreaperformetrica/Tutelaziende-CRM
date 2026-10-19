@@ -82,3 +82,10 @@ export function oraDaIstante(iso?: string | null): string {
 
 /** "09:30 – 13:00" oppure "09:30". */
 export const fmtOrarioEvento = (inizio: string, fine?: string | null) => (fine ? `${inizio} – ${fine}` : inizio);
+
+/** Minuti -> "3 h 20 min" (o "45 min" / "2 h"). */
+export function fmtOre(minuti: number): string {
+  const h = Math.floor(minuti / 60);
+  const m = minuti % 60;
+  return h === 0 ? `${m} min` : m === 0 ? `${h} h` : `${h} h ${m} min`;
+}

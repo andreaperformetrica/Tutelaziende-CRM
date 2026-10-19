@@ -1,15 +1,28 @@
 import express, { Router, type IRouter, type Response } from "express";
+import { randomBytes } from "node:crypto";
 import { and, asc, count, eq, inArray, isNotNull, isNull, lte, or, sql } from "drizzle-orm";
 import {
   AddInvitiEventoBody,
   AddInvitiEventoParams,
   CreateEventoBody,
+  DeleteDocumentoEventoParams,
   DeleteEventoParams,
   DeleteQuestionarioEventoParams,
+  DeleteQuizEventoParams,
   GetEventoBackofficeParams,
+  InviaDocumentiEventoBody,
+  InviaDocumentiEventoParams,
+  InviaQuizEventoBody,
+  InviaQuizEventoParams,
   RegistraCheckInEventoBody,
   RegistraCheckInEventoParams,
+  RegistraPresenzaPartecipanteBody,
+  RegistraPresenzaPartecipanteParams,
   RemoveInvitoEventoParams,
+  SaveQuizEventoBody,
+  SaveQuizEventoParams,
+  UpdateSogliaAttestatoBody,
+  UpdateSogliaAttestatoParams,
   SaveQuestionarioEventoBody,
   SaveQuestionarioEventoParams,
   UpdateEventoBody,
@@ -20,13 +33,16 @@ import {
 import {
   collaboratoriTable,
   db,
+  eventiDocumentiTable,
   eventiInvitiTable,
   eventiPartecipantiTable,
+  eventiQuizInvitiTable,
+  eventiQuizTable,
   eventiTable,
   personeTable,
   utentiTable,
 } from "@workspace/db";
-import { generaAttestati } from "../lib/attestati";
+import { generaAttestati, type PartecipanteAttestato } from "../lib/attestati";
 import { generaQuestionarioPdf } from "../lib/questionario-pdf";
 import { HttpError, nonTrovato } from "../lib/errori";
 import {
@@ -35,14 +51,17 @@ import {
   dataValida,
   datiEvento,
   formattaData,
+  haOreSufficienti,
   intero,
   istanteRoma,
+  minutiPresenza,
   oraRoma,
   partecipantiBackoffice,
   schedaBackoffice,
 } from "../lib/eventi";
 import { contestoDa, differenze, registraLog } from "../lib/log";
-import { notificaInvitoEvento } from "../lib/notifiche-eventi";
+import { notificaDocumentiCorso, notificaInvitoEvento, notificaQuestionarioCorso } from "../lib/notifiche-eventi";
+import { leggiBuffer } from "../lib/eventi-email";
 import { recapitaInBackground } from "../lib/notifiche";
 import { DIMENSIONE_MASSIMA_FILE, eliminaFile, leggiFile, salvaFile, validaFile } from "../lib/storage";
 import { valida } from "../lib/validazione";
@@ -78,13 +97,6 @@ async function orariRegistrati(eventoId: number): Promise<number> {
     .from(eventiPartecipantiTable)
     .where(and(eq(eventiPartecipantiTable.eventoId, eventoId), or(isNotNull(eventiPartecipantiTable.entrataIl), isNotNull(eventiPartecipantiTable.uscitaIl))));
   return n?.n ?? 0;
-}
-
-async function leggiBuffer(chiave: string): Promise<Buffer> {
-  const { stream } = await leggiFile(chiave);
-  const pezzi: Buffer[] = [];
-  for await (const p of stream) pezzi.push(Buffer.isBuffer(p) ? p : Buffer.from(p));
-  return Buffer.concat(pezzi);
 }
 
 function inviaPdf(res: Response, pdf: Buffer, nome: string) {
@@ -212,6 +224,7 @@ router.delete("/backoffice/eventi/:id", async (req, res) => {
   if ((await orariRegistrati(id)) > 0) {
     throw new HttpError(409, "Nell'evento sono già stati registrati orari di entrata o uscita: non si può eliminare.", "ORARI_REGISTRATI");
   }
+  const documenti = await db.select({ chiave: eventiDocumentiTable.chiave }).from(eventiDocumentiTable).where(eq(eventiDocumentiTable.eventoId, id));
   await db.transaction(async (tx) => {
     await tx.delete(eventiTable).where(eq(eventiTable.id, id));
     await registraLog(tx, contestoDa(req), {
@@ -222,7 +235,7 @@ router.delete("/backoffice/eventi/:id", async (req, res) => {
       dettagli: { titolo: e.titolo, data: e.data },
     });
   });
-  for (const chiave of [e.questionarioChiave, e.layoutChiave]) if (chiave) await eliminaFile(chiave, req.log);
+  for (const chiave of [e.questionarioChiave, e.layoutChiave, ...documenti.map((d) => d.chiave)]) if (chiave) await eliminaFile(chiave, req.log);
   res.status(204).end();
 });
 
@@ -321,6 +334,43 @@ router.patch("/backoffice/eventi/:id/partecipanti/:partecipanteId/orari", async 
     });
   });
   res.json(await schedaBackoffice(id));
+});
+
+/** Entrata o uscita scelta dall'elenco dei partecipanti (senza QR): registra l'istante attuale. */
+router.post("/backoffice/eventi/:id/partecipanti/:partecipanteId/presenza", async (req, res) => {
+  const { id, partecipanteId } = valida(RegistraPresenzaPartecipanteParams, req.params);
+  const { tipo } = valida(RegistraPresenzaPartecipanteBody, req.body);
+  const e = await caricaEvento(id);
+  const p = await caricaPartecipanteEvento(id, partecipanteId);
+  const adesso = new Date();
+  await db.transaction(async (tx) => {
+    if (tipo === "entrata") {
+      const [agg] = await tx
+        .update(eventiPartecipantiTable)
+        .set({ entrataIl: adesso })
+        .where(and(eq(eventiPartecipantiTable.id, p.id), isNull(eventiPartecipantiTable.entrataIl)))
+        .returning({ id: eventiPartecipantiTable.id });
+      if (!agg) throw new HttpError(409, `L'entrata di ${nomeCompleto(p)} è già registrata.`, "GIA_REGISTRATO");
+    } else {
+      if (!p.entrataIl) throw new HttpError(409, `Registra prima l'entrata di ${nomeCompleto(p)}.`, "ENTRATA_MANCANTE");
+      if (adesso <= p.entrataIl) throw new HttpError(409, "L'uscita deve essere dopo l'entrata.", "DATI_NON_VALIDI");
+      const [agg] = await tx
+        .update(eventiPartecipantiTable)
+        .set({ uscitaIl: adesso })
+        .where(and(eq(eventiPartecipantiTable.id, p.id), isNull(eventiPartecipantiTable.uscitaIl)))
+        .returning({ id: eventiPartecipantiTable.id });
+      if (!agg) throw new HttpError(409, `L'uscita di ${nomeCompleto(p)} è già registrata.`, "GIA_REGISTRATO");
+    }
+    await registraLog(tx, contestoDa(req), {
+      azione: "evento.presenza",
+      entita: "evento",
+      entitaId: id,
+      descrizione: `${tipo === "entrata" ? "Entrata" : "Uscita"} di ${nomeCompleto(p)} all'evento "${e.titolo}" registrata dall'elenco alle ${oraRoma(adesso)}`,
+      dettagli: { partecipanteId: p.id, tipo },
+    });
+  });
+  const aggiornato = (await partecipantiBackoffice(id)).find((x) => x.id === p.id)!;
+  res.json({ esito: "registrato", tipo, avviso: null, partecipante: aggiornato });
 });
 
 router.post("/backoffice/eventi/:id/check-in", async (req, res) => {
@@ -485,36 +535,306 @@ router.delete("/backoffice/eventi/:id/questionario", async (req, res) => {
 // Attestati
 // ---------------------------------------------------------------------------------------------
 
-async function pdfAttestati(eventoId: number, nomi: string[]) {
+async function pdfAttestati(eventoId: number, partecipanti: PartecipanteAttestato[]) {
   const e = await caricaEvento(eventoId);
   if (e.tipoCorso !== "CAF" && e.tipoCorso !== "PATRONATO") {
     throw new HttpError(409, "Indica il tipo di corso (CAF o Patronato) nell'evento prima di stampare gli attestati.", "DATI_ATTESTATO_MANCANTI");
   }
-  return generaAttestati({ tipoCorso: e.tipoCorso, argomento: e.argomento ?? "", data: e.data }, nomi);
+  return generaAttestati({ tipoCorso: e.tipoCorso, argomento: e.argomento ?? "", data: e.data }, partecipanti);
 }
 
-/** Anteprima con un nome di prova e i dati reali dell'evento. */
+const nomiOrdinati = [asc(sql`lower(${eventiPartecipantiTable.cognome})`), asc(sql`lower(${eventiPartecipantiTable.nome})`), asc(eventiPartecipantiTable.id)];
+
+/** Anteprima con un nome di prova, le ore minime del corso e i dati reali dell'evento. */
 router.get("/backoffice/eventi/:id/attestato/anteprima", async (req, res) => {
   const id = intero(req.params["id"], "id");
-  inviaPdf(res, await pdfAttestati(id, ["Maria Rossi Esempio"]), "anteprima-attestato.pdf");
+  const e = await caricaEvento(id);
+  inviaPdf(res, await pdfAttestati(id, [{ nome: "Maria Rossi Esempio", minuti: Math.max(60, Math.round(e.oreMinimeAttestato * 60)) }]), "anteprima-attestato.pdf");
 });
 
 router.get("/backoffice/eventi/:id/attestato/partecipanti/:partecipanteId", async (req, res) => {
   const id = intero(req.params["id"], "id");
+  const e = await caricaEvento(id);
   const p = await caricaPartecipanteEvento(id, intero(req.params["partecipanteId"], "partecipanteId"));
-  inviaPdf(res, await pdfAttestati(id, [`${p.nome} ${p.cognome}`]), `attestato-${p.cognome}-${p.nome}.pdf`);
+  const minuti = minutiPresenza(p.entrataIl, p.uscitaIl);
+  if (!haOreSufficienti(minuti, e.oreMinimeAttestato)) {
+    throw new HttpError(
+      409,
+      minuti === null
+        ? `Per ${nomeCompleto(p)} mancano l'entrata o l'uscita: senza le ore di presenza l'attestato non si può generare.`
+        : `${nomeCompleto(p)} ha partecipato ${formattaOre(minuti)}: servono almeno ${formattaOre(Math.round(e.oreMinimeAttestato * 60))} per l'attestato.`,
+      "ORE_INSUFFICIENTI",
+    );
+  }
+  inviaPdf(res, await pdfAttestati(id, [{ nome: `${p.nome} ${p.cognome}`, minuti: minuti! }]), `attestato-${p.cognome}-${p.nome}.pdf`);
 });
 
-/** Un attestato per ogni presente (entrata registrata), in ordine alfabetico. */
+function formattaOre(minuti: number): string {
+  const h = Math.floor(minuti / 60);
+  const m = minuti % 60;
+  return h === 0 ? `${m} minuti` : m === 0 ? `${h} ${h === 1 ? "ora" : "ore"}` : `${h} h ${m} min`;
+}
+
+/** Un attestato per ogni partecipante con le ore minime di presenza, in ordine alfabetico. */
 router.get("/backoffice/eventi/:id/attestato/presenti", async (req, res) => {
   const id = intero(req.params["id"], "id");
+  const e = await caricaEvento(id);
+  const righe = await db
+    .select({ nome: eventiPartecipantiTable.nome, cognome: eventiPartecipantiTable.cognome, entrataIl: eventiPartecipantiTable.entrataIl, uscitaIl: eventiPartecipantiTable.uscitaIl })
+    .from(eventiPartecipantiTable)
+    .where(and(eq(eventiPartecipantiTable.eventoId, id), isNotNull(eventiPartecipantiTable.entrataIl), isNotNull(eventiPartecipantiTable.uscitaIl)))
+    .orderBy(...nomiOrdinati);
+  const idonei = righe
+    .map((r) => ({ nome: `${r.nome} ${r.cognome}`, minuti: minutiPresenza(r.entrataIl, r.uscitaIl) }))
+    .filter((r): r is PartecipanteAttestato => haOreSufficienti(r.minuti, e.oreMinimeAttestato));
+  if (idonei.length === 0) {
+    throw new HttpError(409, `Nessun partecipante ha almeno ${formattaOre(Math.round(e.oreMinimeAttestato * 60))} di presenza (servono entrata e uscita registrate).`, "NESSUN_IDONEO");
+  }
+  inviaPdf(res, await pdfAttestati(id, idonei), "attestati-partecipanti.pdf");
+});
+
+router.put("/backoffice/eventi/:id/attestato/soglia", async (req, res) => {
+  const { id } = valida(UpdateSogliaAttestatoParams, req.params);
+  const { oreMinime } = valida(UpdateSogliaAttestatoBody, req.body);
+  const e = await caricaEvento(id);
+  const nuova = Math.round(oreMinime * 4) / 4;
+  if (nuova !== e.oreMinimeAttestato) {
+    await db.transaction(async (tx) => {
+      await tx.update(eventiTable).set({ oreMinimeAttestato: nuova, modificatoIl: new Date() }).where(eq(eventiTable.id, id));
+      await registraLog(tx, contestoDa(req), {
+        azione: "evento.attestato_soglia",
+        entita: "evento",
+        entitaId: id,
+        descrizione: `Ore minime per l'attestato dell'evento "${e.titolo}": da ${e.oreMinimeAttestato} a ${nuova}`,
+        dettagli: { prima: e.oreMinimeAttestato, dopo: nuova },
+      });
+    });
+  }
+  res.json(await schedaBackoffice(id));
+});
+
+// ---------------------------------------------------------------------------------------------
+// Documenti del corso (slide, dispense): si inviano per email ai soli presenti
+// ---------------------------------------------------------------------------------------------
+
+const DIMENSIONE_MASSIMA_DOCUMENTI = 25 * 1024 * 1024;
+
+router.put("/backoffice/eventi/:id/documenti", corpoFile, async (req, res) => {
+  const id = intero(req.params["id"], "id");
+  const e = await caricaEvento(id);
+  const file = validaFile(req.query["nomeFile"], req.body, { conPresentazioni: true });
+  const [somma] = await db
+    .select({ t: sql<number>`coalesce(sum(${eventiDocumentiTable.dimensione}), 0)::int` })
+    .from(eventiDocumentiTable)
+    .where(eq(eventiDocumentiTable.eventoId, id));
+  if ((somma?.t ?? 0) + file.dimensione > DIMENSIONE_MASSIMA_DOCUMENTI) {
+    throw new HttpError(413, "I documenti del corso possono pesare al massimo 25 MB in tutto, perché vengono inviati per email.", "FILE_TROPPO_GRANDE");
+  }
+  const chiave = await salvaFile(file.buffer, file.tipo);
+  try {
+    await db.transaction(async (tx) => {
+      const [d] = await tx
+        .insert(eventiDocumentiTable)
+        .values({ eventoId: id, chiave, nome: file.nome, tipo: file.tipo, dimensione: file.dimensione, caricatoDaUtenteId: req.utente!.id })
+        .returning({ id: eventiDocumentiTable.id });
+      await registraLog(tx, contestoDa(req), {
+        azione: "evento.documento_carica",
+        entita: "evento",
+        entitaId: id,
+        descrizione: `Caricato il documento "${file.nome}" per il corso "${e.titolo}"`,
+        dettagli: { documentoId: d!.id, fileNome: file.nome, dimensione: file.dimensione },
+      });
+    });
+  } catch (err) {
+    await eliminaFile(chiave, req.log);
+    throw err;
+  }
+  res.json(await schedaBackoffice(id));
+});
+
+router.get("/backoffice/eventi/:id/documenti/:documentoId/file", async (req, res) => {
+  const id = intero(req.params["id"], "id");
+  const [d] = await db
+    .select()
+    .from(eventiDocumentiTable)
+    .where(and(eq(eventiDocumentiTable.id, intero(req.params["documentoId"], "documentoId")), eq(eventiDocumentiTable.eventoId, id)));
+  if (!d) throw nonTrovato("Documento non trovato.");
+  const { stream } = await leggiFile(d.chiave);
+  inviaFile(res, stream, d.nome, d.tipo, d.dimensione);
+});
+
+router.post("/backoffice/eventi/:id/documenti/invia", async (req, res) => {
+  const { id } = valida(InviaDocumentiEventoParams, req.params);
+  const { documentiIds } = valida(InviaDocumentiEventoBody, req.body);
+  const e = await caricaEvento(id);
+  const docs = await db
+    .select()
+    .from(eventiDocumentiTable)
+    .where(and(eq(eventiDocumentiTable.eventoId, id), inArray(eventiDocumentiTable.id, [...new Set(documentiIds)])));
+  if (docs.length === 0) throw nonTrovato("Documenti non trovati.");
   const presenti = await db
-    .select({ nome: eventiPartecipantiTable.nome, cognome: eventiPartecipantiTable.cognome })
+    .select({ id: eventiPartecipantiTable.id, nome: eventiPartecipantiTable.nome, cognome: eventiPartecipantiTable.cognome, email: eventiPartecipantiTable.email })
     .from(eventiPartecipantiTable)
     .where(and(eq(eventiPartecipantiTable.eventoId, id), isNotNull(eventiPartecipantiTable.entrataIl)))
-    .orderBy(asc(sql`lower(${eventiPartecipantiTable.cognome})`), asc(sql`lower(${eventiPartecipantiTable.nome})`), asc(eventiPartecipantiTable.id));
+    .orderBy(...nomiOrdinati);
   if (presenti.length === 0) throw new HttpError(409, "Nessun partecipante risulta presente: registra almeno un'entrata.", "NESSUN_PRESENTE");
-  inviaPdf(res, await pdfAttestati(id, presenti.map((p) => `${p.nome} ${p.cognome}`)), "attestati-presenti.pdf");
+  const conEmail = presenti.filter((p) => p.email);
+  if (conEmail.length === 0) throw new HttpError(409, "Nessun presente ha un indirizzo email.", "NESSUN_DESTINATARIO");
+  const totale = docs.reduce((t, d) => t + d.dimensione, 0);
+  if (totale > DIMENSIONE_MASSIMA_DOCUMENTI) throw new HttpError(413, "I documenti scelti pesano troppo per un'email (massimo 25 MB).", "FILE_TROPPO_GRANDE");
+  const notifiche = await db.transaction(async (tx) => {
+    const ids = await notificaDocumentiCorso(tx, e, conEmail, docs.map((d) => d.id));
+    await tx
+      .update(eventiDocumentiTable)
+      .set({ inviatoIl: new Date(), inviatoA: conEmail.length })
+      .where(inArray(eventiDocumentiTable.id, docs.map((d) => d.id)));
+    await registraLog(tx, contestoDa(req), {
+      azione: "evento.documenti_invia",
+      entita: "evento",
+      entitaId: id,
+      descrizione: `Inviati ${docs.length} ${docs.length === 1 ? "documento" : "documenti"} del corso "${e.titolo}" a ${conEmail.length} ${conEmail.length === 1 ? "presente" : "presenti"}`,
+      dettagli: { documenti: docs.map((d) => d.nome), destinatari: conEmail.length, senzaEmail: presenti.length - conEmail.length },
+    });
+    return ids;
+  });
+  recapitaInBackground(notifiche);
+  res.json({ inviati: conEmail.length, senzaEmail: presenti.length - conEmail.length, saltati: 0 });
+});
+
+router.delete("/backoffice/eventi/:id/documenti/:documentoId", async (req, res) => {
+  const { id, documentoId } = valida(DeleteDocumentoEventoParams, req.params);
+  const e = await caricaEvento(id);
+  const [d] = await db.select().from(eventiDocumentiTable).where(and(eq(eventiDocumentiTable.id, documentoId), eq(eventiDocumentiTable.eventoId, id)));
+  if (!d) throw nonTrovato("Documento non trovato.");
+  await db.transaction(async (tx) => {
+    await tx.delete(eventiDocumentiTable).where(eq(eventiDocumentiTable.id, d.id));
+    await registraLog(tx, contestoDa(req), {
+      azione: "evento.documento_elimina",
+      entita: "evento",
+      entitaId: id,
+      descrizione: `Eliminato il documento "${d.nome}" del corso "${e.titolo}"`,
+      dettagli: { documentoId: d.id, fileNome: d.nome },
+    });
+  });
+  await eliminaFile(d.chiave, req.log);
+  res.json(await schedaBackoffice(id));
+});
+
+// ---------------------------------------------------------------------------------------------
+// Questionario online (a scelta multipla, con punteggio)
+// ---------------------------------------------------------------------------------------------
+
+async function invitiQuiz(eventoId: number): Promise<number> {
+  const [n] = await db.select({ n: count() }).from(eventiQuizInvitiTable).where(eq(eventiQuizInvitiTable.eventoId, eventoId));
+  return n?.n ?? 0;
+}
+
+router.put("/backoffice/eventi/:id/quiz", async (req, res) => {
+  const { id } = valida(SaveQuizEventoParams, req.params);
+  const b = valida(SaveQuizEventoBody, req.body);
+  const e = await caricaEvento(id);
+  if ((await invitiQuiz(id)) > 0) {
+    throw new HttpError(409, "Il questionario è già stato inviato ai partecipanti: non si può più modificare.", "QUIZ_GIA_INVIATO");
+  }
+  const domande = b.domande.map((d, i) => {
+    const testo = d.testo.trim();
+    if (!testo) throw new HttpError(400, `La domanda ${i + 1} è vuota.`, "DATI_NON_VALIDI", "domande");
+    const opzioni = d.opzioni.map((o) => o.trim());
+    if (opzioni.some((o) => !o)) throw new HttpError(400, `La domanda ${i + 1} ha una risposta vuota.`, "DATI_NON_VALIDI", "domande");
+    if (new Set(opzioni.map((o) => o.toLowerCase())).size !== opzioni.length) throw new HttpError(400, `La domanda ${i + 1} ha due risposte uguali.`, "DATI_NON_VALIDI", "domande");
+    if (d.corretta >= opzioni.length) throw new HttpError(400, `Indica la risposta esatta della domanda ${i + 1}.`, "DATI_NON_VALIDI", "domande");
+    return { testo, opzioni, corretta: d.corretta };
+  });
+  if (b.punteggioMinimo > domande.length) {
+    throw new HttpError(400, `Il punteggio minimo non può superare il numero di domande (${domande.length}).`, "DATI_NON_VALIDI", "punteggioMinimo");
+  }
+  const [esistente] = await db.select({ id: eventiQuizTable.id }).from(eventiQuizTable).where(eq(eventiQuizTable.eventoId, id));
+  await db.transaction(async (tx) => {
+    if (esistente) {
+      await tx.update(eventiQuizTable).set({ domande, punteggioMinimo: b.punteggioMinimo, modificatoIl: new Date() }).where(eq(eventiQuizTable.id, esistente.id));
+    } else {
+      await tx.insert(eventiQuizTable).values({ eventoId: id, domande, punteggioMinimo: b.punteggioMinimo });
+    }
+    await registraLog(tx, contestoDa(req), {
+      azione: "evento.quiz_salva",
+      entita: "evento",
+      entitaId: id,
+      descrizione: `${esistente ? "Modificato" : "Creato"} il questionario online del corso "${e.titolo}" (${domande.length} ${domande.length === 1 ? "domanda" : "domande"}, minimo ${b.punteggioMinimo})`,
+      dettagli: { domande: domande.length, punteggioMinimo: b.punteggioMinimo },
+    });
+  });
+  res.json(await schedaBackoffice(id));
+});
+
+router.delete("/backoffice/eventi/:id/quiz", async (req, res) => {
+  const { id } = valida(DeleteQuizEventoParams, req.params);
+  const e = await caricaEvento(id);
+  const [q] = await db.select({ id: eventiQuizTable.id }).from(eventiQuizTable).where(eq(eventiQuizTable.eventoId, id));
+  if (!q) throw nonTrovato("Per questo corso non c'è nessun questionario online.");
+  if ((await invitiQuiz(id)) > 0) throw new HttpError(409, "Il questionario è già stato inviato ai partecipanti: non si può eliminare.", "QUIZ_GIA_INVIATO");
+  await db.transaction(async (tx) => {
+    await tx.delete(eventiQuizTable).where(eq(eventiQuizTable.id, q.id));
+    await registraLog(tx, contestoDa(req), {
+      azione: "evento.quiz_elimina",
+      entita: "evento",
+      entitaId: id,
+      descrizione: `Eliminato il questionario online del corso "${e.titolo}"`,
+    });
+  });
+  res.json(await schedaBackoffice(id));
+});
+
+/**
+ * Invia il link personale. Chi non l'ha ancora compilato lo riceve di nuovo (stesso link); chi ha già compilato non riceve nulla:
+ * il link vale una sola volta.
+ */
+router.post("/backoffice/eventi/:id/quiz/invia", async (req, res) => {
+  const { id } = valida(InviaQuizEventoParams, req.params);
+  const { soloPresenti } = valida(InviaQuizEventoBody, req.body);
+  const e = await caricaEvento(id);
+  const [q] = await db.select({ id: eventiQuizTable.id }).from(eventiQuizTable).where(eq(eventiQuizTable.eventoId, id));
+  if (!q) throw new HttpError(409, "Crea prima il questionario online.", "QUIZ_MANCANTE");
+  const partecipanti = await db
+    .select({
+      id: eventiPartecipantiTable.id, nome: eventiPartecipantiTable.nome, cognome: eventiPartecipantiTable.cognome, email: eventiPartecipantiTable.email,
+      invitoId: eventiQuizInvitiTable.id, token: eventiQuizInvitiTable.token, compilatoIl: eventiQuizInvitiTable.compilatoIl,
+    })
+    .from(eventiPartecipantiTable)
+    .leftJoin(eventiQuizInvitiTable, eq(eventiQuizInvitiTable.partecipanteId, eventiPartecipantiTable.id))
+    .where(and(eq(eventiPartecipantiTable.eventoId, id), soloPresenti ? isNotNull(eventiPartecipantiTable.entrataIl) : undefined))
+    .orderBy(...nomiOrdinati);
+  if (partecipanti.length === 0) {
+    throw new HttpError(409, soloPresenti ? "Nessun partecipante risulta presente: registra almeno un'entrata." : "Non ci sono partecipanti iscritti.", "NESSUN_PARTECIPANTE");
+  }
+  const senzaEmail = partecipanti.filter((p) => !p.email).length;
+  const saltati = partecipanti.filter((p) => p.email && p.compilatoIl).length;
+  const daInviare = partecipanti.filter((p) => p.email && !p.compilatoIl);
+  if (daInviare.length === 0) {
+    throw new HttpError(409, saltati > 0 ? "Tutti i destinatari hanno già compilato il questionario." : "Nessun destinatario ha un indirizzo email.", "NESSUN_DESTINATARIO");
+  }
+  const notifiche = await db.transaction(async (tx) => {
+    const ids: number[] = [];
+    for (const p of daInviare) {
+      let token = p.token;
+      if (!p.invitoId) {
+        token = randomBytes(24).toString("base64url");
+        await tx.insert(eventiQuizInvitiTable).values({ eventoId: id, partecipanteId: p.id, token });
+      } else {
+        await tx.update(eventiQuizInvitiTable).set({ inviatoIl: new Date() }).where(eq(eventiQuizInvitiTable.id, p.invitoId));
+      }
+      ids.push(...(await notificaQuestionarioCorso(tx, e, p, token!)));
+    }
+    await registraLog(tx, contestoDa(req), {
+      azione: "evento.quiz_invia",
+      entita: "evento",
+      entitaId: id,
+      descrizione: `Inviato il questionario online del corso "${e.titolo}" a ${daInviare.length} ${daInviare.length === 1 ? "partecipante" : "partecipanti"}`,
+      dettagli: { soloPresenti, inviati: daInviare.length, senzaEmail, giaCompilati: saltati },
+    });
+    return ids;
+  });
+  recapitaInBackground(notifiche);
+  res.json({ inviati: daInviare.length, senzaEmail, saltati });
 });
 
 export default router;

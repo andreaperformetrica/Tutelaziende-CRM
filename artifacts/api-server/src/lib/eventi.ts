@@ -5,7 +5,10 @@ import {
   collaboratoriTable,
   db,
   eventiInvitiTable,
+  eventiDocumentiTable,
   eventiPartecipantiTable,
+  eventiQuizInvitiTable,
+  eventiQuizTable,
   eventiTable,
   personeTable,
   utentiTable,
@@ -85,6 +88,7 @@ export const datiEvento = (e: EventoRow) => ({
   descrizione: e.descrizione,
   tipoCorso: e.tipoCorso === "CAF" || e.tipoCorso === "PATRONATO" ? e.tipoCorso : null,
   argomento: e.argomento,
+  oreMinimeAttestato: e.oreMinimeAttestato,
   passato: e.data < oggiRoma(),
 });
 
@@ -98,29 +102,93 @@ export const fileQuestionario = (e: EventoRow) =>
 /** Sede (collaboratore) con i dati che servono per mostrarla e invitarla. */
 const sedeNome = sql<string>`${personeTable.cognome} || ' ' || ${personeTable.nome}`;
 
+/** Minuti tra entrata e uscita; null se manca uno dei due orari. */
+export function minutiPresenza(entrata: Date | null, uscita: Date | null): number | null {
+  if (!entrata || !uscita || uscita <= entrata) return null;
+  return Math.floor((uscita.getTime() - entrata.getTime()) / 60000);
+}
+
+/** L'attestato spetta a chi ha almeno le ore minime del corso, calcolate da entrata e uscita. */
+export const haOreSufficienti = (minuti: number | null, oreMinime: number): boolean => minuti !== null && minuti >= Math.round(oreMinime * 60);
+
 export async function partecipantiBackoffice(eventoId: number) {
   const righe = await db
     .select({
       id: eventiPartecipantiTable.id,
       nome: eventiPartecipantiTable.nome,
       cognome: eventiPartecipantiTable.cognome,
+      email: eventiPartecipantiTable.email,
       collaboratoreId: eventiPartecipantiTable.collaboratoreId,
       sedeNome,
       numeroSportello: collaboratoriTable.numeroSportello,
       entrataIl: eventiPartecipantiTable.entrataIl,
       uscitaIl: eventiPartecipantiTable.uscitaIl,
+      oreMinime: eventiTable.oreMinimeAttestato,
+      quizInviatoIl: eventiQuizInvitiTable.inviatoIl,
+      quizCompilatoIl: eventiQuizInvitiTable.compilatoIl,
+      quizPunteggio: eventiQuizInvitiTable.punteggio,
+      quizPunteggioMassimo: eventiQuizInvitiTable.punteggioMassimo,
+      quizSuperato: eventiQuizInvitiTable.superato,
     })
     .from(eventiPartecipantiTable)
+    .innerJoin(eventiTable, eq(eventiTable.id, eventiPartecipantiTable.eventoId))
     .innerJoin(collaboratoriTable, eq(collaboratoriTable.id, eventiPartecipantiTable.collaboratoreId))
     .innerJoin(personeTable, eq(personeTable.id, collaboratoriTable.personaId))
+    .leftJoin(eventiQuizInvitiTable, eq(eventiQuizInvitiTable.partecipanteId, eventiPartecipantiTable.id))
     .where(eq(eventiPartecipantiTable.eventoId, eventoId))
     .orderBy(asc(sql`lower(${eventiPartecipantiTable.cognome})`), asc(sql`lower(${eventiPartecipantiTable.nome})`), asc(eventiPartecipantiTable.id));
-  return righe.map(mappaPartecipanteBackoffice);
+  return righe.map((r) => {
+    const minuti = minutiPresenza(r.entrataIl, r.uscitaIl);
+    return {
+      id: r.id,
+      nome: r.nome,
+      cognome: r.cognome,
+      email: r.email,
+      collaboratoreId: r.collaboratoreId,
+      sedeNome: r.sedeNome,
+      numeroSportello: r.numeroSportello,
+      entrataIl: iso(r.entrataIl),
+      uscitaIl: iso(r.uscitaIl),
+      minutiPresenza: minuti,
+      idoneoAttestato: haOreSufficienti(minuti, r.oreMinime),
+      quiz: r.quizInviatoIl
+        ? {
+            inviatoIl: r.quizInviatoIl.toISOString(),
+            compilatoIl: iso(r.quizCompilatoIl),
+            punteggio: r.quizPunteggio,
+            punteggioMassimo: r.quizPunteggioMassimo,
+            superato: r.quizSuperato,
+          }
+        : null,
+    };
+  });
 }
 
-export const mappaPartecipanteBackoffice = (r: {
-  id: number; nome: string; cognome: string; collaboratoreId: number; sedeNome: string; numeroSportello: string; entrataIl: Date | null; uscitaIl: Date | null;
-}) => ({ ...r, entrataIl: iso(r.entrataIl), uscitaIl: iso(r.uscitaIl) });
+/** Documenti caricati per il corso. */
+export async function documentiEvento(eventoId: number) {
+  const righe = await db.select().from(eventiDocumentiTable).where(eq(eventiDocumentiTable.eventoId, eventoId)).orderBy(asc(eventiDocumentiTable.id));
+  return righe.map((d) => ({ id: d.id, nome: d.nome, tipo: d.tipo, dimensione: d.dimensione, caricatoIl: d.caricatoIl.toISOString(), inviatoIl: iso(d.inviatoIl), inviatoA: d.inviatoA }));
+}
+
+/** Questionario online con le risposte esatte (solo per il back office). */
+export async function quizEvento(eventoId: number) {
+  const [q] = await db.select().from(eventiQuizTable).where(eq(eventiQuizTable.eventoId, eventoId));
+  if (!q) return null;
+  const [conteggi] = await db
+    .select({
+      inviati: sql<number>`count(*)::int`,
+      compilati: sql<number>`(count(*) filter (where ${eventiQuizInvitiTable.compilatoIl} is not null))::int`,
+    })
+    .from(eventiQuizInvitiTable)
+    .where(eq(eventiQuizInvitiTable.eventoId, eventoId));
+  return {
+    domande: q.domande,
+    punteggioMinimo: q.punteggioMinimo,
+    aggiornatoIl: q.modificatoIl.toISOString(),
+    inviati: conteggi?.inviati ?? 0,
+    compilati: conteggi?.compilati ?? 0,
+  };
+}
 
 export async function schedaBackoffice(id: number) {
   const e = await caricaEvento(id);
@@ -148,6 +216,8 @@ export async function schedaBackoffice(id: number) {
     domande: e.questionarioDomande ?? [],
     inviti: inviti.map((i) => ({ ...i, invitatoIl: i.invitatoIl.toISOString(), confermatoIl: iso(i.confermatoIl) })),
     partecipanti: await partecipantiBackoffice(id),
+    documenti: await documentiEvento(id),
+    quiz: await quizEvento(id),
   };
 }
 
@@ -176,6 +246,7 @@ export async function schedaSede(eventoId: number, collaboratoreId: number) {
       id: p.id,
       nome: p.nome,
       cognome: p.cognome,
+      email: p.email,
       codiceQr: p.codiceQr,
       entrataIl: iso(p.entrataIl),
       uscitaIl: iso(p.uscitaIl),

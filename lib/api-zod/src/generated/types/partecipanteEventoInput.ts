@@ -17,4 +17,9 @@ export interface PartecipanteEventoInput {
      * @maxLength 80
      */
   cognome: string;
+  /**
+     * Qui arriva il QR code personale
+     * @maxLength 200
+     */
+  email: string;
 }

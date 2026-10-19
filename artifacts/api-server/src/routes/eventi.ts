@@ -13,6 +13,8 @@ import { db, eventiInvitiTable, eventiPartecipantiTable, eventiTable } from "@wo
 import { HttpError, nonTrovato } from "../lib/errori";
 import { caricaEvento, datiEvento, formattaData, intero, invitoSede, nuovoCodiceQr, normalizzaNomePersona, schedaSede } from "../lib/eventi";
 import { contestoDa, registraLog } from "../lib/log";
+import { notificaQrPartecipante } from "../lib/notifiche-eventi";
+import { recapitaInBackground } from "../lib/notifiche";
 import { codiceErrorePg } from "../lib/postgres";
 import { mioCollaboratoreId } from "../lib/pratiche";
 import { leggiFile } from "../lib/storage";
@@ -103,6 +105,13 @@ async function controllaDuplicato(eventoId: number, collaboratoreId: number, nom
   if (d) throw DUPLICATO;
 }
 
+/** Indirizzo email in minuscolo e senza spazi; deve avere la forma di un indirizzo valido. */
+function pulisciEmail(v: string): string {
+  const e = v.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e)) throw new HttpError(400, "Inserisci un indirizzo email valido.", "DATI_NON_VALIDI", "email");
+  return e;
+}
+
 router.post("/eventi/:id/partecipanti", async (req, res) => {
   const { id } = valida(AddPartecipanteEventoParams, req.params);
   const b = valida(AddPartecipanteEventoBody, req.body);
@@ -113,13 +122,16 @@ router.post("/eventi/:id/partecipanti", async (req, res) => {
   const e = await caricaEvento(id);
   const nome = normalizzaNomePersona(b.nome, "Il nome");
   const cognome = normalizzaNomePersona(b.cognome, "Il cognome");
+  const email = pulisciEmail(b.email);
   await controllaDuplicato(id, mio, nome, cognome);
+  let notifiche: number[] = [];
   try {
     await db.transaction(async (tx) => {
       const [p] = await tx
         .insert(eventiPartecipantiTable)
-        .values({ eventoId: id, collaboratoreId: mio, nome, cognome, codiceQr: nuovoCodiceQr(), creatoDaUtenteId: req.utente!.id })
+        .values({ eventoId: id, collaboratoreId: mio, nome, cognome, email, codiceQr: nuovoCodiceQr(), creatoDaUtenteId: req.utente!.id })
         .returning({ id: eventiPartecipantiTable.id });
+      notifiche = await notificaQrPartecipante(tx, e, { id: p!.id, nome, email });
       await registraLog(tx, contestoDa(req), {
         azione: "evento.partecipante_aggiungi",
         entita: "evento",
@@ -132,6 +144,7 @@ router.post("/eventi/:id/partecipanti", async (req, res) => {
     if (codiceErrorePg(err).code === "23505") throw DUPLICATO;
     throw err;
   }
+  recapitaInBackground(notifiche);
   res.status(201).json(await schedaSede(id, mio));
 });
 
@@ -155,18 +168,23 @@ router.patch("/eventi/:id/partecipanti/:partecipanteId", async (req, res) => {
   const e = await caricaEvento(id);
   const nome = normalizzaNomePersona(b.nome, "Il nome");
   const cognome = normalizzaNomePersona(b.cognome, "Il cognome");
+  const email = pulisciEmail(b.email);
   await controllaDuplicato(id, mio, nome, cognome, p.id);
-  if (nome !== p.nome || cognome !== p.cognome) {
+  if (nome !== p.nome || cognome !== p.cognome || email !== p.email) {
+    let notifiche: number[] = [];
     await db.transaction(async (tx) => {
-      await tx.update(eventiPartecipantiTable).set({ nome, cognome }).where(eq(eventiPartecipantiTable.id, p.id));
+      await tx.update(eventiPartecipantiTable).set({ nome, cognome, email }).where(eq(eventiPartecipantiTable.id, p.id));
+      // Se l'indirizzo cambia (o non c'era), il QR code arriva al nuovo indirizzo.
+      if (email !== p.email) notifiche = await notificaQrPartecipante(tx, e, { id: p.id, nome, email });
       await registraLog(tx, contestoDa(req), {
         azione: "evento.partecipante_modifica",
         entita: "evento",
         entitaId: id,
         descrizione: `Corretto il partecipante "${p.cognome} ${p.nome}" in "${cognome} ${nome}" all'evento "${e.titolo}"`,
-        dettagli: { partecipanteId: p.id, prima: { nome: p.nome, cognome: p.cognome }, dopo: { nome, cognome } },
+        dettagli: { partecipanteId: p.id, prima: { nome: p.nome, cognome: p.cognome, email: p.email }, dopo: { nome, cognome, email } },
       });
     });
+    recapitaInBackground(notifiche);
   }
   res.json(await schedaSede(id, mio));
 });

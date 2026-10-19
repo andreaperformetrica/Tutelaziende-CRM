@@ -1,4 +1,4 @@
-import { date, index, integer, jsonb, pgTable, real, serial, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { boolean, date, index, integer, jsonb, pgTable, real, serial, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { collaboratoriTable } from "./collaboratori";
 import { utentiTable } from "./utenti";
 
@@ -33,6 +33,8 @@ export const eventiTable = pgTable("eventi", {
   questionarioCaricatoIl: timestamp("questionario_caricato_il", { withTimezone: true }),
   /** Domande del questionario creato nel sistema (il PDF generato sta nei campi questionario*); null se il questionario e' un file caricato. */
   questionarioDomande: jsonb("questionario_domande").$type<DomandaQuestionario[]>(),
+  /** Ore minime di presenza (da entrata a uscita) per avere l'attestato. Modificabile per ogni corso. */
+  oreMinimeAttestato: real("ore_minime_attestato").notNull().default(3),
   layoutChiave: text("layout_chiave"),
   layoutNome: text("layout_nome"),
   layoutTipo: text("layout_tipo"),
@@ -78,6 +80,8 @@ export const eventiPartecipantiTable = pgTable(
     nome: text("nome").notNull(),
     cognome: text("cognome").notNull(),
     codiceQr: text("codice_qr").notNull(),
+    /** Indirizzo a cui arrivano QR code, documenti e questionario. Vuoto solo per i partecipanti inseriti prima. */
+    email: text("email"),
     entrataIl: timestamp("entrata_il", { withTimezone: true }),
     uscitaIl: timestamp("uscita_il", { withTimezone: true }),
     creatoDaUtenteId: integer("creato_da_utente_id").references(() => utentiTable.id, { onDelete: "set null" }),
@@ -88,3 +92,73 @@ export const eventiPartecipantiTable = pgTable(
 
 export type EventoRow = typeof eventiTable.$inferSelect;
 export type PartecipanteEventoRow = typeof eventiPartecipantiTable.$inferSelect;
+
+/** Documento caricato dopo il corso (slide, dispense...): si invia per email a chi risulta presente. */
+export const eventiDocumentiTable = pgTable(
+  "eventi_documenti",
+  {
+    id: serial("id").primaryKey(),
+    eventoId: integer("evento_id")
+      .notNull()
+      .references(() => eventiTable.id, { onDelete: "cascade" }),
+    chiave: text("chiave").notNull(),
+    nome: text("nome").notNull(),
+    tipo: text("tipo").notNull(),
+    dimensione: integer("dimensione").notNull(),
+    caricatoDaUtenteId: integer("caricato_da_utente_id").references(() => utentiTable.id, { onDelete: "set null" }),
+    caricatoIl: timestamp("caricato_il", { withTimezone: true }).notNull().defaultNow(),
+    /** Ultimo invio ai presenti e a quanti partecipanti e' stato inviato. */
+    inviatoIl: timestamp("inviato_il", { withTimezone: true }),
+    inviatoA: integer("inviato_a"),
+  },
+  (t) => [index("eventi_documenti_evento_idx").on(t.eventoId)],
+);
+
+export interface DomandaQuiz {
+  testo: string;
+  opzioni: string[];
+  /** Posizione (da 0) della risposta esatta. */
+  corretta: number;
+}
+
+/** Questionario online di verifica: domande a scelta multipla con una risposta esatta. Una riga per evento. */
+export const eventiQuizTable = pgTable("eventi_quiz", {
+  id: serial("id").primaryKey(),
+  eventoId: integer("evento_id")
+    .notNull()
+    .references(() => eventiTable.id, { onDelete: "cascade" })
+    .unique(),
+  domande: jsonb("domande").$type<DomandaQuiz[]>().notNull(),
+  /** Punteggio minimo per passare: ogni risposta esatta vale un punto. */
+  punteggioMinimo: integer("punteggio_minimo").notNull(),
+  creatoIl: timestamp("creato_il", { withTimezone: true }).notNull().defaultNow(),
+  modificatoIl: timestamp("modificato_il", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** Link personale al questionario di un partecipante. Si compila una sola volta. */
+export const eventiQuizInvitiTable = pgTable(
+  "eventi_quiz_inviti",
+  {
+    id: serial("id").primaryKey(),
+    eventoId: integer("evento_id")
+      .notNull()
+      .references(() => eventiTable.id, { onDelete: "cascade" }),
+    partecipanteId: integer("partecipante_id")
+      .notNull()
+      .references(() => eventiPartecipantiTable.id, { onDelete: "cascade" })
+      .unique(),
+    token: text("token").notNull(),
+    inviatoIl: timestamp("inviato_il", { withTimezone: true }).notNull().defaultNow(),
+    compilatoIl: timestamp("compilato_il", { withTimezone: true }),
+    punteggio: integer("punteggio"),
+    punteggioMassimo: integer("punteggio_massimo"),
+    superato: boolean("superato"),
+    /** Risposta scelta per ogni domanda (posizione), nell'ordine delle domande al momento della compilazione. */
+    risposte: jsonb("risposte").$type<number[]>(),
+  },
+  (t) => [uniqueIndex("eventi_quiz_inviti_token_uq").on(t.token), index("eventi_quiz_inviti_evento_idx").on(t.eventoId)],
+);
+
+export type EventoDocumentoRow = typeof eventiDocumentiTable.$inferSelect;
+export type EventoQuizRow = typeof eventiQuizTable.$inferSelect;
+export type EventoQuizInvitoRow = typeof eventiQuizInvitiTable.$inferSelect;

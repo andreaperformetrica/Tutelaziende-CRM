@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { getGetEventoBackofficeQueryKey, useGetEventoBackoffice, useRegistraCheckInEvento, type CheckInEsito } from "@workspace/api-client-react";
+import { getGetEventoBackofficeQueryKey, useGetEventoBackoffice, useRegistraCheckInEvento, useRegistraPresenzaPartecipante, type CheckInEsito, type PartecipanteEventoBackoffice } from "@workspace/api-client-react";
 import jsQR from "jsqr";
-import { AlertTriangle, ArrowLeft, Camera, CameraOff, CheckCircle2, XCircle } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Camera, CameraOff, CheckCircle2, LogIn, LogOut, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/common";
 import { cn } from "@/lib/utils";
-import { fmtData, fmtIstante, parseApiError } from "@/lib/format";
+import { fmtData, fmtIstante, fmtOre, oraDaIstante, parseApiError } from "@/lib/format";
+import { useToast } from "@/hooks/use-toast";
 
 type Esito = { tipo: "ok" | "avviso" | "errore"; titolo: string; testo?: string; ora: string };
 
@@ -19,6 +20,23 @@ export default function EventoCheckIn() {
   const qc = useQueryClient();
   const evento = useGetEventoBackoffice(id);
   const check = useRegistraCheckInEvento();
+  const presenza = useRegistraPresenzaPartecipante();
+  const { toast } = useToast();
+  const [inCorso, setInCorso] = useState<number | null>(null);
+  const segna = (p: PartecipanteEventoBackoffice, tipo: "entrata" | "uscita") => {
+    setInCorso(p.id);
+    presenza.mutate({ id, partecipanteId: p.id, data: { tipo } }, {
+      onSuccess: () => {
+        toast({ title: `${tipo === "entrata" ? "Entrata" : "Uscita"} registrata`, description: `${p.cognome} ${p.nome}` });
+        qc.invalidateQueries({ queryKey: getGetEventoBackofficeQueryKey(id) });
+      },
+      onError: (x) => {
+        toast({ variant: "destructive", title: "Registrazione non riuscita", description: parseApiError(x).message });
+        qc.invalidateQueries({ queryKey: getGetEventoBackofficeQueryKey(id) });
+      },
+      onSettled: () => setInCorso(null),
+    });
+  };
   const [esito, setEsito] = useState<Esito | null>(null);
   const [recenti, setRecenti] = useState<Esito[]>([]);
   const [manuale, setManuale] = useState("");
@@ -109,7 +127,7 @@ export default function EventoCheckIn() {
   const usciti = evento.data.partecipanti.filter((p) => p.uscitaIl).length;
 
   return (
-    <div className="max-w-xl mx-auto space-y-4">
+    <div className="max-w-2xl mx-auto space-y-4">
       <Link href={`/admin/eventi/${id}`} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" /> Torna all'evento</Link>
       <div>
         <h1 className="text-2xl font-bold leading-tight" data-testid="text-page-title">Check-in</h1>
@@ -139,6 +157,36 @@ export default function EventoCheckIn() {
       </form>
 
       {esito && <CartaEsito esito={esito} grande />}
+
+      <section className="space-y-2" data-testid="elenco-partecipanti-check-in">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Partecipanti ({evento.data.partecipanti.length})</h2>
+        <p className="text-xs text-muted-foreground">La riga diventa verde quando l&apos;entrata è registrata. Puoi registrare entrata e uscita anche da qui, senza il QR.</p>
+        {evento.data.partecipanti.length === 0 && <p className="text-sm text-muted-foreground rounded-md border border-dashed border-input p-4 text-center">Nessun partecipante iscritto.</p>}
+        <ul className="space-y-1.5">
+          {evento.data.partecipanti.map((p) => {
+            const dentro = !!p.entrataIl;
+            return (
+              <li key={p.id} data-testid={`riga-check-in-${p.id}`} data-presente={dentro ? "si" : "no"}
+                className={cn("rounded-lg border-2 p-3 flex flex-wrap items-center gap-x-4 gap-y-2", dentro ? "border-emerald-600/50 bg-emerald-50 text-emerald-950" : "border-border bg-card")}>
+                <div className="min-w-0 flex-1 basis-48">
+                  <div className="font-semibold leading-tight flex items-center gap-1.5">{dentro && <CheckCircle2 className="size-4 text-emerald-700 shrink-0" />}{p.cognome} {p.nome}</div>
+                  <div className="text-xs text-muted-foreground">{p.sedeNome}</div>
+                </div>
+                <dl className="grid grid-cols-3 gap-x-4 text-sm tabular-nums">
+                  <div><dt className="text-[11px] uppercase tracking-wider text-muted-foreground">Entrata</dt><dd data-testid={`entrata-${p.id}`}>{p.entrataIl ? oraDaIstante(p.entrataIl) : "—"}</dd></div>
+                  <div><dt className="text-[11px] uppercase tracking-wider text-muted-foreground">Uscita</dt><dd data-testid={`uscita-${p.id}`}>{p.uscitaIl ? oraDaIstante(p.uscitaIl) : "—"}</dd></div>
+                  <div><dt className="text-[11px] uppercase tracking-wider text-muted-foreground">Ore totali</dt><dd data-testid={`ore-${p.id}`}>{p.minutiPresenza != null ? fmtOre(p.minutiPresenza) : "—"}</dd></div>
+                </dl>
+                <div className="flex gap-1.5">
+                  <Button size="sm" variant={dentro ? "outline" : "default"} disabled={dentro || inCorso === p.id} onClick={() => segna(p, "entrata")} data-testid={`button-entrata-${p.id}`}><LogIn className="size-3.5 mr-1.5" /> Entrata</Button>
+                  <Button size="sm" variant="outline" disabled={!dentro || !!p.uscitaIl || inCorso === p.id} onClick={() => segna(p, "uscita")} data-testid={`button-uscita-${p.id}`}><LogOut className="size-3.5 mr-1.5" /> Uscita</Button>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
       {recenti.length > 1 && (
         <div className="space-y-1.5">
           <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ultime registrazioni</h2>

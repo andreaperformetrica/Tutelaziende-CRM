@@ -36,6 +36,8 @@ tags:
     description: Eventi e corsi di formazione nel back office (solo admin e super admin)
   - name: eventi
     description: Eventi e corsi di formazione nel Web Collaboratore
+  - name: questionari
+    description: Questionario online del corso, aperto dal link personale senza accesso
   - name: alert
   - name: dashboard
   - name: chat
@@ -1093,6 +1095,176 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CheckInEsito"
+  /backoffice/eventi/{id}/partecipanti/{partecipanteId}/presenza:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+      - name: partecipanteId
+        in: path
+        required: true
+        schema:
+          type: integer
+    post:
+      operationId: registraPresenzaPartecipante
+      tags: [eventi-backoffice]
+      summary: Registra ora l'entrata o l'uscita di un partecipante scelto dall'elenco
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PresenzaInput"
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckInEsito"
+  /backoffice/eventi/{id}/attestato/soglia:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    put:
+      operationId: updateSogliaAttestato
+      tags: [eventi-backoffice]
+      summary: Imposta le ore minime di presenza per ricevere l'attestato
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SogliaAttestatoInput"
+      responses:
+        "200":
+          description: Evento aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventoBackoffice"
+  /backoffice/eventi/{id}/documenti/{documentoId}:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+      - name: documentoId
+        in: path
+        required: true
+        schema:
+          type: integer
+    delete:
+      operationId: deleteDocumentoEvento
+      tags: [eventi-backoffice]
+      summary: Elimina un documento del corso
+      responses:
+        "200":
+          description: Evento aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventoBackoffice"
+  /backoffice/eventi/{id}/documenti/invia:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    post:
+      operationId: inviaDocumentiEvento
+      tags: [eventi-backoffice]
+      summary: Invia per email i documenti scelti ai soli presenti
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentiInvioInput"
+      responses:
+        "200":
+          description: Esito dell'invio
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvioEventoEsito"
+  /backoffice/eventi/{id}/quiz:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    put:
+      operationId: saveQuizEvento
+      tags: [eventi-backoffice]
+      summary: Crea o modifica il questionario online (domande a scelta multipla e punteggio minimo)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuizInput"
+      responses:
+        "200":
+          description: Evento aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventoBackoffice"
+    delete:
+      operationId: deleteQuizEvento
+      tags: [eventi-backoffice]
+      summary: Elimina il questionario online (solo se non e' ancora stato inviato)
+      responses:
+        "200":
+          description: Evento aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventoBackoffice"
+  /backoffice/eventi/{id}/quiz/invia:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    post:
+      operationId: inviaQuizEvento
+      tags: [eventi-backoffice]
+      summary: Invia a ogni partecipante l'email con il link personale al questionario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuizInvioInput"
+      responses:
+        "200":
+          description: Esito dell'invio
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvioEventoEsito"
+  /questionari/{token}:
+    parameters:
+      - name: token
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getQuestionarioPubblico
+      tags: [questionari]
+      summary: Questionario del corso aperto dal link personale (senza accesso)
+      responses:
+        "200":
+          description: Questionario da compilare oppure esito se gia compilato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizPubblico"
+    post:
+      operationId: inviaRisposteQuestionario
+      tags: [questionari]
+      summary: Invia le risposte (una sola volta) e restituisce l'esito
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuizRisposteInput"
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizPubblico"
   /backoffice/eventi/{id}/questionario:
     parameters:
       - $ref: "#/components/parameters/IdPath"
@@ -3469,7 +3641,7 @@ components:
         caricatoIl: { type: string }
     EventoDati:
       type: object
-      required: [id, titolo, data, oraInizio, oraFine, luogo, descrizione, tipoCorso, argomento, passato]
+      required: [id, titolo, data, oraInizio, oraFine, luogo, descrizione, tipoCorso, argomento, oreMinimeAttestato, passato]
       properties:
         id: { type: integer }
         titolo: { type: string }
@@ -3483,6 +3655,7 @@ components:
           enum: [CAF, PATRONATO, null]
           description: "Tipo di corso scritto sull'attestato; vuoto solo per gli eventi creati prima di questo campo"
         argomento: { type: [string, "null"], description: "Argomento del corso scritto sull'attestato" }
+        oreMinimeAttestato: { type: number, description: "Ore minime di presenza, da entrata a uscita, per ricevere l'attestato" }
         passato: { type: boolean, description: "Vero se la data e' prima di oggi" }
     EventoRiepilogo:
       type: object
@@ -3509,16 +3682,146 @@ components:
         partecipanti: { type: integer }
     PartecipanteEventoBackoffice:
       type: object
-      required: [id, nome, cognome, collaboratoreId, sedeNome, numeroSportello, entrataIl, uscitaIl]
+      required: [id, nome, cognome, email, collaboratoreId, sedeNome, numeroSportello, entrataIl, uscitaIl, minutiPresenza, idoneoAttestato, quiz]
       properties:
         id: { type: integer }
         nome: { type: string }
         cognome: { type: string }
+        email: { type: [string, "null"], description: "Vuota solo per i partecipanti inseriti prima che l'email fosse richiesta" }
         collaboratoreId: { type: integer }
         sedeNome: { type: string }
         numeroSportello: { type: string }
         entrataIl: { type: [string, "null"] }
         uscitaIl: { type: [string, "null"] }
+        minutiPresenza: { type: [integer, "null"], description: "Minuti tra entrata e uscita; vuoto se manca uno dei due orari" }
+        idoneoAttestato: { type: boolean, description: "Vero se le ore di presenza raggiungono le ore minime del corso" }
+        quiz:
+          oneOf:
+            - $ref: "#/components/schemas/QuizEsitoPartecipante"
+            - type: "null"
+    QuizEsitoPartecipante:
+      type: object
+      required: [inviatoIl, compilatoIl, punteggio, punteggioMassimo, superato]
+      properties:
+        inviatoIl: { type: string }
+        compilatoIl: { type: [string, "null"] }
+        punteggio: { type: [integer, "null"] }
+        punteggioMassimo: { type: [integer, "null"] }
+        superato: { type: [boolean, "null"] }
+    DocumentoEvento:
+      type: object
+      required: [id, nome, tipo, dimensione, caricatoIl, inviatoIl, inviatoA]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        tipo: { type: string }
+        dimensione: { type: integer }
+        caricatoIl: { type: string }
+        inviatoIl: { type: [string, "null"] }
+        inviatoA: { type: [integer, "null"], description: "A quanti presenti e' stato inviato l'ultima volta" }
+    DomandaQuiz:
+      type: object
+      required: [testo, opzioni, corretta]
+      properties:
+        testo: { type: string, minLength: 1, maxLength: 500 }
+        opzioni:
+          type: array
+          minItems: 2
+          maxItems: 8
+          items: { type: string, minLength: 1, maxLength: 200 }
+        corretta: { type: integer, minimum: 0, maximum: 7, description: "Posizione (da 0) della risposta esatta" }
+    QuizInput:
+      type: object
+      required: [domande, punteggioMinimo]
+      properties:
+        domande:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items: { $ref: "#/components/schemas/DomandaQuiz" }
+        punteggioMinimo: { type: integer, minimum: 1, description: "Risposte esatte necessarie per passare (1 punto ciascuna)" }
+    QuizEvento:
+      type: object
+      required: [domande, punteggioMinimo, aggiornatoIl, inviati, compilati]
+      properties:
+        domande:
+          type: array
+          items: { $ref: "#/components/schemas/DomandaQuiz" }
+        punteggioMinimo: { type: integer }
+        aggiornatoIl: { type: string }
+        inviati: { type: integer, description: "Partecipanti a cui e' stato inviato il link" }
+        compilati: { type: integer }
+    QuizInvioInput:
+      type: object
+      required: [soloPresenti]
+      properties:
+        soloPresenti: { type: boolean, description: "Vero: solo chi ha registrato l'entrata; falso: tutti gli iscritti" }
+    DocumentiInvioInput:
+      type: object
+      required: [documentiIds]
+      properties:
+        documentiIds:
+          type: array
+          minItems: 1
+          items: { type: integer }
+    InvioEventoEsito:
+      type: object
+      required: [inviati, senzaEmail, saltati]
+      properties:
+        inviati: { type: integer, description: "Email messe in invio" }
+        senzaEmail: { type: integer, description: "Destinatari senza indirizzo email" }
+        saltati: { type: integer, description: "Destinatari esclusi (es. questionario gia compilato)" }
+    PresenzaInput:
+      type: object
+      required: [tipo]
+      properties:
+        tipo: { type: string, enum: [entrata, uscita] }
+    SogliaAttestatoInput:
+      type: object
+      required: [oreMinime]
+      properties:
+        oreMinime: { type: number, minimum: 0, maximum: 24, description: "Ore minime di presenza per l'attestato" }
+    QuizPubblicoDomanda:
+      type: object
+      required: [testo, opzioni]
+      properties:
+        testo: { type: string }
+        opzioni:
+          type: array
+          items: { type: string }
+    QuizPubblicoEsito:
+      type: object
+      required: [punteggio, punteggioMassimo, punteggioMinimo, superato, compilatoIl]
+      properties:
+        punteggio: { type: integer }
+        punteggioMassimo: { type: integer }
+        punteggioMinimo: { type: integer }
+        superato: { type: boolean }
+        compilatoIl: { type: string }
+    QuizPubblico:
+      type: object
+      required: [titolo, data, partecipante, stato, domande, esito]
+      properties:
+        titolo: { type: string }
+        data: { type: string }
+        partecipante: { type: string, description: "Nome e cognome" }
+        stato: { type: string, enum: [da_compilare, compilato] }
+        punteggioMinimo: { type: integer }
+        domande:
+          type: array
+          description: "Vuoto dopo la compilazione; non contiene mai le risposte esatte"
+          items: { $ref: "#/components/schemas/QuizPubblicoDomanda" }
+        esito:
+          oneOf:
+            - $ref: "#/components/schemas/QuizPubblicoEsito"
+            - type: "null"
+    QuizRisposteInput:
+      type: object
+      required: [risposte]
+      properties:
+        risposte:
+          type: array
+          items: { type: integer, minimum: 0 }
     DomandaQuestionario:
       type: object
       required: [testo, tipo, opzioni, righe]
@@ -3541,9 +3844,16 @@ components:
           items: { $ref: "#/components/schemas/DomandaQuestionario" }
     EventoBackoffice:
       type: object
-      required: [evento, questionario, domande, inviti, partecipanti]
+      required: [evento, questionario, domande, inviti, partecipanti, documenti, quiz]
       properties:
         evento: { $ref: "#/components/schemas/EventoDati" }
+        documenti:
+          type: array
+          items: { $ref: "#/components/schemas/DocumentoEvento" }
+        quiz:
+          oneOf:
+            - $ref: "#/components/schemas/QuizEvento"
+            - type: "null"
         questionario:
           oneOf:
             - $ref: "#/components/schemas/FileEvento"
@@ -3622,11 +3932,12 @@ components:
         questionario: { type: boolean }
     PartecipanteEventoSede:
       type: object
-      required: [id, nome, cognome, codiceQr, entrataIl, uscitaIl, modificabile]
+      required: [id, nome, cognome, email, codiceQr, entrataIl, uscitaIl, modificabile]
       properties:
         id: { type: integer }
         nome: { type: string }
         cognome: { type: string }
+        email: { type: [string, "null"] }
         codiceQr: { type: string, description: "Contenuto del QR code personale" }
         entrataIl: { type: [string, "null"] }
         uscitaIl: { type: [string, "null"] }
@@ -3646,10 +3957,11 @@ components:
           items: { $ref: "#/components/schemas/PartecipanteEventoSede" }
     PartecipanteEventoInput:
       type: object
-      required: [nome, cognome]
+      required: [nome, cognome, email]
       properties:
         nome: { type: string, minLength: 1, maxLength: 80 }
         cognome: { type: string, minLength: 1, maxLength: 80 }
+        email: { type: string, format: email, maxLength: 200, description: "Qui arriva il QR code personale" }
     FiltroUtenteLog:
       type: object
       required: [id, nome, ruolo]

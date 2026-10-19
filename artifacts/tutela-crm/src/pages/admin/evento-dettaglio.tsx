@@ -3,7 +3,7 @@ import { Link, useLocation, useParams } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   getGetEventoBackofficeQueryKey, getListEventiBackofficeQueryKey, useAddInvitiEvento, useDeleteEvento,
-  useDeleteQuestionarioEvento, useGetEventoBackoffice, useRemoveInvitoEvento, useUpdateEvento, useUpdateOrariPartecipante,
+  useDeleteQuestionarioEvento, useGetEventoBackoffice, useRemoveInvitoEvento, useUpdateEvento, useUpdateOrariPartecipante, useUpdateSogliaAttestato,
   type EventoBackoffice, type PartecipanteEventoBackoffice,
 } from "@workspace/api-client-react";
 import { ArrowLeft, Award, Download, FileText, Loader2, Pencil, Printer, QrCode, Trash2, Upload, UserPlus } from "lucide-react";
@@ -21,8 +21,10 @@ import { SelettoreFile } from "@/components/pratiche/selettore-file";
 import { FormEvento } from "@/components/eventi/form-evento";
 import { SelettoreSedi } from "@/components/eventi/selettore-sedi";
 import { QuestionarioEditor } from "@/components/eventi/questionario-editor";
+import { DocumentiCorso } from "@/components/eventi/documenti-corso";
+import { EsitoQuizBadge, QuizOnline } from "@/components/eventi/quiz-online";
 import { useToast } from "@/hooks/use-toast";
-import { fmtData, fmtIstante, fmtOrarioEvento, oraDaIstante, parseApiError, tipologiaLabel } from "@/lib/format";
+import { fmtData, fmtIstante, fmtOrarioEvento, fmtOre, oraDaIstante, parseApiError, tipologiaLabel } from "@/lib/format";
 import {
   formatoDimensione, inviaFile, messaggioErrore, urlAnteprimaAttestato, urlAttestatiPresenti, urlAttestatoPartecipante, urlQuestionarioBackoffice,
 } from "@/lib/upload";
@@ -72,6 +74,7 @@ export default function EventoDettaglioBackoffice() {
           <TabsTrigger value="iscritti" data-testid="tab-iscritti">Iscritti ({s.partecipanti.length})</TabsTrigger>
           <TabsTrigger value="sedi" data-testid="tab-sedi">Sedi invitate ({s.inviti.length})</TabsTrigger>
           <TabsTrigger value="documenti" data-testid="tab-documenti">Questionario e attestato</TabsTrigger>
+          <TabsTrigger value="dopo" data-testid="tab-dopo-corso">Dopo il corso</TabsTrigger>
         </TabsList>
         <TabsContent value="iscritti" className="mt-4">
           <Iscritti s={s} id={id} presenti={presenti} onSalva={salva} onErrore={errore} />
@@ -82,6 +85,10 @@ export default function EventoDettaglioBackoffice() {
         <TabsContent value="documenti" className="mt-4 grid gap-4 lg:grid-cols-2">
           <Questionario s={s} id={id} onSalva={salva} onErrore={errore} />
           <Attestato s={s} id={id} onSalva={salva} onErrore={errore} />
+        </TabsContent>
+        <TabsContent value="dopo" className="mt-4 grid gap-4 lg:grid-cols-2 items-start">
+          <DocumentiCorso s={s} id={id} onSalva={salva} onErrore={errore} />
+          <QuizOnline s={s} id={id} onSalva={salva} onErrore={errore} onAggiorna={() => qc.invalidateQueries({ queryKey: getGetEventoBackofficeQueryKey(id) })} />
         </TabsContent>
       </Tabs>
 
@@ -112,15 +119,16 @@ function Iscritti({ s, id, presenti, onSalva }: Comune & { presenti: number }) {
   const [err, setErr] = useState<string | null>(null);
   const apri = (p: PartecipanteEventoBackoffice) => { setMod(p); setEntrata(oraDaIstante(p.entrataIl)); setUscita(oraDaIstante(p.uscitaIl)); setErr(null); };
   const haLayout = attestatoPronto(s);
+  const idonei = s.partecipanti.filter((p) => p.idoneoAttestato).length;
 
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-3 justify-between">
-        <p className="text-sm text-muted-foreground" data-testid="text-conteggio-presenti"><strong className="text-foreground">{presenti}</strong> presenti su {s.partecipanti.length} iscritti</p>
-        {haLayout && presenti > 0 ? (
-          <Button asChild variant="outline"><a href={urlAttestatiPresenti(id)} target="_blank" rel="noreferrer" data-testid="link-attestati-presenti"><Printer className="size-4 mr-2" /> Attestati di tutti i presenti</a></Button>
+        <p className="text-sm text-muted-foreground" data-testid="text-conteggio-presenti"><strong className="text-foreground">{presenti}</strong> presenti su {s.partecipanti.length} iscritti · <strong className="text-foreground">{idonei}</strong> con almeno {fmtOre(Math.round(s.evento.oreMinimeAttestato * 60))} di presenza</p>
+        {haLayout && idonei > 0 ? (
+          <Button asChild variant="outline"><a href={urlAttestatiPresenti(id)} target="_blank" rel="noreferrer" data-testid="link-attestati-presenti"><Printer className="size-4 mr-2" /> Attestati di chi ha le ore ({idonei})</a></Button>
         ) : (
-          <Button variant="outline" disabled title={haLayout ? "Nessun presente" : "Indica prima tipo di corso e argomento nell'evento"}><Printer className="size-4 mr-2" /> Attestati di tutti i presenti</Button>
+          <Button variant="outline" disabled title={haLayout ? "Nessun partecipante ha le ore minime" : "Indica prima tipo di corso e argomento nell'evento"}><Printer className="size-4 mr-2" /> Attestati di chi ha le ore (0)</Button>
         )}
       </div>
       {s.partecipanti.length === 0 ? (
@@ -130,19 +138,21 @@ function Iscritti({ s, id, presenti, onSalva }: Comune & { presenti: number }) {
           <Table className="tabella-schede">
             <TableHeader>
               <TableRow className="bg-muted/60 hover:bg-muted/60">
-                {["Partecipante", "Sede", "Entrata", "Uscita", ""].map((h) => <TableHead key={h} className="text-[11px] uppercase tracking-wider font-semibold h-10">{h}</TableHead>)}
+                {["Partecipante", "Sede", "Entrata", "Uscita", "Ore totali", "Questionario online", ""].map((h) => <TableHead key={h} className="text-[11px] uppercase tracking-wider font-semibold h-10">{h}</TableHead>)}
               </TableRow>
             </TableHeader>
             <TableBody>
               {s.partecipanti.map((p) => (
                 <TableRow key={p.id} data-testid={`row-iscritto-${p.id}`}>
-                  <TableCell className="font-semibold whitespace-nowrap">{p.cognome} {p.nome}</TableCell>
+                  <TableCell className="font-semibold whitespace-nowrap">{p.cognome} {p.nome}{p.email && <div className="text-xs font-normal text-muted-foreground">{p.email}</div>}</TableCell>
                   <TableCell data-label="Sede" className="text-sm whitespace-nowrap">{p.sedeNome} <span className="font-mono text-xs text-muted-foreground">· {p.numeroSportello}</span></TableCell>
                   <TableCell data-label="Entrata" className="tabular-nums text-sm whitespace-nowrap">{p.entrataIl ? fmtIstante(p.entrataIl) : <span className="text-muted-foreground">—</span>}</TableCell>
                   <TableCell data-label="Uscita" className="tabular-nums text-sm whitespace-nowrap">{p.uscitaIl ? fmtIstante(p.uscitaIl) : <span className="text-muted-foreground">—</span>}</TableCell>
+                  <TableCell data-label="Ore totali" className="tabular-nums text-sm whitespace-nowrap" data-testid={`ore-iscritto-${p.id}`}>{p.minutiPresenza != null ? fmtOre(p.minutiPresenza) : <span className="text-muted-foreground">—</span>}</TableCell>
+                  <TableCell data-label="Questionario online" className="whitespace-nowrap" data-testid={`quiz-iscritto-${p.id}`}><EsitoQuizBadge quiz={p.quiz} /></TableCell>
                   <TableCell className="text-right whitespace-nowrap">
                     <Button size="sm" variant="ghost" onClick={() => apri(p)} data-testid={`button-orari-${p.id}`}><Pencil className="size-3.5 mr-1.5" /> Orari</Button>
-                    {haLayout && <Button asChild size="sm" variant="ghost"><a href={urlAttestatoPartecipante(id, p.id)} target="_blank" rel="noreferrer" data-testid={`link-attestato-${p.id}`}><Award className="size-3.5 mr-1.5" /> Attestato</a></Button>}
+                    {haLayout && p.idoneoAttestato && <Button asChild size="sm" variant="ghost"><a href={urlAttestatoPartecipante(id, p.id)} target="_blank" rel="noreferrer" data-testid={`link-attestato-${p.id}`}><Award className="size-3.5 mr-1.5" /> Attestato</a></Button>}
                   </TableCell>
                 </TableRow>
               ))}
@@ -291,9 +301,15 @@ function Questionario({ s, id, onSalva, onErrore }: Comune) {
 
 const tipoCorsoLabel = (t: string | null) => (t === "CAF" ? "CAF" : t === "PATRONATO" ? "Patronato" : "—");
 
-function Attestato({ s }: Comune) {
+function Attestato({ s, id, onSalva, onErrore }: Comune) {
+  const { toast } = useToast();
+  const soglia = useUpdateSogliaAttestato();
   const e = s.evento;
   const pronto = attestatoPronto(s);
+  const [ore, setOre] = useState(String(e.oreMinimeAttestato));
+  useEffect(() => { setOre(String(e.oreMinimeAttestato)); }, [e.oreMinimeAttestato]);
+  const valore = Number(ore.replace(",", "."));
+  const valido = ore.trim() !== "" && Number.isFinite(valore) && valore >= 0 && valore <= 24;
   return (
     <section className="rounded-lg border border-border bg-card p-5">
       <h2 className="font-bold text-lg flex items-center gap-2"><Award className="size-5" /> Attestato</h2>
@@ -303,10 +319,23 @@ function Attestato({ s }: Comune) {
         <dt className="text-muted-foreground">Tipo di corso</dt><dd className="font-medium">{tipoCorsoLabel(e.tipoCorso)}</dd>
         <dt className="text-muted-foreground">Argomento</dt><dd className="font-medium">{e.argomento || "—"}</dd>
         <dt className="text-muted-foreground">Data del corso</dt><dd className="font-medium">{fmtData(e.data)}</dd>
+        <dt className="text-muted-foreground">Ore di partecipazione</dt><dd>Calcolate da entrata e uscita di ogni partecipante</dd>
       </dl>
+      <div className="rounded-md border border-border p-3 mb-4">
+        <Label htmlFor="soglia-ore">Ore minime di presenza per ricevere l&apos;attestato</Label>
+        <div className="flex flex-wrap items-center gap-2 mt-1">
+          <Input id="soglia-ore" inputMode="decimal" value={ore} onChange={(x) => setOre(x.target.value)} className="w-24" data-testid="input-soglia-ore" />
+          <span className="text-sm text-muted-foreground">ore</span>
+          <Button size="sm" disabled={!valido || valore === e.oreMinimeAttestato || soglia.isPending} data-testid="button-salva-soglia"
+            onClick={() => soglia.mutate({ id, data: { oreMinime: valore } }, { onSuccess: (r) => { onSalva(r); toast({ title: "Soglia aggiornata" }); }, onError: onErrore })}>
+            {soglia.isPending && <Loader2 className="size-4 mr-2 animate-spin" />}Salva
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">Chi ha meno ore, o non ha l&apos;uscita registrata, non riceve l&apos;attestato. Il valore vale solo per questo corso (di norma 3 ore).</p>
+      </div>
       {pronto ? (
         <iframe title="Anteprima attestato" className="w-full h-[360px] rounded-md border border-border bg-white"
-          src={`${urlAnteprimaAttestato(s.evento.id, `${e.tipoCorso}|${e.argomento}|${e.data}`)}#toolbar=0&navpanes=0`} data-testid="iframe-anteprima-attestato" />
+          src={`${urlAnteprimaAttestato(s.evento.id, `${e.tipoCorso}|${e.argomento}|${e.data}|${e.oreMinimeAttestato}`)}#toolbar=0&navpanes=0`} data-testid="iframe-anteprima-attestato" />
       ) : (
         <p className="text-sm text-destructive" data-testid="attestato-incompleto">Per stampare gli attestati modifica l&apos;evento e indica il tipo di corso e l&apos;argomento.</p>
       )}

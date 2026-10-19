@@ -10,6 +10,8 @@ export interface PartecipanteEventoSede {
   id: number;
   nome: string;
   cognome: string;
+  /** @nullable */
+  email: string | null;
   /** Contenuto del QR code personale */
   codiceQr: string;
   /** @nullable */

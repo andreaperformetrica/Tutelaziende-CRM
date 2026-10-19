@@ -56,6 +56,7 @@ import type {
   CreaEstrattiInput,
   DareAvere,
   DashboardOperatore,
+  DocumentiInvioInput,
   DocumentoNoto,
   DocumentoNotoInput,
   DocumentoTipoInput,
@@ -82,6 +83,7 @@ import type {
   ImpostazioniStampa,
   ImpostazioniStampaInput,
   InvioEstrattoEsito,
+  InvioEventoEsito,
   InvioPraticaInput,
   InvioPratiche,
   InvitiEventoInput,
@@ -123,8 +125,13 @@ import type {
   PraticaTipoRiepilogo,
   PratichePagina,
   PratichePaginaBackoffice,
+  PresenzaInput,
   ProvinciaMandati,
   QuestionarioInput,
+  QuizInput,
+  QuizInvioInput,
+  QuizPubblico,
+  QuizRisposteInput,
   ResocontoCompensi,
   RichiestaFirmaMandato,
   RigaDareAvereInput,
@@ -136,6 +143,7 @@ import type {
   ServizioImportCodice,
   ServizioImportInput,
   SessioneUtente,
+  SogliaAttestatoInput,
   StatisticheOperatori,
   StatoNotifiche,
   StatoPratica,
@@ -4964,6 +4972,769 @@ export const useRegistraCheckInEvento = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getRegistraCheckInEventoMutationOptions(options));
+    }
+
+export const getRegistraPresenzaPartecipanteUrl = (id: number,
+    partecipanteId: number,) => {
+
+
+
+
+  return `/api/backoffice/eventi/${id}/partecipanti/${partecipanteId}/presenza`
+}
+
+/**
+ * @summary Registra ora l'entrata o l'uscita di un partecipante scelto dall'elenco
+ */
+export const registraPresenzaPartecipante = async (id: number,
+    partecipanteId: number,
+    presenzaInput: PresenzaInput, options?: Parameters<typeof customFetch>[1]): Promise<CheckInEsito> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<CheckInEsito>(getRegistraPresenzaPartecipanteUrl(id,partecipanteId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(presenzaInput)
+  }
+);}
+
+
+
+
+
+export const getRegistraPresenzaPartecipanteMutationKey = () => ['registraPresenzaPartecipante'] as const;
+
+export const getRegistraPresenzaPartecipanteMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registraPresenzaPartecipante>>, TError,RegistraPresenzaPartecipanteMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof registraPresenzaPartecipante>>, TError,RegistraPresenzaPartecipanteMutationVariables, TContext> => {
+
+const mutationKey = getRegistraPresenzaPartecipanteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof registraPresenzaPartecipante>>, RegistraPresenzaPartecipanteMutationVariables> = (props) => {
+          const {id,partecipanteId,data} = props ?? {};
+
+          return  registraPresenzaPartecipante(id,partecipanteId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RegistraPresenzaPartecipanteMutationResult = NonNullable<Awaited<ReturnType<typeof registraPresenzaPartecipante>>>
+    export type RegistraPresenzaPartecipanteMutationBody = BodyType<PresenzaInput>
+    export type RegistraPresenzaPartecipanteMutationError = ErrorType<unknown>
+    export type RegistraPresenzaPartecipanteMutationVariables = {id: number;partecipanteId: number;data: BodyType<PresenzaInput>}
+
+    /**
+ * @summary Registra ora l'entrata o l'uscita di un partecipante scelto dall'elenco
+ */
+export const useRegistraPresenzaPartecipante = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registraPresenzaPartecipante>>, TError,RegistraPresenzaPartecipanteMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof registraPresenzaPartecipante>>,
+        TError,
+        RegistraPresenzaPartecipanteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRegistraPresenzaPartecipanteMutationOptions(options));
+    }
+
+export const getUpdateSogliaAttestatoUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/eventi/${id}/attestato/soglia`
+}
+
+/**
+ * @summary Imposta le ore minime di presenza per ricevere l'attestato
+ */
+export const updateSogliaAttestato = async (id: number,
+    sogliaAttestatoInput: SogliaAttestatoInput, options?: Parameters<typeof customFetch>[1]): Promise<EventoBackoffice> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<EventoBackoffice>(getUpdateSogliaAttestatoUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(sogliaAttestatoInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateSogliaAttestatoMutationKey = () => ['updateSogliaAttestato'] as const;
+
+export const getUpdateSogliaAttestatoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSogliaAttestato>>, TError,UpdateSogliaAttestatoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateSogliaAttestato>>, TError,UpdateSogliaAttestatoMutationVariables, TContext> => {
+
+const mutationKey = getUpdateSogliaAttestatoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateSogliaAttestato>>, UpdateSogliaAttestatoMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateSogliaAttestato(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateSogliaAttestatoMutationResult = NonNullable<Awaited<ReturnType<typeof updateSogliaAttestato>>>
+    export type UpdateSogliaAttestatoMutationBody = BodyType<SogliaAttestatoInput>
+    export type UpdateSogliaAttestatoMutationError = ErrorType<unknown>
+    export type UpdateSogliaAttestatoMutationVariables = {id: number;data: BodyType<SogliaAttestatoInput>}
+
+    /**
+ * @summary Imposta le ore minime di presenza per ricevere l'attestato
+ */
+export const useUpdateSogliaAttestato = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSogliaAttestato>>, TError,UpdateSogliaAttestatoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateSogliaAttestato>>,
+        TError,
+        UpdateSogliaAttestatoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateSogliaAttestatoMutationOptions(options));
+    }
+
+export const getDeleteDocumentoEventoUrl = (id: number,
+    documentoId: number,) => {
+
+
+
+
+  return `/api/backoffice/eventi/${id}/documenti/${documentoId}`
+}
+
+/**
+ * @summary Elimina un documento del corso
+ */
+export const deleteDocumentoEvento = async (id: number,
+    documentoId: number, options?: Parameters<typeof customFetch>[1]): Promise<EventoBackoffice> => {
+
+  return customFetch<EventoBackoffice>(getDeleteDocumentoEventoUrl(id,documentoId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteDocumentoEventoMutationKey = () => ['deleteDocumentoEvento'] as const;
+
+export const getDeleteDocumentoEventoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDocumentoEvento>>, TError,DeleteDocumentoEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteDocumentoEvento>>, TError,DeleteDocumentoEventoMutationVariables, TContext> => {
+
+const mutationKey = getDeleteDocumentoEventoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteDocumentoEvento>>, DeleteDocumentoEventoMutationVariables> = (props) => {
+          const {id,documentoId} = props ?? {};
+
+          return  deleteDocumentoEvento(id,documentoId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteDocumentoEventoMutationResult = NonNullable<Awaited<ReturnType<typeof deleteDocumentoEvento>>>
+
+    export type DeleteDocumentoEventoMutationError = ErrorType<unknown>
+    export type DeleteDocumentoEventoMutationVariables = {id: number;documentoId: number}
+
+    /**
+ * @summary Elimina un documento del corso
+ */
+export const useDeleteDocumentoEvento = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDocumentoEvento>>, TError,DeleteDocumentoEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteDocumentoEvento>>,
+        TError,
+        DeleteDocumentoEventoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteDocumentoEventoMutationOptions(options));
+    }
+
+export const getInviaDocumentiEventoUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/eventi/${id}/documenti/invia`
+}
+
+/**
+ * @summary Invia per email i documenti scelti ai soli presenti
+ */
+export const inviaDocumentiEvento = async (id: number,
+    documentiInvioInput: DocumentiInvioInput, options?: Parameters<typeof customFetch>[1]): Promise<InvioEventoEsito> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<InvioEventoEsito>(getInviaDocumentiEventoUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(documentiInvioInput)
+  }
+);}
+
+
+
+
+
+export const getInviaDocumentiEventoMutationKey = () => ['inviaDocumentiEvento'] as const;
+
+export const getInviaDocumentiEventoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inviaDocumentiEvento>>, TError,InviaDocumentiEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof inviaDocumentiEvento>>, TError,InviaDocumentiEventoMutationVariables, TContext> => {
+
+const mutationKey = getInviaDocumentiEventoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof inviaDocumentiEvento>>, InviaDocumentiEventoMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  inviaDocumentiEvento(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InviaDocumentiEventoMutationResult = NonNullable<Awaited<ReturnType<typeof inviaDocumentiEvento>>>
+    export type InviaDocumentiEventoMutationBody = BodyType<DocumentiInvioInput>
+    export type InviaDocumentiEventoMutationError = ErrorType<unknown>
+    export type InviaDocumentiEventoMutationVariables = {id: number;data: BodyType<DocumentiInvioInput>}
+
+    /**
+ * @summary Invia per email i documenti scelti ai soli presenti
+ */
+export const useInviaDocumentiEvento = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inviaDocumentiEvento>>, TError,InviaDocumentiEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof inviaDocumentiEvento>>,
+        TError,
+        InviaDocumentiEventoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getInviaDocumentiEventoMutationOptions(options));
+    }
+
+export const getSaveQuizEventoUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/eventi/${id}/quiz`
+}
+
+/**
+ * @summary Crea o modifica il questionario online (domande a scelta multipla e punteggio minimo)
+ */
+export const saveQuizEvento = async (id: number,
+    quizInput: QuizInput, options?: Parameters<typeof customFetch>[1]): Promise<EventoBackoffice> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<EventoBackoffice>(getSaveQuizEventoUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(quizInput)
+  }
+);}
+
+
+
+
+
+export const getSaveQuizEventoMutationKey = () => ['saveQuizEvento'] as const;
+
+export const getSaveQuizEventoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveQuizEvento>>, TError,SaveQuizEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveQuizEvento>>, TError,SaveQuizEventoMutationVariables, TContext> => {
+
+const mutationKey = getSaveQuizEventoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveQuizEvento>>, SaveQuizEventoMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  saveQuizEvento(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveQuizEventoMutationResult = NonNullable<Awaited<ReturnType<typeof saveQuizEvento>>>
+    export type SaveQuizEventoMutationBody = BodyType<QuizInput>
+    export type SaveQuizEventoMutationError = ErrorType<unknown>
+    export type SaveQuizEventoMutationVariables = {id: number;data: BodyType<QuizInput>}
+
+    /**
+ * @summary Crea o modifica il questionario online (domande a scelta multipla e punteggio minimo)
+ */
+export const useSaveQuizEvento = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveQuizEvento>>, TError,SaveQuizEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof saveQuizEvento>>,
+        TError,
+        SaveQuizEventoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSaveQuizEventoMutationOptions(options));
+    }
+
+export const getDeleteQuizEventoUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/eventi/${id}/quiz`
+}
+
+/**
+ * @summary Elimina il questionario online (solo se non e' ancora stato inviato)
+ */
+export const deleteQuizEvento = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<EventoBackoffice> => {
+
+  return customFetch<EventoBackoffice>(getDeleteQuizEventoUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteQuizEventoMutationKey = () => ['deleteQuizEvento'] as const;
+
+export const getDeleteQuizEventoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteQuizEvento>>, TError,DeleteQuizEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteQuizEvento>>, TError,DeleteQuizEventoMutationVariables, TContext> => {
+
+const mutationKey = getDeleteQuizEventoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteQuizEvento>>, DeleteQuizEventoMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteQuizEvento(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteQuizEventoMutationResult = NonNullable<Awaited<ReturnType<typeof deleteQuizEvento>>>
+
+    export type DeleteQuizEventoMutationError = ErrorType<unknown>
+    export type DeleteQuizEventoMutationVariables = {id: number}
+
+    /**
+ * @summary Elimina il questionario online (solo se non e' ancora stato inviato)
+ */
+export const useDeleteQuizEvento = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteQuizEvento>>, TError,DeleteQuizEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteQuizEvento>>,
+        TError,
+        DeleteQuizEventoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteQuizEventoMutationOptions(options));
+    }
+
+export const getInviaQuizEventoUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/eventi/${id}/quiz/invia`
+}
+
+/**
+ * @summary Invia a ogni partecipante l'email con il link personale al questionario
+ */
+export const inviaQuizEvento = async (id: number,
+    quizInvioInput: QuizInvioInput, options?: Parameters<typeof customFetch>[1]): Promise<InvioEventoEsito> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<InvioEventoEsito>(getInviaQuizEventoUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(quizInvioInput)
+  }
+);}
+
+
+
+
+
+export const getInviaQuizEventoMutationKey = () => ['inviaQuizEvento'] as const;
+
+export const getInviaQuizEventoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inviaQuizEvento>>, TError,InviaQuizEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof inviaQuizEvento>>, TError,InviaQuizEventoMutationVariables, TContext> => {
+
+const mutationKey = getInviaQuizEventoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof inviaQuizEvento>>, InviaQuizEventoMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  inviaQuizEvento(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InviaQuizEventoMutationResult = NonNullable<Awaited<ReturnType<typeof inviaQuizEvento>>>
+    export type InviaQuizEventoMutationBody = BodyType<QuizInvioInput>
+    export type InviaQuizEventoMutationError = ErrorType<unknown>
+    export type InviaQuizEventoMutationVariables = {id: number;data: BodyType<QuizInvioInput>}
+
+    /**
+ * @summary Invia a ogni partecipante l'email con il link personale al questionario
+ */
+export const useInviaQuizEvento = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inviaQuizEvento>>, TError,InviaQuizEventoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof inviaQuizEvento>>,
+        TError,
+        InviaQuizEventoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getInviaQuizEventoMutationOptions(options));
+    }
+
+export const getGetQuestionarioPubblicoUrl = (token: string,) => {
+
+
+
+
+  return `/api/questionari/${token}`
+}
+
+/**
+ * @summary Questionario del corso aperto dal link personale (senza accesso)
+ */
+export const getQuestionarioPubblico = async (token: string, options?: Parameters<typeof customFetch>[1]): Promise<QuizPubblico> => {
+
+  return customFetch<QuizPubblico>(getGetQuestionarioPubblicoUrl(token),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetQuestionarioPubblicoQueryKey = (token: string,) => {
+    return [
+    `/api/questionari/${token}`
+    ] as const;
+    }
+
+
+export const getGetQuestionarioPubblicoQueryOptions = <TData = Awaited<ReturnType<typeof getQuestionarioPubblico>>, TError = ErrorType<unknown>>(token: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getQuestionarioPubblico>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetQuestionarioPubblicoQueryKey(token);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getQuestionarioPubblico>>> = ({ signal }) => getQuestionarioPubblico(token, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: token !== null && token !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getQuestionarioPubblico>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetQuestionarioPubblicoQueryResult = NonNullable<Awaited<ReturnType<typeof getQuestionarioPubblico>>>
+export type GetQuestionarioPubblicoQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Questionario del corso aperto dal link personale (senza accesso)
+ */
+
+export function useGetQuestionarioPubblico<TData = Awaited<ReturnType<typeof getQuestionarioPubblico>>, TError = ErrorType<unknown>>(
+ token: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getQuestionarioPubblico>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetQuestionarioPubblicoQueryOptions(token,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getInviaRisposteQuestionarioUrl = (token: string,) => {
+
+
+
+
+  return `/api/questionari/${token}`
+}
+
+/**
+ * @summary Invia le risposte (una sola volta) e restituisce l'esito
+ */
+export const inviaRisposteQuestionario = async (token: string,
+    quizRisposteInput: QuizRisposteInput, options?: Parameters<typeof customFetch>[1]): Promise<QuizPubblico> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<QuizPubblico>(getInviaRisposteQuestionarioUrl(token),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(quizRisposteInput)
+  }
+);}
+
+
+
+
+
+export const getInviaRisposteQuestionarioMutationKey = () => ['inviaRisposteQuestionario'] as const;
+
+export const getInviaRisposteQuestionarioMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inviaRisposteQuestionario>>, TError,InviaRisposteQuestionarioMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof inviaRisposteQuestionario>>, TError,InviaRisposteQuestionarioMutationVariables, TContext> => {
+
+const mutationKey = getInviaRisposteQuestionarioMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof inviaRisposteQuestionario>>, InviaRisposteQuestionarioMutationVariables> = (props) => {
+          const {token,data} = props ?? {};
+
+          return  inviaRisposteQuestionario(token,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InviaRisposteQuestionarioMutationResult = NonNullable<Awaited<ReturnType<typeof inviaRisposteQuestionario>>>
+    export type InviaRisposteQuestionarioMutationBody = BodyType<QuizRisposteInput>
+    export type InviaRisposteQuestionarioMutationError = ErrorType<unknown>
+    export type InviaRisposteQuestionarioMutationVariables = {token: string;data: BodyType<QuizRisposteInput>}
+
+    /**
+ * @summary Invia le risposte (una sola volta) e restituisce l'esito
+ */
+export const useInviaRisposteQuestionario = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inviaRisposteQuestionario>>, TError,InviaRisposteQuestionarioMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof inviaRisposteQuestionario>>,
+        TError,
+        InviaRisposteQuestionarioMutationVariables,
+        TContext
+      > => {
+      return useMutation(getInviaRisposteQuestionarioMutationOptions(options));
     }
 
 export const getDeleteQuestionarioEventoUrl = (id: number,) => {

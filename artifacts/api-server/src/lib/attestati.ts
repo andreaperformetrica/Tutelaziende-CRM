@@ -1,7 +1,8 @@
 /**
  * Attestati di partecipazione. Il modello grafico (assets/attestato/modello.pdf) e' quello Tutelaziende e resta identico:
- * contiene gia' tutto il testo fisso (compresa la durata) e su ogni copia si scrivono solo quattro campi,
- * con gli stessi caratteri e colori dell'originale: nome e cognome, tipo di corso, argomento e data del corso.
+ * contiene gia' tutto il testo fisso e su ogni copia si scrivono solo questi campi, con gli stessi caratteri e colori
+ * dell'originale: nome e cognome, tipo di corso, argomento, ore di partecipazione (calcolate da entrata e uscita) e data.
+ * Nel modello e' stata tolta la vecchia scritta fissa "della durata di : 8 ORE", sostituita dalle ore di partecipazione.
  */
 import { readFile } from "node:fs/promises";
 import { cmyk, PDFDocument, type PDFFont, type PDFPage } from "pdf-lib";
@@ -113,7 +114,37 @@ function frase(pagina: PDFPage, f: Font, tipoCorso: string) {
   }
 }
 
-export async function generaAttestati(dati: DatiAttestato, nomi: string[]): Promise<Buffer> {
+export interface PartecipanteAttestato {
+  nome: string;
+  /** Minuti di presenza, da entrata a uscita. */
+  minuti: number;
+}
+
+/** 210 -> "3 ORE E 30 MINUTI"; 180 -> "3 ORE"; 45 -> "45 MINUTI". */
+export function testoOre(minuti: number): string {
+  const ore = Math.floor(minuti / 60);
+  const resto = minuti % 60;
+  const o = ore === 1 ? "1 ORA" : `${ore} ORE`;
+  const m = resto === 1 ? "1 MINUTO" : `${resto} MINUTI`;
+  if (ore === 0) return m;
+  return resto === 0 ? o : `${o} E ${m}`;
+}
+
+function righeOre(pagina: PDFPage, f: Font, minuti: number) {
+  const dimensione = 12.5868;
+  const parti = [
+    { testo: "con una partecipazione effettiva di : ", font: f.normale },
+    { testo: testoOre(minuti), font: f.grassetto },
+  ];
+  const totale = parti.reduce((s, p) => s + p.font.widthOfTextAtSize(p.testo, dimensione), 0);
+  let x = CENTRO_X - 1 - totale / 2;
+  for (const p of parti) {
+    pagina.drawText(p.testo, { x, y: 178.027, size: dimensione, font: p.font, color: AZZURRO });
+    x += p.font.widthOfTextAtSize(p.testo, dimensione);
+  }
+}
+
+export async function generaAttestati(dati: DatiAttestato, nomi: PartecipanteAttestato[]): Promise<Buffer> {
   if (nomi.length === 0) throw new HttpError(400, "Non ci sono partecipanti per cui stampare l'attestato.", "NESSUN_PARTECIPANTE");
   const argomento = dati.argomento.trim();
   if (!argomento) throw new HttpError(409, "Indica l'argomento del corso nell'evento prima di stampare gli attestati.", "DATI_ATTESTATO_MANCANTI");
@@ -136,13 +167,15 @@ export async function generaAttestati(dati: DatiAttestato, nomi: string[]): Prom
 
   const testoArgomento = testoStampabile(font.grassetto, `\u201C${argomento}\u201D`);
   const testoData = testoStampabile(font.firma, dataPerAttestato(dati.data));
-  for (const n of nomi) {
+  for (const part of nomi) {
+    const n = part.nome;
     const pagina = out.addPage([pagModello.width, pagModello.height]);
     pagina.drawPage(pagModello, { x: 0, y: 0 });
     scriviCentrato(pagina, testoStampabile(font.nome, n.trim().toUpperCase()), CENTRO_X - 5.7, {
       font: font.nome, dimensione: 32.9194, spaziatura: 0.17 * 32.9194, y: 258.771, colore: GRIGIO,
     });
     frase(pagina, font, dati.tipoCorso);
+    righeOre(pagina, font, part.minuti);
     scriviCentrato(pagina, testoArgomento, CENTRO_X - 2.5, { font: font.grassetto, dimensione: 16.4597, spaziatura: 0.06 * 16.4597, y: 199.864, colore: BLU });
     scriviCentrato(pagina, testoData, CENTRO_DATA_X, { font: font.firma, dimensione: 16.4597, spaziatura: 0.025 * 16.4597, y: 87.085, colore: GRIGIO }, 190);
   }

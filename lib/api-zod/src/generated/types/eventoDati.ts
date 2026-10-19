@@ -28,6 +28,8 @@ export interface EventoDati {
      * @nullable
      */
   argomento: string | null;
+  /** Ore minime di presenza, da entrata a uscita, per ricevere l'attestato */
+  oreMinimeAttestato: number;
   /** Vero se la data e' prima di oggi */
   passato: boolean;
 }

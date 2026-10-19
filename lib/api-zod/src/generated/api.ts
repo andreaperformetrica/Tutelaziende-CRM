@@ -1826,6 +1826,7 @@ export const ListEventiBackofficeResponseItem = zod.object({
   "descrizione": zod.string(),
   "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
   "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
+  "oreMinimeAttestato": zod.number().describe('Ore minime di presenza, da entrata a uscita, per ricevere l\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
   "invitati": zod.number().int(),
@@ -1865,6 +1866,16 @@ export const CreateEventoBody = zod.object({
   "collaboratoriIds": zod.array(zod.number().int())
 })
 
+export const createEventoResponseQuizOneDomandeItemTestoMax = 500;
+
+export const createEventoResponseQuizOneDomandeItemOpzioniItemMax = 200;
+
+export const createEventoResponseQuizOneDomandeItemOpzioniMin = 2;
+export const createEventoResponseQuizOneDomandeItemOpzioniMax = 8;
+
+export const createEventoResponseQuizOneDomandeItemCorrettaMin = 0;
+export const createEventoResponseQuizOneDomandeItemCorrettaMax = 7;
+
 export const createEventoResponseDomandeItemTestoMax = 500;
 
 export const createEventoResponseDomandeItemOpzioniItemMax = 200;
@@ -1886,8 +1897,29 @@ export const CreateEventoResponse = zod.object({
   "descrizione": zod.string(),
   "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
   "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
+  "oreMinimeAttestato": zod.number().describe('Ore minime di presenza, da entrata a uscita, per ricevere l\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string(),
+  "inviatoIl": zod.string().nullable(),
+  "inviatoA": zod.number().int().nullable().describe('A quanti presenti e\' stato inviato l\'ultima volta')
+})),
+  "quiz": zod.union([zod.object({
+  "domande": zod.array(zod.object({
+  "testo": zod.string().min(1).max(createEventoResponseQuizOneDomandeItemTestoMax),
+  "opzioni": zod.array(zod.string().min(1).max(createEventoResponseQuizOneDomandeItemOpzioniItemMax)).min(createEventoResponseQuizOneDomandeItemOpzioniMin).max(createEventoResponseQuizOneDomandeItemOpzioniMax),
+  "corretta": zod.number().int().min(createEventoResponseQuizOneDomandeItemCorrettaMin).max(createEventoResponseQuizOneDomandeItemCorrettaMax).describe('Posizione (da 0) della risposta esatta')
+})),
+  "punteggioMinimo": zod.number().int(),
+  "aggiornatoIl": zod.string(),
+  "inviati": zod.number().int().describe('Partecipanti a cui e\' stato inviato il link'),
+  "compilati": zod.number().int()
+}),zod.null()]),
   "questionario": zod.union([zod.object({
   "nome": zod.string(),
   "tipo": zod.string(),
@@ -1915,11 +1947,21 @@ export const CreateEventoResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "email": zod.string().nullable().describe('Vuota solo per i partecipanti inseriti prima che l\'email fosse richiesta'),
   "collaboratoreId": zod.number().int(),
   "sedeNome": zod.string(),
   "numeroSportello": zod.string(),
   "entrataIl": zod.string().nullable(),
-  "uscitaIl": zod.string().nullable()
+  "uscitaIl": zod.string().nullable(),
+  "minutiPresenza": zod.number().int().nullable().describe('Minuti tra entrata e uscita; vuoto se manca uno dei due orari'),
+  "idoneoAttestato": zod.boolean().describe('Vero se le ore di presenza raggiungono le ore minime del corso'),
+  "quiz": zod.union([zod.object({
+  "inviatoIl": zod.string(),
+  "compilatoIl": zod.string().nullable(),
+  "punteggio": zod.number().int().nullable(),
+  "punteggioMassimo": zod.number().int().nullable(),
+  "superato": zod.boolean().nullable()
+}),zod.null()])
 }))
 })
 
@@ -1930,6 +1972,16 @@ export const CreateEventoResponse = zod.object({
 export const GetEventoBackofficeParams = zod.object({
   "id": zod.coerce.number().int()
 })
+
+export const getEventoBackofficeResponseQuizOneDomandeItemTestoMax = 500;
+
+export const getEventoBackofficeResponseQuizOneDomandeItemOpzioniItemMax = 200;
+
+export const getEventoBackofficeResponseQuizOneDomandeItemOpzioniMin = 2;
+export const getEventoBackofficeResponseQuizOneDomandeItemOpzioniMax = 8;
+
+export const getEventoBackofficeResponseQuizOneDomandeItemCorrettaMin = 0;
+export const getEventoBackofficeResponseQuizOneDomandeItemCorrettaMax = 7;
 
 export const getEventoBackofficeResponseDomandeItemTestoMax = 500;
 
@@ -1952,8 +2004,29 @@ export const GetEventoBackofficeResponse = zod.object({
   "descrizione": zod.string(),
   "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
   "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
+  "oreMinimeAttestato": zod.number().describe('Ore minime di presenza, da entrata a uscita, per ricevere l\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string(),
+  "inviatoIl": zod.string().nullable(),
+  "inviatoA": zod.number().int().nullable().describe('A quanti presenti e\' stato inviato l\'ultima volta')
+})),
+  "quiz": zod.union([zod.object({
+  "domande": zod.array(zod.object({
+  "testo": zod.string().min(1).max(getEventoBackofficeResponseQuizOneDomandeItemTestoMax),
+  "opzioni": zod.array(zod.string().min(1).max(getEventoBackofficeResponseQuizOneDomandeItemOpzioniItemMax)).min(getEventoBackofficeResponseQuizOneDomandeItemOpzioniMin).max(getEventoBackofficeResponseQuizOneDomandeItemOpzioniMax),
+  "corretta": zod.number().int().min(getEventoBackofficeResponseQuizOneDomandeItemCorrettaMin).max(getEventoBackofficeResponseQuizOneDomandeItemCorrettaMax).describe('Posizione (da 0) della risposta esatta')
+})),
+  "punteggioMinimo": zod.number().int(),
+  "aggiornatoIl": zod.string(),
+  "inviati": zod.number().int().describe('Partecipanti a cui e\' stato inviato il link'),
+  "compilati": zod.number().int()
+}),zod.null()]),
   "questionario": zod.union([zod.object({
   "nome": zod.string(),
   "tipo": zod.string(),
@@ -1981,11 +2054,21 @@ export const GetEventoBackofficeResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "email": zod.string().nullable().describe('Vuota solo per i partecipanti inseriti prima che l\'email fosse richiesta'),
   "collaboratoreId": zod.number().int(),
   "sedeNome": zod.string(),
   "numeroSportello": zod.string(),
   "entrataIl": zod.string().nullable(),
-  "uscitaIl": zod.string().nullable()
+  "uscitaIl": zod.string().nullable(),
+  "minutiPresenza": zod.number().int().nullable().describe('Minuti tra entrata e uscita; vuoto se manca uno dei due orari'),
+  "idoneoAttestato": zod.boolean().describe('Vero se le ore di presenza raggiungono le ore minime del corso'),
+  "quiz": zod.union([zod.object({
+  "inviatoIl": zod.string(),
+  "compilatoIl": zod.string().nullable(),
+  "punteggio": zod.number().int().nullable(),
+  "punteggioMassimo": zod.number().int().nullable(),
+  "superato": zod.boolean().nullable()
+}),zod.null()])
 }))
 })
 
@@ -2021,6 +2104,16 @@ export const UpdateEventoBody = zod.object({
   "descrizione": zod.string().max(updateEventoBodyDescrizioneMax).optional()
 })
 
+export const updateEventoResponseQuizOneDomandeItemTestoMax = 500;
+
+export const updateEventoResponseQuizOneDomandeItemOpzioniItemMax = 200;
+
+export const updateEventoResponseQuizOneDomandeItemOpzioniMin = 2;
+export const updateEventoResponseQuizOneDomandeItemOpzioniMax = 8;
+
+export const updateEventoResponseQuizOneDomandeItemCorrettaMin = 0;
+export const updateEventoResponseQuizOneDomandeItemCorrettaMax = 7;
+
 export const updateEventoResponseDomandeItemTestoMax = 500;
 
 export const updateEventoResponseDomandeItemOpzioniItemMax = 200;
@@ -2042,8 +2135,29 @@ export const UpdateEventoResponse = zod.object({
   "descrizione": zod.string(),
   "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
   "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
+  "oreMinimeAttestato": zod.number().describe('Ore minime di presenza, da entrata a uscita, per ricevere l\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string(),
+  "inviatoIl": zod.string().nullable(),
+  "inviatoA": zod.number().int().nullable().describe('A quanti presenti e\' stato inviato l\'ultima volta')
+})),
+  "quiz": zod.union([zod.object({
+  "domande": zod.array(zod.object({
+  "testo": zod.string().min(1).max(updateEventoResponseQuizOneDomandeItemTestoMax),
+  "opzioni": zod.array(zod.string().min(1).max(updateEventoResponseQuizOneDomandeItemOpzioniItemMax)).min(updateEventoResponseQuizOneDomandeItemOpzioniMin).max(updateEventoResponseQuizOneDomandeItemOpzioniMax),
+  "corretta": zod.number().int().min(updateEventoResponseQuizOneDomandeItemCorrettaMin).max(updateEventoResponseQuizOneDomandeItemCorrettaMax).describe('Posizione (da 0) della risposta esatta')
+})),
+  "punteggioMinimo": zod.number().int(),
+  "aggiornatoIl": zod.string(),
+  "inviati": zod.number().int().describe('Partecipanti a cui e\' stato inviato il link'),
+  "compilati": zod.number().int()
+}),zod.null()]),
   "questionario": zod.union([zod.object({
   "nome": zod.string(),
   "tipo": zod.string(),
@@ -2071,11 +2185,21 @@ export const UpdateEventoResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "email": zod.string().nullable().describe('Vuota solo per i partecipanti inseriti prima che l\'email fosse richiesta'),
   "collaboratoreId": zod.number().int(),
   "sedeNome": zod.string(),
   "numeroSportello": zod.string(),
   "entrataIl": zod.string().nullable(),
-  "uscitaIl": zod.string().nullable()
+  "uscitaIl": zod.string().nullable(),
+  "minutiPresenza": zod.number().int().nullable().describe('Minuti tra entrata e uscita; vuoto se manca uno dei due orari'),
+  "idoneoAttestato": zod.boolean().describe('Vero se le ore di presenza raggiungono le ore minime del corso'),
+  "quiz": zod.union([zod.object({
+  "inviatoIl": zod.string(),
+  "compilatoIl": zod.string().nullable(),
+  "punteggio": zod.number().int().nullable(),
+  "punteggioMassimo": zod.number().int().nullable(),
+  "superato": zod.boolean().nullable()
+}),zod.null()])
 }))
 })
 
@@ -2104,6 +2228,16 @@ export const AddInvitiEventoBody = zod.object({
   "collaboratoriIds": zod.array(zod.number().int()).min(1)
 })
 
+export const addInvitiEventoResponseQuizOneDomandeItemTestoMax = 500;
+
+export const addInvitiEventoResponseQuizOneDomandeItemOpzioniItemMax = 200;
+
+export const addInvitiEventoResponseQuizOneDomandeItemOpzioniMin = 2;
+export const addInvitiEventoResponseQuizOneDomandeItemOpzioniMax = 8;
+
+export const addInvitiEventoResponseQuizOneDomandeItemCorrettaMin = 0;
+export const addInvitiEventoResponseQuizOneDomandeItemCorrettaMax = 7;
+
 export const addInvitiEventoResponseDomandeItemTestoMax = 500;
 
 export const addInvitiEventoResponseDomandeItemOpzioniItemMax = 200;
@@ -2125,8 +2259,29 @@ export const AddInvitiEventoResponse = zod.object({
   "descrizione": zod.string(),
   "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
   "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
+  "oreMinimeAttestato": zod.number().describe('Ore minime di presenza, da entrata a uscita, per ricevere l\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string(),
+  "inviatoIl": zod.string().nullable(),
+  "inviatoA": zod.number().int().nullable().describe('A quanti presenti e\' stato inviato l\'ultima volta')
+})),
+  "quiz": zod.union([zod.object({
+  "domande": zod.array(zod.object({
+  "testo": zod.string().min(1).max(addInvitiEventoResponseQuizOneDomandeItemTestoMax),
+  "opzioni": zod.array(zod.string().min(1).max(addInvitiEventoResponseQuizOneDomandeItemOpzioniItemMax)).min(addInvitiEventoResponseQuizOneDomandeItemOpzioniMin).max(addInvitiEventoResponseQuizOneDomandeItemOpzioniMax),
+  "corretta": zod.number().int().min(addInvitiEventoResponseQuizOneDomandeItemCorrettaMin).max(addInvitiEventoResponseQuizOneDomandeItemCorrettaMax).describe('Posizione (da 0) della risposta esatta')
+})),
+  "punteggioMinimo": zod.number().int(),
+  "aggiornatoIl": zod.string(),
+  "inviati": zod.number().int().describe('Partecipanti a cui e\' stato inviato il link'),
+  "compilati": zod.number().int()
+}),zod.null()]),
   "questionario": zod.union([zod.object({
   "nome": zod.string(),
   "tipo": zod.string(),
@@ -2154,11 +2309,21 @@ export const AddInvitiEventoResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "email": zod.string().nullable().describe('Vuota solo per i partecipanti inseriti prima che l\'email fosse richiesta'),
   "collaboratoreId": zod.number().int(),
   "sedeNome": zod.string(),
   "numeroSportello": zod.string(),
   "entrataIl": zod.string().nullable(),
-  "uscitaIl": zod.string().nullable()
+  "uscitaIl": zod.string().nullable(),
+  "minutiPresenza": zod.number().int().nullable().describe('Minuti tra entrata e uscita; vuoto se manca uno dei due orari'),
+  "idoneoAttestato": zod.boolean().describe('Vero se le ore di presenza raggiungono le ore minime del corso'),
+  "quiz": zod.union([zod.object({
+  "inviatoIl": zod.string(),
+  "compilatoIl": zod.string().nullable(),
+  "punteggio": zod.number().int().nullable(),
+  "punteggioMassimo": zod.number().int().nullable(),
+  "superato": zod.boolean().nullable()
+}),zod.null()])
 }))
 })
 
@@ -2170,6 +2335,16 @@ export const RemoveInvitoEventoParams = zod.object({
   "id": zod.coerce.number().int(),
   "collaboratoreId": zod.coerce.number().int()
 })
+
+export const removeInvitoEventoResponseQuizOneDomandeItemTestoMax = 500;
+
+export const removeInvitoEventoResponseQuizOneDomandeItemOpzioniItemMax = 200;
+
+export const removeInvitoEventoResponseQuizOneDomandeItemOpzioniMin = 2;
+export const removeInvitoEventoResponseQuizOneDomandeItemOpzioniMax = 8;
+
+export const removeInvitoEventoResponseQuizOneDomandeItemCorrettaMin = 0;
+export const removeInvitoEventoResponseQuizOneDomandeItemCorrettaMax = 7;
 
 export const removeInvitoEventoResponseDomandeItemTestoMax = 500;
 
@@ -2192,8 +2367,29 @@ export const RemoveInvitoEventoResponse = zod.object({
   "descrizione": zod.string(),
   "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
   "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
+  "oreMinimeAttestato": zod.number().describe('Ore minime di presenza, da entrata a uscita, per ricevere l\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string(),
+  "inviatoIl": zod.string().nullable(),
+  "inviatoA": zod.number().int().nullable().describe('A quanti presenti e\' stato inviato l\'ultima volta')
+})),
+  "quiz": zod.union([zod.object({
+  "domande": zod.array(zod.object({
+  "testo": zod.string().min(1).max(removeInvitoEventoResponseQuizOneDomandeItemTestoMax),
+  "opzioni": zod.array(zod.string().min(1).max(removeInvitoEventoResponseQuizOneDomandeItemOpzioniItemMax)).min(removeInvitoEventoResponseQuizOneDomandeItemOpzioniMin).max(removeInvitoEventoResponseQuizOneDomandeItemOpzioniMax),
+  "corretta": zod.number().int().min(removeInvitoEventoResponseQuizOneDomandeItemCorrettaMin).max(removeInvitoEventoResponseQuizOneDomandeItemCorrettaMax).describe('Posizione (da 0) della risposta esatta')
+})),
+  "punteggioMinimo": zod.number().int(),
+  "aggiornatoIl": zod.string(),
+  "inviati": zod.number().int().describe('Partecipanti a cui e\' stato inviato il link'),
+  "compilati": zod.number().int()
+}),zod.null()]),
   "questionario": zod.union([zod.object({
   "nome": zod.string(),
   "tipo": zod.string(),
@@ -2221,11 +2417,21 @@ export const RemoveInvitoEventoResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "email": zod.string().nullable().describe('Vuota solo per i partecipanti inseriti prima che l\'email fosse richiesta'),
   "collaboratoreId": zod.number().int(),
   "sedeNome": zod.string(),
   "numeroSportello": zod.string(),
   "entrataIl": zod.string().nullable(),
-  "uscitaIl": zod.string().nullable()
+  "uscitaIl": zod.string().nullable(),
+  "minutiPresenza": zod.number().int().nullable().describe('Minuti tra entrata e uscita; vuoto se manca uno dei due orari'),
+  "idoneoAttestato": zod.boolean().describe('Vero se le ore di presenza raggiungono le ore minime del corso'),
+  "quiz": zod.union([zod.object({
+  "inviatoIl": zod.string(),
+  "compilatoIl": zod.string().nullable(),
+  "punteggio": zod.number().int().nullable(),
+  "punteggioMassimo": zod.number().int().nullable(),
+  "superato": zod.boolean().nullable()
+}),zod.null()])
 }))
 })
 
@@ -2246,6 +2452,16 @@ export const UpdateOrariPartecipanteBody = zod.object({
   "entrata": zod.string().regex(updateOrariPartecipanteBodyEntrataRegExp).nullable().describe('HH:MM nel giorno dell\'evento; null per cancellare'),
   "uscita": zod.string().regex(updateOrariPartecipanteBodyUscitaRegExp).nullable().describe('HH:MM nel giorno dell\'evento; null per cancellare')
 })
+
+export const updateOrariPartecipanteResponseQuizOneDomandeItemTestoMax = 500;
+
+export const updateOrariPartecipanteResponseQuizOneDomandeItemOpzioniItemMax = 200;
+
+export const updateOrariPartecipanteResponseQuizOneDomandeItemOpzioniMin = 2;
+export const updateOrariPartecipanteResponseQuizOneDomandeItemOpzioniMax = 8;
+
+export const updateOrariPartecipanteResponseQuizOneDomandeItemCorrettaMin = 0;
+export const updateOrariPartecipanteResponseQuizOneDomandeItemCorrettaMax = 7;
 
 export const updateOrariPartecipanteResponseDomandeItemTestoMax = 500;
 
@@ -2268,8 +2484,29 @@ export const UpdateOrariPartecipanteResponse = zod.object({
   "descrizione": zod.string(),
   "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
   "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
+  "oreMinimeAttestato": zod.number().describe('Ore minime di presenza, da entrata a uscita, per ricevere l\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string(),
+  "inviatoIl": zod.string().nullable(),
+  "inviatoA": zod.number().int().nullable().describe('A quanti presenti e\' stato inviato l\'ultima volta')
+})),
+  "quiz": zod.union([zod.object({
+  "domande": zod.array(zod.object({
+  "testo": zod.string().min(1).max(updateOrariPartecipanteResponseQuizOneDomandeItemTestoMax),
+  "opzioni": zod.array(zod.string().min(1).max(updateOrariPartecipanteResponseQuizOneDomandeItemOpzioniItemMax)).min(updateOrariPartecipanteResponseQuizOneDomandeItemOpzioniMin).max(updateOrariPartecipanteResponseQuizOneDomandeItemOpzioniMax),
+  "corretta": zod.number().int().min(updateOrariPartecipanteResponseQuizOneDomandeItemCorrettaMin).max(updateOrariPartecipanteResponseQuizOneDomandeItemCorrettaMax).describe('Posizione (da 0) della risposta esatta')
+})),
+  "punteggioMinimo": zod.number().int(),
+  "aggiornatoIl": zod.string(),
+  "inviati": zod.number().int().describe('Partecipanti a cui e\' stato inviato il link'),
+  "compilati": zod.number().int()
+}),zod.null()]),
   "questionario": zod.union([zod.object({
   "nome": zod.string(),
   "tipo": zod.string(),
@@ -2297,11 +2534,21 @@ export const UpdateOrariPartecipanteResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "email": zod.string().nullable().describe('Vuota solo per i partecipanti inseriti prima che l\'email fosse richiesta'),
   "collaboratoreId": zod.number().int(),
   "sedeNome": zod.string(),
   "numeroSportello": zod.string(),
   "entrataIl": zod.string().nullable(),
-  "uscitaIl": zod.string().nullable()
+  "uscitaIl": zod.string().nullable(),
+  "minutiPresenza": zod.number().int().nullable().describe('Minuti tra entrata e uscita; vuoto se manca uno dei due orari'),
+  "idoneoAttestato": zod.boolean().describe('Vero se le ore di presenza raggiungono le ore minime del corso'),
+  "quiz": zod.union([zod.object({
+  "inviatoIl": zod.string(),
+  "compilatoIl": zod.string().nullable(),
+  "punteggio": zod.number().int().nullable(),
+  "punteggioMassimo": zod.number().int().nullable(),
+  "superato": zod.boolean().nullable()
+}),zod.null()])
 }))
 })
 
@@ -2329,12 +2576,624 @@ export const RegistraCheckInEventoResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "email": zod.string().nullable().describe('Vuota solo per i partecipanti inseriti prima che l\'email fosse richiesta'),
   "collaboratoreId": zod.number().int(),
   "sedeNome": zod.string(),
   "numeroSportello": zod.string(),
   "entrataIl": zod.string().nullable(),
-  "uscitaIl": zod.string().nullable()
+  "uscitaIl": zod.string().nullable(),
+  "minutiPresenza": zod.number().int().nullable().describe('Minuti tra entrata e uscita; vuoto se manca uno dei due orari'),
+  "idoneoAttestato": zod.boolean().describe('Vero se le ore di presenza raggiungono le ore minime del corso'),
+  "quiz": zod.union([zod.object({
+  "inviatoIl": zod.string(),
+  "compilatoIl": zod.string().nullable(),
+  "punteggio": zod.number().int().nullable(),
+  "punteggioMassimo": zod.number().int().nullable(),
+  "superato": zod.boolean().nullable()
+}),zod.null()])
 })
+})
+
+
+/**
+ * @summary Registra ora l'entrata o l'uscita di un partecipante scelto dall'elenco
+ */
+export const RegistraPresenzaPartecipanteParams = zod.object({
+  "id": zod.coerce.number().int(),
+  "partecipanteId": zod.coerce.number().int()
+})
+
+export const RegistraPresenzaPartecipanteBody = zod.object({
+  "tipo": zod.enum(['entrata', 'uscita'])
+})
+
+export const RegistraPresenzaPartecipanteResponse = zod.object({
+  "esito": zod.enum(['registrato', 'gia_registrato']),
+  "tipo": zod.enum(['entrata', 'uscita']),
+  "avviso": zod.string().nullable(),
+  "partecipante": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "email": zod.string().nullable().describe('Vuota solo per i partecipanti inseriti prima che l\'email fosse richiesta'),
+  "collaboratoreId": zod.number().int(),
+  "sedeNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "entrataIl": zod.string().nullable(),
+  "uscitaIl": zod.string().nullable(),
+  "minutiPresenza": zod.number().int().nullable().describe('Minuti tra entrata e uscita; vuoto se manca uno dei due orari'),
+  "idoneoAttestato": zod.boolean().describe('Vero se le ore di presenza raggiungono le ore minime del corso'),
+  "quiz": zod.union([zod.object({
+  "inviatoIl": zod.string(),
+  "compilatoIl": zod.string().nullable(),
+  "punteggio": zod.number().int().nullable(),
+  "punteggioMassimo": zod.number().int().nullable(),
+  "superato": zod.boolean().nullable()
+}),zod.null()])
+})
+})
+
+
+/**
+ * @summary Imposta le ore minime di presenza per ricevere l'attestato
+ */
+export const UpdateSogliaAttestatoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const updateSogliaAttestatoBodyOreMinimeMin = 0;
+export const updateSogliaAttestatoBodyOreMinimeMax = 24;
+
+
+
+export const UpdateSogliaAttestatoBody = zod.object({
+  "oreMinime": zod.number().min(updateSogliaAttestatoBodyOreMinimeMin).max(updateSogliaAttestatoBodyOreMinimeMax).describe('Ore minime di presenza per l\'attestato')
+})
+
+export const updateSogliaAttestatoResponseQuizOneDomandeItemTestoMax = 500;
+
+export const updateSogliaAttestatoResponseQuizOneDomandeItemOpzioniItemMax = 200;
+
+export const updateSogliaAttestatoResponseQuizOneDomandeItemOpzioniMin = 2;
+export const updateSogliaAttestatoResponseQuizOneDomandeItemOpzioniMax = 8;
+
+export const updateSogliaAttestatoResponseQuizOneDomandeItemCorrettaMin = 0;
+export const updateSogliaAttestatoResponseQuizOneDomandeItemCorrettaMax = 7;
+
+export const updateSogliaAttestatoResponseDomandeItemTestoMax = 500;
+
+export const updateSogliaAttestatoResponseDomandeItemOpzioniItemMax = 200;
+
+export const updateSogliaAttestatoResponseDomandeItemOpzioniMax = 15;
+
+export const updateSogliaAttestatoResponseDomandeItemRigheMax = 10;
+
+
+
+export const UpdateSogliaAttestatoResponse = zod.object({
+  "evento": zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "data": zod.string().describe('AAAA-MM-GG'),
+  "oraInizio": zod.string().describe('HH:MM'),
+  "oraFine": zod.string().nullable(),
+  "luogo": zod.string(),
+  "descrizione": zod.string(),
+  "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
+  "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
+  "oreMinimeAttestato": zod.number().describe('Ore minime di presenza, da entrata a uscita, per ricevere l\'attestato'),
+  "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
+}),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string(),
+  "inviatoIl": zod.string().nullable(),
+  "inviatoA": zod.number().int().nullable().describe('A quanti presenti e\' stato inviato l\'ultima volta')
+})),
+  "quiz": zod.union([zod.object({
+  "domande": zod.array(zod.object({
+  "testo": zod.string().min(1).max(updateSogliaAttestatoResponseQuizOneDomandeItemTestoMax),
+  "opzioni": zod.array(zod.string().min(1).max(updateSogliaAttestatoResponseQuizOneDomandeItemOpzioniItemMax)).min(updateSogliaAttestatoResponseQuizOneDomandeItemOpzioniMin).max(updateSogliaAttestatoResponseQuizOneDomandeItemOpzioniMax),
+  "corretta": zod.number().int().min(updateSogliaAttestatoResponseQuizOneDomandeItemCorrettaMin).max(updateSogliaAttestatoResponseQuizOneDomandeItemCorrettaMax).describe('Posizione (da 0) della risposta esatta')
+})),
+  "punteggioMinimo": zod.number().int(),
+  "aggiornatoIl": zod.string(),
+  "inviati": zod.number().int().describe('Partecipanti a cui e\' stato inviato il link'),
+  "compilati": zod.number().int()
+}),zod.null()]),
+  "questionario": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "domande": zod.array(zod.object({
+  "testo": zod.string().min(1).max(updateSogliaAttestatoResponseDomandeItemTestoMax),
+  "tipo": zod.enum(['scelta', 'aperta']).describe('scelta = caselle da spuntare, aperta = righe per scrivere'),
+  "opzioni": zod.array(zod.string().min(1).max(updateSogliaAttestatoResponseDomandeItemOpzioniItemMax)).max(updateSogliaAttestatoResponseDomandeItemOpzioniMax),
+  "righe": zod.number().int().min(1).max(updateSogliaAttestatoResponseDomandeItemRigheMax)
+})).describe('Domande del questionario creato nel sistema (vuoto se il questionario e\' un file caricato o manca)'),
+  "inviti": zod.array(zod.object({
+  "collaboratoreId": zod.number().int(),
+  "nome": zod.string().describe('Cognome e nome'),
+  "denominazione": zod.string().nullish(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.string(),
+  "attivo": zod.boolean(),
+  "invitatoIl": zod.string(),
+  "confermatoIl": zod.string().nullable(),
+  "partecipanti": zod.number().int()
+})),
+  "partecipanti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "email": zod.string().nullable().describe('Vuota solo per i partecipanti inseriti prima che l\'email fosse richiesta'),
+  "collaboratoreId": zod.number().int(),
+  "sedeNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "entrataIl": zod.string().nullable(),
+  "uscitaIl": zod.string().nullable(),
+  "minutiPresenza": zod.number().int().nullable().describe('Minuti tra entrata e uscita; vuoto se manca uno dei due orari'),
+  "idoneoAttestato": zod.boolean().describe('Vero se le ore di presenza raggiungono le ore minime del corso'),
+  "quiz": zod.union([zod.object({
+  "inviatoIl": zod.string(),
+  "compilatoIl": zod.string().nullable(),
+  "punteggio": zod.number().int().nullable(),
+  "punteggioMassimo": zod.number().int().nullable(),
+  "superato": zod.boolean().nullable()
+}),zod.null()])
+}))
+})
+
+
+/**
+ * @summary Elimina un documento del corso
+ */
+export const DeleteDocumentoEventoParams = zod.object({
+  "id": zod.coerce.number().int(),
+  "documentoId": zod.coerce.number().int()
+})
+
+export const deleteDocumentoEventoResponseQuizOneDomandeItemTestoMax = 500;
+
+export const deleteDocumentoEventoResponseQuizOneDomandeItemOpzioniItemMax = 200;
+
+export const deleteDocumentoEventoResponseQuizOneDomandeItemOpzioniMin = 2;
+export const deleteDocumentoEventoResponseQuizOneDomandeItemOpzioniMax = 8;
+
+export const deleteDocumentoEventoResponseQuizOneDomandeItemCorrettaMin = 0;
+export const deleteDocumentoEventoResponseQuizOneDomandeItemCorrettaMax = 7;
+
+export const deleteDocumentoEventoResponseDomandeItemTestoMax = 500;
+
+export const deleteDocumentoEventoResponseDomandeItemOpzioniItemMax = 200;
+
+export const deleteDocumentoEventoResponseDomandeItemOpzioniMax = 15;
+
+export const deleteDocumentoEventoResponseDomandeItemRigheMax = 10;
+
+
+
+export const DeleteDocumentoEventoResponse = zod.object({
+  "evento": zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "data": zod.string().describe('AAAA-MM-GG'),
+  "oraInizio": zod.string().describe('HH:MM'),
+  "oraFine": zod.string().nullable(),
+  "luogo": zod.string(),
+  "descrizione": zod.string(),
+  "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
+  "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
+  "oreMinimeAttestato": zod.number().describe('Ore minime di presenza, da entrata a uscita, per ricevere l\'attestato'),
+  "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
+}),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string(),
+  "inviatoIl": zod.string().nullable(),
+  "inviatoA": zod.number().int().nullable().describe('A quanti presenti e\' stato inviato l\'ultima volta')
+})),
+  "quiz": zod.union([zod.object({
+  "domande": zod.array(zod.object({
+  "testo": zod.string().min(1).max(deleteDocumentoEventoResponseQuizOneDomandeItemTestoMax),
+  "opzioni": zod.array(zod.string().min(1).max(deleteDocumentoEventoResponseQuizOneDomandeItemOpzioniItemMax)).min(deleteDocumentoEventoResponseQuizOneDomandeItemOpzioniMin).max(deleteDocumentoEventoResponseQuizOneDomandeItemOpzioniMax),
+  "corretta": zod.number().int().min(deleteDocumentoEventoResponseQuizOneDomandeItemCorrettaMin).max(deleteDocumentoEventoResponseQuizOneDomandeItemCorrettaMax).describe('Posizione (da 0) della risposta esatta')
+})),
+  "punteggioMinimo": zod.number().int(),
+  "aggiornatoIl": zod.string(),
+  "inviati": zod.number().int().describe('Partecipanti a cui e\' stato inviato il link'),
+  "compilati": zod.number().int()
+}),zod.null()]),
+  "questionario": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "domande": zod.array(zod.object({
+  "testo": zod.string().min(1).max(deleteDocumentoEventoResponseDomandeItemTestoMax),
+  "tipo": zod.enum(['scelta', 'aperta']).describe('scelta = caselle da spuntare, aperta = righe per scrivere'),
+  "opzioni": zod.array(zod.string().min(1).max(deleteDocumentoEventoResponseDomandeItemOpzioniItemMax)).max(deleteDocumentoEventoResponseDomandeItemOpzioniMax),
+  "righe": zod.number().int().min(1).max(deleteDocumentoEventoResponseDomandeItemRigheMax)
+})).describe('Domande del questionario creato nel sistema (vuoto se il questionario e\' un file caricato o manca)'),
+  "inviti": zod.array(zod.object({
+  "collaboratoreId": zod.number().int(),
+  "nome": zod.string().describe('Cognome e nome'),
+  "denominazione": zod.string().nullish(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.string(),
+  "attivo": zod.boolean(),
+  "invitatoIl": zod.string(),
+  "confermatoIl": zod.string().nullable(),
+  "partecipanti": zod.number().int()
+})),
+  "partecipanti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "email": zod.string().nullable().describe('Vuota solo per i partecipanti inseriti prima che l\'email fosse richiesta'),
+  "collaboratoreId": zod.number().int(),
+  "sedeNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "entrataIl": zod.string().nullable(),
+  "uscitaIl": zod.string().nullable(),
+  "minutiPresenza": zod.number().int().nullable().describe('Minuti tra entrata e uscita; vuoto se manca uno dei due orari'),
+  "idoneoAttestato": zod.boolean().describe('Vero se le ore di presenza raggiungono le ore minime del corso'),
+  "quiz": zod.union([zod.object({
+  "inviatoIl": zod.string(),
+  "compilatoIl": zod.string().nullable(),
+  "punteggio": zod.number().int().nullable(),
+  "punteggioMassimo": zod.number().int().nullable(),
+  "superato": zod.boolean().nullable()
+}),zod.null()])
+}))
+})
+
+
+/**
+ * @summary Invia per email i documenti scelti ai soli presenti
+ */
+export const InviaDocumentiEventoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+
+
+
+export const InviaDocumentiEventoBody = zod.object({
+  "documentiIds": zod.array(zod.number().int()).min(1)
+})
+
+export const InviaDocumentiEventoResponse = zod.object({
+  "inviati": zod.number().int().describe('Email messe in invio'),
+  "senzaEmail": zod.number().int().describe('Destinatari senza indirizzo email'),
+  "saltati": zod.number().int().describe('Destinatari esclusi (es. questionario gia compilato)')
+})
+
+
+/**
+ * @summary Crea o modifica il questionario online (domande a scelta multipla e punteggio minimo)
+ */
+export const SaveQuizEventoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const saveQuizEventoBodyDomandeItemTestoMax = 500;
+
+export const saveQuizEventoBodyDomandeItemOpzioniItemMax = 200;
+
+export const saveQuizEventoBodyDomandeItemOpzioniMin = 2;
+export const saveQuizEventoBodyDomandeItemOpzioniMax = 8;
+
+export const saveQuizEventoBodyDomandeItemCorrettaMin = 0;
+export const saveQuizEventoBodyDomandeItemCorrettaMax = 7;
+
+export const saveQuizEventoBodyDomandeMax = 50;
+
+
+
+
+export const SaveQuizEventoBody = zod.object({
+  "domande": zod.array(zod.object({
+  "testo": zod.string().min(1).max(saveQuizEventoBodyDomandeItemTestoMax),
+  "opzioni": zod.array(zod.string().min(1).max(saveQuizEventoBodyDomandeItemOpzioniItemMax)).min(saveQuizEventoBodyDomandeItemOpzioniMin).max(saveQuizEventoBodyDomandeItemOpzioniMax),
+  "corretta": zod.number().int().min(saveQuizEventoBodyDomandeItemCorrettaMin).max(saveQuizEventoBodyDomandeItemCorrettaMax).describe('Posizione (da 0) della risposta esatta')
+})).min(1).max(saveQuizEventoBodyDomandeMax),
+  "punteggioMinimo": zod.number().int().min(1).describe('Risposte esatte necessarie per passare (1 punto ciascuna)')
+})
+
+export const saveQuizEventoResponseQuizOneDomandeItemTestoMax = 500;
+
+export const saveQuizEventoResponseQuizOneDomandeItemOpzioniItemMax = 200;
+
+export const saveQuizEventoResponseQuizOneDomandeItemOpzioniMin = 2;
+export const saveQuizEventoResponseQuizOneDomandeItemOpzioniMax = 8;
+
+export const saveQuizEventoResponseQuizOneDomandeItemCorrettaMin = 0;
+export const saveQuizEventoResponseQuizOneDomandeItemCorrettaMax = 7;
+
+export const saveQuizEventoResponseDomandeItemTestoMax = 500;
+
+export const saveQuizEventoResponseDomandeItemOpzioniItemMax = 200;
+
+export const saveQuizEventoResponseDomandeItemOpzioniMax = 15;
+
+export const saveQuizEventoResponseDomandeItemRigheMax = 10;
+
+
+
+export const SaveQuizEventoResponse = zod.object({
+  "evento": zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "data": zod.string().describe('AAAA-MM-GG'),
+  "oraInizio": zod.string().describe('HH:MM'),
+  "oraFine": zod.string().nullable(),
+  "luogo": zod.string(),
+  "descrizione": zod.string(),
+  "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
+  "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
+  "oreMinimeAttestato": zod.number().describe('Ore minime di presenza, da entrata a uscita, per ricevere l\'attestato'),
+  "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
+}),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string(),
+  "inviatoIl": zod.string().nullable(),
+  "inviatoA": zod.number().int().nullable().describe('A quanti presenti e\' stato inviato l\'ultima volta')
+})),
+  "quiz": zod.union([zod.object({
+  "domande": zod.array(zod.object({
+  "testo": zod.string().min(1).max(saveQuizEventoResponseQuizOneDomandeItemTestoMax),
+  "opzioni": zod.array(zod.string().min(1).max(saveQuizEventoResponseQuizOneDomandeItemOpzioniItemMax)).min(saveQuizEventoResponseQuizOneDomandeItemOpzioniMin).max(saveQuizEventoResponseQuizOneDomandeItemOpzioniMax),
+  "corretta": zod.number().int().min(saveQuizEventoResponseQuizOneDomandeItemCorrettaMin).max(saveQuizEventoResponseQuizOneDomandeItemCorrettaMax).describe('Posizione (da 0) della risposta esatta')
+})),
+  "punteggioMinimo": zod.number().int(),
+  "aggiornatoIl": zod.string(),
+  "inviati": zod.number().int().describe('Partecipanti a cui e\' stato inviato il link'),
+  "compilati": zod.number().int()
+}),zod.null()]),
+  "questionario": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "domande": zod.array(zod.object({
+  "testo": zod.string().min(1).max(saveQuizEventoResponseDomandeItemTestoMax),
+  "tipo": zod.enum(['scelta', 'aperta']).describe('scelta = caselle da spuntare, aperta = righe per scrivere'),
+  "opzioni": zod.array(zod.string().min(1).max(saveQuizEventoResponseDomandeItemOpzioniItemMax)).max(saveQuizEventoResponseDomandeItemOpzioniMax),
+  "righe": zod.number().int().min(1).max(saveQuizEventoResponseDomandeItemRigheMax)
+})).describe('Domande del questionario creato nel sistema (vuoto se il questionario e\' un file caricato o manca)'),
+  "inviti": zod.array(zod.object({
+  "collaboratoreId": zod.number().int(),
+  "nome": zod.string().describe('Cognome e nome'),
+  "denominazione": zod.string().nullish(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.string(),
+  "attivo": zod.boolean(),
+  "invitatoIl": zod.string(),
+  "confermatoIl": zod.string().nullable(),
+  "partecipanti": zod.number().int()
+})),
+  "partecipanti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "email": zod.string().nullable().describe('Vuota solo per i partecipanti inseriti prima che l\'email fosse richiesta'),
+  "collaboratoreId": zod.number().int(),
+  "sedeNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "entrataIl": zod.string().nullable(),
+  "uscitaIl": zod.string().nullable(),
+  "minutiPresenza": zod.number().int().nullable().describe('Minuti tra entrata e uscita; vuoto se manca uno dei due orari'),
+  "idoneoAttestato": zod.boolean().describe('Vero se le ore di presenza raggiungono le ore minime del corso'),
+  "quiz": zod.union([zod.object({
+  "inviatoIl": zod.string(),
+  "compilatoIl": zod.string().nullable(),
+  "punteggio": zod.number().int().nullable(),
+  "punteggioMassimo": zod.number().int().nullable(),
+  "superato": zod.boolean().nullable()
+}),zod.null()])
+}))
+})
+
+
+/**
+ * @summary Elimina il questionario online (solo se non e' ancora stato inviato)
+ */
+export const DeleteQuizEventoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const deleteQuizEventoResponseQuizOneDomandeItemTestoMax = 500;
+
+export const deleteQuizEventoResponseQuizOneDomandeItemOpzioniItemMax = 200;
+
+export const deleteQuizEventoResponseQuizOneDomandeItemOpzioniMin = 2;
+export const deleteQuizEventoResponseQuizOneDomandeItemOpzioniMax = 8;
+
+export const deleteQuizEventoResponseQuizOneDomandeItemCorrettaMin = 0;
+export const deleteQuizEventoResponseQuizOneDomandeItemCorrettaMax = 7;
+
+export const deleteQuizEventoResponseDomandeItemTestoMax = 500;
+
+export const deleteQuizEventoResponseDomandeItemOpzioniItemMax = 200;
+
+export const deleteQuizEventoResponseDomandeItemOpzioniMax = 15;
+
+export const deleteQuizEventoResponseDomandeItemRigheMax = 10;
+
+
+
+export const DeleteQuizEventoResponse = zod.object({
+  "evento": zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "data": zod.string().describe('AAAA-MM-GG'),
+  "oraInizio": zod.string().describe('HH:MM'),
+  "oraFine": zod.string().nullable(),
+  "luogo": zod.string(),
+  "descrizione": zod.string(),
+  "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
+  "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
+  "oreMinimeAttestato": zod.number().describe('Ore minime di presenza, da entrata a uscita, per ricevere l\'attestato'),
+  "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
+}),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string(),
+  "inviatoIl": zod.string().nullable(),
+  "inviatoA": zod.number().int().nullable().describe('A quanti presenti e\' stato inviato l\'ultima volta')
+})),
+  "quiz": zod.union([zod.object({
+  "domande": zod.array(zod.object({
+  "testo": zod.string().min(1).max(deleteQuizEventoResponseQuizOneDomandeItemTestoMax),
+  "opzioni": zod.array(zod.string().min(1).max(deleteQuizEventoResponseQuizOneDomandeItemOpzioniItemMax)).min(deleteQuizEventoResponseQuizOneDomandeItemOpzioniMin).max(deleteQuizEventoResponseQuizOneDomandeItemOpzioniMax),
+  "corretta": zod.number().int().min(deleteQuizEventoResponseQuizOneDomandeItemCorrettaMin).max(deleteQuizEventoResponseQuizOneDomandeItemCorrettaMax).describe('Posizione (da 0) della risposta esatta')
+})),
+  "punteggioMinimo": zod.number().int(),
+  "aggiornatoIl": zod.string(),
+  "inviati": zod.number().int().describe('Partecipanti a cui e\' stato inviato il link'),
+  "compilati": zod.number().int()
+}),zod.null()]),
+  "questionario": zod.union([zod.object({
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string()
+}),zod.null()]),
+  "domande": zod.array(zod.object({
+  "testo": zod.string().min(1).max(deleteQuizEventoResponseDomandeItemTestoMax),
+  "tipo": zod.enum(['scelta', 'aperta']).describe('scelta = caselle da spuntare, aperta = righe per scrivere'),
+  "opzioni": zod.array(zod.string().min(1).max(deleteQuizEventoResponseDomandeItemOpzioniItemMax)).max(deleteQuizEventoResponseDomandeItemOpzioniMax),
+  "righe": zod.number().int().min(1).max(deleteQuizEventoResponseDomandeItemRigheMax)
+})).describe('Domande del questionario creato nel sistema (vuoto se il questionario e\' un file caricato o manca)'),
+  "inviti": zod.array(zod.object({
+  "collaboratoreId": zod.number().int(),
+  "nome": zod.string().describe('Cognome e nome'),
+  "denominazione": zod.string().nullish(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.string(),
+  "attivo": zod.boolean(),
+  "invitatoIl": zod.string(),
+  "confermatoIl": zod.string().nullable(),
+  "partecipanti": zod.number().int()
+})),
+  "partecipanti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "email": zod.string().nullable().describe('Vuota solo per i partecipanti inseriti prima che l\'email fosse richiesta'),
+  "collaboratoreId": zod.number().int(),
+  "sedeNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "entrataIl": zod.string().nullable(),
+  "uscitaIl": zod.string().nullable(),
+  "minutiPresenza": zod.number().int().nullable().describe('Minuti tra entrata e uscita; vuoto se manca uno dei due orari'),
+  "idoneoAttestato": zod.boolean().describe('Vero se le ore di presenza raggiungono le ore minime del corso'),
+  "quiz": zod.union([zod.object({
+  "inviatoIl": zod.string(),
+  "compilatoIl": zod.string().nullable(),
+  "punteggio": zod.number().int().nullable(),
+  "punteggioMassimo": zod.number().int().nullable(),
+  "superato": zod.boolean().nullable()
+}),zod.null()])
+}))
+})
+
+
+/**
+ * @summary Invia a ogni partecipante l'email con il link personale al questionario
+ */
+export const InviaQuizEventoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const InviaQuizEventoBody = zod.object({
+  "soloPresenti": zod.boolean().describe('Vero: solo chi ha registrato l\'entrata; falso: tutti gli iscritti')
+})
+
+export const InviaQuizEventoResponse = zod.object({
+  "inviati": zod.number().int().describe('Email messe in invio'),
+  "senzaEmail": zod.number().int().describe('Destinatari senza indirizzo email'),
+  "saltati": zod.number().int().describe('Destinatari esclusi (es. questionario gia compilato)')
+})
+
+
+/**
+ * @summary Questionario del corso aperto dal link personale (senza accesso)
+ */
+export const GetQuestionarioPubblicoParams = zod.object({
+  "token": zod.coerce.string()
+})
+
+export const GetQuestionarioPubblicoResponse = zod.object({
+  "titolo": zod.string(),
+  "data": zod.string(),
+  "partecipante": zod.string().describe('Nome e cognome'),
+  "stato": zod.enum(['da_compilare', 'compilato']),
+  "punteggioMinimo": zod.number().int().optional(),
+  "domande": zod.array(zod.object({
+  "testo": zod.string(),
+  "opzioni": zod.array(zod.string())
+})).describe('Vuoto dopo la compilazione; non contiene mai le risposte esatte'),
+  "esito": zod.union([zod.object({
+  "punteggio": zod.number().int(),
+  "punteggioMassimo": zod.number().int(),
+  "punteggioMinimo": zod.number().int(),
+  "superato": zod.boolean(),
+  "compilatoIl": zod.string()
+}),zod.null()])
+})
+
+
+/**
+ * @summary Invia le risposte (una sola volta) e restituisce l'esito
+ */
+export const InviaRisposteQuestionarioParams = zod.object({
+  "token": zod.coerce.string()
+})
+
+export const inviaRisposteQuestionarioBodyRisposteItemMin = 0;
+
+
+
+export const InviaRisposteQuestionarioBody = zod.object({
+  "risposte": zod.array(zod.number().int().min(inviaRisposteQuestionarioBodyRisposteItemMin))
+})
+
+export const InviaRisposteQuestionarioResponse = zod.object({
+  "titolo": zod.string(),
+  "data": zod.string(),
+  "partecipante": zod.string().describe('Nome e cognome'),
+  "stato": zod.enum(['da_compilare', 'compilato']),
+  "punteggioMinimo": zod.number().int().optional(),
+  "domande": zod.array(zod.object({
+  "testo": zod.string(),
+  "opzioni": zod.array(zod.string())
+})).describe('Vuoto dopo la compilazione; non contiene mai le risposte esatte'),
+  "esito": zod.union([zod.object({
+  "punteggio": zod.number().int(),
+  "punteggioMassimo": zod.number().int(),
+  "punteggioMinimo": zod.number().int(),
+  "superato": zod.boolean(),
+  "compilatoIl": zod.string()
+}),zod.null()])
 })
 
 
@@ -2344,6 +3203,16 @@ export const RegistraCheckInEventoResponse = zod.object({
 export const DeleteQuestionarioEventoParams = zod.object({
   "id": zod.coerce.number().int()
 })
+
+export const deleteQuestionarioEventoResponseQuizOneDomandeItemTestoMax = 500;
+
+export const deleteQuestionarioEventoResponseQuizOneDomandeItemOpzioniItemMax = 200;
+
+export const deleteQuestionarioEventoResponseQuizOneDomandeItemOpzioniMin = 2;
+export const deleteQuestionarioEventoResponseQuizOneDomandeItemOpzioniMax = 8;
+
+export const deleteQuestionarioEventoResponseQuizOneDomandeItemCorrettaMin = 0;
+export const deleteQuestionarioEventoResponseQuizOneDomandeItemCorrettaMax = 7;
 
 export const deleteQuestionarioEventoResponseDomandeItemTestoMax = 500;
 
@@ -2366,8 +3235,29 @@ export const DeleteQuestionarioEventoResponse = zod.object({
   "descrizione": zod.string(),
   "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
   "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
+  "oreMinimeAttestato": zod.number().describe('Ore minime di presenza, da entrata a uscita, per ricevere l\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string(),
+  "inviatoIl": zod.string().nullable(),
+  "inviatoA": zod.number().int().nullable().describe('A quanti presenti e\' stato inviato l\'ultima volta')
+})),
+  "quiz": zod.union([zod.object({
+  "domande": zod.array(zod.object({
+  "testo": zod.string().min(1).max(deleteQuestionarioEventoResponseQuizOneDomandeItemTestoMax),
+  "opzioni": zod.array(zod.string().min(1).max(deleteQuestionarioEventoResponseQuizOneDomandeItemOpzioniItemMax)).min(deleteQuestionarioEventoResponseQuizOneDomandeItemOpzioniMin).max(deleteQuestionarioEventoResponseQuizOneDomandeItemOpzioniMax),
+  "corretta": zod.number().int().min(deleteQuestionarioEventoResponseQuizOneDomandeItemCorrettaMin).max(deleteQuestionarioEventoResponseQuizOneDomandeItemCorrettaMax).describe('Posizione (da 0) della risposta esatta')
+})),
+  "punteggioMinimo": zod.number().int(),
+  "aggiornatoIl": zod.string(),
+  "inviati": zod.number().int().describe('Partecipanti a cui e\' stato inviato il link'),
+  "compilati": zod.number().int()
+}),zod.null()]),
   "questionario": zod.union([zod.object({
   "nome": zod.string(),
   "tipo": zod.string(),
@@ -2395,11 +3285,21 @@ export const DeleteQuestionarioEventoResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "email": zod.string().nullable().describe('Vuota solo per i partecipanti inseriti prima che l\'email fosse richiesta'),
   "collaboratoreId": zod.number().int(),
   "sedeNome": zod.string(),
   "numeroSportello": zod.string(),
   "entrataIl": zod.string().nullable(),
-  "uscitaIl": zod.string().nullable()
+  "uscitaIl": zod.string().nullable(),
+  "minutiPresenza": zod.number().int().nullable().describe('Minuti tra entrata e uscita; vuoto se manca uno dei due orari'),
+  "idoneoAttestato": zod.boolean().describe('Vero se le ore di presenza raggiungono le ore minime del corso'),
+  "quiz": zod.union([zod.object({
+  "inviatoIl": zod.string(),
+  "compilatoIl": zod.string().nullable(),
+  "punteggio": zod.number().int().nullable(),
+  "punteggioMassimo": zod.number().int().nullable(),
+  "superato": zod.boolean().nullable()
+}),zod.null()])
 }))
 })
 
@@ -2432,6 +3332,16 @@ export const SaveQuestionarioEventoBody = zod.object({
 })).min(1).max(saveQuestionarioEventoBodyDomandeMax)
 })
 
+export const saveQuestionarioEventoResponseQuizOneDomandeItemTestoMax = 500;
+
+export const saveQuestionarioEventoResponseQuizOneDomandeItemOpzioniItemMax = 200;
+
+export const saveQuestionarioEventoResponseQuizOneDomandeItemOpzioniMin = 2;
+export const saveQuestionarioEventoResponseQuizOneDomandeItemOpzioniMax = 8;
+
+export const saveQuestionarioEventoResponseQuizOneDomandeItemCorrettaMin = 0;
+export const saveQuestionarioEventoResponseQuizOneDomandeItemCorrettaMax = 7;
+
 export const saveQuestionarioEventoResponseDomandeItemTestoMax = 500;
 
 export const saveQuestionarioEventoResponseDomandeItemOpzioniItemMax = 200;
@@ -2453,8 +3363,29 @@ export const SaveQuestionarioEventoResponse = zod.object({
   "descrizione": zod.string(),
   "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
   "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
+  "oreMinimeAttestato": zod.number().describe('Ore minime di presenza, da entrata a uscita, per ricevere l\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "tipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.string(),
+  "inviatoIl": zod.string().nullable(),
+  "inviatoA": zod.number().int().nullable().describe('A quanti presenti e\' stato inviato l\'ultima volta')
+})),
+  "quiz": zod.union([zod.object({
+  "domande": zod.array(zod.object({
+  "testo": zod.string().min(1).max(saveQuestionarioEventoResponseQuizOneDomandeItemTestoMax),
+  "opzioni": zod.array(zod.string().min(1).max(saveQuestionarioEventoResponseQuizOneDomandeItemOpzioniItemMax)).min(saveQuestionarioEventoResponseQuizOneDomandeItemOpzioniMin).max(saveQuestionarioEventoResponseQuizOneDomandeItemOpzioniMax),
+  "corretta": zod.number().int().min(saveQuestionarioEventoResponseQuizOneDomandeItemCorrettaMin).max(saveQuestionarioEventoResponseQuizOneDomandeItemCorrettaMax).describe('Posizione (da 0) della risposta esatta')
+})),
+  "punteggioMinimo": zod.number().int(),
+  "aggiornatoIl": zod.string(),
+  "inviati": zod.number().int().describe('Partecipanti a cui e\' stato inviato il link'),
+  "compilati": zod.number().int()
+}),zod.null()]),
   "questionario": zod.union([zod.object({
   "nome": zod.string(),
   "tipo": zod.string(),
@@ -2482,11 +3413,21 @@ export const SaveQuestionarioEventoResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "email": zod.string().nullable().describe('Vuota solo per i partecipanti inseriti prima che l\'email fosse richiesta'),
   "collaboratoreId": zod.number().int(),
   "sedeNome": zod.string(),
   "numeroSportello": zod.string(),
   "entrataIl": zod.string().nullable(),
-  "uscitaIl": zod.string().nullable()
+  "uscitaIl": zod.string().nullable(),
+  "minutiPresenza": zod.number().int().nullable().describe('Minuti tra entrata e uscita; vuoto se manca uno dei due orari'),
+  "idoneoAttestato": zod.boolean().describe('Vero se le ore di presenza raggiungono le ore minime del corso'),
+  "quiz": zod.union([zod.object({
+  "inviatoIl": zod.string(),
+  "compilatoIl": zod.string().nullable(),
+  "punteggio": zod.number().int().nullable(),
+  "punteggioMassimo": zod.number().int().nullable(),
+  "superato": zod.boolean().nullable()
+}),zod.null()])
 }))
 })
 
@@ -2505,6 +3446,7 @@ export const ListEventiResponseItem = zod.object({
   "descrizione": zod.string(),
   "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
   "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
+  "oreMinimeAttestato": zod.number().describe('Ore minime di presenza, da entrata a uscita, per ricevere l\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
   "confermatoIl": zod.string().nullable(),
@@ -2532,6 +3474,7 @@ export const GetEventoResponse = zod.object({
   "descrizione": zod.string(),
   "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
   "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
+  "oreMinimeAttestato": zod.number().describe('Ore minime di presenza, da entrata a uscita, per ricevere l\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
   "confermatoIl": zod.string().nullable(),
@@ -2545,6 +3488,7 @@ export const GetEventoResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "email": zod.string().nullable(),
   "codiceQr": zod.string().describe('Contenuto del QR code personale'),
   "entrataIl": zod.string().nullable(),
   "uscitaIl": zod.string().nullable(),
@@ -2571,6 +3515,7 @@ export const ConfermaPartecipazioneEventoResponse = zod.object({
   "descrizione": zod.string(),
   "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
   "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
+  "oreMinimeAttestato": zod.number().describe('Ore minime di presenza, da entrata a uscita, per ricevere l\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
   "confermatoIl": zod.string().nullable(),
@@ -2584,6 +3529,7 @@ export const ConfermaPartecipazioneEventoResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "email": zod.string().nullable(),
   "codiceQr": zod.string().describe('Contenuto del QR code personale'),
   "entrataIl": zod.string().nullable(),
   "uscitaIl": zod.string().nullable(),
@@ -2603,11 +3549,14 @@ export const addPartecipanteEventoBodyNomeMax = 80;
 
 export const addPartecipanteEventoBodyCognomeMax = 80;
 
+export const addPartecipanteEventoBodyEmailMax = 200;
+
 
 
 export const AddPartecipanteEventoBody = zod.object({
   "nome": zod.string().min(1).max(addPartecipanteEventoBodyNomeMax),
-  "cognome": zod.string().min(1).max(addPartecipanteEventoBodyCognomeMax)
+  "cognome": zod.string().min(1).max(addPartecipanteEventoBodyCognomeMax),
+  "email": zod.string().email().max(addPartecipanteEventoBodyEmailMax).describe('Qui arriva il QR code personale')
 })
 
 export const AddPartecipanteEventoResponse = zod.object({
@@ -2621,6 +3570,7 @@ export const AddPartecipanteEventoResponse = zod.object({
   "descrizione": zod.string(),
   "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
   "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
+  "oreMinimeAttestato": zod.number().describe('Ore minime di presenza, da entrata a uscita, per ricevere l\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
   "confermatoIl": zod.string().nullable(),
@@ -2634,6 +3584,7 @@ export const AddPartecipanteEventoResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "email": zod.string().nullable(),
   "codiceQr": zod.string().describe('Contenuto del QR code personale'),
   "entrataIl": zod.string().nullable(),
   "uscitaIl": zod.string().nullable(),
@@ -2654,11 +3605,14 @@ export const updatePartecipanteEventoBodyNomeMax = 80;
 
 export const updatePartecipanteEventoBodyCognomeMax = 80;
 
+export const updatePartecipanteEventoBodyEmailMax = 200;
+
 
 
 export const UpdatePartecipanteEventoBody = zod.object({
   "nome": zod.string().min(1).max(updatePartecipanteEventoBodyNomeMax),
-  "cognome": zod.string().min(1).max(updatePartecipanteEventoBodyCognomeMax)
+  "cognome": zod.string().min(1).max(updatePartecipanteEventoBodyCognomeMax),
+  "email": zod.string().email().max(updatePartecipanteEventoBodyEmailMax).describe('Qui arriva il QR code personale')
 })
 
 export const UpdatePartecipanteEventoResponse = zod.object({
@@ -2672,6 +3626,7 @@ export const UpdatePartecipanteEventoResponse = zod.object({
   "descrizione": zod.string(),
   "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
   "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
+  "oreMinimeAttestato": zod.number().describe('Ore minime di presenza, da entrata a uscita, per ricevere l\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
   "confermatoIl": zod.string().nullable(),
@@ -2685,6 +3640,7 @@ export const UpdatePartecipanteEventoResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "email": zod.string().nullable(),
   "codiceQr": zod.string().describe('Contenuto del QR code personale'),
   "entrataIl": zod.string().nullable(),
   "uscitaIl": zod.string().nullable(),
@@ -2712,6 +3668,7 @@ export const DeletePartecipanteEventoResponse = zod.object({
   "descrizione": zod.string(),
   "tipoCorso": zod.union([zod.literal('CAF'),zod.literal('PATRONATO'),zod.literal(null)]).nullable().describe('Tipo di corso scritto sull\'attestato; vuoto solo per gli eventi creati prima di questo campo'),
   "argomento": zod.string().nullable().describe('Argomento del corso scritto sull\'attestato'),
+  "oreMinimeAttestato": zod.number().describe('Ore minime di presenza, da entrata a uscita, per ricevere l\'attestato'),
   "passato": zod.boolean().describe('Vero se la data e\' prima di oggi')
 }),
   "confermatoIl": zod.string().nullable(),
@@ -2725,6 +3682,7 @@ export const DeletePartecipanteEventoResponse = zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
   "cognome": zod.string(),
+  "email": zod.string().nullable(),
   "codiceQr": zod.string().describe('Contenuto del QR code personale'),
   "entrataIl": zod.string().nullable(),
   "uscitaIl": zod.string().nullable(),

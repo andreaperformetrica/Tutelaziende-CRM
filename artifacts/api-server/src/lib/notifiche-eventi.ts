@@ -230,3 +230,71 @@ export async function notificaAlertCollaboratori(ex: Executor, righe: RigaAlertE
     testoEmail: (d, link) => `Buongiorno ${d.nome},\n\n${righe.length === 1 ? "c'è un nuovo alert" : `ci sono ${righe.length} nuovi alert`} sui collaboratori:\n\n${elenco}\n\nApri gli alert: ${link}`,
   });
 }
+
+const descrizioneCorso = (e: { titolo: string; data: string; oraInizio: string; luogo: string }) =>
+  `"${e.titolo}" del ${formattaData(e.data)} alle ${e.oraInizio}, presso ${e.luogo}`;
+
+const destinatarioPartecipante = (p: { nome: string; email: string | null }): DestinatarioNotifica => ({ utenteId: null, nome: p.nome, email: p.email, cellulare: null });
+
+/** 8. QR code personale: al partecipante, con l'immagine del QR nel corpo e in allegato. */
+export async function notificaQrPartecipante(
+  ex: Executor,
+  evento: { titolo: string; data: string; oraInizio: string; luogo: string },
+  p: { id: number; nome: string; email: string | null },
+): Promise<number[]> {
+  if (!p.email) return [];
+  return accodaNotifiche(ex, {
+    evento: "evento_qr_partecipante",
+    destinatari: [destinatarioPartecipante(p)],
+    canali: ["email"],
+    allegatiEvento: { qrPartecipanteId: p.id },
+    percorso: "/",
+    oggetto: `Il tuo QR code per il corso: ${evento.titolo}`,
+    testoEmail: (d) =>
+      `Buongiorno ${d.nome},\n\nsei iscritto al corso ${descrizioneCorso(evento)}.\n\nQui sotto e in allegato trovi il tuo QR code personale: mostralo all'ingresso e all'uscita per registrare la tua presenza. Non cederlo ad altre persone.`,
+  });
+}
+
+/** 9. Documenti del corso: ai presenti, in allegato. */
+export async function notificaDocumentiCorso(
+  ex: Executor,
+  evento: { titolo: string; data: string },
+  destinatari: { nome: string; email: string | null }[],
+  documentiIds: number[],
+): Promise<number[]> {
+  const ids: number[] = [];
+  for (const d of destinatari) {
+    if (!d.email) continue;
+    ids.push(
+      ...(await accodaNotifiche(ex, {
+        evento: "evento_documenti",
+        destinatari: [destinatarioPartecipante(d)],
+        canali: ["email"],
+        allegatiEvento: { documentiIds },
+        percorso: "/",
+        oggetto: `Documenti del corso: ${evento.titolo}`,
+        testoEmail: (x) => `Buongiorno ${x.nome},\n\ngrazie per aver partecipato al corso "${evento.titolo}" del ${formattaData(evento.data)}.\n\nIn allegato trovi i documenti del corso.`,
+      })),
+    );
+  }
+  return ids;
+}
+
+/** 10. Questionario del corso: link personale, valido una sola volta. */
+export async function notificaQuestionarioCorso(
+  ex: Executor,
+  evento: { titolo: string; data: string },
+  p: { nome: string; email: string | null },
+  token: string,
+): Promise<number[]> {
+  if (!p.email) return [];
+  return accodaNotifiche(ex, {
+    evento: "evento_questionario",
+    destinatari: [destinatarioPartecipante(p)],
+    canali: ["email"],
+    percorso: `/questionario/${token}`,
+    oggetto: `Questionario del corso: ${evento.titolo}`,
+    testoEmail: (d, link) =>
+      `Buongiorno ${d.nome},\n\nper concludere il corso "${evento.titolo}" del ${formattaData(evento.data)} ti chiediamo di compilare il questionario.\n\nApri il questionario: ${link}\n\nIl link è personale e si può usare una sola volta: una volta inviate le risposte non sarà più possibile modificarle né ripetere il questionario.`,
+  });
+}

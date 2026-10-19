@@ -759,6 +759,8 @@ export interface EventoDati {
      * @nullable
      */
   argomento: string | null;
+  /** Ore minime di presenza, da entrata a uscita, per ricevere l'attestato */
+  oreMinimeAttestato: number;
   /** Vero se la data e' prima di oggi */
   passato: boolean;
 }
@@ -788,10 +790,27 @@ export interface InvitoEvento {
   partecipanti: number;
 }
 
+export interface QuizEsitoPartecipante {
+  inviatoIl: string;
+  /** @nullable */
+  compilatoIl: string | null;
+  /** @nullable */
+  punteggio: number | null;
+  /** @nullable */
+  punteggioMassimo: number | null;
+  /** @nullable */
+  superato: boolean | null;
+}
+
 export interface PartecipanteEventoBackoffice {
   id: number;
   nome: string;
   cognome: string;
+  /**
+     * Vuota solo per i partecipanti inseriti prima che l'email fosse richiesta
+     * @nullable
+     */
+  email: string | null;
   collaboratoreId: number;
   sedeNome: string;
   numeroSportello: string;
@@ -799,6 +818,150 @@ export interface PartecipanteEventoBackoffice {
   entrataIl: string | null;
   /** @nullable */
   uscitaIl: string | null;
+  /**
+     * Minuti tra entrata e uscita; vuoto se manca uno dei due orari
+     * @nullable
+     */
+  minutiPresenza: number | null;
+  /** Vero se le ore di presenza raggiungono le ore minime del corso */
+  idoneoAttestato: boolean;
+  quiz: QuizEsitoPartecipante | null;
+}
+
+export interface DocumentoEvento {
+  id: number;
+  nome: string;
+  tipo: string;
+  dimensione: number;
+  caricatoIl: string;
+  /** @nullable */
+  inviatoIl: string | null;
+  /**
+     * A quanti presenti e' stato inviato l'ultima volta
+     * @nullable
+     */
+  inviatoA: number | null;
+}
+
+export interface DomandaQuiz {
+  /**
+     * @minLength 1
+     * @maxLength 500
+     */
+  testo: string;
+  /**
+     * @minItems 2
+     * @maxItems 8
+     * @items.minLength 1
+     * @items.maxLength 200
+     */
+  opzioni: string[];
+  /**
+     * Posizione (da 0) della risposta esatta
+     * @minimum 0
+     * @maximum 7
+     */
+  corretta: number;
+}
+
+export interface QuizInput {
+  /**
+     * @minItems 1
+     * @maxItems 50
+     */
+  domande: DomandaQuiz[];
+  /**
+     * Risposte esatte necessarie per passare (1 punto ciascuna)
+     * @minimum 1
+     */
+  punteggioMinimo: number;
+}
+
+export interface QuizEvento {
+  domande: DomandaQuiz[];
+  punteggioMinimo: number;
+  aggiornatoIl: string;
+  /** Partecipanti a cui e' stato inviato il link */
+  inviati: number;
+  compilati: number;
+}
+
+export interface QuizInvioInput {
+  /** Vero: solo chi ha registrato l'entrata; falso: tutti gli iscritti */
+  soloPresenti: boolean;
+}
+
+export interface DocumentiInvioInput {
+  /** @minItems 1 */
+  documentiIds: number[];
+}
+
+export interface InvioEventoEsito {
+  /** Email messe in invio */
+  inviati: number;
+  /** Destinatari senza indirizzo email */
+  senzaEmail: number;
+  /** Destinatari esclusi (es. questionario gia compilato) */
+  saltati: number;
+}
+
+export type PresenzaInputTipo = typeof PresenzaInputTipo[keyof typeof PresenzaInputTipo];
+
+
+export const PresenzaInputTipo = {
+  entrata: 'entrata',
+  uscita: 'uscita',
+} as const;
+
+export interface PresenzaInput {
+  tipo: PresenzaInputTipo;
+}
+
+export interface SogliaAttestatoInput {
+  /**
+     * Ore minime di presenza per l'attestato
+     * @minimum 0
+     * @maximum 24
+     */
+  oreMinime: number;
+}
+
+export interface QuizPubblicoDomanda {
+  testo: string;
+  opzioni: string[];
+}
+
+export interface QuizPubblicoEsito {
+  punteggio: number;
+  punteggioMassimo: number;
+  punteggioMinimo: number;
+  superato: boolean;
+  compilatoIl: string;
+}
+
+export type QuizPubblicoStato = typeof QuizPubblicoStato[keyof typeof QuizPubblicoStato];
+
+
+export const QuizPubblicoStato = {
+  da_compilare: 'da_compilare',
+  compilato: 'compilato',
+} as const;
+
+export interface QuizPubblico {
+  titolo: string;
+  data: string;
+  /** Nome e cognome */
+  partecipante: string;
+  stato: QuizPubblicoStato;
+  punteggioMinimo?: number;
+  /** Vuoto dopo la compilazione; non contiene mai le risposte esatte */
+  domande: QuizPubblicoDomanda[];
+  esito: QuizPubblicoEsito | null;
+}
+
+export interface QuizRisposteInput {
+  /** @items.minimum 0 */
+  risposte: number[];
 }
 
 /**
@@ -843,6 +1006,8 @@ export interface QuestionarioInput {
 
 export interface EventoBackoffice {
   evento: EventoDati;
+  documenti: DocumentoEvento[];
+  quiz: QuizEvento | null;
   questionario: FileEvento | null;
   /** Domande del questionario creato nel sistema (vuoto se il questionario e' un file caricato o manca) */
   domande: DomandaQuestionario[];
@@ -993,6 +1158,8 @@ export interface PartecipanteEventoSede {
   id: number;
   nome: string;
   cognome: string;
+  /** @nullable */
+  email: string | null;
   /** Contenuto del QR code personale */
   codiceQr: string;
   /** @nullable */
@@ -1022,6 +1189,11 @@ export interface PartecipanteEventoInput {
      * @maxLength 80
      */
   cognome: string;
+  /**
+     * Qui arriva il QR code personale
+     * @maxLength 200
+     */
+  email: string;
 }
 
 export interface FiltroUtenteLog {

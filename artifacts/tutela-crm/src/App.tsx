@@ -10,6 +10,7 @@ import { BackofficeShell, CollaboratoreShell } from '@/components/layout/shells'
 import { ErrorState } from '@/components/common';
 import { Skeleton } from '@/components/ui/skeleton';
 import LoginPage from '@/pages/login';
+import QuestionarioPubblico from '@/pages/questionario-pubblico';
 import CambiaPasswordPage from '@/pages/cambia-password';
 import TipiPraticaPage from '@/pages/admin/tipi-pratica';
 import TipoPraticaDettaglioPage from '@/pages/admin/tipo-pratica-dettaglio';
@@ -84,6 +85,7 @@ function Router() {
       <Switch>
         <Route path="/" component={Root} />
         <Route path="/login" component={LoginPage} />
+        <Route path="/questionario/:token" component={QuestionarioPubblico} />
         <Route path="/cambia-password" component={g(<CambiaPasswordPage />)} />
         <Route path="/admin/dashboard" component={g(<DashboardPage />, 'backoffice', TUTTI_BO)} />
         <Route path="/admin/chat" component={g(<ChatPage />, 'backoffice', TUTTI_BO)} />

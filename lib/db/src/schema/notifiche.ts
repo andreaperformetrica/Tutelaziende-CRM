@@ -22,6 +22,8 @@ export const notificheTable = pgTable(
     numeroPratica: integer("numero_pratica"),
     /** Estratto allegato all'email (il PDF viene generato al momento dell'invio). */
     estrattoId: integer("estratto_id"),
+    /** Allegati degli eventi: QR code di un partecipante o documenti del corso (si generano al momento dell'invio). */
+    allegatiEvento: jsonb("allegati_evento").$type<{ qrPartecipanteId?: number; documentiIds?: number[] }>(),
     /** Oggetto (solo email). */
     oggetto: text("oggetto"),
     /** Testo che il destinatario riceve (per WhatsApp: il testo del template con le variabili sostituite). */

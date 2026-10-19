@@ -19,6 +19,8 @@ import { fmtData, fmtIstante, fmtOrarioEvento, parseApiError } from "@/lib/forma
 import { cartellinoPng, qrDataUrl, scaricaBlob } from "@/lib/qr";
 import { formatoDimensione, urlQuestionarioSede } from "@/lib/upload";
 
+const emailValida = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
+
 export default function EventoDettaglioCollaboratore() {
   const params = useParams<{ id: string }>();
   const id = Number(params.id);
@@ -32,10 +34,12 @@ export default function EventoDettaglioCollaboratore() {
 
   const [nome, setNome] = useState("");
   const [cognome, setCognome] = useState("");
+  const [email, setEmail] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [mod, setMod] = useState<PartecipanteEventoSede | null>(null);
   const [modNome, setModNome] = useState("");
   const [modCognome, setModCognome] = useState("");
+  const [modEmail, setModEmail] = useState("");
   const [modErr, setModErr] = useState<string | null>(null);
   const [daTogliere, setDaTogliere] = useState<PartecipanteEventoSede | null>(null);
 
@@ -62,7 +66,7 @@ export default function EventoDettaglioCollaboratore() {
       {!s.confermatoIl ? (
         <section className="rounded-lg border-2 border-accent bg-card p-5" data-testid="box-conferma">
           <h2 className="font-bold text-lg">Confermi la partecipazione della tua sede?</h2>
-          <p className="text-sm text-muted-foreground mt-1 mb-4">Dopo la conferma potrai inserire i partecipanti e ottenere il loro QR code personale.</p>
+          <p className="text-sm text-muted-foreground mt-1 mb-4">Dopo la conferma potrai inserire i partecipanti: ognuno riceve il QR code personale per email e lo trovi anche qui.</p>
           <Button disabled={conferma.isPending} onClick={() => conferma.mutate({ id }, { onSuccess: (r) => { salva(r); toast({ title: "Partecipazione confermata" }); }, onError: errore })} data-testid="button-conferma-partecipazione">
             {conferma.isPending ? <Loader2 className="size-4 mr-2 animate-spin" /> : <CheckCircle2 className="size-4 mr-2" />}Conferma partecipazione
           </Button>
@@ -85,18 +89,20 @@ export default function EventoDettaglioCollaboratore() {
       {s.confermatoIl && (
         <section className="space-y-4">
           <h2 className="font-bold text-xl">Partecipanti ({s.partecipanti.length})</h2>
-          <form className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-card p-4"
+          <form noValidate className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-card p-4"
             onSubmit={(ev) => {
               ev.preventDefault();
               setErr(null);
               if (!nome.trim() || !cognome.trim()) return setErr("Inserisci nome e cognome.");
-              aggiungi.mutate({ id, data: { nome: nome.trim(), cognome: cognome.trim() } }, {
-                onSuccess: (r) => { salva(r); setNome(""); setCognome(""); toast({ title: "Partecipante aggiunto" }); },
+              if (!emailValida(email)) return setErr("Inserisci un indirizzo email valido: il QR code arriva lì.");
+              aggiungi.mutate({ id, data: { nome: nome.trim(), cognome: cognome.trim(), email: email.trim() } }, {
+                onSuccess: (r) => { salva(r); setNome(""); setCognome(""); setEmail(""); toast({ title: "Partecipante aggiunto", description: "Il QR code è stato inviato all'indirizzo email indicato." }); },
                 onError: (x) => setErr(parseApiError(x).message),
               });
             }}>
             <div className="flex-1 min-w-40"><Label htmlFor="p-nome">Nome</Label><Input id="p-nome" value={nome} maxLength={80} autoComplete="off" onChange={(x) => setNome(x.target.value)} data-testid="input-partecipante-nome" /></div>
             <div className="flex-1 min-w-40"><Label htmlFor="p-cognome">Cognome</Label><Input id="p-cognome" value={cognome} maxLength={80} autoComplete="off" onChange={(x) => setCognome(x.target.value)} data-testid="input-partecipante-cognome" /></div>
+            <div className="flex-1 min-w-56"><Label htmlFor="p-email">Email</Label><Input id="p-email" type="email" value={email} maxLength={200} autoComplete="off" onChange={(x) => setEmail(x.target.value)} data-testid="input-partecipante-email" /></div>
             <Button type="submit" disabled={aggiungi.isPending} data-testid="button-aggiungi-partecipante">{aggiungi.isPending ? <Loader2 className="size-4 mr-2 animate-spin" /> : <Plus className="size-4 mr-2" />}Aggiungi</Button>
             <div className="basis-full"><FieldError id="errore-partecipante">{err}</FieldError></div>
           </form>
@@ -107,7 +113,7 @@ export default function EventoDettaglioCollaboratore() {
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {s.partecipanti.map((p) => (
                 <SchedaPartecipante key={p.id} p={p} evento={e}
-                  onModifica={() => { setMod(p); setModNome(p.nome); setModCognome(p.cognome); setModErr(null); }}
+                  onModifica={() => { setMod(p); setModNome(p.nome); setModCognome(p.cognome); setModEmail(p.email ?? ""); setModErr(null); }}
                   onElimina={() => setDaTogliere(p)} />
               ))}
             </ul>
@@ -121,14 +127,20 @@ export default function EventoDettaglioCollaboratore() {
           <div className="space-y-3">
             <div><Label htmlFor="m-nome">Nome</Label><Input id="m-nome" value={modNome} onChange={(x) => setModNome(x.target.value)} data-testid="input-modifica-nome" /></div>
             <div><Label htmlFor="m-cognome">Cognome</Label><Input id="m-cognome" value={modCognome} onChange={(x) => setModCognome(x.target.value)} data-testid="input-modifica-cognome" /></div>
+            <div><Label htmlFor="m-email">Email</Label><Input id="m-email" type="email" value={modEmail} onChange={(x) => setModEmail(x.target.value)} data-testid="input-modifica-email" /></div>
+            <p className="text-xs text-muted-foreground">Se cambi l'indirizzo, il QR code viene inviato al nuovo.</p>
             <FieldError>{modErr}</FieldError>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setMod(null)}>Annulla</Button>
               <Button disabled={modifica.isPending} data-testid="button-salva-partecipante"
-                onClick={() => mod && modifica.mutate({ id, partecipanteId: mod.id, data: { nome: modNome.trim(), cognome: modCognome.trim() } }, {
+                onClick={() => {
+                  if (!mod) return;
+                  if (!emailValida(modEmail)) return setModErr("Inserisci un indirizzo email valido.");
+                  modifica.mutate({ id, partecipanteId: mod.id, data: { nome: modNome.trim(), cognome: modCognome.trim(), email: modEmail.trim() } }, {
                   onSuccess: (r) => { salva(r); setMod(null); toast({ title: "Partecipante aggiornato" }); },
                   onError: (x) => setModErr(parseApiError(x).message),
-                })}>Salva</Button>
+                  });
+                }}>Salva</Button>
             </div>
           </div>
         </DialogContent>
@@ -156,6 +168,7 @@ function SchedaPartecipante({ p, evento, onModifica, onElimina }: { p: Partecipa
     <li className="rounded-lg border border-border bg-card p-4 flex flex-col items-center text-center" data-testid={`card-partecipante-${p.id}`}>
       <div className="size-40 grid place-items-center">{qr ? <img src={qr} alt={`QR code di ${nomeCompleto}`} className="size-40" data-testid={`qr-partecipante-${p.id}`} /> : <Skeleton className="size-40" />}</div>
       <div className="font-bold mt-2">{p.cognome} {p.nome}</div>
+      <div className="text-xs text-muted-foreground break-all" data-testid={`email-partecipante-${p.id}`}>{p.email ?? "Email non indicata"}</div>
       <div className="text-xs text-muted-foreground h-4 mt-0.5">
         {p.entrataIl ? `Entrata ${fmtIstante(p.entrataIl)}` : ""}{p.uscitaIl ? ` · uscita ${fmtIstante(p.uscitaIl)}` : ""}
       </div>

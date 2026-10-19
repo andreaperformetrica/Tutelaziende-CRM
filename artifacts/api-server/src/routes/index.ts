@@ -16,6 +16,7 @@ import logRouter from "./log";
 import notificheRouter from "./notifiche";
 import eventiBackofficeRouter from "./eventi-backoffice";
 import eventiRouter from "./eventi";
+import questionariRouter from "./questionari";
 import compensiRouter from "./compensi";
 import newsRouter from "./news";
 import avvisiRouter from "./avvisi";
@@ -34,6 +35,8 @@ router.use(healthRouter);
 router.use(controlloOrigine);
 router.use(caricaUtente);
 router.use(authRouter);
+// Questionario del corso: aperto dal link personale, senza accesso.
+router.use(questionariRouter);
 
 // Tutto il resto richiede il login e la password gia' cambiata.
 router.use(richiediLogin, richiediPasswordCambiata);
