@@ -1,0 +1,397 @@
+<migration_failure>
+   Failed to run database migration statement
+ALTER TABLE "documenti_pratica" DROP CONSTRAINT "documenti_pratica_categoria_id_categorie_allegato_id_fk";
+
+constraint "documenti_pratica_categoria_id_categorie_allegato_id_fk" of relation "documenti_pratica" does not exist
+   </migration_failure>
+
+   <generated_migration_diff>
+   CREATE TABLE "normative_tipo" (
+"id" serial PRIMARY KEY NOT NULL,
+"tipo_pratica_id" integer NOT NULL,
+"titolo" text NOT NULL,
+"url" text NOT NULL,
+"ordine" integer DEFAULT 0 NOT NULL
+);
+
+
+CREATE TABLE "compensi_collaboratore" (
+"id" serial PRIMARY KEY NOT NULL,
+"tipo_pratica_id" integer NOT NULL,
+"collaboratore_id" integer NOT NULL,
+"pagabile" boolean DEFAULT false NOT NULL,
+"punti" integer DEFAULT 0 NOT NULL,
+"valore_centesimi" integer DEFAULT 0 NOT NULL
+);
+
+
+CREATE TABLE "mandati_firme" (
+"id" serial PRIMARY KEY NOT NULL,
+"pratica_id" integer NOT NULL,
+"mandato_id" integer,
+"collaboratore_id" integer NOT NULL,
+"utente_id" integer NOT NULL,
+"firmatario_nome" text NOT NULL,
+"firmatario_codice_fiscale" text NOT NULL,
+"firmatario_cellulare" text NOT NULL,
+"firmato_il" timestamp with time zone DEFAULT now() NOT NULL,
+"file_chiave" text NOT NULL,
+"file_nome" text NOT NULL,
+"file_tipo" text NOT NULL,
+"file_dimensione" integer NOT NULL
+);
+
+
+CREATE TABLE "mandati_otp" (
+"id" serial PRIMARY KEY NOT NULL,
+"pratica_id" integer NOT NULL,
+"utente_id" integer NOT NULL,
+"codice_hash" text NOT NULL,
+"cellulare" text NOT NULL,
+"creato_il" timestamp with time zone DEFAULT now() NOT NULL,
+"scade_il" timestamp with time zone NOT NULL,
+"tentativi" integer DEFAULT 0 NOT NULL,
+"usato_il" timestamp with time zone
+);
+
+
+CREATE TABLE "allegati_tipo" (
+"id" serial PRIMARY KEY NOT NULL,
+"tipo_pratica_id" integer NOT NULL,
+"nome" text NOT NULL,
+"ordine" integer DEFAULT 0 NOT NULL
+);
+
+
+CREATE TABLE "eventi_quiz_inviti" (
+"id" serial PRIMARY KEY NOT NULL,
+"evento_id" integer NOT NULL,
+"partecipante_id" integer NOT NULL,
+"token" text NOT NULL,
+"inviato_il" timestamp with time zone DEFAULT now() NOT NULL,
+"compilato_il" timestamp with time zone,
+"punteggio" integer,
+"punteggio_massimo" integer,
+"superato" boolean,
+"risposte" jsonb,
+CONSTRAINT "eventi_quiz_inviti_partecipante_id_unique" UNIQUE("partecipante_id")
+);
+
+
+CREATE TABLE "alert_regole" (
+"codice" text PRIMARY KEY NOT NULL,
+"attiva" boolean DEFAULT true NOT NULL,
+"soglia" integer NOT NULL,
+"periodo_giorni" integer
+);
+
+
+CREATE TABLE "eventi_quiz" (
+"id" serial PRIMARY KEY NOT NULL,
+"evento_id" integer NOT NULL,
+"domande" jsonb NOT NULL,
+"punteggio_minimo" integer NOT NULL,
+"creato_il" timestamp with time zone DEFAULT now() NOT NULL,
+"modificato_il" timestamp with time zone DEFAULT now() NOT NULL,
+CONSTRAINT "eventi_quiz_evento_id_unique" UNIQUE("evento_id")
+);
+
+
+CREATE TABLE "documenti_noti" (
+"id" serial PRIMARY KEY NOT NULL,
+"nome" text NOT NULL,
+"creato_il" timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+CREATE TABLE "alert_collaboratori" (
+"id" serial PRIMARY KEY NOT NULL,
+"regola" text NOT NULL,
+"collaboratore_id" integer NOT NULL,
+"tipo_pratica_id" integer NOT NULL,
+"stato" text DEFAULT 'aperto' NOT NULL,
+"valore" integer NOT NULL,
+"ultima_pratica_il" timestamp with time zone,
+"creato_il" timestamp with time zone DEFAULT now() NOT NULL,
+"risolto_il" timestamp with time zone
+);
+
+
+CREATE TABLE "estratti_esclusioni" (
+"id" serial PRIMARY KEY NOT NULL,
+"estratto_id" integer NOT NULL,
+"pratica_id" integer NOT NULL,
+"numero_pratica" integer NOT NULL,
+"assistito" text NOT NULL,
+"tipo_pratica" text NOT NULL,
+"motivo" text NOT NULL
+);
+
+
+CREATE TABLE "eventi_documenti" (
+"id" serial PRIMARY KEY NOT NULL,
+"evento_id" integer NOT NULL,
+"chiave" text NOT NULL,
+"nome" text NOT NULL,
+"tipo" text NOT NULL,
+"dimensione" integer NOT NULL,
+"caricato_da_utente_id" integer,
+"caricato_il" timestamp with time zone DEFAULT now() NOT NULL,
+"inviato_il" timestamp with time zone,
+"inviato_a" integer
+);
+
+
+CREATE TABLE "chat_messaggi" (
+"id" serial PRIMARY KEY NOT NULL,
+"mittente_utente_id" integer NOT NULL,
+"destinatario_utente_id" integer,
+"testo" text NOT NULL,
+"creato_il" timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+CREATE TABLE "ricevute" (
+"id" serial PRIMARY KEY NOT NULL,
+"anno" integer NOT NULL,
+"numero" integer NOT NULL,
+"data_ricevuta" date NOT NULL,
+"collaboratore_id" integer NOT NULL,
+"anno_dare_avere" integer NOT NULL,
+"origine_tipo" text NOT NULL,
+"origine_id" integer NOT NULL,
+"origine_descrizione" text NOT NULL,
+"imponibile_centesimi" integer NOT NULL,
+"aliquota_iva" real,
+"iva_centesimi" integer DEFAULT 0 NOT NULL,
+"totale_centesimi" integer NOT NULL,
+"dati" text NOT NULL,
+"creato_il" timestamp with time zone DEFAULT now() NOT NULL,
+"creato_da_utente_id" integer,
+"pagato_il" date,
+"pagamento_metodo" text,
+"pagamento_registrato_il" timestamp with time zone,
+"pagamento_utente_id" integer,
+"allegato_chiave" text,
+"allegato_nome" text,
+"allegato_tipo" text,
+"allegato_dimensione" integer,
+"allegato_caricato_il" timestamp with time zone
+);
+
+
+CREATE TABLE "alert_regole_tipi" (
+"regola" text NOT NULL,
+"tipo_pratica_id" integer NOT NULL,
+CONSTRAINT "alert_regole_tipi_regola_tipo_pratica_id_pk" PRIMARY KEY("regola","tipo_pratica_id")
+);
+
+
+CREATE TABLE "chat_letture" (
+"utente_id" integer NOT NULL,
+"conversazione" text NOT NULL,
+"ultimo_messaggio_id" integer DEFAULT 0 NOT NULL,
+CONSTRAINT "chat_letture_utente_id_conversazione_pk" PRIMARY KEY("utente_id","conversazione")
+);
+
+
+ALTER TABLE "categorie_allegato" DISABLE ROW LEVEL SECURITY;
+
+DROP TABLE "categorie_allegato" CASCADE;
+
+ALTER TABLE "documenti_pratica" DROP CONSTRAINT "documenti_pratica_categoria_id_categorie_allegato_id_fk";
+
+
+DROP INDEX "importazioni_servizio_hash_uq";
+
+ALTER TABLE "mandati" ADD COLUMN "provincia" text;
+
+ALTER TABLE "mandati" ADD COLUMN "tipo_pratica_id" integer;
+
+ALTER TABLE "notifiche" ADD COLUMN "allegati_evento" jsonb;
+
+ALTER TABLE "tipi_pratica" ADD COLUMN "scadenza_giorni" integer;
+
+ALTER TABLE "tipi_pratica" ADD COLUMN "anticipo_giorni" integer DEFAULT 2 NOT NULL;
+
+ALTER TABLE "estratti" ADD COLUMN "allegato_chiave" text;
+
+ALTER TABLE "estratti" ADD COLUMN "allegato_nome" text;
+
+ALTER TABLE "estratti" ADD COLUMN "allegato_tipo" text;
+
+ALTER TABLE "estratti" ADD COLUMN "allegato_dimensione" integer;
+
+ALTER TABLE "estratti" ADD COLUMN "allegato_caricato_il" timestamp with time zone;
+
+ALTER TABLE "eventi_partecipanti" ADD COLUMN "email" text;
+
+ALTER TABLE "importazioni" ADD COLUMN "trimestre" integer;
+
+ALTER TABLE "importazioni" ADD COLUMN "periodo" text;
+
+ALTER TABLE "importazioni" ADD COLUMN "anno_dare_avere" integer NOT NULL;
+
+ALTER TABLE "importazioni_righe" ADD COLUMN "sede_file" text;
+
+ALTER TABLE "importazioni_righe" ADD COLUMN "precedente_centesimi" integer;
+
+ALTER TABLE "moduli_tipo" ADD COLUMN "compilazione_automatica" boolean DEFAULT false NOT NULL;
+
+ALTER TABLE "collaboratori" ADD COLUMN "denominazione" text;
+
+ALTER TABLE "collaboratori" ADD COLUMN "ragione_sociale" text;
+
+ALTER TABLE "collaboratori" ADD COLUMN "tipo_soggetto" text;
+
+ALTER TABLE "collaboratori" ADD COLUMN "sede_indirizzo" text;
+
+ALTER TABLE "collaboratori" ADD COLUMN "sede_comune_codice" text;
+
+ALTER TABLE "collaboratori" ADD COLUMN "sede_comune" text;
+
+ALTER TABLE "collaboratori" ADD COLUMN "sede_provincia" text;
+
+ALTER TABLE "collaboratori" ADD COLUMN "sede_cap" text;
+
+ALTER TABLE "collaboratori" ADD COLUMN "iban" text;
+
+ALTER TABLE "collaboratori" ADD COLUMN "codice_fiscale_associazione" text;
+
+ALTER TABLE "collaboratori" ADD COLUMN "banca" text;
+
+ALTER TABLE "collaboratori" ADD COLUMN "filiale" text;
+
+ALTER TABLE "eventi" ADD COLUMN "ore_minime_attestato" real DEFAULT 3 NOT NULL;
+
+ALTER TABLE "pratiche" ADD COLUMN "priorita" text DEFAULT 'media' NOT NULL;
+
+ALTER TABLE "pratiche" ADD COLUMN "sollecito_vicina_il" timestamp with time zone;
+
+ALTER TABLE "pratiche" ADD COLUMN "sollecito_superata_il" timestamp with time zone;
+
+ALTER TABLE "normative_tipo" ADD CONSTRAINT "normative_tipo_tipo_pratica_id_tipi_pratica_id_fk" FOREIGN KEY ("tipo_pratica_id") REFERENCES "public"."tipi_pratica"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "compensi_collaboratore" ADD CONSTRAINT "compensi_collaboratore_collaboratore_id_collaboratori_id_fk" FOREIGN KEY ("collaboratore_id") REFERENCES "public"."collaboratori"("id") ON DELETE no action ON UPDATE no action;
+
+ALTER TABLE "compensi_collaboratore" ADD CONSTRAINT "compensi_collaboratore_tipo_pratica_id_tipi_pratica_id_fk" FOREIGN KEY ("tipo_pratica_id") REFERENCES "public"."tipi_pratica"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "mandati_firme" ADD CONSTRAINT "mandati_firme_collaboratore_id_collaboratori_id_fk" FOREIGN KEY ("collaboratore_id") REFERENCES "public"."collaboratori"("id") ON DELETE no action ON UPDATE no action;
+
+ALTER TABLE "mandati_firme" ADD CONSTRAINT "mandati_firme_mandato_id_mandati_id_fk" FOREIGN KEY ("mandato_id") REFERENCES "public"."mandati"("id") ON DELETE restrict ON UPDATE no action;
+
+ALTER TABLE "mandati_firme" ADD CONSTRAINT "mandati_firme_pratica_id_pratiche_id_fk" FOREIGN KEY ("pratica_id") REFERENCES "public"."pratiche"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "mandati_firme" ADD CONSTRAINT "mandati_firme_utente_id_utenti_id_fk" FOREIGN KEY ("utente_id") REFERENCES "public"."utenti"("id") ON DELETE no action ON UPDATE no action;
+
+ALTER TABLE "mandati_otp" ADD CONSTRAINT "mandati_otp_pratica_id_pratiche_id_fk" FOREIGN KEY ("pratica_id") REFERENCES "public"."pratiche"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "mandati_otp" ADD CONSTRAINT "mandati_otp_utente_id_utenti_id_fk" FOREIGN KEY ("utente_id") REFERENCES "public"."utenti"("id") ON DELETE no action ON UPDATE no action;
+
+ALTER TABLE "allegati_tipo" ADD CONSTRAINT "allegati_tipo_tipo_pratica_id_tipi_pratica_id_fk" FOREIGN KEY ("tipo_pratica_id") REFERENCES "public"."tipi_pratica"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "eventi_quiz_inviti" ADD CONSTRAINT "eventi_quiz_inviti_evento_id_eventi_id_fk" FOREIGN KEY ("evento_id") REFERENCES "public"."eventi"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "eventi_quiz_inviti" ADD CONSTRAINT "eventi_quiz_inviti_partecipante_id_eventi_partecipanti_id_fk" FOREIGN KEY ("partecipante_id") REFERENCES "public"."eventi_partecipanti"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "eventi_quiz" ADD CONSTRAINT "eventi_quiz_evento_id_eventi_id_fk" FOREIGN KEY ("evento_id") REFERENCES "public"."eventi"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "alert_collaboratori" ADD CONSTRAINT "alert_collaboratori_collaboratore_id_collaboratori_id_fk" FOREIGN KEY ("collaboratore_id") REFERENCES "public"."collaboratori"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "alert_collaboratori" ADD CONSTRAINT "alert_collaboratori_tipo_pratica_id_tipi_pratica_id_fk" FOREIGN KEY ("tipo_pratica_id") REFERENCES "public"."tipi_pratica"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "estratti_esclusioni" ADD CONSTRAINT "estratti_esclusioni_estratto_id_estratti_id_fk" FOREIGN KEY ("estratto_id") REFERENCES "public"."estratti"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "estratti_esclusioni" ADD CONSTRAINT "estratti_esclusioni_pratica_id_pratiche_id_fk" FOREIGN KEY ("pratica_id") REFERENCES "public"."pratiche"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "eventi_documenti" ADD CONSTRAINT "eventi_documenti_caricato_da_utente_id_utenti_id_fk" FOREIGN KEY ("caricato_da_utente_id") REFERENCES "public"."utenti"("id") ON DELETE set null ON UPDATE no action;
+
+ALTER TABLE "eventi_documenti" ADD CONSTRAINT "eventi_documenti_evento_id_eventi_id_fk" FOREIGN KEY ("evento_id") REFERENCES "public"."eventi"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "chat_messaggi" ADD CONSTRAINT "chat_messaggi_destinatario_utente_id_utenti_id_fk" FOREIGN KEY ("destinatario_utente_id") REFERENCES "public"."utenti"("id") ON DELETE no action ON UPDATE no action;
+
+ALTER TABLE "chat_messaggi" ADD CONSTRAINT "chat_messaggi_mittente_utente_id_utenti_id_fk" FOREIGN KEY ("mittente_utente_id") REFERENCES "public"."utenti"("id") ON DELETE no action ON UPDATE no action;
+
+ALTER TABLE "ricevute" ADD CONSTRAINT "ricevute_collaboratore_id_collaboratori_id_fk" FOREIGN KEY ("collaboratore_id") REFERENCES "public"."collaboratori"("id") ON DELETE no action ON UPDATE no action;
+
+ALTER TABLE "ricevute" ADD CONSTRAINT "ricevute_creato_da_utente_id_utenti_id_fk" FOREIGN KEY ("creato_da_utente_id") REFERENCES "public"."utenti"("id") ON DELETE no action ON UPDATE no action;
+
+ALTER TABLE "ricevute" ADD CONSTRAINT "ricevute_pagamento_utente_id_utenti_id_fk" FOREIGN KEY ("pagamento_utente_id") REFERENCES "public"."utenti"("id") ON DELETE no action ON UPDATE no action;
+
+ALTER TABLE "alert_regole_tipi" ADD CONSTRAINT "alert_regole_tipi_tipo_pratica_id_tipi_pratica_id_fk" FOREIGN KEY ("tipo_pratica_id") REFERENCES "public"."tipi_pratica"("id") ON DELETE cascade ON UPDATE no action;
+
+ALTER TABLE "chat_letture" ADD CONSTRAINT "chat_letture_utente_id_utenti_id_fk" FOREIGN KEY ("utente_id") REFERENCES "public"."utenti"("id") ON DELETE cascade ON UPDATE no action;
+
+CREATE INDEX "normative_tipo_tipo_idx" ON "normative_tipo" USING btree ("tipo_pratica_id");
+
+CREATE UNIQUE INDEX "compensi_collaboratore_uq" ON "compensi_collaboratore" USING btree ("tipo_pratica_id","collaboratore_id");
+
+CREATE UNIQUE INDEX "mandati_firme_pratica_uq" ON "mandati_firme" USING btree ("pratica_id");
+
+CREATE INDEX "mandati_otp_pratica_idx" ON "mandati_otp" USING btree ("pratica_id","utente_id");
+
+CREATE UNIQUE INDEX "allegati_tipo_nome_uq" ON "allegati_tipo" USING btree ("tipo_pratica_id",lower(nome));
+
+CREATE INDEX "eventi_quiz_inviti_evento_idx" ON "eventi_quiz_inviti" USING btree ("evento_id");
+
+CREATE UNIQUE INDEX "eventi_quiz_inviti_token_uq" ON "eventi_quiz_inviti" USING btree ("token");
+
+CREATE UNIQUE INDEX "documenti_noti_nome_uq" ON "documenti_noti" USING btree (lower(nome));
+
+CREATE UNIQUE INDEX "alert_collaboratori_aperto_uq" ON "alert_collaboratori" USING btree ("regola","collaboratore_id","tipo_pratica_id") WHERE (stato = 'aperto'::text);
+
+CREATE INDEX "alert_collaboratori_stato_idx" ON "alert_collaboratori" USING btree ("stato","creato_il");
+
+CREATE INDEX "estratti_esclusioni_estratto_idx" ON "estratti_esclusioni" USING btree ("estratto_id");
+
+CREATE INDEX "eventi_documenti_evento_idx" ON "eventi_documenti" USING btree ("evento_id");
+
+CREATE INDEX "chat_messaggi_destinatario_idx" ON "chat_messaggi" USING btree ("destinatario_utente_id","id");
+
+CREATE INDEX "chat_messaggi_mittente_idx" ON "chat_messaggi" USING btree ("mittente_utente_id","destinatario_utente_id","id");
+
+CREATE UNIQUE INDEX "ricevute_anno_numero_uq" ON "ricevute" USING btree ("anno","numero");
+
+CREATE INDEX "ricevute_collaboratore_idx" ON "ricevute" USING btree ("collaboratore_id");
+
+CREATE INDEX "ricevute_data_idx" ON "ricevute" USING btree ("data_ricevuta");
+
+CREATE UNIQUE INDEX "ricevute_origine_uq" ON "ricevute" USING btree ("collaboratore_id","origine_tipo","origine_id");
+
+ALTER TABLE "mandati" ADD CONSTRAINT "mandati_tipo_pratica_id_tipi_pratica_id_fk" FOREIGN KEY ("tipo_pratica_id") REFERENCES "public"."tipi_pratica"("id") ON DELETE no action ON UPDATE no action;
+
+CREATE UNIQUE INDEX "mandati_provincia_tipo_uq" ON "mandati" USING btree ("provincia",COALESCE(tipo_pratica_id, 0)) WHERE (provincia IS NOT NULL);
+
+CREATE INDEX "commenti_pratica_utente_idx" ON "commenti_pratica" USING btree ("utente_id","creato_il");
+
+CREATE UNIQUE INDEX "importazioni_hash_uq" ON "importazioni" USING btree ("hash_file") WHERE (stato = 'confermata'::text);
+
+CREATE UNIQUE INDEX "importazioni_periodo_uq" ON "importazioni" USING btree ("servizio","anno",COALESCE(trimestre, 0)) WHERE ((stato = 'confermata'::text) AND (servizio <> 'naspi'::text));
+
+CREATE INDEX "eventi_pratica_utente_idx" ON "eventi_pratica" USING btree ("utente_id","creato_il");
+
+CREATE INDEX "pratiche_chiusa_il_idx" ON "pratiche" USING btree ("chiusa_il") WHERE (chiusa_il IS NOT NULL);
+
+CREATE INDEX "pratiche_collaboratore_inviata_idx" ON "pratiche" USING btree ("collaboratore_id","inviata_il");
+
+CREATE INDEX "pratiche_creata_il_idx" ON "pratiche" USING btree ("creata_il");
+
+CREATE INDEX "pratiche_gestita_inviata_idx" ON "pratiche" USING btree ("gestita_da_utente_id","inviata_il");
+
+CREATE INDEX "pratiche_inviata_il_idx" ON "pratiche" USING btree ("inviata_il","id");
+
+CREATE INDEX "pratiche_priorita_inviata_idx" ON "pratiche" USING btree ("priorita","inviata_il");
+
+CREATE INDEX "pratiche_stato_inviata_idx" ON "pratiche" USING btree ("stato_id","inviata_il");
+
+CREATE INDEX "pratiche_tipo_inviata_idx" ON "pratiche" USING btree ("tipo_pratica_id","inviata_il");
+
+ALTER TABLE "documenti_pratica" DROP COLUMN "categoria_id";
+
+ALTER TABLE "importazioni" DROP COLUMN "configurazione";
+   </generated_migration_diff>
+
+   <migration_warnings>
+   · You're about to delete categorie_allegato table with 5 items
+· You're about to delete categoria_id column in documenti_pratica table with 6 items
+   </migration_warnings>

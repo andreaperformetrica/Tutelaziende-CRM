@@ -195,3 +195,18 @@ export const impostazioniTable = pgTable("impostazioni", {
   chiave: text("chiave").primaryKey(),
   valore: text("valore").notNull(),
 });
+
+/**
+ * Tabella non piu' usata dall'applicazione (le categorie degli allegati sono state tolte).
+ * Resta definita solo per il passaggio in produzione: l'eliminazione della tabella insieme al vincolo
+ * "documenti_pratica.categoria_id" nello stesso Publish fallirebbe. Si elimina con un Publish successivo.
+ */
+export const categorieAllegatoTable = pgTable(
+  "categorie_allegato",
+  {
+    id: serial("id").primaryKey(),
+    nome: text("nome").notNull(),
+    creatoIl: timestamp("creato_il", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("categorie_allegato_nome_uq").on(sql`lower(${t.nome})`)],
+);
