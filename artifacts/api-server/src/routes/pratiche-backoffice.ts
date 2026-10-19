@@ -2,10 +2,14 @@ import { Readable } from "node:stream";
 import { mandatoCompilatoPdf } from "../lib/mandato-compilato";
 import { chiaveFirmaPratica, leggiPdfFirmato } from "../lib/firma-mandato";
 import { NOME_STATO_PAGATA, aggiornaMaturazione, estrattoDellaPratica } from "../lib/compensi";
+import ExcelJS from "exceljs";
+import JSZip from "jszip";
 import express, { Router, type IRouter } from "express";
 import { and, asc, desc, eq, isNotNull, isNull, ne, sql, type SQL } from "drizzle-orm";
 import {
   CambiaStatoPraticaBody,
+  CambiaPrioritaPraticaBody,
+  CambiaPrioritaPraticaParams,
   CambiaStatoPraticaParams,
   CreateCommentoPraticaBackofficeBody,
   CreateCommentoPraticaBackofficeParams,
@@ -30,7 +34,7 @@ import {
 } from "@workspace/db";
 import { HttpError, nonTrovato } from "../lib/errori";
 import { contestoDa, registraLog } from "../lib/log";
-import { contaPerStato, contaPratiche, mandatoDellaPratica, selezionaPratiche, MAX_MESSAGGIO } from "../lib/pratiche";
+import { contaPerStatoBackoffice, contaPraticheBackoffice, mandatoDellaPratica, selezionaPratiche, MAX_MESSAGGIO } from "../lib/pratiche";
 import {
   aggiornataSql,
   caricaPraticaInviata,
@@ -43,6 +47,7 @@ import {
 import { DIMENSIONE_MASSIMA_FILE, eliminaFile, leggiFile, salvaFile, validaFile } from "../lib/storage";
 import { notificaCommentoUfficio } from "../lib/notifiche-eventi";
 import { recapitaInBackground } from "../lib/notifiche";
+import { scadenzeInCarico } from "../lib/scadenze";
 import { valida } from "../lib/validazione";
 import { richiediRuolo } from "../middlewares/auth";
 import { inviaFile } from "./tipi-pratica";
@@ -52,6 +57,27 @@ router.use("/backoffice/pratiche", richiediRuolo("super_admin", "admin", "operat
 const corpoFile = express.raw({ type: () => true, limit: DIMENSIONE_MASSIMA_FILE });
 
 const PER_PAGINA_DEFAULT = 25;
+const ETICHETTA_PRIORITA = { urgente: "Urgente", media: "Media", bassa: "Bassa" } as const;
+const nomeCollaboratore = (c: { nome: string; cognome: string; denominazione?: string | null }) => `${c.nome} ${c.cognome}${c.denominazione ? ` (${c.denominazione})` : ""}`;
+
+/** Mesi (AAAA-MM, fuso Roma) in cui c'e' almeno una pratica inviata, dal piu' recente: si cerca per intervalli, senza leggere tutta la tabella. */
+async function mesiConPratiche(): Promise<string[]> {
+  const r = await db.execute<{ mese: string }>(sql`
+    select to_char(m, 'YYYY-MM') as mese
+    from (
+      select generate_series(
+        date_trunc('month', min(inviata_il) at time zone 'Europe/Rome'),
+        date_trunc('month', max(inviata_il) at time zone 'Europe/Rome'),
+        interval '1 month') as m
+      from pratiche where inviata_il is not null
+    ) mesi
+    where exists (
+      select 1 from pratiche
+      where inviata_il >= (m at time zone 'Europe/Rome')
+        and inviata_il < ((m + interval '1 month') at time zone 'Europe/Rome'))
+    order by m desc`);
+  return r.rows.map((x) => x.mese);
+}
 const intero = (v: unknown, nome: string): number => {
   const n = Number(v);
   if (!Number.isInteger(n) || n <= 0) throw new HttpError(400, `Parametro "${nome}" non valido.`, "DATI_NON_VALIDI", nome);
@@ -66,21 +92,20 @@ function controllaData(valore: string | undefined, campo: string): string | unde
   return valore;
 }
 
-const giornoRoma = sql`((${praticheTable.inviataIl} at time zone 'Europe/Rome')::date)`;
-const meseRoma = sql`to_char(${praticheTable.inviataIl} at time zone 'Europe/Rome', 'YYYY-MM')`;
+// Filtri sulle date come intervalli sulla colonna `inviata_il` (fuso Europe/Rome): cosi' il database usa gli indici.
+// Confrontare `(inviata_il at time zone ...)::date` obbligava invece a calcolare la data di ogni riga della tabella.
+const dalRoma = (data: string) => sql`(${data}::date)::timestamp at time zone 'Europe/Rome'`;
+const finoAlRoma = (data: string) => sql`((${data}::date) + 1)::timestamp at time zone 'Europe/Rome'`;
 
-// ---------------------------------------------------------------------------------------------
-// Elenco e filtri
-// ---------------------------------------------------------------------------------------------
+type ParametriElenco = ReturnType<typeof ListPraticheBackofficeQueryParams.parse>;
 
-router.get("/backoffice/pratiche", async (req, res) => {
-  const p = valida(ListPraticheBackofficeQueryParams, req.query);
+/** Filtri e ordinamento dell'elenco; li usano sia l'elenco a pagine sia l'esportazione in Excel. */
+function filtriElenco(p: ParametriElenco) {
   const dal = controllaData(p.dal, "dal");
   const al = controllaData(p.al, "al");
   if (dal && al && dal > al) throw new HttpError(400, "La data iniziale è successiva a quella finale.", "DATA_NON_VALIDA", "dal");
   if (p.mese && !/^\d{4}-(0[1-9]|1[0-2])$/.test(p.mese)) throw new HttpError(400, "Mese non valido.", "DATI_NON_VALIDI", "mese");
-  const pagina = p.pagina ?? 1;
-  const perPagina = p.perPagina ?? PER_PAGINA_DEFAULT;
+  const inizioMese = p.mese ? `${p.mese}-01` : null;
 
   // Il riepilogo per stato rispetta tutti i filtri tranne lo stato, cosi' resta completo quando se ne sceglie uno.
   const senzaStato = and(
@@ -90,9 +115,10 @@ router.get("/backoffice/pratiche", async (req, res) => {
     p.gestitaDaUtenteId ? eq(praticheTable.gestitaDaUtenteId, p.gestitaDaUtenteId) : undefined,
     p.nonAssegnate === true ? isNull(praticheTable.gestitaDaUtenteId) : undefined,
     p.soloLavorate === true ? isNotNull(praticheTable.gestitaDaUtenteId) : undefined,
-    p.mese ? sql`${meseRoma} = ${p.mese}` : undefined,
-    dal ? sql`${giornoRoma} >= ${dal}::date` : undefined,
-    al ? sql`${giornoRoma} <= ${al}::date` : undefined,
+    p.priorita ? eq(praticheTable.priorita, p.priorita) : undefined,
+    inizioMese ? sql`${praticheTable.inviataIl} >= ${dalRoma(inizioMese)} and ${praticheTable.inviataIl} < ((${inizioMese}::date + interval '1 month')::timestamp at time zone 'Europe/Rome')` : undefined,
+    dal ? sql`${praticheTable.inviataIl} >= ${dalRoma(dal)}` : undefined,
+    al ? sql`${praticheTable.inviataIl} < ${finoAlRoma(al)}` : undefined,
     p.soloAggiornate === true ? aggiornataSql : undefined,
   );
   const where = and(senzaStato, p.statoId ? eq(praticheTable.statoId, p.statoId) : undefined);
@@ -106,6 +132,8 @@ router.get("/backoffice/pratiche", async (req, res) => {
     numero: sql`${praticheTable.numero}`,
     stato: sql`${statiPraticaTable.ordine}`,
     tipo: sql`lower(${tipiPraticaTable.nome})`,
+    // In ordine crescente: urgente, media, bassa.
+    priorita: sql`(case ${praticheTable.priorita} when 'urgente' then 0 when 'media' then 1 else 2 end)`,
   };
   const ordine: SQL[] = [
     ...(p.aggiornatePrima === true ? [desc(aggiornataSql)] : []),
@@ -114,15 +142,98 @@ router.get("/backoffice/pratiche", async (req, res) => {
     desc(praticheTable.inviataIl),
     desc(praticheTable.id),
   ];
+  return { senzaStato, where, ordine };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Elenco e filtri
+// ---------------------------------------------------------------------------------------------
+
+router.get("/backoffice/pratiche", async (req, res) => {
+  const p = valida(ListPraticheBackofficeQueryParams, req.query);
+  const { senzaStato, where, ordine } = filtriElenco(p);
+  const pagina = p.pagina ?? 1;
+  const perPagina = p.perPagina ?? PER_PAGINA_DEFAULT;
 
   const [totale, riepilogoStati, righe] = await Promise.all([
-    contaPratiche(where),
-    contaPerStato(senzaStato),
+    contaPraticheBackoffice(where),
+    contaPerStatoBackoffice(senzaStato),
     selezionaPratiche(where, ordine)
       .limit(perPagina)
       .offset((pagina - 1) * perPagina),
   ]);
   res.json({ elementi: righe.map(mappaRiepilogoBackoffice), totale, riepilogoStati, pagina, perPagina });
+});
+
+const MAX_RIGHE_EXCEL = 50000;
+
+/** Istante come ora di Roma "scritta" in UTC: Excel non ha fusi orari, cosi' mostra la stessa ora che si vede nella piattaforma. */
+function istanteRomaPerExcel(d: Date): Date {
+  const parti = Object.fromEntries(
+    new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Rome", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
+      .formatToParts(d)
+      .map((x) => [x.type, x.value]),
+  ) as Record<string, string>;
+  return new Date(Date.UTC(Number(parti["year"]), Number(parti["month"]) - 1, Number(parti["day"]), Number(parti["hour"]), Number(parti["minute"])));
+}
+
+/** Excel dell'elenco con gli stessi filtri e lo stesso ordinamento applicati a video, tutte le colonne dell'elenco. */
+router.get("/backoffice/pratiche/esporta", async (req, res) => {
+  const p = valida(ListPraticheBackofficeQueryParams, req.query);
+  const { where, ordine } = filtriElenco(p);
+  const totale = await contaPraticheBackoffice(where);
+  if (totale > MAX_RIGHE_EXCEL) {
+    throw new HttpError(400, `Le pratiche trovate sono ${totale}: troppe per un solo file (massimo ${MAX_RIGHE_EXCEL}). Restringi i filtri e riprova.`, "TROPPE_RIGHE");
+  }
+  const righe = await selezionaPratiche(where, ordine);
+  const wb = new ExcelJS.Workbook();
+  const foglio = wb.addWorksheet("Pratiche");
+  foglio.columns = [
+    { header: "Assistito", key: "assistito", width: 30 },
+    { header: "Numero", key: "numero", width: 10 },
+    { header: "Collaboratore", key: "collaboratore", width: 30 },
+    { header: "Città", key: "citta", width: 20 },
+    { header: "Richiesta pratica", key: "richiesta", width: 18, style: { numFmt: "dd/mm/yyyy hh:mm" } },
+    { header: "Stato", key: "stato", width: 20 },
+    { header: "Tipo", key: "tipo", width: 28 },
+    { header: "Gestita da", key: "gestita", width: 26 },
+    { header: "Priorità", key: "priorita", width: 12 },
+    { header: "Scadenza", key: "scadenza", width: 18, style: { numFmt: "dd/mm/yyyy hh:mm" } },
+    { header: "Aggiornata", key: "aggiornata", width: 12 },
+  ];
+  foglio.getRow(1).font = { bold: true };
+  foglio.views = [{ state: "frozen", ySplit: 1 }];
+  for (const r of righe) {
+    const m = mappaRiepilogoBackoffice(r);
+    foglio.addRow({
+      assistito: `${m.assistito.cognome} ${m.assistito.nome}`,
+      numero: m.numero,
+      collaboratore: nomeCollaboratore(m.collaboratore),
+      citta: m.citta,
+      richiesta: istanteRomaPerExcel(new Date(m.dataRichiesta)),
+      stato: m.stato.nome,
+      tipo: m.tipo.nome,
+      gestita: m.gestitaDa ? `${m.gestitaDa.cognome} ${m.gestitaDa.nome}` : "Non assegnata",
+      priorita: ETICHETTA_PRIORITA[m.priorita],
+      scadenza: m.scadenza ? istanteRomaPerExcel(new Date(m.scadenza.scadenzaIl)) : null,
+      aggiornata: m.aggiornata ? "Sì" : "No",
+    });
+  }
+  foglio.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: 11 } };
+  const buffer = Buffer.from(await wb.xlsx.writeBuffer());
+  await registraLog(db, contestoDa(req), {
+    azione: "pratica.esporta",
+    entita: "pratica",
+    descrizione: `Esportazione in Excel dell'elenco pratiche (${righe.length} pratiche)`,
+    dettagli: { righe: righe.length, filtri: Object.fromEntries(Object.entries(req.query).filter(([k]) => k !== "pagina" && k !== "perPagina")) },
+  });
+  const oggi = new Intl.DateTimeFormat("it-IT", { timeZone: "Europe/Rome", day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date()).replace(/\//g, "-");
+  inviaFile(res, Readable.from(buffer), `Pratiche ${oggi}.xlsx`, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", buffer.length);
+});
+
+/** Pratiche in gestione all'utente con scadenza vicina o superata (per il popup). */
+router.get("/backoffice/pratiche/scadenze", async (req, res) => {
+  res.json(await scadenzeInCarico(req.utente!.id));
 });
 
 router.get("/backoffice/pratiche/filtri", async (_req, res) => {
@@ -143,13 +254,9 @@ router.get("/backoffice/pratiche/filtri", async (_req, res) => {
       .from(utentiTable)
       .where(ne(utentiTable.ruolo, "collaboratore"))
       .orderBy(asc(utentiTable.cognome), asc(utentiTable.nome)),
-    db
-      .selectDistinct({ mese: meseRoma.mapWith(String) })
-      .from(praticheTable)
-      .where(isNotNull(praticheTable.inviataIl))
-      .orderBy(desc(meseRoma)),
+    mesiConPratiche(),
   ]);
-  res.json({ collaboratori, tipi, stati, operatori, mesi: mesi.map((m) => m.mese) });
+  res.json({ collaboratori, tipi, stati, operatori, mesi });
 });
 
 router.get("/backoffice/pratiche/:id", async (req, res) => {
@@ -181,7 +288,8 @@ router.post("/backoffice/pratiche/:id/presa-in-carico", async (req, res) => {
       precedente = g ? `${g.cognome} ${g.nome}` : null;
     }
     const ora = new Date();
-    await tx.update(praticheTable).set({ gestitaDaUtenteId: u.id, modificataIl: ora, ultimaAttivitaBackofficeIl: ora }).where(eq(praticheTable.id, id));
+    // Chi prende in carico riceve i propri solleciti di scadenza: si riparte da zero.
+    await tx.update(praticheTable).set({ gestitaDaUtenteId: u.id, modificataIl: ora, ultimaAttivitaBackofficeIl: ora, sollecitoVicinaIl: null, sollecitoSuperataIl: null }).where(eq(praticheTable.id, id));
     await tx.insert(eventiPraticaTable).values({ praticaId: id, tipo: "presa_in_carico", utenteId: u.id, da: precedente, a: io });
     await registraLog(tx, contestoDa(req), {
       azione: "pratica.presa_in_carico",
@@ -191,6 +299,24 @@ router.post("/backoffice/pratiche/:id/presa-in-carico", async (req, res) => {
         ? `Presa in carico della pratica ${descrizionePraticaBo(p)} (era di ${precedente})`
         : `Presa in carico della pratica ${descrizionePraticaBo(p)}`,
       dettagli: { precedente, nuovo: io },
+    });
+  });
+  res.json(await dettaglioBackoffice(req, id));
+});
+
+router.put("/backoffice/pratiche/:id/priorita", async (req, res) => {
+  const { id } = valida(CambiaPrioritaPraticaParams, req.params);
+  const { priorita } = valida(CambiaPrioritaPraticaBody, req.body);
+  const p = await caricaPraticaInviata(id);
+  if (p.priorita === priorita) throw new HttpError(409, "La pratica ha già questa priorità.", "PRIORITA_INVARIATA", "priorita");
+  await db.transaction(async (tx) => {
+    await tx.update(praticheTable).set({ priorita, modificataIl: new Date() }).where(eq(praticheTable.id, id));
+    await registraLog(tx, contestoDa(req), {
+      azione: "pratica.priorita",
+      entita: "pratica",
+      entitaId: id,
+      descrizione: `Pratica ${descrizionePraticaBo(p)}: priorità cambiata da "${ETICHETTA_PRIORITA[p.priorita]}" a "${ETICHETTA_PRIORITA[priorita]}"`,
+      dettagli: { da: p.priorita, a: priorita },
     });
   });
   res.json(await dettaglioBackoffice(req, id));
@@ -340,6 +466,43 @@ router.get("/backoffice/pratiche/:id/documenti/:docId/file", async (req, res) =>
   if (!d) throw nonTrovato("Documento non trovato.");
   const { stream } = await leggiFile(d.fileChiave);
   inviaFile(res, stream, d.fileNome, d.fileTipo, d.fileDimensione, req.query["anteprima"] === "1");
+});
+
+const nomeSicuro = (t: string) => t.replace(/[\\/:*?"<>|\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 120);
+
+/** Tutti i documenti caricati dal collaboratore in un unico file zip, con nomi leggibili ("Carta d'identità - ROSSI MARIO.pdf"). */
+router.get("/backoffice/pratiche/:id/documenti.zip", async (req, res) => {
+  const id = intero(req.params["id"], "id");
+  const p = await caricaPraticaInviata(id);
+  const docs = await db
+    .select()
+    .from(documentiPraticaTable)
+    .where(and(eq(documentiPraticaTable.praticaId, id), eq(documentiPraticaTable.daBackoffice, false)))
+    .orderBy(asc(documentiPraticaTable.id));
+  if (!docs.length) throw nonTrovato("Il collaboratore non ha caricato nessun documento per questa pratica.");
+  const assistito = `${p.assCognome} ${p.assNome}`.toUpperCase();
+  const zip = new JSZip();
+  const usati = new Set<string>();
+  for (const d of docs) {
+    const ext = /\.[A-Za-z0-9]{1,8}$/.exec(d.fileNome)?.[0].toLowerCase() ?? "";
+    const base = `${nomeSicuro(d.nome) || "Documento"} - ${assistito}`;
+    let nome = `${base}${ext}`;
+    for (let n = 2; usati.has(nome.toLowerCase()); n++) nome = `${base} (${n})${ext}`;
+    usati.add(nome.toLowerCase());
+    const { stream } = await leggiFile(d.fileChiave);
+    const pezzi: Buffer[] = [];
+    for await (const c of stream) pezzi.push(Buffer.from(c as Buffer));
+    zip.file(nome, Buffer.concat(pezzi));
+  }
+  const buffer = await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE", compressionOptions: { level: 1 } });
+  await registraLog(db, contestoDa(req), {
+    azione: "pratica.documenti_scarica",
+    entita: "pratica",
+    entitaId: id,
+    descrizione: `Scaricati tutti i documenti della pratica ${descrizionePraticaBo(p)} (${docs.length} file)`,
+    dettagli: { file: docs.length },
+  });
+  inviaFile(res, Readable.from(buffer), `Pratica ${p.numero} - ${nomeSicuro(assistito)}.zip`, "application/zip", buffer.length);
 });
 
 router.get("/backoffice/pratiche/:id/mandato/file", async (req, res) => {

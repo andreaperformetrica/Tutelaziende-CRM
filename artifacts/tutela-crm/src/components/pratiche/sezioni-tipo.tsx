@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   getGetTipoPraticaQueryKey, getListTipiPraticaQueryKey, useCreateAllegatoTipo, useCreateNormativaTipo, useDeleteAllegatoTipo,
-  useDeleteCompensoCollaboratore, useDeleteNormativaTipo, useListCollaboratori, useSaveCompensoCollaboratore, useUpdateNormativaTipo,
+  useDeleteCompensoCollaboratore, useDeleteNormativaTipo, useListCollaboratori, useSaveCompensoCollaboratore, useUpdateNormativaTipo, useUpdateScadenzaTipo,
   type TipoPratica,
 } from "@workspace/api-client-react";
 import { Check, ExternalLink, Loader2, Pencil, Plus, Trash2, X } from "lucide-react";
@@ -238,6 +238,56 @@ export function AllegatiOperatoreTipo({ tipo }: { tipo: TipoPratica }) {
       <ConfermaElimina aperto={daEliminare !== null} titolo="Togliere il documento?" testo="Non sarà più proposto agli operatori per questo tipo di pratica."
         onAnnulla={() => setDaEliminare(null)}
         onConferma={() => { const id = daEliminare!; setDaEliminare(null); del.mutate({ id }, { onSuccess: (t) => { aggiorna(t); toast({ title: "Documento tolto" }); }, onError }); }} />
+    </Sezione>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------
+
+export function ScadenzaTipo({ tipo }: { tipo: TipoPratica }) {
+  const { toast } = useToast();
+  const aggiorna = useAggiorna(tipo.id);
+  const salva = useUpdateScadenzaTipo();
+  const [attiva, setAttiva] = useState(tipo.scadenzaGiorni !== null);
+  const [giorni, setGiorni] = useState(tipo.scadenzaGiorni !== null ? String(tipo.scadenzaGiorni) : "");
+  const [anticipo, setAnticipo] = useState(String(tipo.anticipoGiorni));
+  const [err, setErr] = useState<string | null>(null);
+
+  const invia = () => {
+    const g = Number(giorni);
+    const a = Number(anticipo);
+    if (attiva && (!Number.isInteger(g) || g < 1 || g > 3650)) return setErr("Scrivi i giorni di scadenza (da 1 a 3650).");
+    if (!Number.isInteger(a) || a < 0 || a > 365) return setErr("L'anticipo deve essere un numero di giorni da 0 a 365.");
+    if (attiva && a >= g) return setErr("L'anticipo deve essere minore dei giorni di scadenza.");
+    setErr(null);
+    salva.mutate({ id: tipo.id, data: { scadenzaGiorni: attiva ? g : null, anticipoGiorni: a } }, {
+      onSuccess: (t) => { aggiorna(t); toast({ title: "Scadenza salvata" }); },
+      onError: (e) => setErr(parseApiError(e).message),
+    });
+  };
+
+  return (
+    <Sezione titolo="Scadenza" testId="sezione-scadenza"
+      nota="Giorni entro cui la pratica va lavorata, contati dall'invio. Quando la scadenza si avvicina compare un avviso nelle pratiche in gestione e l'operatore che ha la pratica in carico riceve un'email. Senza scadenza non c'è nessun avviso.">
+      <label className="flex items-center gap-3 text-sm font-medium">
+        <Switch checked={attiva} onCheckedChange={setAttiva} data-testid="switch-scadenza" /> Questo tipo di pratica ha una scadenza
+      </label>
+      {attiva && (
+        <div className="flex flex-wrap gap-4">
+          <div>
+            <Label htmlFor="scadenza-giorni" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Scade dopo (giorni)</Label>
+            <Input id="scadenza-giorni" type="number" min={1} max={3650} value={giorni} onChange={(e) => setGiorni(e.target.value)} className="mt-1 w-40 bg-card" data-testid="input-scadenza-giorni" />
+          </div>
+          <div>
+            <Label htmlFor="anticipo-giorni" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Avvisa prima (giorni)</Label>
+            <Input id="anticipo-giorni" type="number" min={0} max={365} value={anticipo} onChange={(e) => setAnticipo(e.target.value)} className="mt-1 w-40 bg-card" data-testid="input-anticipo-giorni" />
+          </div>
+        </div>
+      )}
+      <FieldError id="errore-scadenza">{err ?? undefined}</FieldError>
+      <Button onClick={invia} disabled={salva.isPending} data-testid="button-salva-scadenza">
+        {salva.isPending && <Loader2 className="size-4 mr-2 animate-spin" />} Salva scadenza
+      </Button>
     </Sezione>
   );
 }

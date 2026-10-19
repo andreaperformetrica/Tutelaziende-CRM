@@ -14,6 +14,10 @@ export const tipiPraticaTable = pgTable(
     /** Punti e valore valgono solo per i tipi pagabili: per gli altri sono sempre 0. */
     punti: integer("punti").notNull().default(0),
     valoreCentesimi: integer("valore_centesimi").notNull().default(0),
+    /** Scadenza in giorni dall'invio della pratica; vuoto = nessuna scadenza (e nessun avviso). */
+    scadenzaGiorni: integer("scadenza_giorni"),
+    /** Giorni di anticipo, prima della scadenza, da cui parte l'avviso e il sollecito all'operatore. */
+    anticipoGiorni: integer("anticipo_giorni").notNull().default(2),
     creatoIl: timestamp("creato_il", { withTimezone: true }).notNull().defaultNow(),
     modificatoIl: timestamp("modificato_il", { withTimezone: true }).notNull().defaultNow(),
   },

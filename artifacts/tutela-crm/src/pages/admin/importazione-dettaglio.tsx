@@ -13,7 +13,7 @@ import { ErrorState, PageHeader } from "@/components/common";
 import { ConfermaElimina } from "@/components/pratiche/conferma-elimina";
 import { RegolaImportForm, TESTO_CHIAVE, TESTO_REGOLA } from "@/components/compensi/regola-import-form";
 import { useToast } from "@/hooks/use-toast";
-import { fmtDataIstante, fmtEuro, parseApiError } from "@/lib/format";
+import { fmtIstante, fmtEuro, parseApiError } from "@/lib/format";
 
 export default function ImportazioneDettaglioPage() {
   const id = Number(useParams<{ id: string }>().id);
@@ -66,7 +66,7 @@ export default function ImportazioneDettaglioPage() {
     <div>
       <Link href="/admin/compensi?tab=importazioni" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-3"><ArrowLeft className="size-4 mr-1" />Compensi</Link>
       <PageHeader title={`Import ${i.servizioEtichetta} ${i.anno}`} kicker={`Importazione n. ${i.id}`}
-        subtitle={<>{i.nomeFile} · caricato il {fmtDataIstante(i.creatoIl)}{i.creatoDa ? ` da ${i.creatoDa}` : ""}{i.confermatoIl ? ` · confermato il ${fmtDataIstante(i.confermatoIl)}` : ""}</>}
+        subtitle={<>{i.nomeFile} · caricato il {fmtIstante(i.creatoIl)}{i.creatoDa ? ` da ${i.creatoDa}` : ""}{i.confermatoIl ? ` · confermato il ${fmtIstante(i.confermatoIl)}` : ""}</>}
         actions={<Button variant="outline" onClick={() => setAnnulla(true)} data-testid="button-rimuovi-import"><Trash2 className="size-4 mr-2" />{anteprima ? "Scarta anteprima" : "Annulla importazione"}</Button>} />
 
       <div className="grid gap-3 sm:grid-cols-3 mb-6">

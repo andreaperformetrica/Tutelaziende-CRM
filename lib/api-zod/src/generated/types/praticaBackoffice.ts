@@ -14,11 +14,15 @@ import type { EventoCronologiaPratica } from './eventoCronologiaPratica';
 import type { MandatoPratica } from './mandatoPratica';
 import type { OperatorePratica } from './operatorePratica';
 import type { PraticaTipoRiepilogo } from './praticaTipoRiepilogo';
+import type { PrioritaPratica } from './prioritaPratica';
+import type { ScadenzaPratica } from './scadenzaPratica';
 import type { StatoPraticaRiepilogo } from './statoPraticaRiepilogo';
 
 export interface PraticaBackoffice {
   id: number;
   numero: number;
+  priorita: PrioritaPratica;
+  scadenza: ScadenzaPratica | null;
   stato: StatoPraticaRiepilogo;
   tipo: PraticaTipoRiepilogo;
   assistito: Assistito;

@@ -1461,6 +1461,26 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TipoPratica"
+  /tipi-pratica/{id}/scadenza:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    put:
+      operationId: updateScadenzaTipo
+      tags: [configurazione]
+      summary: Imposta la scadenza (giorni dall'invio) e i giorni di anticipo degli avvisi
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScadenzaTipoInput"
+      responses:
+        "200":
+          description: Esito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TipoPratica"
   /tipi-pratica/{id}/documenti:
     parameters:
       - $ref: "#/components/parameters/IdPath"
@@ -2125,7 +2145,8 @@ paths:
         - { name: soloLavorate, in: query, required: false, description: "Solo le pratiche gia' prese in carico da un operatore", schema: { type: boolean } }
         - { name: soloAggiornate, in: query, required: false, description: "Solo le pratiche aggiornate dal collaboratore e in attesa del back office", schema: { type: boolean } }
         - { name: aggiornatePrima, in: query, required: false, description: "Mette in cima le pratiche aggiornate", schema: { type: boolean } }
-        - { name: ordina, in: query, required: false, schema: { type: string, enum: [data, citta, numero, stato, tipo] } }
+        - { name: priorita, in: query, required: false, schema: { $ref: "#/components/schemas/PrioritaPratica" } }
+        - { name: ordina, in: query, required: false, schema: { type: string, enum: [data, citta, numero, stato, tipo, priorita] } }
         - { name: direzione, in: query, required: false, schema: { type: string, enum: [asc, desc] } }
         - { name: pagina, in: query, required: false, schema: { type: integer, minimum: 1 } }
         - { name: perPagina, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 200 } }
@@ -2136,6 +2157,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PratichePaginaBackoffice"
+  /backoffice/pratiche/scadenze:
+    get:
+      operationId: listScadenzeInCarico
+      tags: [gestione-pratiche]
+      summary: Pratiche in gestione all'utente con scadenza vicina o superata (solo tipi con scadenza)
+      responses:
+        "200":
+          description: Pratiche da sollecitare
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AvvisoScadenza"
   /backoffice/pratiche/filtri:
     get:
       operationId: getFiltriPraticheBackoffice
@@ -2176,6 +2211,26 @@ paths:
       operationId: prendiInCaricoPratica
       tags: [gestione-pratiche]
       summary: Assegna la pratica all'operatore che la prende in carico
+      responses:
+        "200":
+          description: Pratica aggiornata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PraticaBackoffice"
+  /backoffice/pratiche/{id}/priorita:
+    parameters:
+      - $ref: "#/components/parameters/IdPath"
+    put:
+      operationId: cambiaPrioritaPratica
+      tags: [gestione-pratiche]
+      summary: Cambia la priorita' della pratica
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CambioPrioritaInput"
       responses:
         "200":
           description: Pratica aggiornata
@@ -3436,9 +3491,42 @@ components:
           items:
             $ref: "#/components/schemas/FiltroAzioneLog"
 
+    PrioritaPratica:
+      type: string
+      enum: [urgente, media, bassa]
+    ScadenzaPratica:
+      type: object
+      required: [scadenzaIl, stato, giorniResidui]
+      properties:
+        scadenzaIl: { type: string, format: date-time, description: "Invio + giorni di scadenza del tipo" }
+        stato: { type: string, enum: [in_corso, vicina, superata] }
+        giorniResidui: { type: integer, description: "Giorni interi alla scadenza; negativo se superata" }
+    AvvisoScadenza:
+      type: object
+      required: [id, numero, assistito, tipoNome, scadenzaIl, stato, giorniResidui]
+      properties:
+        id: { type: integer }
+        numero: { type: integer }
+        assistito: { type: string, description: Cognome e nome }
+        tipoNome: { type: string }
+        scadenzaIl: { type: string, format: date-time }
+        stato: { type: string, enum: [vicina, superata] }
+        giorniResidui: { type: integer }
+    CambioPrioritaInput:
+      type: object
+      required: [priorita]
+      properties:
+        priorita:
+          $ref: "#/components/schemas/PrioritaPratica"
+    ScadenzaTipoInput:
+      type: object
+      required: [scadenzaGiorni, anticipoGiorni]
+      properties:
+        scadenzaGiorni: { type: [integer, "null"], minimum: 1, maximum: 3650, description: "Vuoto = nessuna scadenza" }
+        anticipoGiorni: { type: integer, minimum: 0, maximum: 365 }
     TipoPratica:
       type: object
-      required: [id, nome, attivo, pagabile, punti, valoreEuro, documenti, moduli, compensiCollaboratori, normative, allegatiOperatore, creatoIl]
+      required: [id, nome, attivo, pagabile, punti, valoreEuro, scadenzaGiorni, anticipoGiorni, documenti, moduli, compensiCollaboratori, normative, allegatiOperatore, creatoIl]
       properties:
         id: { type: integer }
         nome: { type: string }
@@ -3446,6 +3534,8 @@ components:
         pagabile: { type: boolean }
         punti: { type: integer }
         valoreEuro: { type: number, description: "Euro con due decimali" }
+        scadenzaGiorni: { type: [integer, "null"], description: "Scadenza in giorni dall'invio della pratica; vuoto = nessuna scadenza" }
+        anticipoGiorni: { type: integer, description: "Giorni prima della scadenza da cui partono avvisi e solleciti" }
         creatoIl: { type: string, format: date-time }
         documenti:
           type: array
@@ -4052,10 +4142,16 @@ components:
         colore: { type: [string, "null"] }
     PraticaBackofficeRiepilogo:
       type: object
-      required: [id, numero, assistito, collaboratore, citta, dataRichiesta, stato, tipo, gestitaDa, aggiornata]
+      required: [id, numero, assistito, collaboratore, citta, dataRichiesta, stato, tipo, gestitaDa, aggiornata, priorita, scadenza]
       properties:
         id: { type: integer }
         numero: { type: integer }
+        priorita:
+          $ref: "#/components/schemas/PrioritaPratica"
+        scadenza:
+          oneOf:
+            - $ref: "#/components/schemas/ScadenzaPratica"
+            - type: "null"
         assistito:
           $ref: "#/components/schemas/PraticaAssistitoRiepilogo"
         collaboratore:
@@ -4180,9 +4276,17 @@ components:
         - aggiornata
         - mieInCarico
         - puoEliminare
+        - priorita
+        - scadenza
       properties:
         id: { type: integer }
         numero: { type: integer }
+        priorita:
+          $ref: "#/components/schemas/PrioritaPratica"
+        scadenza:
+          oneOf:
+            - $ref: "#/components/schemas/ScadenzaPratica"
+            - type: "null"
         stato:
           $ref: "#/components/schemas/StatoPraticaRiepilogo"
         tipo:

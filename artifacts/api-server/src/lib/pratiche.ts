@@ -71,6 +71,9 @@ export function selezionaPratiche(where: SQL | undefined, ordine?: SQL[]) {
       assCitta: assistitiTable.citta,
       tipoNome: tipiPraticaTable.nome,
       tipoAttivo: tipiPraticaTable.attivo,
+      tipoScadenzaGiorni: tipiPraticaTable.scadenzaGiorni,
+      tipoAnticipoGiorni: tipiPraticaTable.anticipoGiorni,
+      priorita: praticheTable.priorita,
       assNome: personeTable.nome,
       assCognome: personeTable.cognome,
       assCf: personeTable.codiceFiscale,
@@ -107,6 +110,27 @@ export async function contaPratiche(where: SQL | undefined): Promise<number> {
     .innerJoin(collaboratoriTable, eq(collaboratoriTable.id, praticheTable.collaboratoreId))
     .where(where);
   return r?.n ?? 0;
+}
+
+/**
+ * Conteggi per il back office: i filtri usano solo colonne della tabella pratiche (e, per lo stato, la tabella stati),
+ * quindi non servono i join con assistiti, persone e collaboratori che rallentavano il conteggio.
+ */
+export async function contaPraticheBackoffice(where: SQL | undefined): Promise<number> {
+  const [r] = await db.select({ n: sql<number>`count(*)::int` }).from(praticheTable).where(where);
+  return r?.n ?? 0;
+}
+
+export async function contaPerStatoBackoffice(where: SQL | undefined) {
+  const conPratiche = await db
+    .select({ statoId: praticheTable.statoId, totale: sql<number>`count(*)::int` })
+    .from(praticheTable)
+    .where(and(where, sql`${praticheTable.inviataIl} is not null`, sql`${praticheTable.statoId} is not null`))
+    .groupBy(praticheTable.statoId);
+  const stati = await db.select().from(statiPraticaTable).orderBy(asc(statiPraticaTable.ordine), asc(statiPraticaTable.id));
+  return stati
+    .filter((s) => s.nome.trim().toLowerCase() !== "bozza")
+    .map((s) => ({ statoId: s.id, nome: s.nome, chiuso: s.chiuso, colore: s.colore, totale: conPratiche.find((x) => x.statoId === s.id)?.totale ?? 0 }));
 }
 
 const GRUPPI_PRATICHE = {

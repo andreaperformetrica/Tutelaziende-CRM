@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState, ErrorState } from "@/components/common";
 import { useToast } from "@/hooks/use-toast";
-import { fmtDataIstante, fmtEuro, parseApiError } from "@/lib/format";
+import { fmtIstante, fmtEuro, parseApiError } from "@/lib/format";
 import { inviaFile, messaggioErrore } from "@/lib/upload";
 import { RegolaImportForm, TESTO_CHIAVE, TESTO_REGOLA } from "./regola-import-form";
 
@@ -108,7 +108,7 @@ export function ImportazioniTab() {
                     <TableCell>{i.servizioEtichetta}</TableCell>
                     <TableCell className="tabular-nums">{i.anno}</TableCell>
                     <TableCell className="max-w-[16rem] truncate">{i.nomeFile}</TableCell>
-                    <TableCell className="tabular-nums">{fmtDataIstante(i.creatoIl)}{i.creatoDa ? <span className="text-muted-foreground text-xs"> · {i.creatoDa}</span> : null}</TableCell>
+                    <TableCell className="tabular-nums">{fmtIstante(i.creatoIl)}{i.creatoDa ? <span className="text-muted-foreground text-xs"> · {i.creatoDa}</span> : null}</TableCell>
                     <TableCell className="text-right tabular-nums">{i.stato === "confermata" ? `${i.righeImportate} / ${i.righeLette}` : i.righeLette}</TableCell>
                     <TableCell className="text-right tabular-nums">{i.stato === "confermata" ? fmtEuro(i.totaleEuro) : "—"}</TableCell>
                     <TableCell>{i.stato === "confermata" ? <Badge className="bg-primary text-primary-foreground">Confermata</Badge> : <Badge variant="outline">In anteprima</Badge>}</TableCell>

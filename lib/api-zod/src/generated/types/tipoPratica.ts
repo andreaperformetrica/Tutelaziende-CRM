@@ -19,6 +19,13 @@ export interface TipoPratica {
   punti: number;
   /** Euro con due decimali */
   valoreEuro: number;
+  /**
+     * Scadenza in giorni dall'invio della pratica; vuoto = nessuna scadenza
+     * @nullable
+     */
+  scadenzaGiorni: number | null;
+  /** Giorni prima della scadenza da cui partono avvisi e solleciti */
+  anticipoGiorni: number;
   creatoIl: Date;
   documenti: DocumentoTipo[];
   moduli: ModuloTipo[];

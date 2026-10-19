@@ -15,4 +15,5 @@ export const ListPraticheBackofficeOrdina = {
   numero: 'numero',
   stato: 'stato',
   tipo: 'tipo',
+  priorita: 'priorita',
 } as const;

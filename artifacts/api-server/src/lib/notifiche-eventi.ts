@@ -179,3 +179,27 @@ export async function accodaEstrattoInviato(ex: Executor, estratto: { id: number
     testoEmail: (d) => `Buongiorno ${d.nome},\n\nin allegato trovi l'estratto delle pratiche chiuse del ${data}.`,
   });
 }
+
+/**
+ * 6. Scadenza di una pratica vicina o superata: solo all'operatore che ha la pratica in carico.
+ * Come per gli altri messaggi: solo il numero della pratica, niente tipo ne' dati dell'assistito.
+ */
+export async function notificaScadenzaPratica(
+  ex: Executor,
+  p: { id: number; numero: number },
+  operatoreId: number,
+  tipo: "vicina" | "superata",
+): Promise<number[]> {
+  const [operatore] = (await caricaBackoffice(ex, ["super_admin", "admin", "operatore"])).filter((u) => u.utenteId === operatoreId);
+  if (!operatore) return [];
+  const frase = tipo === "vicina" ? "sta per scadere" : "è scaduta";
+  return accodaNotifiche(ex, {
+    evento: tipo === "vicina" ? "scadenza_vicina" : "scadenza_superata",
+    destinatari: [operatore],
+    canali: ["email"],
+    pratica: { id: p.id, numero: p.numero },
+    percorso: `/admin/pratiche/${p.id}`,
+    oggetto: tipo === "vicina" ? `Scadenza vicina: pratica n. ${p.numero}` : `Scadenza superata: pratica n. ${p.numero}`,
+    testoEmail: (d, link) => `Buongiorno ${d.nome},\n\nla pratica n. ${p.numero}, che hai in carico, ${frase}.\n\nApri la pratica: ${link}`,
+  });
+}

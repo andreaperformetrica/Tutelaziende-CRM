@@ -1,14 +1,15 @@
 import { DatiFirma } from "@/components/pratiche/firma-mandato";
 import { StatoBadge } from "@/components/pratiche/stato-badge";
+import { PRIORITA, PrioritaBadge, testoGiorni } from "@/components/pratiche/priorita";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useLocation, useParams } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  getGetPraticaBackofficeQueryKey, useCambiaStatoPratica, useCreateCommentoPraticaBackoffice, useDeletePraticaBackoffice,
+  getGetPraticaBackofficeQueryKey, useCambiaPrioritaPratica, useCambiaStatoPratica, useCreateCommentoPraticaBackoffice, useDeletePraticaBackoffice,
   useGetFiltriPraticheBackoffice, useGetPraticaBackoffice, usePrendiInCaricoPratica,
-  type DocumentoPratica, type PraticaBackoffice,
+  type DocumentoPratica, type PraticaBackoffice, type PrioritaPratica,
 } from "@workspace/api-client-react";
-import { AlertTriangle, ArrowLeft, Download, Eye, FileText, HandHelping, Loader2, Mail, MessageCircle, MessageSquareText, Paperclip, Phone, Send, Trash2, Upload, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Clock, Download, Eye, FileText, HandHelping, Loader2, Mail, MessageCircle, MessageSquareText, Paperclip, Phone, Send, Trash2, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -24,7 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { UtenteChip } from "@/components/utenti/colore-utente";
 import { fmtCellulare, fmtData, fmtIstante, parseApiError, ruoloLabel, nomeCollaboratore } from "@/lib/format";
 import {
-  ErroreUpload, FORMATI_DOCUMENTI, formatoDimensione, inviaFile, urlDocumentoBackoffice, urlMandatoBackoffice,
+  ErroreUpload, FORMATI_DOCUMENTI, formatoDimensione, inviaFile, urlDocumentiZipBackoffice, urlDocumentoBackoffice, urlMandatoBackoffice,
 } from "@/lib/upload";
 
 const ALTRO = "altro";
@@ -91,6 +92,7 @@ export default function PraticaDettaglioBackoffice() {
   const filtri = useGetFiltriPraticheBackoffice();
   const presa = usePrendiInCaricoPratica();
   const cambiaStato = useCambiaStatoPratica();
+  const cambiaPriorita = useCambiaPrioritaPratica();
   const commenta = useCreateCommentoPraticaBackoffice();
   const chatRef = useRef<HTMLDivElement>(null);
   const numeroCommenti = q.data?.commenti.length ?? 0;
@@ -146,11 +148,22 @@ export default function PraticaDettaglioBackoffice() {
           subtitle={<span>{p.tipo.nome} · {a.cognome} {a.nome} · richiesta il {fmtIstante(p.inviataIl)}</span>}
           actions={<>
             {p.aggiornata && <Badge className="bg-primary text-primary-foreground" data-testid="badge-aggiornata">Aggiornata</Badge>}
+            <PrioritaBadge priorita={p.priorita} className="text-sm px-3 py-1" testId="badge-priorita-pratica" />
             <StatoBadge stato={p.stato} className="text-sm px-3 py-1" testId="badge-stato-pratica" />
           </>} />
       </div>
 
       {errore && <div role="alert" className="flex gap-3 rounded-lg border border-destructive/40 bg-destructive/10 text-destructive p-4 text-sm" data-testid="errore-pratica"><AlertTriangle className="size-5 shrink-0 mt-0.5" /><div className="flex-1">{errore}</div><button type="button" onClick={() => setErrore(null)} aria-label="Chiudi"><X className="size-4" /></button></div>}
+
+      {p.scadenza && p.scadenza.stato !== "in_corso" && (
+        <div role="alert" className={`flex items-start gap-3 rounded-lg border p-4 text-sm ${p.scadenza.stato === "superata" ? "border-red-300 bg-red-50 text-red-800" : "border-amber-300 bg-amber-50 text-amber-900"}`} data-testid="banner-scadenza">
+          <Clock className="size-5 shrink-0 mt-0.5" />
+          <div><strong>{p.scadenza.stato === "superata" ? "Scadenza superata" : "Scadenza vicina"}</strong>: la pratica scade il {fmtIstante(p.scadenza.scadenzaIl)} ({testoGiorni(p.scadenza)}).</div>
+        </div>
+      )}
+      {p.scadenza && p.scadenza.stato === "in_corso" && (
+        <p className="text-sm text-muted-foreground" data-testid="testo-scadenza">Scadenza della pratica: {fmtIstante(p.scadenza.scadenzaIl)} ({testoGiorni(p.scadenza)}).</p>
+      )}
 
       <Sezione titolo="Gestione" testId="sezione-gestione">
         <div className="flex flex-wrap items-end gap-x-8 gap-y-4">
@@ -169,6 +182,13 @@ export default function PraticaDettaglioBackoffice() {
               <Select value={sceltoEffettivo} onValueChange={setStatoScelto}>
                 <SelectTrigger id="cambia-stato" className="mt-1 w-full sm:w-56 bg-card" data-testid="select-stato"><SelectValue /></SelectTrigger>
                 <SelectContent>{stati.map((s) => <SelectItem key={s.id} value={String(s.id)}>{s.nome}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="w-full sm:w-auto">
+              <Label htmlFor="cambia-priorita" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Priorità</Label>
+              <Select value={p.priorita} onValueChange={(v) => { setErrore(null); cambiaPriorita.mutate({ id, data: { priorita: v as PrioritaPratica } }, { onSuccess: (n) => { aggiorna(n); toast({ title: "Priorità aggiornata" }); }, onError: fallita }); }} disabled={cambiaPriorita.isPending}>
+                <SelectTrigger id="cambia-priorita" className="mt-1 w-full sm:w-40 bg-card" data-testid="select-priorita"><SelectValue /></SelectTrigger>
+                <SelectContent>{PRIORITA.map((x) => <SelectItem key={x.value} value={x.value}>{x.label}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <Button variant="outline" disabled={sceltoEffettivo === statoCorrente || cambiaStato.isPending} data-testid="button-cambia-stato"
@@ -209,7 +229,8 @@ export default function PraticaDettaglioBackoffice() {
         <p className="text-base leading-relaxed whitespace-pre-wrap rounded-md bg-card border border-border p-4" data-testid="text-messaggio">{p.messaggio || "Il collaboratore non ha scritto nessun messaggio."}</p>
       </section>
 
-      <Sezione titolo="Documenti del collaboratore" testId="sezione-documenti">
+      <Sezione titolo="Documenti del collaboratore" testId="sezione-documenti"
+        azioni={p.documenti.length > 0 ? <Button size="sm" variant="outline" asChild><a href={urlDocumentiZipBackoffice(id)} download data-testid="button-scarica-tutto"><Download className="size-4 mr-1.5" /> Scarica tutto</a></Button> : undefined}>
         {p.mandato && (
           <div className="mb-3 pb-3 border-b border-border flex flex-wrap items-center justify-between gap-3" data-testid="riga-mandato">
             <div className="text-sm"><span className="font-semibold">{p.mandato.nome}</span> <Badge variant="outline" className="ml-1">Mandato</Badge><div className="text-xs text-muted-foreground">{p.mandato.fileNome} ({p.mandato.firma ? "firmato" : "compilato con i dati dell'assistito"})</div>{p.mandato.firma && <div className="mt-2"><DatiFirma firma={p.mandato.firma} /></div>}</div>

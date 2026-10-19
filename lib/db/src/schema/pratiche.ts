@@ -48,12 +48,26 @@ export const praticheTable = pgTable(
     chiusaIl: timestamp("chiusa_il", { withTimezone: true }),
     maturaPunti: integer("matura_punti"),
     maturaValoreCentesimi: integer("matura_valore_centesimi"),
+    /** Priorita' impostata dal back office; le pratiche nuove sono "media". */
+    priorita: text("priorita", { enum: ["urgente", "media", "bassa"] }).notNull().default("media"),
+    /** Quando e' partito il sollecito "scadenza vicina" / "scadenza superata" all'operatore (una sola volta ciascuno). */
+    sollecitoVicinaIl: timestamp("sollecito_vicina_il", { withTimezone: true }),
+    sollecitoSuperataIl: timestamp("sollecito_superata_il", { withTimezone: true }),
   },
   (t) => [
     uniqueIndex("pratiche_numero_uq").on(t.numero),
     index("pratiche_collaboratore_idx").on(t.collaboratoreId),
     index("pratiche_assistito_idx").on(t.assistitoId),
     index("pratiche_stato_idx").on(t.statoId),
+    // Elenco e filtri del back office: date, stato, operatore, tipo, priorita'. `id` in coda rende l'ordinamento stabile e usa l'indice.
+    index("pratiche_inviata_il_idx").on(t.inviataIl, t.id),
+    index("pratiche_stato_inviata_idx").on(t.statoId, t.inviataIl),
+    index("pratiche_gestita_inviata_idx").on(t.gestitaDaUtenteId, t.inviataIl),
+    index("pratiche_tipo_inviata_idx").on(t.tipoPraticaId, t.inviataIl),
+    index("pratiche_collaboratore_inviata_idx").on(t.collaboratoreId, t.inviataIl),
+    index("pratiche_priorita_inviata_idx").on(t.priorita, t.inviataIl),
+    index("pratiche_creata_il_idx").on(t.creataIl),
+    index("pratiche_chiusa_il_idx").on(t.chiusaIl).where(sql`${t.chiusaIl} is not null`),
   ],
 );
 

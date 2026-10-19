@@ -49,6 +49,12 @@ export const urlDocumentoPratica = (praticaId: number, docId: number) => `${BASE
 
 export const urlDocumentoBackoffice = (praticaId: number, docId: number, anteprima = false) =>
   `${BASE}/backoffice/pratiche/${praticaId}/documenti/${docId}/file${anteprima ? "?anteprima=1" : ""}`;
+export const urlDocumentiZipBackoffice = (praticaId: number) => `${BASE}/backoffice/pratiche/${praticaId}/documenti.zip`;
+export const urlEsportaPraticheBackoffice = (params: Record<string, string | number | boolean | undefined>) => {
+  const qs = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) if (v !== undefined && k !== "pagina" && k !== "perPagina") qs.set(k, String(v));
+  return `${BASE}/backoffice/pratiche/esporta?${qs.toString()}`;
+};
 export const urlMandatoBackoffice = (praticaId: number, anteprima = false) =>
   `${BASE}/backoffice/pratiche/${praticaId}/mandato/file${anteprima ? "?anteprima=1" : ""}`;
 

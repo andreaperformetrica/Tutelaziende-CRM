@@ -25,6 +25,8 @@ export type CanaleNotifica = "email" | "whatsapp" | "chiamata";
 export const EVENTI_NOTIFICA = {
   pratica_inviata_sede: "Pratica inviata (alla sede)",
   pratica_inviata_backoffice: "Pratica inviata (al back office)",
+  scadenza_vicina: "Scadenza pratica vicina (all'operatore)",
+  scadenza_superata: "Scadenza pratica superata (all'operatore)",
   commento_ufficio: "Commento dell'ufficio (alla sede)",
   risposta_sede: "Risposta della sede (all'operatore)",
   assistito_duplicato: "Anagrafica già registrata (agli admin)",

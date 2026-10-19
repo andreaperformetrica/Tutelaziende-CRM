@@ -42,6 +42,8 @@ export function mappaTipo(t: RigaTipo, documenti: RigaDocumento[], moduli: RigaM
     pagabile: t.pagabile,
     punti: t.punti,
     valoreEuro: t.valoreCentesimi / 100,
+    scadenzaGiorni: t.scadenzaGiorni,
+    anticipoGiorni: t.anticipoGiorni,
     creatoIl: t.creatoIl.toISOString(),
     documenti: documenti
       .filter((d) => d.tipoPraticaId === t.id)

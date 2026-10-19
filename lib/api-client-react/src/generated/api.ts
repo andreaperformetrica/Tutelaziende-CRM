@@ -28,7 +28,9 @@ import type {
   AssociaCollaboratoreInput,
   AssociaSegnalazioneInput,
   Avvisi,
+  AvvisoScadenza,
   CambioPasswordInput,
+  CambioPrioritaInput,
   CambioStatoInput,
   CercaLuoghiParams,
   CheckInEsito,
@@ -115,6 +117,7 @@ import type {
   RigaDareAvereInput,
   RigaDareAvereModificaInput,
   RuoloCapogruppoInput,
+  ScadenzaTipoInput,
   SegnalazioneDuplicato,
   ServizioImport,
   ServizioImportCodice,
@@ -6500,6 +6503,95 @@ export const useUpdateTipoPratica = <TError = ErrorType<unknown>,
       return useMutation(getUpdateTipoPraticaMutationOptions(options));
     }
 
+export const getUpdateScadenzaTipoUrl = (id: number,) => {
+
+
+
+
+  return `/api/tipi-pratica/${id}/scadenza`
+}
+
+/**
+ * @summary Imposta la scadenza (giorni dall'invio) e i giorni di anticipo degli avvisi
+ */
+export const updateScadenzaTipo = async (id: number,
+    scadenzaTipoInput: ScadenzaTipoInput, options?: Parameters<typeof customFetch>[1]): Promise<TipoPratica> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<TipoPratica>(getUpdateScadenzaTipoUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(scadenzaTipoInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateScadenzaTipoMutationKey = () => ['updateScadenzaTipo'] as const;
+
+export const getUpdateScadenzaTipoMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateScadenzaTipo>>, TError,UpdateScadenzaTipoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateScadenzaTipo>>, TError,UpdateScadenzaTipoMutationVariables, TContext> => {
+
+const mutationKey = getUpdateScadenzaTipoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateScadenzaTipo>>, UpdateScadenzaTipoMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateScadenzaTipo(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateScadenzaTipoMutationResult = NonNullable<Awaited<ReturnType<typeof updateScadenzaTipo>>>
+    export type UpdateScadenzaTipoMutationBody = BodyType<ScadenzaTipoInput>
+    export type UpdateScadenzaTipoMutationError = ErrorType<unknown>
+    export type UpdateScadenzaTipoMutationVariables = {id: number;data: BodyType<ScadenzaTipoInput>}
+
+    /**
+ * @summary Imposta la scadenza (giorni dall'invio) e i giorni di anticipo degli avvisi
+ */
+export const useUpdateScadenzaTipo = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateScadenzaTipo>>, TError,UpdateScadenzaTipoMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateScadenzaTipo>>,
+        TError,
+        UpdateScadenzaTipoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateScadenzaTipoMutationOptions(options));
+    }
+
 export const getCreateDocumentoTipoUrl = (id: number,) => {
 
 
@@ -9712,6 +9804,83 @@ export function useListPraticheBackoffice<TData = Awaited<ReturnType<typeof list
 
 
 
+export const getListScadenzeInCaricoUrl = () => {
+
+
+
+
+  return `/api/backoffice/pratiche/scadenze`
+}
+
+/**
+ * @summary Pratiche in gestione all'utente con scadenza vicina o superata (solo tipi con scadenza)
+ */
+export const listScadenzeInCarico = async ( options?: Parameters<typeof customFetch>[1]): Promise<AvvisoScadenza[]> => {
+
+  return customFetch<AvvisoScadenza[]>(getListScadenzeInCaricoUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListScadenzeInCaricoQueryKey = () => {
+    return [
+    `/api/backoffice/pratiche/scadenze`
+    ] as const;
+    }
+
+
+export const getListScadenzeInCaricoQueryOptions = <TData = Awaited<ReturnType<typeof listScadenzeInCarico>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listScadenzeInCarico>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListScadenzeInCaricoQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listScadenzeInCarico>>> = ({ signal }) => listScadenzeInCarico({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listScadenzeInCarico>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListScadenzeInCaricoQueryResult = NonNullable<Awaited<ReturnType<typeof listScadenzeInCarico>>>
+export type ListScadenzeInCaricoQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Pratiche in gestione all'utente con scadenza vicina o superata (solo tipi con scadenza)
+ */
+
+export function useListScadenzeInCarico<TData = Awaited<ReturnType<typeof listScadenzeInCarico>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listScadenzeInCarico>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListScadenzeInCaricoQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getGetFiltriPraticheBackofficeUrl = () => {
 
 
@@ -10012,6 +10181,95 @@ export const usePrendiInCaricoPratica = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getPrendiInCaricoPraticaMutationOptions(options));
+    }
+
+export const getCambiaPrioritaPraticaUrl = (id: number,) => {
+
+
+
+
+  return `/api/backoffice/pratiche/${id}/priorita`
+}
+
+/**
+ * @summary Cambia la priorita' della pratica
+ */
+export const cambiaPrioritaPratica = async (id: number,
+    cambioPrioritaInput: CambioPrioritaInput, options?: Parameters<typeof customFetch>[1]): Promise<PraticaBackoffice> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<PraticaBackoffice>(getCambiaPrioritaPraticaUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(cambioPrioritaInput)
+  }
+);}
+
+
+
+
+
+export const getCambiaPrioritaPraticaMutationKey = () => ['cambiaPrioritaPratica'] as const;
+
+export const getCambiaPrioritaPraticaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cambiaPrioritaPratica>>, TError,CambiaPrioritaPraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof cambiaPrioritaPratica>>, TError,CambiaPrioritaPraticaMutationVariables, TContext> => {
+
+const mutationKey = getCambiaPrioritaPraticaMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof cambiaPrioritaPratica>>, CambiaPrioritaPraticaMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  cambiaPrioritaPratica(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CambiaPrioritaPraticaMutationResult = NonNullable<Awaited<ReturnType<typeof cambiaPrioritaPratica>>>
+    export type CambiaPrioritaPraticaMutationBody = BodyType<CambioPrioritaInput>
+    export type CambiaPrioritaPraticaMutationError = ErrorType<unknown>
+    export type CambiaPrioritaPraticaMutationVariables = {id: number;data: BodyType<CambioPrioritaInput>}
+
+    /**
+ * @summary Cambia la priorita' della pratica
+ */
+export const useCambiaPrioritaPratica = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cambiaPrioritaPratica>>, TError,CambiaPrioritaPraticaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof cambiaPrioritaPratica>>,
+        TError,
+        CambiaPrioritaPraticaMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCambiaPrioritaPraticaMutationOptions(options));
     }
 
 export const getCambiaStatoPraticaUrl = (id: number,) => {

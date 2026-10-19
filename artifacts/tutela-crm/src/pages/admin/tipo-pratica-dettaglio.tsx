@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState, FieldError, PageHeader } from "@/components/common";
 import { CampiTipo, leggiTipo, type ValoriTipo } from "@/components/pratiche/campi-tipo";
-import { AllegatiOperatoreTipo, CompensiCollaboratoreTipo, NormativeTipo } from "@/components/pratiche/sezioni-tipo";
+import { AllegatiOperatoreTipo, CompensiCollaboratoreTipo, NormativeTipo, ScadenzaTipo } from "@/components/pratiche/sezioni-tipo";
 import { SelettoreDocumento } from "@/components/pratiche/selettore-documento";
 import { ConfermaElimina } from "@/components/pratiche/conferma-elimina";
 import { SelettoreFile } from "@/components/pratiche/selettore-file";
@@ -253,6 +253,7 @@ export default function TipoPraticaDettaglioPage() {
               <div className="space-y-5">
                 <DocumentiTipo tipo={tipo} />
                 <ModuliTipo tipo={tipo} />
+                <ScadenzaTipo key={`${tipo.scadenzaGiorni}-${tipo.anticipoGiorni}`} tipo={tipo} />
                 <AllegatiOperatoreTipo tipo={tipo} />
                 <CompensiCollaboratoreTipo tipo={tipo} />
                 <NormativeTipo tipo={tipo} />

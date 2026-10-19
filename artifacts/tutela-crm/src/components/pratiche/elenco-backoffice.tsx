@@ -1,11 +1,15 @@
 import { StatoBadge, coloreStato } from "@/components/pratiche/stato-badge";
+import { PRIORITA, PrioritaBadge, ScadenzaEtichetta } from "@/components/pratiche/priorita";
+import { PopupScadenze } from "@/components/pratiche/popup-scadenze";
+import { useToast } from "@/hooks/use-toast";
+import { urlEsportaPraticheBackoffice } from "@/lib/upload";
 import { useState } from "react";
 import { useLocation } from "wouter";
 import {
   useGetFiltriPraticheBackoffice, useListPraticheBackoffice,
-  type ListPraticheBackofficeOrdina, type ListPraticheBackofficeParams,
+  type ListPraticheBackofficeOrdina, type ListPraticheBackofficeParams, type PrioritaPratica,
 } from "@workspace/api-client-react";
-import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, FileText, Search } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, FileSpreadsheet, FileText, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -18,7 +22,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { EmptyState, ErrorState, FieldError, PageHeader } from "@/components/common";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/lib/auth";
-import { fmtDataIstante, parseApiError, ruoloLabel, nomeCollaboratore } from "@/lib/format";
+import { fmtIstante, parseApiError, ruoloLabel, nomeCollaboratore } from "@/lib/format";
 
 const PER_PAGINA = 25;
 const TUTTI = "all";
@@ -26,10 +30,10 @@ const MESI = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "lug
 const etichettaMese = (m: string) => `${MESI[Number(m.slice(5, 7)) - 1] ?? m} ${m.slice(0, 4)}`;
 
 interface Filtri {
-  collaboratore: string; tipo: string; stato: string; gestitaDa: string; mese: string; dal: string; al: string;
+  collaboratore: string; tipo: string; stato: string; priorita: string; gestitaDa: string; mese: string; dal: string; al: string;
   aggiornatePrima: boolean; soloAggiornate: boolean; soloLavorate: boolean;
 }
-const VUOTI: Filtri = { collaboratore: TUTTI, tipo: TUTTI, stato: TUTTI, gestitaDa: TUTTI, mese: TUTTI, dal: "", al: "", aggiornatePrima: false, soloAggiornate: false, soloLavorate: false };
+const VUOTI: Filtri = { collaboratore: TUTTI, tipo: TUTTI, stato: TUTTI, priorita: TUTTI, gestitaDa: TUTTI, mese: TUTTI, dal: "", al: "", aggiornatePrima: false, soloAggiornate: false, soloLavorate: false };
 
 /** Costruisce i parametri dell'API: i booleani si inviano solo quando sono veri. */
 function parametri(f: Filtri, mieId: number | null, ordina: ListPraticheBackofficeOrdina, direzione: "asc" | "desc", pagina: number): ListPraticheBackofficeParams {
@@ -37,6 +41,7 @@ function parametri(f: Filtri, mieId: number | null, ordina: ListPraticheBackoffi
   if (f.collaboratore !== TUTTI) p.collaboratoreId = Number(f.collaboratore);
   if (f.tipo !== TUTTI) p.tipoPraticaId = Number(f.tipo);
   if (f.stato !== TUTTI) p.statoId = Number(f.stato);
+  if (f.priorita !== TUTTI) p.priorita = f.priorita as PrioritaPratica;
   if (mieId !== null) p.gestitaDaUtenteId = mieId;
   else if (f.gestitaDa === "none") p.nonAssegnate = true;
   else if (f.gestitaDa !== TUTTI) p.gestitaDaUtenteId = Number(f.gestitaDa);
@@ -78,6 +83,8 @@ export function ElencoPraticheBackoffice({ soloMie }: { soloMie?: boolean }) {
   const [direzione, setDirezione] = useState<"asc" | "desc">("desc");
   const [pagina, setPagina] = useState(1);
   const [errDate, setErrDate] = useState<string | null>(null);
+  const [esportando, setEsportando] = useState(false);
+  const { toast } = useToast();
 
   const lista = useListPraticheBackoffice(parametri(applicati, mieId, ordina, direzione, pagina), { query: { enabled: !soloMie || mieId !== null, queryKey: ["pratiche-backoffice", soloMie ?? false, mieId, applicati, ordina, direzione, pagina] } });
   const f = filtri.data;
@@ -95,6 +102,26 @@ export function ElencoPraticheBackoffice({ soloMie }: { soloMie?: boolean }) {
     setPagina(1);
   };
 
+  /** Scarica l'Excel con gli stessi filtri e lo stesso ordine dell'elenco (tutte le pratiche trovate, non solo la pagina). */
+  const esporta = async () => {
+    setEsportando(true);
+    try {
+      const url = urlEsportaPraticheBackoffice({ ...parametri(applicati, mieId, ordina, direzione, 1) });
+      const res = await fetch(url, { credentials: "include" });
+      if (!res.ok) throw new Error(((await res.json().catch(() => null)) as { error?: string } | null)?.error ?? "Impossibile creare il file Excel.");
+      const nome = /filename\*=UTF-8''([^;]+)/.exec(res.headers.get("Content-Disposition") ?? "")?.[1];
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(await res.blob());
+      link.download = nome ? decodeURIComponent(nome) : "Pratiche.xlsx";
+      document.body.appendChild(link); link.click(); link.remove();
+      URL.revokeObjectURL(link.href);
+    } catch (e) {
+      toast({ variant: "destructive", title: "Esportazione non riuscita", description: e instanceof Error ? e.message : "Riprova." });
+    } finally { setEsportando(false); }
+  };
+
+  // La colonna Scadenza compare solo quando almeno una pratica della pagina ha una scadenza (i tipi senza scadenza non ne hanno).
+  const conScadenze = lista.data?.elementi.some((x) => x.scadenza) ?? false;
   const totale = lista.data?.totale ?? 0;
   const pagine = Math.max(1, Math.ceil(totale / PER_PAGINA));
   const filtrato = JSON.stringify(applicati) !== JSON.stringify(VUOTI);
@@ -112,6 +139,8 @@ export function ElencoPraticheBackoffice({ soloMie }: { soloMie?: boolean }) {
     <div>
       <PageHeader kicker="Back office" title={soloMie ? "Le mie pratiche" : "Elenco pratiche"}
         subtitle={soloMie ? "Le pratiche che hai preso in carico." : "Tutte le pratiche inviate dai collaboratori."} />
+
+      {soloMie && <PopupScadenze />}
 
       {lista.data && (
         <section className="mb-4 rounded-lg border border-border bg-card px-4 py-3 rise" aria-label="Riepilogo pratiche" data-testid="riepilogo-stati">
@@ -146,6 +175,9 @@ export function ElencoPraticheBackoffice({ soloMie }: { soloMie?: boolean }) {
           <Campo id="f-stato" label="Stato">
             <Scelta id="f-stato" valore={bozza.stato} onChange={imposta("stato")} tutti="Tutti" testId="filtro-stato" opzioni={(f?.stati ?? []).map((s) => ({ value: String(s.id), label: s.nome }))} />
           </Campo>
+          <Campo id="f-priorita" label="Priorità">
+            <Scelta id="f-priorita" valore={bozza.priorita} onChange={imposta("priorita")} tutti="Tutte" testId="filtro-priorita" opzioni={PRIORITA.map((x) => ({ value: x.value, label: x.label }))} />
+          </Campo>
           {!soloMie && (
             <Campo id="f-gestita" label="Gestita da">
               <Select value={bozza.gestitaDa} onValueChange={imposta("gestitaDa")}>
@@ -177,7 +209,12 @@ export function ElencoPraticheBackoffice({ soloMie }: { soloMie?: boolean }) {
             <Button type="submit" data-testid="button-cerca"><Search className="size-4 mr-2" /> Cerca</Button>
             {filtrato || JSON.stringify(bozza) !== JSON.stringify(VUOTI) ? <Button type="button" variant="ghost" onClick={azzera} data-testid="button-azzera-filtri">Azzera</Button> : null}
           </div>
-          <div className="text-sm" data-testid="text-pratiche-trovate">Pratiche trovate: <strong className="tabular-nums">{lista.data ? totale : "…"}</strong></div>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="text-sm" data-testid="text-pratiche-trovate">Pratiche trovate: <strong className="tabular-nums">{lista.data ? totale : "…"}</strong></div>
+            <Button type="button" variant="outline" onClick={esporta} disabled={esportando || !totale} data-testid="button-esporta-excel">
+              {esportando ? <Loader2 className="size-4 mr-2 animate-spin" /> : <FileSpreadsheet className="size-4 mr-2" />} Esporta in Excel
+            </Button>
+          </div>
         </div>
       </form>
 
@@ -192,14 +229,16 @@ export function ElencoPraticheBackoffice({ soloMie }: { soloMie?: boolean }) {
       ) : (
         <>
           <div className="rounded-lg border border-border bg-card overflow-x-auto rise">
-            <Table className="tabella-schede">
+            <Table className="tabella-schede [&_th]:px-2 [&_td]:px-1.5">
               <TableHeader>
                 <TableRow className="bg-muted/60 hover:bg-muted/60">
                   <Semplice label="Assistito" />
                   <Intestazione c="numero" label="Numero" />
+                  <Intestazione c="priorita" label="Priorità" />
                   <Semplice label="Collaboratore" />
                   <Intestazione c="citta" label="Città" />
                   <Intestazione c="data" label="Richiesta pratica" />
+                  {conScadenze && <Semplice label="Scadenza" />}
                   <Intestazione c="stato" label="Stato" />
                   <Intestazione c="tipo" label="Tipo" />
                   <Semplice label="Gestita da" />
@@ -209,17 +248,19 @@ export function ElencoPraticheBackoffice({ soloMie }: { soloMie?: boolean }) {
               <TableBody>
                 {lista.data.elementi.map((p) => (
                   <TableRow key={p.id} className={`transition-colors hover:bg-secondary/50 ${p.aggiornata ? "bg-accent/10" : ""}`} data-testid={`row-pratica-${p.id}`}>
-                    <TableCell className="font-semibold whitespace-nowrap">
+                    <TableCell className="font-semibold">
                       {p.assistito.cognome} {p.assistito.nome}
                       {p.aggiornata && <Badge className="ml-2 bg-primary text-primary-foreground" data-testid={`badge-aggiornata-${p.id}`}>Aggiornata</Badge>}
                     </TableCell>
                     <TableCell data-label="Numero" className="font-mono text-sm font-semibold">{p.numero}</TableCell>
-                    <TableCell data-label="Collaboratore" className="text-sm whitespace-nowrap">{nomeCollaboratore(p.collaboratore)}</TableCell>
+                    <TableCell data-label="Priorità"><PrioritaBadge priorita={p.priorita} testId={`priorita-${p.id}`} /></TableCell>
+                    <TableCell data-label="Collaboratore" className="text-sm">{nomeCollaboratore(p.collaboratore)}</TableCell>
                     <TableCell data-label="Città" className="text-sm">{p.citta}</TableCell>
-                    <TableCell data-label="Richiesta" className="text-sm tabular-nums whitespace-nowrap">{fmtDataIstante(p.dataRichiesta)}</TableCell>
+                    <TableCell data-label="Richiesta" className="text-sm tabular-nums">{fmtIstante(p.dataRichiesta)}</TableCell>
+                    {conScadenze && <TableCell data-label="Scadenza" className="text-sm"><ScadenzaEtichetta scadenza={p.scadenza} testId={`scadenza-${p.id}`} /></TableCell>}
                     <TableCell data-label="Stato"><StatoBadge stato={p.stato} /></TableCell>
                     <TableCell data-label="Tipo" className="text-sm">{p.tipo.nome}</TableCell>
-                    <TableCell data-label="Gestita da" className="text-sm whitespace-nowrap">{p.gestitaDa ? <UtenteChip id={p.gestitaDa.id} colore={p.gestitaDa.colore}>{p.gestitaDa.cognome} {p.gestitaDa.nome}</UtenteChip> : <span className="text-muted-foreground">Non assegnata</span>}</TableCell>
+                    <TableCell data-label="Gestita da" className="text-sm">{p.gestitaDa ? <UtenteChip id={p.gestitaDa.id} colore={p.gestitaDa.colore}>{p.gestitaDa.cognome} {p.gestitaDa.nome}</UtenteChip> : <span className="text-muted-foreground">Non assegnata</span>}</TableCell>
                     <TableCell className="max-md:pt-2"><Button size="sm" className="bg-green-700 hover:bg-green-800 text-white max-md:w-full" onClick={() => nav(`/admin/pratiche/${p.id}`)} data-testid={`button-apri-${p.id}`}>Apri</Button></TableCell>
                   </TableRow>
                 ))}

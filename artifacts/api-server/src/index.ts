@@ -3,6 +3,7 @@ import { logger } from "./lib/logger";
 import { inizializzaConfigurazionePratiche } from "./lib/configurazione-iniziale";
 import { maturaPraticheGiaChiuse } from "./lib/compensi";
 import { recapitaNotificheRimaste } from "./lib/notifiche";
+import { avviaSolleciti } from "./lib/scadenze";
 
 const rawPort = process.env["PORT"];
 
@@ -33,6 +34,8 @@ try {
 }
 
 recapitaNotificheRimaste().catch((err) => logger.error({ err }, "Impossibile recapitare le notifiche rimaste in coda"));
+
+avviaSolleciti();
 
 app.listen(port, (err) => {
   if (err) {

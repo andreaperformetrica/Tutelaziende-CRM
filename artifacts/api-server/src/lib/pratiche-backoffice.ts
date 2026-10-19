@@ -18,6 +18,7 @@ import {
 } from "@workspace/db";
 import { mappaAssistito, selezionaAssistiti } from "./assistiti";
 import { nonTrovato } from "./errori";
+import { infoScadenza } from "./scadenze";
 import { mandatoDellaPratica, mappaDocumentoPratica, selezionaPratiche, type RigaPratica } from "./pratiche";
 
 const utenteAutore = alias(utentiTable, "utente_autore_bo");
@@ -51,6 +52,8 @@ export function mappaRiepilogoBackoffice(r: RigaPratica) {
     tipo: { id: r.tipoPraticaId, nome: r.tipoNome },
     gestitaDa: gestore(r),
     aggiornata: eAggiornata(r),
+    priorita: r.priorita,
+    scadenza: infoScadenza(r),
   };
 }
 
@@ -145,6 +148,8 @@ export async function dettaglioBackoffice(req: Request, id: number) {
   return {
     id: p.id,
     numero: p.numero!,
+    priorita: p.priorita,
+    scadenza: infoScadenza(p),
     stato: { id: p.statoId!, nome: p.statoNome, chiuso: p.statoChiuso, colore: p.statoColore },
     tipo: { id: p.tipoPraticaId, nome: p.tipoNome },
     assistito: mappaAssistito(ass!, req),

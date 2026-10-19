@@ -7,6 +7,7 @@
  */
 import type { ListPraticheBackofficeDirezione } from './listPraticheBackofficeDirezione';
 import type { ListPraticheBackofficeOrdina } from './listPraticheBackofficeOrdina';
+import type { PrioritaPratica } from './prioritaPratica';
 
 export type ListPraticheBackofficeParams = {
 collaboratoreId?: number;
@@ -44,6 +45,7 @@ soloAggiornate?: boolean;
  * Mette in cima le pratiche aggiornate
  */
 aggiornatePrima?: boolean;
+priorita?: PrioritaPratica;
 ordina?: ListPraticheBackofficeOrdina;
 direzione?: ListPraticheBackofficeDirezione;
 /**

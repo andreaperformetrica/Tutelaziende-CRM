@@ -9,11 +9,15 @@ import type { OperatorePratica } from './operatorePratica';
 import type { PraticaAssistitoRiepilogo } from './praticaAssistitoRiepilogo';
 import type { PraticaCollaboratoreRiepilogo } from './praticaCollaboratoreRiepilogo';
 import type { PraticaTipoRiepilogo } from './praticaTipoRiepilogo';
+import type { PrioritaPratica } from './prioritaPratica';
+import type { ScadenzaPratica } from './scadenzaPratica';
 import type { StatoPraticaRiepilogo } from './statoPraticaRiepilogo';
 
 export interface PraticaBackofficeRiepilogo {
   id: number;
   numero: number;
+  priorita: PrioritaPratica;
+  scadenza: ScadenzaPratica | null;
   assistito: PraticaAssistitoRiepilogo;
   collaboratore: PraticaCollaboratoreRiepilogo;
   /** Citta' dell'assistito */

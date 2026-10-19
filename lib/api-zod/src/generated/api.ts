@@ -3159,6 +3159,8 @@ export const ListTipiPraticaResponseItem = zod.object({
   "pagabile": zod.boolean(),
   "punti": zod.number().int(),
   "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "scadenzaGiorni": zod.number().int().nullable().describe('Scadenza in giorni dall\'invio della pratica; vuoto = nessuna scadenza'),
+  "anticipoGiorni": zod.number().int().describe('Giorni prima della scadenza da cui partono avvisi e solleciti'),
   "creatoIl": zod.coerce.date(),
   "documenti": zod.array(zod.object({
   "id": zod.number().int(),
@@ -3221,6 +3223,8 @@ export const CreateTipoPraticaResponse = zod.object({
   "pagabile": zod.boolean(),
   "punti": zod.number().int(),
   "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "scadenzaGiorni": zod.number().int().nullable().describe('Scadenza in giorni dall\'invio della pratica; vuoto = nessuna scadenza'),
+  "anticipoGiorni": zod.number().int().describe('Giorni prima della scadenza da cui partono avvisi e solleciti'),
   "creatoIl": zod.coerce.date(),
   "documenti": zod.array(zod.object({
   "id": zod.number().int(),
@@ -3272,6 +3276,8 @@ export const GetTipoPraticaResponse = zod.object({
   "pagabile": zod.boolean(),
   "punti": zod.number().int(),
   "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "scadenzaGiorni": zod.number().int().nullable().describe('Scadenza in giorni dall\'invio della pratica; vuoto = nessuna scadenza'),
+  "anticipoGiorni": zod.number().int().describe('Giorni prima della scadenza da cui partono avvisi e solleciti'),
   "creatoIl": zod.coerce.date(),
   "documenti": zod.array(zod.object({
   "id": zod.number().int(),
@@ -3337,6 +3343,73 @@ export const UpdateTipoPraticaResponse = zod.object({
   "pagabile": zod.boolean(),
   "punti": zod.number().int(),
   "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "scadenzaGiorni": zod.number().int().nullable().describe('Scadenza in giorni dall\'invio della pratica; vuoto = nessuna scadenza'),
+  "anticipoGiorni": zod.number().int().describe('Giorni prima della scadenza da cui partono avvisi e solleciti'),
+  "creatoIl": zod.coerce.date(),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "mandato": zod.boolean().describe('Se vero e\' il mandato del collaboratore, caricato dal back office'),
+  "ordine": zod.number().int()
+})),
+  "moduli": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "compilazioneAutomatica": zod.boolean().describe('Il modulo scaricato dal collaboratore e\' compilato con i dati dell\'assistito'),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date()
+})),
+  "compensiCollaboratori": zod.array(zod.object({
+  "id": zod.number().int(),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string(),
+  "numeroSportello": zod.string(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number()
+})),
+  "normative": zod.array(zod.object({
+  "id": zod.number().int(),
+  "titolo": zod.string(),
+  "url": zod.string()
+})),
+  "allegatiOperatore": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+}))
+})
+
+
+/**
+ * @summary Imposta la scadenza (giorni dall'invio) e i giorni di anticipo degli avvisi
+ */
+export const UpdateScadenzaTipoParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const updateScadenzaTipoBodyScadenzaGiorniMax = 3650;
+
+export const updateScadenzaTipoBodyAnticipoGiorniMin = 0;
+export const updateScadenzaTipoBodyAnticipoGiorniMax = 365;
+
+
+
+export const UpdateScadenzaTipoBody = zod.object({
+  "scadenzaGiorni": zod.number().int().min(1).max(updateScadenzaTipoBodyScadenzaGiorniMax).nullable().describe('Vuoto = nessuna scadenza'),
+  "anticipoGiorni": zod.number().int().min(updateScadenzaTipoBodyAnticipoGiorniMin).max(updateScadenzaTipoBodyAnticipoGiorniMax)
+})
+
+export const UpdateScadenzaTipoResponse = zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "attivo": zod.boolean(),
+  "pagabile": zod.boolean(),
+  "punti": zod.number().int(),
+  "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "scadenzaGiorni": zod.number().int().nullable().describe('Scadenza in giorni dall\'invio della pratica; vuoto = nessuna scadenza'),
+  "anticipoGiorni": zod.number().int().describe('Giorni prima della scadenza da cui partono avvisi e solleciti'),
   "creatoIl": zod.coerce.date(),
   "documenti": zod.array(zod.object({
   "id": zod.number().int(),
@@ -3393,6 +3466,8 @@ export const CreateDocumentoTipoResponse = zod.object({
   "pagabile": zod.boolean(),
   "punti": zod.number().int(),
   "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "scadenzaGiorni": zod.number().int().nullable().describe('Scadenza in giorni dall\'invio della pratica; vuoto = nessuna scadenza'),
+  "anticipoGiorni": zod.number().int().describe('Giorni prima della scadenza da cui partono avvisi e solleciti'),
   "creatoIl": zod.coerce.date(),
   "documenti": zod.array(zod.object({
   "id": zod.number().int(),
@@ -3448,6 +3523,8 @@ export const OrdinaDocumentiTipoResponse = zod.object({
   "pagabile": zod.boolean(),
   "punti": zod.number().int(),
   "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "scadenzaGiorni": zod.number().int().nullable().describe('Scadenza in giorni dall\'invio della pratica; vuoto = nessuna scadenza'),
+  "anticipoGiorni": zod.number().int().describe('Giorni prima della scadenza da cui partono avvisi e solleciti'),
   "creatoIl": zod.coerce.date(),
   "documenti": zod.array(zod.object({
   "id": zod.number().int(),
@@ -3504,6 +3581,8 @@ export const UpdateDocumentoTipoResponse = zod.object({
   "pagabile": zod.boolean(),
   "punti": zod.number().int(),
   "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "scadenzaGiorni": zod.number().int().nullable().describe('Scadenza in giorni dall\'invio della pratica; vuoto = nessuna scadenza'),
+  "anticipoGiorni": zod.number().int().describe('Giorni prima della scadenza da cui partono avvisi e solleciti'),
   "creatoIl": zod.coerce.date(),
   "documenti": zod.array(zod.object({
   "id": zod.number().int(),
@@ -3555,6 +3634,8 @@ export const DeleteDocumentoTipoResponse = zod.object({
   "pagabile": zod.boolean(),
   "punti": zod.number().int(),
   "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "scadenzaGiorni": zod.number().int().nullable().describe('Scadenza in giorni dall\'invio della pratica; vuoto = nessuna scadenza'),
+  "anticipoGiorni": zod.number().int().describe('Giorni prima della scadenza da cui partono avvisi e solleciti'),
   "creatoIl": zod.coerce.date(),
   "documenti": zod.array(zod.object({
   "id": zod.number().int(),
@@ -3611,6 +3692,8 @@ export const RenameModuloTipoResponse = zod.object({
   "pagabile": zod.boolean(),
   "punti": zod.number().int(),
   "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "scadenzaGiorni": zod.number().int().nullable().describe('Scadenza in giorni dall\'invio della pratica; vuoto = nessuna scadenza'),
+  "anticipoGiorni": zod.number().int().describe('Giorni prima della scadenza da cui partono avvisi e solleciti'),
   "creatoIl": zod.coerce.date(),
   "documenti": zod.array(zod.object({
   "id": zod.number().int(),
@@ -3662,6 +3745,8 @@ export const DeleteModuloTipoResponse = zod.object({
   "pagabile": zod.boolean(),
   "punti": zod.number().int(),
   "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "scadenzaGiorni": zod.number().int().nullable().describe('Scadenza in giorni dall\'invio della pratica; vuoto = nessuna scadenza'),
+  "anticipoGiorni": zod.number().int().describe('Giorni prima della scadenza da cui partono avvisi e solleciti'),
   "creatoIl": zod.coerce.date(),
   "documenti": zod.array(zod.object({
   "id": zod.number().int(),
@@ -3747,6 +3832,8 @@ export const SaveCompensoCollaboratoreResponse = zod.object({
   "pagabile": zod.boolean(),
   "punti": zod.number().int(),
   "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "scadenzaGiorni": zod.number().int().nullable().describe('Scadenza in giorni dall\'invio della pratica; vuoto = nessuna scadenza'),
+  "anticipoGiorni": zod.number().int().describe('Giorni prima della scadenza da cui partono avvisi e solleciti'),
   "creatoIl": zod.coerce.date(),
   "documenti": zod.array(zod.object({
   "id": zod.number().int(),
@@ -3798,6 +3885,8 @@ export const DeleteCompensoCollaboratoreResponse = zod.object({
   "pagabile": zod.boolean(),
   "punti": zod.number().int(),
   "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "scadenzaGiorni": zod.number().int().nullable().describe('Scadenza in giorni dall\'invio della pratica; vuoto = nessuna scadenza'),
+  "anticipoGiorni": zod.number().int().describe('Giorni prima della scadenza da cui partono avvisi e solleciti'),
   "creatoIl": zod.coerce.date(),
   "documenti": zod.array(zod.object({
   "id": zod.number().int(),
@@ -3854,6 +3943,8 @@ export const CreateNormativaTipoResponse = zod.object({
   "pagabile": zod.boolean(),
   "punti": zod.number().int(),
   "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "scadenzaGiorni": zod.number().int().nullable().describe('Scadenza in giorni dall\'invio della pratica; vuoto = nessuna scadenza'),
+  "anticipoGiorni": zod.number().int().describe('Giorni prima della scadenza da cui partono avvisi e solleciti'),
   "creatoIl": zod.coerce.date(),
   "documenti": zod.array(zod.object({
   "id": zod.number().int(),
@@ -3910,6 +4001,8 @@ export const UpdateNormativaTipoResponse = zod.object({
   "pagabile": zod.boolean(),
   "punti": zod.number().int(),
   "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "scadenzaGiorni": zod.number().int().nullable().describe('Scadenza in giorni dall\'invio della pratica; vuoto = nessuna scadenza'),
+  "anticipoGiorni": zod.number().int().describe('Giorni prima della scadenza da cui partono avvisi e solleciti'),
   "creatoIl": zod.coerce.date(),
   "documenti": zod.array(zod.object({
   "id": zod.number().int(),
@@ -3961,6 +4054,8 @@ export const DeleteNormativaTipoResponse = zod.object({
   "pagabile": zod.boolean(),
   "punti": zod.number().int(),
   "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "scadenzaGiorni": zod.number().int().nullable().describe('Scadenza in giorni dall\'invio della pratica; vuoto = nessuna scadenza'),
+  "anticipoGiorni": zod.number().int().describe('Giorni prima della scadenza da cui partono avvisi e solleciti'),
   "creatoIl": zod.coerce.date(),
   "documenti": zod.array(zod.object({
   "id": zod.number().int(),
@@ -4016,6 +4111,8 @@ export const CreateAllegatoTipoResponse = zod.object({
   "pagabile": zod.boolean(),
   "punti": zod.number().int(),
   "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "scadenzaGiorni": zod.number().int().nullable().describe('Scadenza in giorni dall\'invio della pratica; vuoto = nessuna scadenza'),
+  "anticipoGiorni": zod.number().int().describe('Giorni prima della scadenza da cui partono avvisi e solleciti'),
   "creatoIl": zod.coerce.date(),
   "documenti": zod.array(zod.object({
   "id": zod.number().int(),
@@ -4067,6 +4164,8 @@ export const DeleteAllegatoTipoResponse = zod.object({
   "pagabile": zod.boolean(),
   "punti": zod.number().int(),
   "valoreEuro": zod.number().describe('Euro con due decimali'),
+  "scadenzaGiorni": zod.number().int().nullable().describe('Scadenza in giorni dall\'invio della pratica; vuoto = nessuna scadenza'),
+  "anticipoGiorni": zod.number().int().describe('Giorni prima della scadenza da cui partono avvisi e solleciti'),
   "creatoIl": zod.coerce.date(),
   "documenti": zod.array(zod.object({
   "id": zod.number().int(),
@@ -5248,7 +5347,8 @@ export const ListPraticheBackofficeQueryParams = zod.object({
   "soloLavorate": zod.coerce.boolean().optional().describe('Solo le pratiche gia\' prese in carico da un operatore'),
   "soloAggiornate": zod.coerce.boolean().optional().describe('Solo le pratiche aggiornate dal collaboratore e in attesa del back office'),
   "aggiornatePrima": zod.coerce.boolean().optional().describe('Mette in cima le pratiche aggiornate'),
-  "ordina": zod.enum(['data', 'citta', 'numero', 'stato', 'tipo']).optional(),
+  "priorita": zod.enum(['urgente', 'media', 'bassa']).optional(),
+  "ordina": zod.enum(['data', 'citta', 'numero', 'stato', 'tipo', 'priorita']).optional(),
   "direzione": zod.enum(['asc', 'desc']).optional(),
   "pagina": zod.coerce.number().int().min(1).optional(),
   "perPagina": zod.coerce.number().int().min(1).max(listPraticheBackofficeQueryPerPaginaMax).optional()
@@ -5258,6 +5358,12 @@ export const ListPraticheBackofficeResponse = zod.object({
   "elementi": zod.array(zod.object({
   "id": zod.number().int(),
   "numero": zod.number().int(),
+  "priorita": zod.enum(['urgente', 'media', 'bassa']),
+  "scadenza": zod.union([zod.object({
+  "scadenzaIl": zod.coerce.date().describe('Invio + giorni di scadenza del tipo'),
+  "stato": zod.enum(['in_corso', 'vicina', 'superata']),
+  "giorniResidui": zod.number().int().describe('Giorni interi alla scadenza; negativo se superata')
+}),zod.null()]),
   "assistito": zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
@@ -5304,6 +5410,21 @@ export const ListPraticheBackofficeResponse = zod.object({
 
 
 /**
+ * @summary Pratiche in gestione all'utente con scadenza vicina o superata (solo tipi con scadenza)
+ */
+export const ListScadenzeInCaricoResponseItem = zod.object({
+  "id": zod.number().int(),
+  "numero": zod.number().int(),
+  "assistito": zod.string().describe('Cognome e nome'),
+  "tipoNome": zod.string(),
+  "scadenzaIl": zod.coerce.date(),
+  "stato": zod.enum(['vicina', 'superata']),
+  "giorniResidui": zod.number().int()
+})
+export const ListScadenzeInCaricoResponse = zod.array(ListScadenzeInCaricoResponseItem)
+
+
+/**
  * @summary Valori selezionabili nei filtri dell'elenco pratiche
  */
 export const GetFiltriPraticheBackofficeResponse = zod.object({
@@ -5344,6 +5465,12 @@ export const GetPraticaBackofficeParams = zod.object({
 export const GetPraticaBackofficeResponse = zod.object({
   "id": zod.number().int(),
   "numero": zod.number().int(),
+  "priorita": zod.enum(['urgente', 'media', 'bassa']),
+  "scadenza": zod.union([zod.object({
+  "scadenzaIl": zod.coerce.date().describe('Invio + giorni di scadenza del tipo'),
+  "stato": zod.enum(['in_corso', 'vicina', 'superata']),
+  "giorniResidui": zod.number().int().describe('Giorni interi alla scadenza; negativo se superata')
+}),zod.null()]),
   "stato": zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
@@ -5488,6 +5615,156 @@ export const PrendiInCaricoPraticaParams = zod.object({
 export const PrendiInCaricoPraticaResponse = zod.object({
   "id": zod.number().int(),
   "numero": zod.number().int(),
+  "priorita": zod.enum(['urgente', 'media', 'bassa']),
+  "scadenza": zod.union([zod.object({
+  "scadenzaIl": zod.coerce.date().describe('Invio + giorni di scadenza del tipo'),
+  "stato": zod.enum(['in_corso', 'vicina', 'superata']),
+  "giorniResidui": zod.number().int().describe('Giorni interi alla scadenza; negativo se superata')
+}),zod.null()]),
+  "stato": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "chiuso": zod.boolean(),
+  "colore": zod.string().nullable()
+}),
+  "tipo": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+}),
+  "assistito": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "sesso": zod.enum(['M', 'F']),
+  "dataNascita": zod.string(),
+  "luogoNascitaCodice": zod.string(),
+  "luogoNascitaNome": zod.string(),
+  "luogoNascitaProvincia": zod.string().nullish(),
+  "luogoNascitaEstero": zod.boolean(),
+  "nazionalita": zod.string(),
+  "nazionalitaNome": zod.string(),
+  "straniero": zod.boolean(),
+  "codiceFiscale": zod.string(),
+  "partitaIva": zod.string().nullish().describe('Facoltativa, 11 cifre'),
+  "cellulare": zod.string(),
+  "email": zod.string().nullish(),
+  "citta": zod.string(),
+  "provincia": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatoria'),
+  "cap": zod.string().nullish().describe('Null solo per gli assistiti inseriti prima che fosse obbligatorio'),
+  "indirizzo": zod.string().nullish(),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "denominazione": zod.string().nullish(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.enum(['CAF', 'PATRONATO', 'ENTRAMBI'])
+}).describe('Collaboratore a cui e\' associato l\'assistito'),
+  "modificabile": zod.boolean().describe('Vero solo per il collaboratore a cui l\'assistito e\' associato (puo\' aprire pratiche)'),
+  "anagraficaModificabile": zod.boolean().describe('Vero per super admin, admin e operatori; il collaboratore vede l\'anagrafica in sola lettura'),
+  "creatoIl": zod.coerce.date(),
+  "modificatoIl": zod.coerce.date()
+}),
+  "collaboratore": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "denominazione": zod.string().nullish(),
+  "numeroSportello": zod.string(),
+  "tipologia": zod.string(),
+  "email": zod.string().nullable(),
+  "cellulare": zod.string()
+}),
+  "mandato": zod.union([zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "fileNome": zod.string().describe('Nome del PDF compilato con i dati dell\'assistito'),
+  "firma": zod.union([zod.object({
+  "firmatoIl": zod.coerce.date(),
+  "firmatario": zod.string(),
+  "codiceFiscale": zod.string(),
+  "cellulare": zod.string(),
+  "fileNome": zod.string().describe('Nome del PDF firmato')
+}),zod.null()]).optional().describe('Presente se il mandato e\' stato firmato con il codice SMS')
+}),zod.null()]),
+  "documenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "documentoTipoId": zod.number().int().nullable().describe('Vuoto per gli allegati aggiuntivi'),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date(),
+  "caricatoDa": zod.string(),
+  "dopoInvio": zod.boolean(),
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office')
+})).describe('Documenti e allegati caricati dal collaboratore'),
+  "allegatiUfficio": zod.array(zod.object({
+  "id": zod.number().int(),
+  "documentoTipoId": zod.number().int().nullable().describe('Vuoto per gli allegati aggiuntivi'),
+  "nome": zod.string(),
+  "fileNome": zod.string(),
+  "fileTipo": zod.string(),
+  "dimensione": zod.number().int(),
+  "caricatoIl": zod.coerce.date(),
+  "caricatoDa": zod.string(),
+  "dopoInvio": zod.boolean(),
+  "daUfficio": zod.boolean().describe('Allegato aggiunto da un operatore del back office')
+})).describe('Allegati aggiunti dagli operatori'),
+  "allegatiOperatore": zod.array(zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string()
+})).describe('Documenti che l\'operatore puo\' allegare, secondo il tipo di pratica'),
+  "messaggio": zod.string().describe('Messaggio iniziale scritto dal collaboratore'),
+  "commenti": zod.array(zod.object({
+  "id": zod.number().int(),
+  "testo": zod.string(),
+  "autore": zod.string(),
+  "ruolo": zod.enum(['super_admin', 'admin', 'operatore', 'collaboratore']),
+  "creatoIl": zod.coerce.date(),
+  "canaleAvviso": zod.union([zod.literal('email'),zod.literal('whatsapp'),zod.literal('chiamata'),zod.literal('entrambi'),zod.literal('tutti'),zod.literal(null)]).nullable(),
+  "mio": zod.boolean()
+})),
+  "cronologia": zod.array(zod.object({
+  "id": zod.string(),
+  "tipo": zod.enum(['invio', 'presa_in_carico', 'cambio_stato', 'allegato', 'commento']),
+  "creatoIl": zod.coerce.date(),
+  "autore": zod.string(),
+  "descrizione": zod.string()
+})).describe('Eventi della pratica, dal piu\' recente'),
+  "inviataIl": zod.coerce.date(),
+  "gestitaDa": zod.union([zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "colore": zod.string().nullable()
+}),zod.null()]),
+  "aggiornata": zod.boolean(),
+  "mieInCarico": zod.boolean().describe('La pratica e\' gia\' in carico all\'utente che la sta guardando'),
+  "puoEliminare": zod.boolean().describe('Solo il super admin puo\' cancellare una pratica')
+})
+
+
+/**
+ * @summary Cambia la priorita' della pratica
+ */
+export const CambiaPrioritaPraticaParams = zod.object({
+  "id": zod.coerce.number().int()
+})
+
+export const CambiaPrioritaPraticaBody = zod.object({
+  "priorita": zod.enum(['urgente', 'media', 'bassa'])
+})
+
+export const CambiaPrioritaPraticaResponse = zod.object({
+  "id": zod.number().int(),
+  "numero": zod.number().int(),
+  "priorita": zod.enum(['urgente', 'media', 'bassa']),
+  "scadenza": zod.union([zod.object({
+  "scadenzaIl": zod.coerce.date().describe('Invio + giorni di scadenza del tipo'),
+  "stato": zod.enum(['in_corso', 'vicina', 'superata']),
+  "giorniResidui": zod.number().int().describe('Giorni interi alla scadenza; negativo se superata')
+}),zod.null()]),
   "stato": zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
@@ -5626,6 +5903,12 @@ export const CambiaStatoPraticaBody = zod.object({
 export const CambiaStatoPraticaResponse = zod.object({
   "id": zod.number().int(),
   "numero": zod.number().int(),
+  "priorita": zod.enum(['urgente', 'media', 'bassa']),
+  "scadenza": zod.union([zod.object({
+  "scadenzaIl": zod.coerce.date().describe('Invio + giorni di scadenza del tipo'),
+  "stato": zod.enum(['in_corso', 'vicina', 'superata']),
+  "giorniResidui": zod.number().int().describe('Giorni interi alla scadenza; negativo se superata')
+}),zod.null()]),
   "stato": zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),
@@ -5765,6 +6048,12 @@ export const CreateCommentoPraticaBackofficeBody = zod.object({
 export const CreateCommentoPraticaBackofficeResponse = zod.object({
   "id": zod.number().int(),
   "numero": zod.number().int(),
+  "priorita": zod.enum(['urgente', 'media', 'bassa']),
+  "scadenza": zod.union([zod.object({
+  "scadenzaIl": zod.coerce.date().describe('Invio + giorni di scadenza del tipo'),
+  "stato": zod.enum(['in_corso', 'vicina', 'superata']),
+  "giorniResidui": zod.number().int().describe('Giorni interi alla scadenza; negativo se superata')
+}),zod.null()]),
   "stato": zod.object({
   "id": zod.number().int(),
   "nome": zod.string(),

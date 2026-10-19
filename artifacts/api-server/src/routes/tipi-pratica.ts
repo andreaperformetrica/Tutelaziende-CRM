@@ -11,6 +11,8 @@ import {
   DeleteNormativaTipoParams,
   SaveCompensoCollaboratoreBody,
   SaveCompensoCollaboratoreParams,
+  UpdateScadenzaTipoBody,
+  UpdateScadenzaTipoParams,
   UpdateNormativaTipoBody,
   UpdateNormativaTipoParams,
   CreateDocumentoTipoBody,
@@ -38,6 +40,7 @@ import {
   moduliTipoTable,
   normativeTipoTable,
   personeTable,
+  praticheTable,
   tipiPraticaTable,
 } from "@workspace/db";
 import { controllaModuloCompilabile } from "../lib/mandato-compilato";
@@ -160,6 +163,34 @@ router.put("/tipi-pratica/:id", async (req, res) => {
     if (codiceErrorePg(err).code === "23505") throw NOME_DUPLICATO;
     throw err;
   }
+  res.json(await caricaTipoMappato(id));
+});
+
+/** Scadenza in giorni dall'invio e giorni di anticipo degli avvisi; "nessuna scadenza" = nessun popup e nessun sollecito per quel tipo. */
+router.put("/tipi-pratica/:id/scadenza", async (req, res) => {
+  const { id } = valida(UpdateScadenzaTipoParams, req.params);
+  const b = valida(UpdateScadenzaTipoBody, req.body);
+  const prima = await caricaTipoMappato(id);
+  if (b.scadenzaGiorni !== null && b.anticipoGiorni >= b.scadenzaGiorni) {
+    throw new HttpError(400, "L'anticipo deve essere minore dei giorni di scadenza.", "DATI_NON_VALIDI", "anticipoGiorni");
+  }
+  const cambiata = prima.scadenzaGiorni !== b.scadenzaGiorni || prima.anticipoGiorni !== b.anticipoGiorni;
+  const testo = (g: number | null) => (g === null ? "nessuna scadenza" : `${g} giorni dall'invio`);
+  await db.transaction(async (tx) => {
+    await tx
+      .update(tipiPraticaTable)
+      .set({ scadenzaGiorni: b.scadenzaGiorni, anticipoGiorni: b.anticipoGiorni, modificatoIl: sql`now()` })
+      .where(eq(tipiPraticaTable.id, id));
+    // Cambiando le regole i solleciti gia' inviati non valgono piu': ripartono con le nuove date.
+    if (cambiata) await tx.update(praticheTable).set({ sollecitoVicinaIl: null, sollecitoSuperataIl: null }).where(eq(praticheTable.tipoPraticaId, id));
+    await registraLog(tx, contestoDa(req), {
+      azione: "tipo_pratica.scadenza",
+      entita: "tipo_pratica",
+      entitaId: id,
+      descrizione: `Tipo di pratica "${prima.nome}": scadenza ${testo(b.scadenzaGiorni)}, avviso ${b.anticipoGiorni} giorni prima (prima: ${testo(prima.scadenzaGiorni)}, avviso ${prima.anticipoGiorni} giorni prima)`,
+      dettagli: { prima: { scadenzaGiorni: prima.scadenzaGiorni, anticipoGiorni: prima.anticipoGiorni }, dopo: b },
+    });
+  });
   res.json(await caricaTipoMappato(id));
 });
 

@@ -1040,6 +1040,70 @@ export interface FiltriLog {
   azioni: FiltroAzioneLog[];
 }
 
+export type PrioritaPratica = typeof PrioritaPratica[keyof typeof PrioritaPratica];
+
+
+export const PrioritaPratica = {
+  urgente: 'urgente',
+  media: 'media',
+  bassa: 'bassa',
+} as const;
+
+export type ScadenzaPraticaStato = typeof ScadenzaPraticaStato[keyof typeof ScadenzaPraticaStato];
+
+
+export const ScadenzaPraticaStato = {
+  in_corso: 'in_corso',
+  vicina: 'vicina',
+  superata: 'superata',
+} as const;
+
+export interface ScadenzaPratica {
+  /** Invio + giorni di scadenza del tipo */
+  scadenzaIl: string;
+  stato: ScadenzaPraticaStato;
+  /** Giorni interi alla scadenza; negativo se superata */
+  giorniResidui: number;
+}
+
+export type AvvisoScadenzaStato = typeof AvvisoScadenzaStato[keyof typeof AvvisoScadenzaStato];
+
+
+export const AvvisoScadenzaStato = {
+  vicina: 'vicina',
+  superata: 'superata',
+} as const;
+
+export interface AvvisoScadenza {
+  id: number;
+  numero: number;
+  /** Cognome e nome */
+  assistito: string;
+  tipoNome: string;
+  scadenzaIl: string;
+  stato: AvvisoScadenzaStato;
+  giorniResidui: number;
+}
+
+export interface CambioPrioritaInput {
+  priorita: PrioritaPratica;
+}
+
+export interface ScadenzaTipoInput {
+  /**
+     * Vuoto = nessuna scadenza
+     * @minimum 1
+     * @maximum 3650
+     * @nullable
+     */
+  scadenzaGiorni: number | null;
+  /**
+     * @minimum 0
+     * @maximum 365
+     */
+  anticipoGiorni: number;
+}
+
 export interface DocumentoTipo {
   id: number;
   nome: string;
@@ -1088,6 +1152,13 @@ export interface TipoPratica {
   punti: number;
   /** Euro con due decimali */
   valoreEuro: number;
+  /**
+     * Scadenza in giorni dall'invio della pratica; vuoto = nessuna scadenza
+     * @nullable
+     */
+  scadenzaGiorni: number | null;
+  /** Giorni prima della scadenza da cui partono avvisi e solleciti */
+  anticipoGiorni: number;
   creatoIl: string;
   documenti: DocumentoTipo[];
   moduli: ModuloTipo[];
@@ -1668,6 +1739,8 @@ export interface StatoPraticaRiepilogo {
 export interface PraticaBackofficeRiepilogo {
   id: number;
   numero: number;
+  priorita: PrioritaPratica;
+  scadenza: ScadenzaPratica | null;
   assistito: PraticaAssistitoRiepilogo;
   collaboratore: PraticaCollaboratoreRiepilogo;
   /** Citta' dell'assistito */
@@ -1786,6 +1859,8 @@ export interface CollaboratorePratica {
 export interface PraticaBackoffice {
   id: number;
   numero: number;
+  priorita: PrioritaPratica;
+  scadenza: ScadenzaPratica | null;
   stato: StatoPraticaRiepilogo;
   tipo: PraticaTipoRiepilogo;
   assistito: Assistito;
@@ -2534,6 +2609,7 @@ soloAggiornate?: boolean;
  * Mette in cima le pratiche aggiornate
  */
 aggiornatePrima?: boolean;
+priorita?: PrioritaPratica;
 ordina?: ListPraticheBackofficeOrdina;
 direzione?: ListPraticheBackofficeDirezione;
 /**
@@ -2556,6 +2632,7 @@ export const ListPraticheBackofficeOrdina = {
   numero: 'numero',
   stato: 'stato',
   tipo: 'tipo',
+  priorita: 'priorita',
 } as const;
 
 export type ListPraticheBackofficeDirezione = typeof ListPraticheBackofficeDirezione[keyof typeof ListPraticheBackofficeDirezione];
