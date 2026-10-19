@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { getGetAvvisiQueryKey, getGetConteggioAlertQueryKey, getGetConteggioSegnalazioniQueryKey, getGetNonLettiChatQueryKey, useGetAvvisi, useGetConteggioAlert, useGetConteggioSegnalazioni, useGetNonLettiChat, useLogout, type SessioneUtente } from "@workspace/api-client-react";
-import { Inbox, UserCheck, KeyRound, LogOut, ScrollText, ShieldCheck, Users, UsersRound, Home, UserRound, TriangleAlert, FileText, FileSignature, ListOrdered, Clock, Bell, CalendarDays, Coins, Settings, ChevronDown, Newspaper, Menu, LayoutDashboard, MessagesSquare, BellRing, ChartColumn, Receipt } from "lucide-react";
+import { Inbox, UserCheck, KeyRound, LogOut, ScrollText, ShieldCheck, Users, UsersRound, Home, UserRound, TriangleAlert, FileText, FileSignature, ListOrdered, Clock, Bell, CalendarDays, Coins, Settings, ChevronDown, Newspaper, Menu, LayoutDashboard, MessagesSquare, BellRing, ChartColumn, Receipt, FileSpreadsheet } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { UtenteAvatar } from "@/components/utenti/colore-utente";
 import { iniziali, ruoloLabel } from "@/lib/format";
@@ -38,6 +38,7 @@ const VOCI: Voce[] = [
   { href: "/admin/alert", label: "Alert", icon: BellRing, roles: ["super_admin", "admin"], id: "alert" },
   { href: "/admin/eventi", label: "Eventi e corsi", icon: CalendarDays, roles: ["super_admin", "admin"], id: "eventi" },
   { href: "/admin/compensi", label: "Compensi", icon: Coins, roles: ["super_admin", "admin", "operatore"], id: "compensi" },
+  { href: "/admin/importa-compensi", label: "Importa compensi", icon: FileSpreadsheet, roles: ["super_admin", "admin"], id: "importa-compensi" },
   { href: "/admin/pagamenti-fatture", label: "Pagamenti e fatture", icon: Receipt, roles: ["super_admin", "admin", "operatore"], id: "pagamenti-fatture" },
   { href: "/admin/statistiche", label: "Statistiche operatori", icon: ChartColumn, roles: ["super_admin"], id: "statistiche" },
   { href: "/admin/tipi-pratica", label: "Tipi di pratica", icon: FileText, roles: ["super_admin", "admin"], id: "tipi-pratica", gruppo: "settaggi" },

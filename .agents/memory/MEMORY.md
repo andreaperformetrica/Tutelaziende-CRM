@@ -7,7 +7,7 @@
 - [Phase 6 notifications decisions](tutela-crm-phase6-decisions.md) — Resend + Twilio template, secret names, recipients, privacy rule, outbox-style delivery
 - [Phase 7 eventi decisions](tutela-crm-phase7-decisions.md) — eventi/QR/check-in/attestati: permissions, locks, presenti meaning, extra WhatsApp template secret
 - [Phase 8 compensi decisions](tutela-crm-phase8-decisions.md) — maturation snapshot, Pagata reserved, one estratto per pratica, dare/avere derivation, email attachment
-- [Phase 9 import decisions](tutela-crm-phase9-decisions.md) — generic admin-configured Excel import, duplicate rule, section mapping assumptions awaiting user confirmation
+- [Phase 9 import decisions (superseded by Aggiornamento 7)](tutela-crm-phase9-decisions.md) — old generic admin-configured import, replaced
 - [Tutela CRM branding](tutela-crm-branding.md) — Tutelaziende logo files, blue palette, PDF logo is a setting
 - [Colori utenti interni](tutela-crm-colori-utenti.md) — chosen color per internal user, automatic fallback computed in frontend, where it is shown
 - [Mandati per sede (superseded)](tutela-crm-mandati-per-sede.md) — mandato is a per-sede docx template, one per collaboratore, compiled to PDF in the pratica (supersedes per-tipo notes)
@@ -21,3 +21,4 @@
 - [Aggiornamento 4](tutela-crm-aggiornamento4.md) — canale default, base URL link email, alert collaboratori, dashboard, chat interna, statistiche operatori
 - [Aggiornamento 5](tutela-crm-aggiornamento5.md) — eventi: email partecipanti+QR, check-out/ore, soglia attestato, documenti ai presenti, questionario online monouso
 - [Aggiornamento 6](tutela-crm-aggiornamento6.md) — ricevute/pagamenti e fatture, crediti, esclusioni estratti, invio massivo, allegato pagamento, ruolo operatore
+- [Aggiornamento 7](tutela-crm-aggiornamento7.md) — importa compensi Excel 730/ISEE/NASPI: sportello match, NASPI differenze, un import per anno, file mai due volte

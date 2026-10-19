@@ -13,5 +13,4 @@ export const ServizioImportCodice = {
   mod730: 'mod730',
   isee: 'isee',
   naspi: 'naspi',
-  pensionati: 'pensionati',
 } as const;

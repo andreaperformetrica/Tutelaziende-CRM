@@ -2681,106 +2681,7 @@ export const ServizioImportCodice = {
   mod730: 'mod730',
   isee: 'isee',
   naspi: 'naspi',
-  pensionati: 'pensionati',
 } as const;
-
-/**
- * fisso = importo in euro per ogni riga valida; percentuale = percentuale della colonna importo
- * @nullable
- */
-export type ServizioImportRegola = typeof ServizioImportRegola[keyof typeof ServizioImportRegola] | null;
-
-
-export const ServizioImportRegola = {
-  fisso: 'fisso',
-  percentuale: 'percentuale',
-} as const;
-
-export type ServizioImportTipoChiave = typeof ServizioImportTipoChiave[keyof typeof ServizioImportTipoChiave];
-
-
-export const ServizioImportTipoChiave = {
-  sportello: 'sportello',
-  email: 'email',
-  nome: 'nome',
-} as const;
-
-export type SezioneDareAvereCodice = typeof SezioneDareAvereCodice[keyof typeof SezioneDareAvereCodice];
-
-
-export const SezioneDareAvereCodice = {
-  naspi: 'naspi',
-  pensionati: 'pensionati',
-  patronato: 'patronato',
-  caf: 'caf',
-  crediti: 'crediti',
-  debiti: 'debiti',
-} as const;
-
-export interface ServizioImport {
-  servizio: ServizioImportCodice;
-  etichetta: string;
-  sezione: SezioneDareAvereCodice;
-  /**
-     * fisso = importo in euro per ogni riga valida; percentuale = percentuale della colonna importo
-     * @nullable
-     */
-  regola: ServizioImportRegola;
-  /**
-     * Euro per riga (regola fisso) oppure percentuale, es. 12,5 (regola percentuale)
-     * @nullable
-     */
-  valore: number | null;
-  /**
-     * Intestazione della colonna che identifica il collaboratore
-     * @nullable
-     */
-  colonnaChiave: string | null;
-  tipoChiave: ServizioImportTipoChiave;
-  /**
-     * Intestazione della colonna dell'importo (solo regola percentuale)
-     * @nullable
-     */
-  colonnaImporto: string | null;
-  configurato: boolean;
-}
-
-export type ServizioImportInputRegola = typeof ServizioImportInputRegola[keyof typeof ServizioImportInputRegola];
-
-
-export const ServizioImportInputRegola = {
-  fisso: 'fisso',
-  percentuale: 'percentuale',
-} as const;
-
-export type ServizioImportInputTipoChiave = typeof ServizioImportInputTipoChiave[keyof typeof ServizioImportInputTipoChiave];
-
-
-export const ServizioImportInputTipoChiave = {
-  sportello: 'sportello',
-  email: 'email',
-  nome: 'nome',
-} as const;
-
-export interface ServizioImportInput {
-  regola: ServizioImportInputRegola;
-  /**
-     * @minimum 0
-     * @maximum 1000000
-     */
-  valore: number;
-  /**
-     * @minLength 1
-     * @maxLength 120
-     */
-  colonnaChiave: string;
-  tipoChiave: ServizioImportInputTipoChiave;
-  /**
-     * @maxLength 120
-     * @nullable
-     */
-  colonnaImporto?: string | null;
-}
 
 export type ImportazioneStato = typeof ImportazioneStato[keyof typeof ImportazioneStato];
 
@@ -2794,7 +2695,22 @@ export interface Importazione {
   id: number;
   servizio: ServizioImportCodice;
   servizioEtichetta: string;
+  /** Es. "730/2025", "ISEE trimestre 1 2026", "NASPI 2026 gen-set" */
+  titolo: string;
+  /** Anno di riferimento (per la NASPI anche anno della serie dei cumulati) */
   anno: number;
+  /**
+     * Solo ISEE
+     * @nullable
+     */
+  trimestre: number | null;
+  /**
+     * Solo NASPI
+     * @nullable
+     */
+  periodo: string | null;
+  /** Anno del dare/avere in cui compare la riga */
+  annoDareAvere: number;
   nomeFile: string;
   stato: ImportazioneStato;
   righeLette: number;
@@ -2807,52 +2723,89 @@ export interface Importazione {
   confermatoIl: string | null;
 }
 
+/**
+ * avviso = NASPI con differenza negativa (non pagata); riferimento = primo import NASPI dello sportello
+ */
+export type RigaImportazioneEsito = typeof RigaImportazioneEsito[keyof typeof RigaImportazioneEsito];
+
+
+export const RigaImportazioneEsito = {
+  valida: 'valida',
+  errore: 'errore',
+  avviso: 'avviso',
+  riferimento: 'riferimento',
+} as const;
+
 export interface RigaImportazione {
   /** Numero di riga nel foglio Excel */
   numeroRiga: number;
-  /** @nullable */
-  riferimento: string | null;
+  /**
+     * Valore letto nella colonna sportello
+     * @nullable
+     */
+  sportello: string | null;
+  /**
+     * Colonna sede del file
+     * @nullable
+     */
+  sedeFile: string | null;
   /** @nullable */
   collaboratoreId: number | null;
   /** @nullable */
   collaboratoreNome: string | null;
-  /** @nullable */
-  baseEuro: number | null;
-  /** @nullable */
-  compensoEuro: number | null;
-  errori: string[];
-}
-
-export interface TotaleCollaboratoreImport {
-  collaboratoreId: number;
-  collaboratoreNome: string;
-  numeroSportello: string;
-  righe: number;
-  compensoEuro: number;
+  /**
+     * Denominazione del collaboratore in archivio
+     * @nullable
+     */
+  collaboratoreSede: string | null;
+  /**
+     * Totale dovuto (730
+     * @nullable
+     */
+  importoEuro: number | null;
+  /**
+     * Solo NASPI; cumulato gia' coperto prima di questo import
+     * @nullable
+     */
+  precedenteEuro: number | null;
+  /**
+     * Importo riportato nel dare/avere
+     * @nullable
+     */
+  daPagareEuro: number | null;
+  /** avviso = NASPI con differenza negativa (non pagata); riferimento = primo import NASPI dello sportello */
+  esito: RigaImportazioneEsito;
+  messaggi: string[];
 }
 
 export interface ImportazioneDettaglio {
   importazione: Importazione;
-  configurazione: ServizioImport;
-  configurazioneCompleta: boolean;
-  /**
-     * Cosa manca o non corrisponde al file
-     * @nullable
-     */
-  messaggioConfigurazione: string | null;
-  /** Colonne trovate nel file (vuoto per le importazioni confermate) */
-  intestazioni: string[];
   righe: RigaImportazione[];
+  /** Righe che verranno (o sono state) salvate */
   righeValide: number;
   righeConErrori: number;
+  righeAvviso: number;
+  /** Somma degli importi da pagare */
   totaleEuro: number;
-  perCollaboratore: TotaleCollaboratoreImport[];
+  avvisiFile: string[];
 }
 
 export interface ConfermaImportazioneInput {
   /** Vero per salvare solo le righe senza errori quando ce ne sono con errori */
   soloValide: boolean;
 }
+
+export type SezioneDareAvereCodice = typeof SezioneDareAvereCodice[keyof typeof SezioneDareAvereCodice];
+
+
+export const SezioneDareAvereCodice = {
+  naspi: 'naspi',
+  pensionati: 'pensionati',
+  patronato: 'patronato',
+  caf: 'caf',
+  crediti: 'crediti',
+  debiti: 'debiti',
+} as const;
 
 export interface RicevutaRigaRiferimento {
   id: number;

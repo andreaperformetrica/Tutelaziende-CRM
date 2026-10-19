@@ -1722,44 +1722,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ImpostazioniStampa"
-  /backoffice/compensi/importazioni/servizi:
-    get:
-      operationId: listServiziImport
-      tags: [compensi]
-      summary: Regole di calcolo e colonne dei servizi importabili (730, ISEE, NASPI, Pensionati)
-      responses:
-        "200":
-          description: Servizi
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/ServizioImport"
-  /backoffice/compensi/importazioni/servizi/{servizio}:
-    parameters:
-      - name: servizio
-        in: path
-        required: true
-        schema:
-          $ref: "#/components/schemas/ServizioImportCodice"
-    put:
-      operationId: updateServizioImport
-      tags: [compensi]
-      summary: Imposta regola di calcolo (fissa o percentuale) e colonne del file di un servizio
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/ServizioImportInput"
-      responses:
-        "200":
-          description: Servizio aggiornato
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ServizioImport"
   /backoffice/compensi/importazioni:
     get:
       operationId: listImportazioni
@@ -1789,7 +1751,7 @@ paths:
     get:
       operationId: getImportazione
       tags: [compensi]
-      summary: Dettaglio; per un'anteprima rilegge il file con la regola attuale
+      summary: Dettaglio; per un'anteprima rilegge il file con i riferimenti NASPI attuali
       responses:
         "200":
           description: Dettaglio
@@ -5430,37 +5392,19 @@ components:
         nota2: { type: string, maxLength: 600 }
     ServizioImportCodice:
       type: string
-      enum: [mod730, isee, naspi, pensionati]
-    ServizioImport:
-      type: object
-      required: [servizio, etichetta, sezione, regola, valore, colonnaChiave, tipoChiave, colonnaImporto, configurato]
-      properties:
-        servizio: { $ref: "#/components/schemas/ServizioImportCodice" }
-        etichetta: { type: string }
-        sezione: { $ref: "#/components/schemas/SezioneDareAvereCodice" }
-        regola: { type: [string, "null"], enum: [fisso, percentuale, null], description: "fisso = importo in euro per ogni riga valida; percentuale = percentuale della colonna importo" }
-        valore: { type: [number, "null"], description: "Euro per riga (regola fisso) oppure percentuale, es. 12,5 (regola percentuale)" }
-        colonnaChiave: { type: [string, "null"], description: Intestazione della colonna che identifica il collaboratore }
-        tipoChiave: { type: string, enum: [sportello, email, nome] }
-        colonnaImporto: { type: [string, "null"], description: Intestazione della colonna dell'importo (solo regola percentuale) }
-        configurato: { type: boolean }
-    ServizioImportInput:
-      type: object
-      required: [regola, valore, colonnaChiave, tipoChiave]
-      properties:
-        regola: { type: string, enum: [fisso, percentuale] }
-        valore: { type: number, minimum: 0, maximum: 1000000 }
-        colonnaChiave: { type: string, minLength: 1, maxLength: 120 }
-        tipoChiave: { type: string, enum: [sportello, email, nome] }
-        colonnaImporto: { type: [string, "null"], maxLength: 120 }
+      enum: [mod730, isee, naspi]
     Importazione:
       type: object
-      required: [id, servizio, servizioEtichetta, anno, nomeFile, stato, righeLette, righeImportate, totaleEuro, creatoIl, creatoDa, confermatoIl]
+      required: [id, servizio, servizioEtichetta, titolo, anno, trimestre, periodo, annoDareAvere, nomeFile, stato, righeLette, righeImportate, totaleEuro, creatoIl, creatoDa, confermatoIl]
       properties:
         id: { type: integer }
         servizio: { $ref: "#/components/schemas/ServizioImportCodice" }
         servizioEtichetta: { type: string }
-        anno: { type: integer }
+        titolo: { type: string, description: 'Es. "730/2025", "ISEE trimestre 1 2026", "NASPI 2026 gen-set"' }
+        anno: { type: integer, description: Anno di riferimento (per la NASPI anche anno della serie dei cumulati) }
+        trimestre: { type: [integer, "null"], description: Solo ISEE }
+        periodo: { type: [string, "null"], description: Solo NASPI, testo libero }
+        annoDareAvere: { type: integer, description: Anno del dare/avere in cui compare la riga }
         nomeFile: { type: string }
         stato: { type: string, enum: [anteprima, confermata] }
         righeLette: { type: integer }
@@ -5471,38 +5415,30 @@ components:
         confermatoIl: { type: [string, "null"], format: date-time }
     RigaImportazione:
       type: object
-      required: [numeroRiga, riferimento, collaboratoreId, collaboratoreNome, baseEuro, compensoEuro, errori]
+      required: [numeroRiga, sportello, sedeFile, collaboratoreId, collaboratoreNome, collaboratoreSede, importoEuro, precedenteEuro, daPagareEuro, esito, messaggi]
       properties:
         numeroRiga: { type: integer, description: Numero di riga nel foglio Excel }
-        riferimento: { type: [string, "null"] }
+        sportello: { type: [string, "null"], description: Valore letto nella colonna sportello }
+        sedeFile: { type: [string, "null"], description: Colonna sede del file, solo controllo visivo }
         collaboratoreId: { type: [integer, "null"] }
         collaboratoreNome: { type: [string, "null"] }
-        baseEuro: { type: [number, "null"] }
-        compensoEuro: { type: [number, "null"] }
-        errori: { type: array, items: { type: string } }
-    TotaleCollaboratoreImport:
-      type: object
-      required: [collaboratoreId, collaboratoreNome, numeroSportello, righe, compensoEuro]
-      properties:
-        collaboratoreId: { type: integer }
-        collaboratoreNome: { type: string }
-        numeroSportello: { type: string }
-        righe: { type: integer }
-        compensoEuro: { type: number }
+        collaboratoreSede: { type: [string, "null"], description: Denominazione del collaboratore in archivio }
+        importoEuro: { type: [number, "null"], description: Totale dovuto (730, ISEE) o importo cumulato (NASPI) }
+        precedenteEuro: { type: [number, "null"], description: Solo NASPI; cumulato gia' coperto prima di questo import }
+        daPagareEuro: { type: [number, "null"], description: Importo riportato nel dare/avere }
+        esito: { type: string, enum: [valida, errore, avviso, riferimento], description: "avviso = NASPI con differenza negativa (non pagata); riferimento = primo import NASPI dello sportello" }
+        messaggi: { type: array, items: { type: string } }
     ImportazioneDettaglio:
       type: object
-      required: [importazione, configurazione, configurazioneCompleta, messaggioConfigurazione, intestazioni, righe, righeValide, righeConErrori, totaleEuro, perCollaboratore]
+      required: [importazione, righe, righeValide, righeConErrori, righeAvviso, totaleEuro, avvisiFile]
       properties:
         importazione: { $ref: "#/components/schemas/Importazione" }
-        configurazione: { $ref: "#/components/schemas/ServizioImport" }
-        configurazioneCompleta: { type: boolean }
-        messaggioConfigurazione: { type: [string, "null"], description: Cosa manca o non corrisponde al file }
-        intestazioni: { type: array, items: { type: string }, description: Colonne trovate nel file (vuoto per le importazioni confermate) }
         righe: { type: array, items: { $ref: "#/components/schemas/RigaImportazione" } }
-        righeValide: { type: integer }
+        righeValide: { type: integer, description: Righe che verranno (o sono state) salvate }
         righeConErrori: { type: integer }
-        totaleEuro: { type: number }
-        perCollaboratore: { type: array, items: { $ref: "#/components/schemas/TotaleCollaboratoreImport" } }
+        righeAvviso: { type: integer }
+        totaleEuro: { type: number, description: Somma degli importi da pagare }
+        avvisiFile: { type: array, items: { type: string } }
     ConfermaImportazioneInput:
       type: object
       required: [soloValide]

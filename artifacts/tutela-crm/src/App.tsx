@@ -44,6 +44,7 @@ import CompensiPage from '@/pages/admin/compensi';
 import PagamentiFatturePage from '@/pages/admin/pagamenti-fatture';
 import RicevutaDettaglioPage from '@/pages/admin/ricevuta-dettaglio';
 import ImportazioneDettaglioPage from '@/pages/admin/importazione-dettaglio';
+import ImportaCompensiPage from '@/pages/admin/importa-compensi';
 import EstrattoDettaglioPage from '@/pages/admin/estratto-dettaglio';
 import EventoDettaglioBackoffice from '@/pages/admin/evento-dettaglio';
 import EventoCheckIn from '@/pages/admin/evento-check-in';
@@ -115,7 +116,8 @@ function Router() {
         <Route path="/admin/pagamenti-fatture" component={g(<PagamentiFatturePage />, 'backoffice', TUTTI_BO)} />
         <Route path="/admin/pagamenti-fatture/:id" component={g(<RicevutaDettaglioPage />, 'backoffice', TUTTI_BO)} />
         <Route path="/admin/compensi/estratti/:id" component={g(<EstrattoDettaglioPage />, 'backoffice', ADMIN)} />
-        <Route path="/admin/compensi/importazioni/:id" component={g(<ImportazioneDettaglioPage />, 'backoffice', ADMIN)} />
+        <Route path="/admin/importa-compensi" component={g(<ImportaCompensiPage />, 'backoffice', ADMIN)} />
+        <Route path="/admin/importa-compensi/:id" component={g(<ImportazioneDettaglioPage />, 'backoffice', ADMIN)} />
         <Route path="/admin/eventi" component={g(<EventiBackoffice />, 'backoffice', ADMIN)} />
         <Route path="/admin/eventi/:id/check-in" component={g(<EventoCheckIn />, 'backoffice', ADMIN)} />
         <Route path="/admin/eventi/:id" component={g(<EventoDettaglioBackoffice />, 'backoffice', ADMIN)} />

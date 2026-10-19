@@ -4423,72 +4423,22 @@ export const DeleteLogoStampaResponse = zod.object({
 
 
 /**
- * @summary Regole di calcolo e colonne dei servizi importabili (730, ISEE, NASPI, Pensionati)
- */
-export const ListServiziImportResponseItem = zod.object({
-  "servizio": zod.enum(['mod730', 'isee', 'naspi', 'pensionati']),
-  "etichetta": zod.string(),
-  "sezione": zod.enum(['naspi', 'pensionati', 'patronato', 'caf', 'crediti', 'debiti']),
-  "regola": zod.union([zod.literal('fisso'),zod.literal('percentuale'),zod.literal(null)]).nullable().describe('fisso = importo in euro per ogni riga valida; percentuale = percentuale della colonna importo'),
-  "valore": zod.number().nullable().describe('Euro per riga (regola fisso) oppure percentuale, es. 12,5 (regola percentuale)'),
-  "colonnaChiave": zod.string().nullable().describe('Intestazione della colonna che identifica il collaboratore'),
-  "tipoChiave": zod.enum(['sportello', 'email', 'nome']),
-  "colonnaImporto": zod.string().nullable().describe('Intestazione della colonna dell\'importo (solo regola percentuale)'),
-  "configurato": zod.boolean()
-})
-export const ListServiziImportResponse = zod.array(ListServiziImportResponseItem)
-
-
-/**
- * @summary Imposta regola di calcolo (fissa o percentuale) e colonne del file di un servizio
- */
-export const UpdateServizioImportParams = zod.object({
-  "servizio": zod.enum(['mod730', 'isee', 'naspi', 'pensionati'])
-})
-
-export const updateServizioImportBodyValoreMin = 0;
-export const updateServizioImportBodyValoreMax = 1000000;
-
-export const updateServizioImportBodyColonnaChiaveMax = 120;
-
-export const updateServizioImportBodyColonnaImportoMax = 120;
-
-
-
-export const UpdateServizioImportBody = zod.object({
-  "regola": zod.enum(['fisso', 'percentuale']),
-  "valore": zod.number().min(updateServizioImportBodyValoreMin).max(updateServizioImportBodyValoreMax),
-  "colonnaChiave": zod.string().min(1).max(updateServizioImportBodyColonnaChiaveMax),
-  "tipoChiave": zod.enum(['sportello', 'email', 'nome']),
-  "colonnaImporto": zod.string().max(updateServizioImportBodyColonnaImportoMax).nullish()
-})
-
-export const UpdateServizioImportResponse = zod.object({
-  "servizio": zod.enum(['mod730', 'isee', 'naspi', 'pensionati']),
-  "etichetta": zod.string(),
-  "sezione": zod.enum(['naspi', 'pensionati', 'patronato', 'caf', 'crediti', 'debiti']),
-  "regola": zod.union([zod.literal('fisso'),zod.literal('percentuale'),zod.literal(null)]).nullable().describe('fisso = importo in euro per ogni riga valida; percentuale = percentuale della colonna importo'),
-  "valore": zod.number().nullable().describe('Euro per riga (regola fisso) oppure percentuale, es. 12,5 (regola percentuale)'),
-  "colonnaChiave": zod.string().nullable().describe('Intestazione della colonna che identifica il collaboratore'),
-  "tipoChiave": zod.enum(['sportello', 'email', 'nome']),
-  "colonnaImporto": zod.string().nullable().describe('Intestazione della colonna dell\'importo (solo regola percentuale)'),
-  "configurato": zod.boolean()
-})
-
-
-/**
  * @summary Importazioni (anteprime e confermate), dalla piu' recente
  */
 export const ListImportazioniQueryParams = zod.object({
-  "servizio": zod.enum(['mod730', 'isee', 'naspi', 'pensionati']).optional(),
+  "servizio": zod.enum(['mod730', 'isee', 'naspi']).optional(),
   "anno": zod.coerce.number().int().optional()
 })
 
 export const ListImportazioniResponseItem = zod.object({
   "id": zod.number().int(),
-  "servizio": zod.enum(['mod730', 'isee', 'naspi', 'pensionati']),
+  "servizio": zod.enum(['mod730', 'isee', 'naspi']),
   "servizioEtichetta": zod.string(),
-  "anno": zod.number().int(),
+  "titolo": zod.string().describe('Es. "730/2025", "ISEE trimestre 1 2026", "NASPI 2026 gen-set"'),
+  "anno": zod.number().int().describe('Anno di riferimento (per la NASPI anche anno della serie dei cumulati)'),
+  "trimestre": zod.number().int().nullable().describe('Solo ISEE'),
+  "periodo": zod.string().nullable().describe('Solo NASPI'),
+  "annoDareAvere": zod.number().int().describe('Anno del dare/avere in cui compare la riga'),
   "nomeFile": zod.string(),
   "stato": zod.enum(['anteprima', 'confermata']),
   "righeLette": zod.number().int(),
@@ -4502,7 +4452,7 @@ export const ListImportazioniResponse = zod.array(ListImportazioniResponseItem)
 
 
 /**
- * @summary Dettaglio; per un'anteprima rilegge il file con la regola attuale
+ * @summary Dettaglio; per un'anteprima rilegge il file con i riferimenti NASPI attuali
  */
 export const GetImportazioneParams = zod.object({
   "id": zod.coerce.number().int()
@@ -4511,9 +4461,13 @@ export const GetImportazioneParams = zod.object({
 export const GetImportazioneResponse = zod.object({
   "importazione": zod.object({
   "id": zod.number().int(),
-  "servizio": zod.enum(['mod730', 'isee', 'naspi', 'pensionati']),
+  "servizio": zod.enum(['mod730', 'isee', 'naspi']),
   "servizioEtichetta": zod.string(),
-  "anno": zod.number().int(),
+  "titolo": zod.string().describe('Es. "730/2025", "ISEE trimestre 1 2026", "NASPI 2026 gen-set"'),
+  "anno": zod.number().int().describe('Anno di riferimento (per la NASPI anche anno della serie dei cumulati)'),
+  "trimestre": zod.number().int().nullable().describe('Solo ISEE'),
+  "periodo": zod.string().nullable().describe('Solo NASPI'),
+  "annoDareAvere": zod.number().int().describe('Anno del dare/avere in cui compare la riga'),
   "nomeFile": zod.string(),
   "stato": zod.enum(['anteprima', 'confermata']),
   "righeLette": zod.number().int(),
@@ -4523,39 +4477,24 @@ export const GetImportazioneResponse = zod.object({
   "creatoDa": zod.string().nullable(),
   "confermatoIl": zod.coerce.date().nullable()
 }),
-  "configurazione": zod.object({
-  "servizio": zod.enum(['mod730', 'isee', 'naspi', 'pensionati']),
-  "etichetta": zod.string(),
-  "sezione": zod.enum(['naspi', 'pensionati', 'patronato', 'caf', 'crediti', 'debiti']),
-  "regola": zod.union([zod.literal('fisso'),zod.literal('percentuale'),zod.literal(null)]).nullable().describe('fisso = importo in euro per ogni riga valida; percentuale = percentuale della colonna importo'),
-  "valore": zod.number().nullable().describe('Euro per riga (regola fisso) oppure percentuale, es. 12,5 (regola percentuale)'),
-  "colonnaChiave": zod.string().nullable().describe('Intestazione della colonna che identifica il collaboratore'),
-  "tipoChiave": zod.enum(['sportello', 'email', 'nome']),
-  "colonnaImporto": zod.string().nullable().describe('Intestazione della colonna dell\'importo (solo regola percentuale)'),
-  "configurato": zod.boolean()
-}),
-  "configurazioneCompleta": zod.boolean(),
-  "messaggioConfigurazione": zod.string().nullable().describe('Cosa manca o non corrisponde al file'),
-  "intestazioni": zod.array(zod.string()).describe('Colonne trovate nel file (vuoto per le importazioni confermate)'),
   "righe": zod.array(zod.object({
   "numeroRiga": zod.number().int().describe('Numero di riga nel foglio Excel'),
-  "riferimento": zod.string().nullable(),
+  "sportello": zod.string().nullable().describe('Valore letto nella colonna sportello'),
+  "sedeFile": zod.string().nullable().describe('Colonna sede del file'),
   "collaboratoreId": zod.number().int().nullable(),
   "collaboratoreNome": zod.string().nullable(),
-  "baseEuro": zod.number().nullable(),
-  "compensoEuro": zod.number().nullable(),
-  "errori": zod.array(zod.string())
+  "collaboratoreSede": zod.string().nullable().describe('Denominazione del collaboratore in archivio'),
+  "importoEuro": zod.number().nullable().describe('Totale dovuto (730'),
+  "precedenteEuro": zod.number().nullable().describe('Solo NASPI; cumulato gia\' coperto prima di questo import'),
+  "daPagareEuro": zod.number().nullable().describe('Importo riportato nel dare/avere'),
+  "esito": zod.enum(['valida', 'errore', 'avviso', 'riferimento']).describe('avviso = NASPI con differenza negativa (non pagata); riferimento = primo import NASPI dello sportello'),
+  "messaggi": zod.array(zod.string())
 })),
-  "righeValide": zod.number().int(),
+  "righeValide": zod.number().int().describe('Righe che verranno (o sono state) salvate'),
   "righeConErrori": zod.number().int(),
-  "totaleEuro": zod.number(),
-  "perCollaboratore": zod.array(zod.object({
-  "collaboratoreId": zod.number().int(),
-  "collaboratoreNome": zod.string(),
-  "numeroSportello": zod.string(),
-  "righe": zod.number().int(),
-  "compensoEuro": zod.number()
-}))
+  "righeAvviso": zod.number().int(),
+  "totaleEuro": zod.number().describe('Somma degli importi da pagare'),
+  "avvisiFile": zod.array(zod.string())
 })
 
 
@@ -4583,9 +4522,13 @@ export const ConfermaImportazioneBody = zod.object({
 export const ConfermaImportazioneResponse = zod.object({
   "importazione": zod.object({
   "id": zod.number().int(),
-  "servizio": zod.enum(['mod730', 'isee', 'naspi', 'pensionati']),
+  "servizio": zod.enum(['mod730', 'isee', 'naspi']),
   "servizioEtichetta": zod.string(),
-  "anno": zod.number().int(),
+  "titolo": zod.string().describe('Es. "730/2025", "ISEE trimestre 1 2026", "NASPI 2026 gen-set"'),
+  "anno": zod.number().int().describe('Anno di riferimento (per la NASPI anche anno della serie dei cumulati)'),
+  "trimestre": zod.number().int().nullable().describe('Solo ISEE'),
+  "periodo": zod.string().nullable().describe('Solo NASPI'),
+  "annoDareAvere": zod.number().int().describe('Anno del dare/avere in cui compare la riga'),
   "nomeFile": zod.string(),
   "stato": zod.enum(['anteprima', 'confermata']),
   "righeLette": zod.number().int(),
@@ -4595,39 +4538,24 @@ export const ConfermaImportazioneResponse = zod.object({
   "creatoDa": zod.string().nullable(),
   "confermatoIl": zod.coerce.date().nullable()
 }),
-  "configurazione": zod.object({
-  "servizio": zod.enum(['mod730', 'isee', 'naspi', 'pensionati']),
-  "etichetta": zod.string(),
-  "sezione": zod.enum(['naspi', 'pensionati', 'patronato', 'caf', 'crediti', 'debiti']),
-  "regola": zod.union([zod.literal('fisso'),zod.literal('percentuale'),zod.literal(null)]).nullable().describe('fisso = importo in euro per ogni riga valida; percentuale = percentuale della colonna importo'),
-  "valore": zod.number().nullable().describe('Euro per riga (regola fisso) oppure percentuale, es. 12,5 (regola percentuale)'),
-  "colonnaChiave": zod.string().nullable().describe('Intestazione della colonna che identifica il collaboratore'),
-  "tipoChiave": zod.enum(['sportello', 'email', 'nome']),
-  "colonnaImporto": zod.string().nullable().describe('Intestazione della colonna dell\'importo (solo regola percentuale)'),
-  "configurato": zod.boolean()
-}),
-  "configurazioneCompleta": zod.boolean(),
-  "messaggioConfigurazione": zod.string().nullable().describe('Cosa manca o non corrisponde al file'),
-  "intestazioni": zod.array(zod.string()).describe('Colonne trovate nel file (vuoto per le importazioni confermate)'),
   "righe": zod.array(zod.object({
   "numeroRiga": zod.number().int().describe('Numero di riga nel foglio Excel'),
-  "riferimento": zod.string().nullable(),
+  "sportello": zod.string().nullable().describe('Valore letto nella colonna sportello'),
+  "sedeFile": zod.string().nullable().describe('Colonna sede del file'),
   "collaboratoreId": zod.number().int().nullable(),
   "collaboratoreNome": zod.string().nullable(),
-  "baseEuro": zod.number().nullable(),
-  "compensoEuro": zod.number().nullable(),
-  "errori": zod.array(zod.string())
+  "collaboratoreSede": zod.string().nullable().describe('Denominazione del collaboratore in archivio'),
+  "importoEuro": zod.number().nullable().describe('Totale dovuto (730'),
+  "precedenteEuro": zod.number().nullable().describe('Solo NASPI; cumulato gia\' coperto prima di questo import'),
+  "daPagareEuro": zod.number().nullable().describe('Importo riportato nel dare/avere'),
+  "esito": zod.enum(['valida', 'errore', 'avviso', 'riferimento']).describe('avviso = NASPI con differenza negativa (non pagata); riferimento = primo import NASPI dello sportello'),
+  "messaggi": zod.array(zod.string())
 })),
-  "righeValide": zod.number().int(),
+  "righeValide": zod.number().int().describe('Righe che verranno (o sono state) salvate'),
   "righeConErrori": zod.number().int(),
-  "totaleEuro": zod.number(),
-  "perCollaboratore": zod.array(zod.object({
-  "collaboratoreId": zod.number().int(),
-  "collaboratoreNome": zod.string(),
-  "numeroSportello": zod.string(),
-  "righe": zod.number().int(),
-  "compensoEuro": zod.number()
-}))
+  "righeAvviso": zod.number().int(),
+  "totaleEuro": zod.number().describe('Somma degli importi da pagare'),
+  "avvisiFile": zod.array(zod.string())
 })
 
 

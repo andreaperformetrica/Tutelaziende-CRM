@@ -104,26 +104,32 @@ export const compensiRigheTable = pgTable(
   (t) => [index("compensi_righe_coll_anno_idx").on(t.collaboratoreId, t.anno)],
 );
 
-export const SERVIZI_IMPORT = ["mod730", "isee", "naspi", "pensionati"] as const;
+export const SERVIZI_IMPORT = ["mod730", "isee", "naspi"] as const;
 export const STATI_IMPORT = ["anteprima", "confermata"] as const;
 
 /**
- * File Excel importato per un servizio (730, ISEE, NASPI, Pensionati). Resta in "anteprima" finche' l'admin non
- * conferma; l'indice univoco parziale impedisce di confermare due volte lo stesso file per lo stesso servizio.
+ * File Excel importato per un servizio (730, ISEE, NASPI). Resta in "anteprima" finche' l'admin non conferma.
+ * Indici univoci parziali (solo importazioni confermate): lo stesso file non si importa due volte e 730 / ISEE hanno
+ * un solo import per anno (e trimestre); la NASPI e' periodica e non ha questo vincolo.
  */
 export const importazioniTable = pgTable(
   "importazioni",
   {
     id: serial("id").primaryKey(),
     servizio: text("servizio", { enum: SERVIZI_IMPORT }).notNull(),
+    /** Anno di riferimento (730/2025, ISEE trimestre 1 2026); per la NASPI e' l'anno della serie dei cumulati. */
     anno: integer("anno").notNull(),
+    /** Solo ISEE: trimestre 1-4. */
+    trimestre: integer("trimestre"),
+    /** Solo NASPI: periodo scritto dall'admin (es. "gen-set 2026"), usato nella riga del dare/avere. */
+    periodo: text("periodo"),
+    /** Anno del dare/avere in cui compare la riga. */
+    annoDareAvere: integer("anno_dare_avere").notNull(),
     nomeFile: text("nome_file").notNull(),
     /** SHA-256 del contenuto del file. */
     hashFile: text("hash_file").notNull(),
     chiaveFile: text("chiave_file").notNull(),
     stato: text("stato", { enum: STATI_IMPORT }).notNull().default("anteprima"),
-    /** Regola e colonne usate alla conferma (JSON), cosi' resta tracciabile anche se poi cambiano. */
-    configurazione: text("configurazione"),
     righeLette: integer("righe_lette").notNull().default(0),
     righeImportate: integer("righe_importate").notNull().default(0),
     totaleCentesimi: integer("totale_centesimi").notNull().default(0),
@@ -133,12 +139,15 @@ export const importazioniTable = pgTable(
     confermatoDaUtenteId: integer("confermato_da_utente_id").references(() => utentiTable.id),
   },
   (t) => [
-    uniqueIndex("importazioni_servizio_hash_uq").on(t.servizio, t.hashFile).where(sql`${t.stato} = 'confermata'`),
+    uniqueIndex("importazioni_hash_uq").on(t.hashFile).where(sql`${t.stato} = 'confermata'`),
+    uniqueIndex("importazioni_periodo_uq")
+      .on(t.servizio, t.anno, sql`coalesce(${t.trimestre}, 0)`)
+      .where(sql`${t.stato} = 'confermata' and ${t.servizio} <> 'naspi'`),
     index("importazioni_servizio_anno_idx").on(t.servizio, t.anno),
   ],
 );
 
-/** Riga valida di un'importazione confermata, abbinata a un collaboratore. */
+/** Riga di un'importazione confermata, abbinata a un collaboratore (una per sportello). */
 export const importazioniRigheTable = pgTable(
   "importazioni_righe",
   {
@@ -150,10 +159,15 @@ export const importazioniRigheTable = pgTable(
     collaboratoreId: integer("collaboratore_id")
       .notNull()
       .references(() => collaboratoriTable.id),
-    /** Valore della colonna chiave, come letto nel file. */
+    /** Sportello come scritto nel file. */
     riferimento: text("riferimento").notNull(),
-    /** Importo di base (colonna importo), solo con la regola a percentuale. */
+    /** Colonna "sede" del file (solo controllo visivo). */
+    sedeFile: text("sede_file"),
+    /** NASPI: importo cumulato letto nel file. */
     baseCentesimi: integer("base_centesimi"),
+    /** NASPI: cumulato gia' coperto prima di questo import (null = primo import, crea il riferimento). */
+    precedenteCentesimi: integer("precedente_centesimi"),
+    /** Importo da riportare nel dare/avere (730/ISEE: totale dovuto; NASPI: differenza, mai negativa). */
     compensoCentesimi: integer("compenso_centesimi").notNull(),
   },
   (t) => [index("importazioni_righe_imp_idx").on(t.importazioneId), index("importazioni_righe_coll_idx").on(t.collaboratoreId)],

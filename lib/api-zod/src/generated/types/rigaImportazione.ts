@@ -5,19 +5,46 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { RigaImportazioneEsito } from './rigaImportazioneEsito';
 
 export interface RigaImportazione {
   /** Numero di riga nel foglio Excel */
   numeroRiga: number;
-  /** @nullable */
-  riferimento: string | null;
+  /**
+     * Valore letto nella colonna sportello
+     * @nullable
+     */
+  sportello: string | null;
+  /**
+     * Colonna sede del file
+     * @nullable
+     */
+  sedeFile: string | null;
   /** @nullable */
   collaboratoreId: number | null;
   /** @nullable */
   collaboratoreNome: string | null;
-  /** @nullable */
-  baseEuro: number | null;
-  /** @nullable */
-  compensoEuro: number | null;
-  errori: string[];
+  /**
+     * Denominazione del collaboratore in archivio
+     * @nullable
+     */
+  collaboratoreSede: string | null;
+  /**
+     * Totale dovuto (730
+     * @nullable
+     */
+  importoEuro: number | null;
+  /**
+     * Solo NASPI; cumulato gia' coperto prima di questo import
+     * @nullable
+     */
+  precedenteEuro: number | null;
+  /**
+     * Importo riportato nel dare/avere
+     * @nullable
+     */
+  daPagareEuro: number | null;
+  /** avviso = NASPI con differenza negativa (non pagata); riferimento = primo import NASPI dello sportello */
+  esito: RigaImportazioneEsito;
+  messaggi: string[];
 }

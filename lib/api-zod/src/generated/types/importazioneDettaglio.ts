@@ -7,23 +7,15 @@
  */
 import type { Importazione } from './importazione';
 import type { RigaImportazione } from './rigaImportazione';
-import type { ServizioImport } from './servizioImport';
-import type { TotaleCollaboratoreImport } from './totaleCollaboratoreImport';
 
 export interface ImportazioneDettaglio {
   importazione: Importazione;
-  configurazione: ServizioImport;
-  configurazioneCompleta: boolean;
-  /**
-     * Cosa manca o non corrisponde al file
-     * @nullable
-     */
-  messaggioConfigurazione: string | null;
-  /** Colonne trovate nel file (vuoto per le importazioni confermate) */
-  intestazioni: string[];
   righe: RigaImportazione[];
+  /** Righe che verranno (o sono state) salvate */
   righeValide: number;
   righeConErrori: number;
+  righeAvviso: number;
+  /** Somma degli importi da pagare */
   totaleEuro: number;
-  perCollaboratore: TotaleCollaboratoreImport[];
+  avvisiFile: string[];
 }

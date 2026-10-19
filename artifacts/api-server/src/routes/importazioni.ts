@@ -1,33 +1,23 @@
-/** Import dei servizi da Excel (730, ISEE, NASPI, Pensionati). Solo admin e super admin. */
+/** Import dei compensi da Excel (730, ISEE, NASPI). Solo admin e super admin. */
 import express, { Router, type IRouter } from "express";
-import { and, eq } from "drizzle-orm";
-import {
-  ConfermaImportazioneBody,
-  ConfermaImportazioneParams,
-  DeleteImportazioneParams,
-  GetImportazioneParams,
-  ListImportazioniQueryParams,
-  UpdateServizioImportBody,
-  UpdateServizioImportParams,
-} from "@workspace/api-zod";
-import { db, importazioniRigheTable, importazioniTable } from "@workspace/db";
+import { and, desc, eq, gt, or, sql } from "drizzle-orm";
+import { ConfermaImportazioneBody, ConfermaImportazioneParams, DeleteImportazioneParams, GetImportazioneParams, ListImportazioniQueryParams } from "@workspace/api-zod";
+import { db, importazioniRigheTable, importazioniTable, ricevuteTable } from "@workspace/db";
 import { HttpError } from "../lib/errori";
 import {
   CODICI_SERVIZI,
   analizzaImportazione,
+  analizzaTabella,
   caricaImportazione,
-  costruisciConfigurazione,
   dettaglioImportazione,
   elencoImportazioni,
-  elencoServizi,
   erroreDuplicato,
+  errorePeriodoEsistente,
   estensioneDi,
-  etichettaServizio,
   hashContenuto,
   importazioneConfermataDuplicata,
-  leggiConfigurazione,
-  mappaServizio,
-  scriviConfigurazione,
+  importazionePeriodoEsistente,
+  titoloImport,
   type Servizio,
 } from "../lib/importazioni";
 import { contestoDa, registraLog } from "../lib/log";
@@ -44,38 +34,26 @@ const TIPO_FILE: Record<string, string> = {
   xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   csv: "text/csv",
 };
-const euroTesto = (c: number) => `€ ${(c / 100).toFixed(2).replace(".", ",")}`;
+const euroTesto = (c: number) => `€ ${(c / 100).toLocaleString("it-IT", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const annoCorrente = () => Number(new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Rome", year: "numeric" }).format(new Date()));
 
 function controllaServizio(v: unknown): Servizio {
   if (typeof v !== "string" || !CODICI_SERVIZI.includes(v as Servizio)) {
-    throw new HttpError(400, "Scegli il servizio da importare (730, ISEE, NASPI o Pensionati).", "DATI_NON_VALIDI", "servizio");
+    throw new HttpError(400, "Scegli il tipo di import (730, ISEE o NASPI).", "DATI_NON_VALIDI", "servizio");
   }
   return v as Servizio;
+}
+
+function controllaAnno(v: unknown, campo: string, messaggio: string): number {
+  const n = Number(v);
+  if (!Number.isInteger(n) || n < 2000 || n > 2100) throw new HttpError(400, messaggio, "DATI_NON_VALIDI", campo);
+  return n;
 }
 
 function erroreUnivoco(err: unknown): boolean {
   const e = err as { code?: string; cause?: { code?: string } } | null;
   return e?.code === "23505" || e?.cause?.code === "23505";
 }
-
-router.get("/backoffice/compensi/importazioni/servizi", async (_req, res) => {
-  res.json(await elencoServizi());
-});
-
-router.put("/backoffice/compensi/importazioni/servizi/:servizio", async (req, res) => {
-  const { servizio } = valida(UpdateServizioImportParams, req.params);
-  const config = costruisciConfigurazione(valida(UpdateServizioImportBody, req.body));
-  await db.transaction(async (tx) => {
-    await scriviConfigurazione(tx, servizio, config);
-    await registraLog(tx, contestoDa(req), {
-      azione: "importazione.config",
-      entita: "importazione_servizio",
-      descrizione: `Import ${etichettaServizio(servizio)}: regola ${config.regola === "fisso" ? `fissa di ${euroTesto(config.valoreCentesimi)} per riga` : `a percentuale (${(config.valoreCentesimi / 100).toString().replace(".", ",")}%) della colonna «${config.colonnaImporto}»`}, collaboratore dalla colonna «${config.colonnaChiave}» (${config.tipoChiave})`,
-      dettagli: { servizio, ...config },
-    });
-  });
-  res.json(mappaServizio(servizio, await leggiConfigurazione(servizio)));
-});
 
 router.get("/backoffice/compensi/importazioni", async (req, res) => {
   const q = valida(ListImportazioniQueryParams, req.query);
@@ -85,8 +63,18 @@ router.get("/backoffice/compensi/importazioni", async (req, res) => {
 /** Carica il file e crea l'anteprima. Corpo binario, fuori dal client generato. */
 router.post("/backoffice/compensi/importazioni", corpoFile, async (req, res) => {
   const servizio = controllaServizio(req.query["servizio"]);
-  const anno = Number(req.query["anno"]);
-  if (!Number.isInteger(anno) || anno < 2000 || anno > 2100) throw new HttpError(400, "Indica l'anno di competenza.", "DATI_NON_VALIDI", "anno");
+  const anno = controllaAnno(req.query["anno"], "anno", servizio === "mod730" ? "Indica l'anno di riferimento del 730." : "Indica l'anno.");
+  let trimestre: number | null = null;
+  if (servizio === "isee") {
+    trimestre = Number(req.query["trimestre"]);
+    if (![1, 2, 3, 4].includes(trimestre)) throw new HttpError(400, "Indica il trimestre (1, 2, 3 o 4).", "DATI_NON_VALIDI", "trimestre");
+  }
+  const periodoGrezzo = servizio === "naspi" ? String(req.query["periodo"] ?? "").trim() : "";
+  if (periodoGrezzo.length > 60) throw new HttpError(400, "Il periodo può avere al massimo 60 caratteri.", "DATI_NON_VALIDI", "periodo");
+  const periodo = periodoGrezzo || null;
+  const annoDareAvere =
+    servizio === "mod730" && req.query["annoDareAvere"] ? controllaAnno(req.query["annoDareAvere"], "annoDareAvere", "Indica l'anno del dare e avere.") : servizio === "mod730" ? annoCorrente() : anno;
+
   const corpo = req.body;
   if (!Buffer.isBuffer(corpo) || corpo.length === 0) throw new HttpError(400, "Seleziona un file da caricare.", "FILE_MANCANTE");
   if (corpo.length > DIMENSIONE_MASSIMA_FILE) throw new HttpError(413, "Il file supera la dimensione massima di 15 MB.", "FILE_TROPPO_GRANDE");
@@ -99,12 +87,16 @@ router.post("/backoffice/compensi/importazioni", corpoFile, async (req, res) => 
   if (!(ESTENSIONI_IMPORT as readonly string[]).includes(estensione)) {
     throw new HttpError(400, "Formato non ammesso. Carica un file Excel .xlsx oppure un CSV.", "FILE_FORMATO_NON_AMMESSO");
   }
+  const dati = { servizio, anno, trimestre, periodo };
   const hash = hashContenuto(corpo);
-  const duplicato = await importazioneConfermataDuplicata(servizio, hash);
+  const duplicato = await importazioneConfermataDuplicata(hash);
   if (duplicato) throw erroreDuplicato(duplicato);
-  // Si controlla subito che il file sia leggibile, cosi' un file rotto non lascia anteprime inutili.
+  const esistente = await importazionePeriodoEsistente(dati);
+  if (esistente) throw errorePeriodoEsistente(esistente);
+  // Si controlla subito che il file sia leggibile e abbia le colonne giuste, cosi' un file sbagliato non lascia anteprime inutili.
   const tabella = await leggiTabella(corpo, estensione);
   if (tabella.righe.length === 0) throw new HttpError(400, "Il file contiene solo l'intestazione: non ci sono righe da importare.", "FILE_NON_VALIDO");
+  await analizzaTabella(tabella, servizio, anno);
   const chiave = await salvaFile(corpo, TIPO_FILE[estensione]!);
   let vecchie: string[] = [];
   let id = 0;
@@ -112,20 +104,20 @@ router.post("/backoffice/compensi/importazioni", corpoFile, async (req, res) => 
     await db.transaction(async (tx) => {
       const precedenti = await tx
         .delete(importazioniTable)
-        .where(and(eq(importazioniTable.servizio, servizio), eq(importazioniTable.hashFile, hash), eq(importazioniTable.stato, "anteprima")))
+        .where(and(eq(importazioniTable.hashFile, hash), eq(importazioniTable.stato, "anteprima")))
         .returning({ chiave: importazioniTable.chiaveFile });
       vecchie = precedenti.map((p) => p.chiave);
       const [nuova] = await tx
         .insert(importazioniTable)
-        .values({ servizio, anno, nomeFile, hashFile: hash, chiaveFile: chiave, righeLette: tabella.righe.length, creatoDaUtenteId: req.utente!.id })
+        .values({ ...dati, annoDareAvere, nomeFile, hashFile: hash, chiaveFile: chiave, righeLette: tabella.righe.length, creatoDaUtenteId: req.utente!.id })
         .returning();
       id = nuova!.id;
       await registraLog(tx, contestoDa(req), {
         azione: "importazione.anteprima",
         entita: "importazione",
         entitaId: id,
-        descrizione: `Caricato il file "${nomeFile}" per l'import ${etichettaServizio(servizio)} ${anno} (${tabella.righe.length} righe lette, in attesa di conferma)`,
-        dettagli: { servizio, anno, nomeFile, righe: tabella.righe.length },
+        descrizione: `Caricato il file "${nomeFile}" per l'import ${titoloImport(dati)} (${tabella.righe.length} righe lette, in attesa di conferma)`,
+        dettagli: { ...dati, annoDareAvere, nomeFile, righe: tabella.righe.length },
       });
     });
   } catch (err) {
@@ -146,59 +138,72 @@ router.post("/backoffice/compensi/importazioni/:id/conferma", async (req, res) =
   const { soloValide } = valida(ConfermaImportazioneBody, req.body);
   try {
     await db.transaction(async (tx) => {
+      // Le conferme NASPI si calcolano una alla volta: la differenza dipende da quella precedente.
+      await tx.execute(sql`select pg_advisory_xact_lock(73001)`);
       const [bloccata] = await tx.select().from(importazioniTable).where(eq(importazioniTable.id, id)).for("update");
       if (!bloccata) throw new HttpError(404, "Importazione non trovata.", "NON_TROVATO");
       if (bloccata.stato !== "anteprima") throw new HttpError(409, "Questa importazione è già stata confermata.", "IMPORT_GIA_CONFERMATO");
-      const duplicato = await importazioneConfermataDuplicata(bloccata.servizio, bloccata.hashFile, tx);
+      const duplicato = await importazioneConfermataDuplicata(bloccata.hashFile, tx);
       if (duplicato) throw erroreDuplicato(duplicato);
-      const { config, analisi } = await analizzaImportazione(bloccata, tx);
-      if (!analisi.configurazioneCompleta || !config) {
-        throw new HttpError(400, analisi.messaggioConfigurazione ?? "Imposta la regola di calcolo prima di confermare.", "IMPORT_CONFIGURAZIONE_INCOMPLETA");
-      }
-      const valide = analisi.righe.filter((r) => r.errori.length === 0);
+      const esistente = await importazionePeriodoEsistente(bloccata, tx);
+      if (esistente) throw errorePeriodoEsistente(esistente);
+      const analisi = await analizzaImportazione(bloccata, tx);
+      const valide = analisi.righe.filter((r) => r.esito !== "errore");
       const conErrori = analisi.righe.length - valide.length;
       if (conErrori > 0 && !soloValide) {
         throw new HttpError(409, `Ci sono ${conErrori} righe con errori. Correggi il file oppure scegli di importare solo le righe valide.`, "IMPORT_CON_ERRORI");
       }
       if (valide.length === 0) throw new HttpError(400, "Nessuna riga valida da importare.", "IMPORT_VUOTO");
-      const totale = valide.reduce((t, r) => t + r.compensoCentesimi!, 0);
+      const totale = valide.reduce((t, r) => t + (r.compensoCentesimi ?? 0), 0);
+      const negative = valide.filter((r) => r.esito === "avviso").length;
+      const riferimenti = valide.filter((r) => r.esito === "riferimento").length;
       for (let i = 0; i < valide.length; i += 500) {
         await tx.insert(importazioniRigheTable).values(
           valide.slice(i, i + 500).map((r) => ({
             importazioneId: id,
             numeroRiga: r.numeroRiga,
             collaboratoreId: r.collaboratoreId!,
-            riferimento: r.riferimento ?? "",
-            baseCentesimi: r.baseCentesimi,
-            compensoCentesimi: r.compensoCentesimi!,
+            riferimento: r.sportello ?? "",
+            sedeFile: r.sedeFile,
+            baseCentesimi: bloccata.servizio === "naspi" ? r.importoCentesimi : null,
+            precedenteCentesimi: r.precedenteCentesimi,
+            compensoCentesimi: r.compensoCentesimi ?? 0,
           })),
         );
       }
       await tx
         .update(importazioniTable)
-        .set({
-          stato: "confermata",
-          configurazione: JSON.stringify(config),
-          righeLette: analisi.righe.length,
-          righeImportate: valide.length,
-          totaleCentesimi: totale,
-          confermatoIl: new Date(),
-          confermatoDaUtenteId: req.utente!.id,
-        })
+        .set({ stato: "confermata", righeLette: analisi.righe.length, righeImportate: valide.length, totaleCentesimi: totale, confermatoIl: new Date(), confermatoDaUtenteId: req.utente!.id })
         .where(eq(importazioniTable.id, id));
       await registraLog(tx, contestoDa(req), {
         azione: "importazione.conferma",
         entita: "importazione",
         entitaId: id,
-        descrizione: `Confermato l'import ${etichettaServizio(bloccata.servizio)} ${bloccata.anno} dal file "${bloccata.nomeFile}": ${valide.length} righe importate${conErrori ? `, ${conErrori} scartate per errori` : ""}, totale ${euroTesto(totale)}`,
-        dettagli: { servizio: bloccata.servizio, anno: bloccata.anno, righeImportate: valide.length, righeScartate: conErrori, totaleCentesimi: totale, ...config },
+        descrizione:
+          `Importato ${titoloImport(bloccata)} dal file "${bloccata.nomeFile}": ${analisi.righe.length} righe lette, ${valide.length} importate` +
+          `${conErrori ? `, ${conErrori} scartate per errori` : ""}${negative ? `, ${negative} con differenza negativa non pagata` : ""}${riferimenti ? `, ${riferimenti} nuovi riferimenti` : ""}, totale da pagare ${euroTesto(totale)}`,
+        dettagli: {
+          servizio: bloccata.servizio,
+          anno: bloccata.anno,
+          trimestre: bloccata.trimestre,
+          periodo: bloccata.periodo,
+          annoDareAvere: bloccata.annoDareAvere,
+          nomeFile: bloccata.nomeFile,
+          righeLette: analisi.righe.length,
+          righeImportate: valide.length,
+          righeScartate: conErrori,
+          differenzeNegative: negative,
+          totaleCentesimi: totale,
+        },
       });
     });
   } catch (err) {
     if (erroreUnivoco(err)) {
       const i = await caricaImportazione(id);
-      const d = await importazioneConfermataDuplicata(i.servizio, i.hashFile);
+      const d = await importazioneConfermataDuplicata(i.hashFile);
       if (d) throw erroreDuplicato(d);
+      const p = await importazionePeriodoEsistente(i);
+      if (p) throw errorePeriodoEsistente(p);
     }
     throw err;
   }
@@ -209,19 +214,47 @@ router.delete("/backoffice/compensi/importazioni/:id", async (req, res) => {
   const { id } = valida(DeleteImportazioneParams, req.params);
   let chiave = "";
   await db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(73001)`);
     const [i] = await tx.select().from(importazioniTable).where(eq(importazioniTable.id, id)).for("update");
     if (!i) throw new HttpError(404, "Importazione non trovata.", "NON_TROVATO");
+    const confermata = i.stato === "confermata";
+    if (confermata) {
+      const [ricevuta] = await tx
+        .select({ numero: ricevuteTable.numero, anno: ricevuteTable.anno })
+        .from(ricevuteTable)
+        .where(and(eq(ricevuteTable.origineTipo, "importazione"), eq(ricevuteTable.origineId, id)));
+      if (ricevuta) {
+        throw new HttpError(409, `Esiste la ricevuta n. ${ricevuta.numero}/${ricevuta.anno} su questa importazione: eliminala prima di annullare l'import.`, "IMPORT_CON_RICEVUTA");
+      }
+      if (i.servizio === "naspi") {
+        const [successiva] = await tx
+          .select({ id: importazioniTable.id })
+          .from(importazioniTable)
+          .where(
+            and(
+              eq(importazioniTable.servizio, "naspi"),
+              eq(importazioniTable.anno, i.anno),
+              eq(importazioniTable.stato, "confermata"),
+              or(gt(importazioniTable.confermatoIl, i.confermatoIl!), and(eq(importazioniTable.confermatoIl, i.confermatoIl!), gt(importazioniTable.id, id))),
+            ),
+          )
+          .orderBy(desc(importazioniTable.id))
+          .limit(1);
+        if (successiva) {
+          throw new HttpError(409, `Si può annullare solo l'ultima importazione NASPI dell'anno: la n. ${successiva.id} è successiva e calcola le differenze da questa.`, "IMPORT_NASPI_NON_ULTIMA");
+        }
+      }
+    }
     chiave = i.chiaveFile;
     await tx.delete(importazioniTable).where(eq(importazioniTable.id, id));
-    const confermata = i.stato === "confermata";
     await registraLog(tx, contestoDa(req), {
       azione: confermata ? "importazione.annulla" : "importazione.scarta",
       entita: "importazione",
       entitaId: id,
       descrizione: confermata
-        ? `Annullato l'import ${etichettaServizio(i.servizio)} ${i.anno} del file "${i.nomeFile}" (${i.righeImportate} righe, ${euroTesto(i.totaleCentesimi)} tolti dal dare/avere)`
-        : `Scartata l'anteprima dell'import ${etichettaServizio(i.servizio)} ${i.anno} del file "${i.nomeFile}"`,
-      dettagli: { servizio: i.servizio, anno: i.anno, nomeFile: i.nomeFile, righeImportate: i.righeImportate, totaleCentesimi: i.totaleCentesimi },
+        ? `Annullato l'import ${titoloImport(i)} del file "${i.nomeFile}" (${i.righeImportate} righe, ${euroTesto(i.totaleCentesimi)} tolti dal dare/avere)`
+        : `Scartata l'anteprima dell'import ${titoloImport(i)} del file "${i.nomeFile}"`,
+      dettagli: { servizio: i.servizio, anno: i.anno, trimestre: i.trimestre, nomeFile: i.nomeFile, righeImportate: i.righeImportate, totaleCentesimi: i.totaleCentesimi },
     });
   });
   await eliminaFile(chiave, req.log);

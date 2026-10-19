@@ -128,7 +128,7 @@ export function DareAvereTab() {
                       <Button size="sm" variant="outline" className="mr-2" onClick={() => apriRicevuta(r, s.sezione)} data-testid={`button-crea-ricevuta-${s.sezione}-${i}`}><Receipt className="size-3.5 mr-1.5" />Crea ricevuta</Button>
                     ))}
                     {s.automatica && r.estrattoId && <Link className="text-sm underline" href={`/admin/compensi/estratti/${r.estrattoId}`}>Apri estratto</Link>}
-                    {r.importazioneId && <Link className="text-sm underline" href={`/admin/compensi/importazioni/${r.importazioneId}`}>Apri importazione</Link>}
+                    {r.importazioneId && <Link className="text-sm underline" href={`/admin/importa-compensi/${r.importazioneId}`}>Apri importazione</Link>}
                   </TableCell>
                 </TableRow>
               ))}

@@ -12,7 +12,22 @@ export interface Importazione {
   id: number;
   servizio: ServizioImportCodice;
   servizioEtichetta: string;
+  /** Es. "730/2025", "ISEE trimestre 1 2026", "NASPI 2026 gen-set" */
+  titolo: string;
+  /** Anno di riferimento (per la NASPI anche anno della serie dei cumulati) */
   anno: number;
+  /**
+     * Solo ISEE
+     * @nullable
+     */
+  trimestre: number | null;
+  /**
+     * Solo NASPI
+     * @nullable
+     */
+  periodo: string | null;
+  /** Anno del dare/avere in cui compare la riga */
+  annoDareAvere: number;
   nomeFile: string;
   stato: ImportazioneStato;
   righeLette: number;

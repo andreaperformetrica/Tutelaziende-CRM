@@ -4,11 +4,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ResocontoTab } from "@/components/compensi/resoconto-tab";
 import { EstrattiTab } from "@/components/compensi/estratti-tab";
 import { DareAvereTab } from "@/components/compensi/dare-avere-tab";
-import { ImportazioniTab } from "@/components/compensi/importazioni-tab";
 import { useSession } from "@/lib/auth";
 import { StampatiTab } from "@/components/compensi/stampati-tab";
 
-const TAB = ["resoconto", "estratti", "dare-avere", "importazioni", "stampati"];
+const TAB = ["resoconto", "estratti", "dare-avere", "stampati"];
 
 export default function CompensiPage() {
   const { session } = useSession();
@@ -31,13 +30,11 @@ export default function CompensiPage() {
           {!soloDareAvere && <TabsTrigger value="resoconto" data-testid="tab-resoconto">Resoconto</TabsTrigger>}
           {!soloDareAvere && <TabsTrigger value="estratti" data-testid="tab-estratti">Estratti</TabsTrigger>}
           <TabsTrigger value="dare-avere" data-testid="tab-dare-avere">Dare e avere</TabsTrigger>
-          {!soloDareAvere && <TabsTrigger value="importazioni" data-testid="tab-importazioni">Importazioni</TabsTrigger>}
           {!soloDareAvere && <TabsTrigger value="stampati" data-testid="tab-stampati">Impostazioni stampati</TabsTrigger>}
         </TabsList>
         <TabsContent value="resoconto"><ResocontoTab /></TabsContent>
         <TabsContent value="estratti"><EstrattiTab /></TabsContent>
         <TabsContent value="dare-avere"><DareAvereTab /></TabsContent>
-        <TabsContent value="importazioni"><ImportazioniTab /></TabsContent>
         <TabsContent value="stampati"><StampatiTab /></TabsContent>
       </Tabs>
     </div>
