@@ -11,7 +11,11 @@ const H = 841.89;
 const W = 595.28;
 const M = 56;
 
-const importo = (centesimi: number) => euro(centesimi).toLocaleString("it-IT", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+/** Importo con il punto delle migliaia anche sopra i mille (es. 2.000,00), come nel facsimile. */
+const importo = (centesimi: number) => {
+  const [intero, dec] = euro(centesimi).toFixed(2).split(".");
+  return `${intero!.replace(/\B(?=(\d{3})+(?!\d))/g, ".")},${dec}`;
+};
 
 function conPrefisso(prefisso: string, valore: string): string {
   return valore.toLowerCase().startsWith(prefisso.toLowerCase()) ? valore : `${prefisso} ${valore}`;
