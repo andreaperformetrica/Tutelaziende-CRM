@@ -1085,6 +1085,205 @@ export interface AvvisoScadenza {
   giorniResidui: number;
 }
 
+export type ImpostazioniNotificheOrigine = typeof ImpostazioniNotificheOrigine[keyof typeof ImpostazioniNotificheOrigine];
+
+
+export const ImpostazioniNotificheOrigine = {
+  impostazioni: 'impostazioni',
+  segreto: 'segreto',
+  dominio: 'dominio',
+  nessuna: 'nessuna',
+} as const;
+
+export interface ImpostazioniNotifiche {
+  /**
+     * Indirizzo scritto dall'admin
+     * @nullable
+     */
+  urlPiattaforma: string | null;
+  /**
+     * Indirizzo che verrà davvero usato nei link
+     * @nullable
+     */
+  urlEffettivo: string | null;
+  origine: ImpostazioniNotificheOrigine;
+}
+
+export interface ImpostazioniNotificheInput {
+  /**
+     * @maxLength 300
+     * @nullable
+     */
+  urlPiattaforma: string | null;
+}
+
+export interface AlertRegolaInattivita {
+  attiva: boolean;
+  /**
+     * @minimum 1
+     * @maximum 60
+     */
+  mesi: number;
+  tipiIds: number[];
+}
+
+export interface AlertRegolaVolume {
+  attiva: boolean;
+  /**
+     * @minimum 1
+     * @maximum 1000
+     */
+  soglia: number;
+  /**
+     * @minimum 1
+     * @maximum 365
+     */
+  periodoGiorni: number;
+  tipiIds: number[];
+}
+
+export interface AlertConfigurazione {
+  inattivita: AlertRegolaInattivita;
+  volume: AlertRegolaVolume;
+}
+
+export interface ConteggioAlert {
+  aperti: number;
+}
+
+export type AlertCollaboratoreRegola = typeof AlertCollaboratoreRegola[keyof typeof AlertCollaboratoreRegola];
+
+
+export const AlertCollaboratoreRegola = {
+  inattivita: 'inattivita',
+  volume: 'volume',
+} as const;
+
+export type AlertCollaboratoreStato = typeof AlertCollaboratoreStato[keyof typeof AlertCollaboratoreStato];
+
+
+export const AlertCollaboratoreStato = {
+  aperto: 'aperto',
+  risolto: 'risolto',
+} as const;
+
+export interface AlertCollaboratore {
+  id: number;
+  regola: AlertCollaboratoreRegola;
+  collaboratoreId: number;
+  collaboratoreNome: string;
+  sportello: string;
+  tipoId: number;
+  tipoNome: string;
+  stato: AlertCollaboratoreStato;
+  valore: number;
+  /** @nullable */
+  ultimaPraticaIl: string | null;
+  creatoIl: string;
+  /** @nullable */
+  risoltoIl: string | null;
+  descrizione: string;
+}
+
+export interface AlertElenco {
+  elementi: AlertCollaboratore[];
+  aperti: number;
+}
+
+export interface PraticaDaVedere {
+  id: number;
+  numero: number;
+  assistito: string;
+  tipoNome: string;
+  data: string;
+  /** @nullable */
+  dettaglio?: string | null;
+}
+
+export interface DashboardOperatore {
+  inCarico: number;
+  nuove: number;
+  commentiSenzaRisposta: number;
+  scadenze: number;
+  nuoveElenco: PraticaDaVedere[];
+  commentiElenco: PraticaDaVedere[];
+  scadenzeElenco: AvvisoScadenza[];
+}
+
+export interface ChatUtente {
+  id: number;
+  nome: string;
+  cognome: string;
+  ruolo: string;
+  /** @nullable */
+  colore: string | null;
+}
+
+export interface ChatUltimoMessaggio {
+  testo: string;
+  creatoIl: string;
+  mio: boolean;
+}
+
+export type ChatConversazioneTipo = typeof ChatConversazioneTipo[keyof typeof ChatConversazioneTipo];
+
+
+export const ChatConversazioneTipo = {
+  generale: 'generale',
+  diretta: 'diretta',
+} as const;
+
+export interface ChatConversazione {
+  /** generale oppure u + id dell'altra persona */
+  chiave: string;
+  tipo: ChatConversazioneTipo;
+  utente: ChatUtente | null;
+  nonLetti: number;
+  ultimoMessaggio: ChatUltimoMessaggio | null;
+}
+
+export interface ChatMessaggio {
+  id: number;
+  mittente: ChatUtente;
+  testo: string;
+  creatoIl: string;
+  mio: boolean;
+}
+
+export interface ChatMessaggioInput {
+  /** @maxLength 2000 */
+  testo: string;
+}
+
+export interface ChatLettoInput {
+  fino: number;
+}
+
+export interface ChatNonLetti {
+  totale: number;
+}
+
+export interface StatisticaOperatore {
+  utenteId: number;
+  nome: string;
+  cognome: string;
+  ruolo: string;
+  /** @nullable */
+  colore: string | null;
+  preseInCarico: number;
+  lavorate: number;
+  chiuse: number;
+  /** @nullable */
+  tempoMedioOre: number | null;
+  commentiInviati: number;
+}
+
+export interface StatisticheOperatori {
+  dal: string;
+  al: string;
+  righe: StatisticaOperatore[];
+}
+
 export interface CambioPrioritaInput {
   priorita: PrioritaPratica;
 }
@@ -2478,6 +2677,29 @@ export const ListNotificheEsito = {
   non_inviata: 'non_inviata',
   errore: 'errore',
 } as const;
+
+export type ListAlertCollaboratoriParams = {
+stato?: ListAlertCollaboratoriStato;
+};
+
+export type ListAlertCollaboratoriStato = typeof ListAlertCollaboratoriStato[keyof typeof ListAlertCollaboratoriStato];
+
+
+export const ListAlertCollaboratoriStato = {
+  aperto: 'aperto',
+  risolto: 'risolto',
+} as const;
+
+export type GetStatisticheOperatoriParams = {
+/**
+ * Data iniziale AAAA-MM-GG
+ */
+dal?: string;
+/**
+ * Data finale AAAA-MM-GG
+ */
+al?: string;
+};
 
 export type GetResocontoCompensiParams = {
 collaboratoreId?: number;

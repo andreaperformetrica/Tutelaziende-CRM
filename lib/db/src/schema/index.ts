@@ -11,3 +11,5 @@ export * from "./eventi";
 export * from "./compensi";
 export * from "./news";
 export * from "./mandati-firma";
+export * from "./alert";
+export * from "./chat";

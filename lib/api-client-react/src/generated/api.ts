@@ -20,6 +20,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AlertConfigurazione,
+  AlertElenco,
   AllegatoTipoInput,
   ArchiviaSegnalazioneInput,
   AssistitiPagina,
@@ -33,6 +35,11 @@ import type {
   CambioPrioritaInput,
   CambioStatoInput,
   CercaLuoghiParams,
+  ChatConversazione,
+  ChatLettoInput,
+  ChatMessaggio,
+  ChatMessaggioInput,
+  ChatNonLetti,
   CheckInEsito,
   CheckInInput,
   Collaboratore,
@@ -44,9 +51,11 @@ import type {
   CompensoCollaboratoreInput,
   ConfermaFirmaMandato,
   ConfermaImportazioneInput,
+  ConteggioAlert,
   ConteggioSegnalazioni,
   CreaEstrattiInput,
   DareAvere,
+  DashboardOperatore,
   DocumentoNoto,
   DocumentoNotoInput,
   DocumentoTipoInput,
@@ -64,15 +73,19 @@ import type {
   FirmaMandato,
   GetDareAvereParams,
   GetResocontoCompensiParams,
+  GetStatisticheOperatoriParams,
   HealthStatus,
   Importazione,
   ImportazioneDettaglio,
+  ImpostazioniNotifiche,
+  ImpostazioniNotificheInput,
   ImpostazioniStampa,
   ImpostazioniStampaInput,
   InvioEstrattoEsito,
   InvioPraticaInput,
   InvioPratiche,
   InvitiEventoInput,
+  ListAlertCollaboratoriParams,
   ListAssistitiParams,
   ListCollaboratoriParams,
   ListEstrattiParams,
@@ -123,6 +136,7 @@ import type {
   ServizioImportCodice,
   ServizioImportInput,
   SessioneUtente,
+  StatisticheOperatori,
   StatoNotifiche,
   StatoPratica,
   StatoPraticaInput,
@@ -3129,6 +3143,1067 @@ export function useGetStatoNotifiche<TData = Awaited<ReturnType<typeof getStatoN
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetStatoNotificheQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetImpostazioniNotificheUrl = () => {
+
+
+
+
+  return `/api/notifiche/impostazioni`
+}
+
+/**
+ * @summary Indirizzo dell'app usato nei link delle email
+ */
+export const getImpostazioniNotifiche = async ( options?: Parameters<typeof customFetch>[1]): Promise<ImpostazioniNotifiche> => {
+
+  return customFetch<ImpostazioniNotifiche>(getGetImpostazioniNotificheUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetImpostazioniNotificheQueryKey = () => {
+    return [
+    `/api/notifiche/impostazioni`
+    ] as const;
+    }
+
+
+export const getGetImpostazioniNotificheQueryOptions = <TData = Awaited<ReturnType<typeof getImpostazioniNotifiche>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getImpostazioniNotifiche>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetImpostazioniNotificheQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getImpostazioniNotifiche>>> = ({ signal }) => getImpostazioniNotifiche({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getImpostazioniNotifiche>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetImpostazioniNotificheQueryResult = NonNullable<Awaited<ReturnType<typeof getImpostazioniNotifiche>>>
+export type GetImpostazioniNotificheQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Indirizzo dell'app usato nei link delle email
+ */
+
+export function useGetImpostazioniNotifiche<TData = Awaited<ReturnType<typeof getImpostazioniNotifiche>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getImpostazioniNotifiche>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetImpostazioniNotificheQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateImpostazioniNotificheUrl = () => {
+
+
+
+
+  return `/api/notifiche/impostazioni`
+}
+
+/**
+ * @summary Imposta l'indirizzo pubblico dell'app (vuoto = usa quello automatico)
+ */
+export const updateImpostazioniNotifiche = async (impostazioniNotificheInput: ImpostazioniNotificheInput, options?: Parameters<typeof customFetch>[1]): Promise<ImpostazioniNotifiche> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ImpostazioniNotifiche>(getUpdateImpostazioniNotificheUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(impostazioniNotificheInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateImpostazioniNotificheMutationKey = () => ['updateImpostazioniNotifiche'] as const;
+
+export const getUpdateImpostazioniNotificheMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateImpostazioniNotifiche>>, TError,UpdateImpostazioniNotificheMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateImpostazioniNotifiche>>, TError,UpdateImpostazioniNotificheMutationVariables, TContext> => {
+
+const mutationKey = getUpdateImpostazioniNotificheMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateImpostazioniNotifiche>>, UpdateImpostazioniNotificheMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateImpostazioniNotifiche(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateImpostazioniNotificheMutationResult = NonNullable<Awaited<ReturnType<typeof updateImpostazioniNotifiche>>>
+    export type UpdateImpostazioniNotificheMutationBody = BodyType<ImpostazioniNotificheInput>
+    export type UpdateImpostazioniNotificheMutationError = ErrorType<unknown>
+    export type UpdateImpostazioniNotificheMutationVariables = {data: BodyType<ImpostazioniNotificheInput>}
+
+    /**
+ * @summary Imposta l'indirizzo pubblico dell'app (vuoto = usa quello automatico)
+ */
+export const useUpdateImpostazioniNotifiche = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateImpostazioniNotifiche>>, TError,UpdateImpostazioniNotificheMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateImpostazioniNotifiche>>,
+        TError,
+        UpdateImpostazioniNotificheMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateImpostazioniNotificheMutationOptions(options));
+    }
+
+export const getListAlertCollaboratoriUrl = (params?: ListAlertCollaboratoriParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/backoffice/alert?${stringifiedParams}` : `/api/backoffice/alert`
+}
+
+/**
+ * @summary Alert sui collaboratori (aperti oppure risolti)
+ */
+export const listAlertCollaboratori = async (params?: ListAlertCollaboratoriParams, options?: Parameters<typeof customFetch>[1]): Promise<AlertElenco> => {
+
+  return customFetch<AlertElenco>(getListAlertCollaboratoriUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAlertCollaboratoriQueryKey = (params?: ListAlertCollaboratoriParams,) => {
+    return [
+    `/api/backoffice/alert`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListAlertCollaboratoriQueryOptions = <TData = Awaited<ReturnType<typeof listAlertCollaboratori>>, TError = ErrorType<unknown>>(params?: ListAlertCollaboratoriParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAlertCollaboratori>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAlertCollaboratoriQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAlertCollaboratori>>> = ({ signal }) => listAlertCollaboratori(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAlertCollaboratori>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAlertCollaboratoriQueryResult = NonNullable<Awaited<ReturnType<typeof listAlertCollaboratori>>>
+export type ListAlertCollaboratoriQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Alert sui collaboratori (aperti oppure risolti)
+ */
+
+export function useListAlertCollaboratori<TData = Awaited<ReturnType<typeof listAlertCollaboratori>>, TError = ErrorType<unknown>>(
+ params?: ListAlertCollaboratoriParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAlertCollaboratori>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAlertCollaboratoriQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetConteggioAlertUrl = () => {
+
+
+
+
+  return `/api/backoffice/alert/conteggio`
+}
+
+/**
+ * @summary Numero di alert aperti
+ */
+export const getConteggioAlert = async ( options?: Parameters<typeof customFetch>[1]): Promise<ConteggioAlert> => {
+
+  return customFetch<ConteggioAlert>(getGetConteggioAlertUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetConteggioAlertQueryKey = () => {
+    return [
+    `/api/backoffice/alert/conteggio`
+    ] as const;
+    }
+
+
+export const getGetConteggioAlertQueryOptions = <TData = Awaited<ReturnType<typeof getConteggioAlert>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getConteggioAlert>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetConteggioAlertQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getConteggioAlert>>> = ({ signal }) => getConteggioAlert({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getConteggioAlert>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetConteggioAlertQueryResult = NonNullable<Awaited<ReturnType<typeof getConteggioAlert>>>
+export type GetConteggioAlertQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Numero di alert aperti
+ */
+
+export function useGetConteggioAlert<TData = Awaited<ReturnType<typeof getConteggioAlert>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getConteggioAlert>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetConteggioAlertQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetConfigurazioneAlertUrl = () => {
+
+
+
+
+  return `/api/backoffice/alert/configurazione`
+}
+
+/**
+ * @summary Regole e soglie degli alert
+ */
+export const getConfigurazioneAlert = async ( options?: Parameters<typeof customFetch>[1]): Promise<AlertConfigurazione> => {
+
+  return customFetch<AlertConfigurazione>(getGetConfigurazioneAlertUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetConfigurazioneAlertQueryKey = () => {
+    return [
+    `/api/backoffice/alert/configurazione`
+    ] as const;
+    }
+
+
+export const getGetConfigurazioneAlertQueryOptions = <TData = Awaited<ReturnType<typeof getConfigurazioneAlert>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getConfigurazioneAlert>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetConfigurazioneAlertQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getConfigurazioneAlert>>> = ({ signal }) => getConfigurazioneAlert({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getConfigurazioneAlert>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetConfigurazioneAlertQueryResult = NonNullable<Awaited<ReturnType<typeof getConfigurazioneAlert>>>
+export type GetConfigurazioneAlertQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Regole e soglie degli alert
+ */
+
+export function useGetConfigurazioneAlert<TData = Awaited<ReturnType<typeof getConfigurazioneAlert>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getConfigurazioneAlert>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetConfigurazioneAlertQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateConfigurazioneAlertUrl = () => {
+
+
+
+
+  return `/api/backoffice/alert/configurazione`
+}
+
+/**
+ * @summary Salva regole e soglie e ricalcola gli alert
+ */
+export const updateConfigurazioneAlert = async (alertConfigurazione: AlertConfigurazione, options?: Parameters<typeof customFetch>[1]): Promise<AlertConfigurazione> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<AlertConfigurazione>(getUpdateConfigurazioneAlertUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(alertConfigurazione)
+  }
+);}
+
+
+
+
+
+export const getUpdateConfigurazioneAlertMutationKey = () => ['updateConfigurazioneAlert'] as const;
+
+export const getUpdateConfigurazioneAlertMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateConfigurazioneAlert>>, TError,UpdateConfigurazioneAlertMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateConfigurazioneAlert>>, TError,UpdateConfigurazioneAlertMutationVariables, TContext> => {
+
+const mutationKey = getUpdateConfigurazioneAlertMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateConfigurazioneAlert>>, UpdateConfigurazioneAlertMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateConfigurazioneAlert(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateConfigurazioneAlertMutationResult = NonNullable<Awaited<ReturnType<typeof updateConfigurazioneAlert>>>
+    export type UpdateConfigurazioneAlertMutationBody = BodyType<AlertConfigurazione>
+    export type UpdateConfigurazioneAlertMutationError = ErrorType<unknown>
+    export type UpdateConfigurazioneAlertMutationVariables = {data: BodyType<AlertConfigurazione>}
+
+    /**
+ * @summary Salva regole e soglie e ricalcola gli alert
+ */
+export const useUpdateConfigurazioneAlert = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateConfigurazioneAlert>>, TError,UpdateConfigurazioneAlertMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateConfigurazioneAlert>>,
+        TError,
+        UpdateConfigurazioneAlertMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateConfigurazioneAlertMutationOptions(options));
+    }
+
+export const getGetDashboardOperatoreUrl = () => {
+
+
+
+
+  return `/api/backoffice/dashboard`
+}
+
+/**
+ * @summary Riepilogo di lavoro dell'utente di back office
+ */
+export const getDashboardOperatore = async ( options?: Parameters<typeof customFetch>[1]): Promise<DashboardOperatore> => {
+
+  return customFetch<DashboardOperatore>(getGetDashboardOperatoreUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDashboardOperatoreQueryKey = () => {
+    return [
+    `/api/backoffice/dashboard`
+    ] as const;
+    }
+
+
+export const getGetDashboardOperatoreQueryOptions = <TData = Awaited<ReturnType<typeof getDashboardOperatore>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDashboardOperatore>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDashboardOperatoreQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDashboardOperatore>>> = ({ signal }) => getDashboardOperatore({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDashboardOperatore>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetDashboardOperatoreQueryResult = NonNullable<Awaited<ReturnType<typeof getDashboardOperatore>>>
+export type GetDashboardOperatoreQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Riepilogo di lavoro dell'utente di back office
+ */
+
+export function useGetDashboardOperatore<TData = Awaited<ReturnType<typeof getDashboardOperatore>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDashboardOperatore>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetDashboardOperatoreQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListConversazioniChatUrl = () => {
+
+
+
+
+  return `/api/backoffice/chat/conversazioni`
+}
+
+/**
+ * @summary Canale generale e persone con cui si può scrivere, con i messaggi non letti
+ */
+export const listConversazioniChat = async ( options?: Parameters<typeof customFetch>[1]): Promise<ChatConversazione[]> => {
+
+  return customFetch<ChatConversazione[]>(getListConversazioniChatUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListConversazioniChatQueryKey = () => {
+    return [
+    `/api/backoffice/chat/conversazioni`
+    ] as const;
+    }
+
+
+export const getListConversazioniChatQueryOptions = <TData = Awaited<ReturnType<typeof listConversazioniChat>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listConversazioniChat>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListConversazioniChatQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listConversazioniChat>>> = ({ signal }) => listConversazioniChat({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listConversazioniChat>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListConversazioniChatQueryResult = NonNullable<Awaited<ReturnType<typeof listConversazioniChat>>>
+export type ListConversazioniChatQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Canale generale e persone con cui si può scrivere, con i messaggi non letti
+ */
+
+export function useListConversazioniChat<TData = Awaited<ReturnType<typeof listConversazioniChat>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listConversazioniChat>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListConversazioniChatQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetNonLettiChatUrl = () => {
+
+
+
+
+  return `/api/backoffice/chat/non-letti`
+}
+
+/**
+ * @summary Totale dei messaggi non letti
+ */
+export const getNonLettiChat = async ( options?: Parameters<typeof customFetch>[1]): Promise<ChatNonLetti> => {
+
+  return customFetch<ChatNonLetti>(getGetNonLettiChatUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetNonLettiChatQueryKey = () => {
+    return [
+    `/api/backoffice/chat/non-letti`
+    ] as const;
+    }
+
+
+export const getGetNonLettiChatQueryOptions = <TData = Awaited<ReturnType<typeof getNonLettiChat>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getNonLettiChat>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetNonLettiChatQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getNonLettiChat>>> = ({ signal }) => getNonLettiChat({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getNonLettiChat>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetNonLettiChatQueryResult = NonNullable<Awaited<ReturnType<typeof getNonLettiChat>>>
+export type GetNonLettiChatQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Totale dei messaggi non letti
+ */
+
+export function useGetNonLettiChat<TData = Awaited<ReturnType<typeof getNonLettiChat>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getNonLettiChat>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetNonLettiChatQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListMessaggiChatUrl = (chiave: string,) => {
+
+
+
+
+  return `/api/backoffice/chat/conversazioni/${chiave}/messaggi`
+}
+
+/**
+ * @summary Messaggi di una conversazione (gli ultimi 200)
+ */
+export const listMessaggiChat = async (chiave: string, options?: Parameters<typeof customFetch>[1]): Promise<ChatMessaggio[]> => {
+
+  return customFetch<ChatMessaggio[]>(getListMessaggiChatUrl(chiave),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMessaggiChatQueryKey = (chiave: string,) => {
+    return [
+    `/api/backoffice/chat/conversazioni/${chiave}/messaggi`
+    ] as const;
+    }
+
+
+export const getListMessaggiChatQueryOptions = <TData = Awaited<ReturnType<typeof listMessaggiChat>>, TError = ErrorType<unknown>>(chiave: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMessaggiChat>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMessaggiChatQueryKey(chiave);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMessaggiChat>>> = ({ signal }) => listMessaggiChat(chiave, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: chiave !== null && chiave !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMessaggiChat>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMessaggiChatQueryResult = NonNullable<Awaited<ReturnType<typeof listMessaggiChat>>>
+export type ListMessaggiChatQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Messaggi di una conversazione (gli ultimi 200)
+ */
+
+export function useListMessaggiChat<TData = Awaited<ReturnType<typeof listMessaggiChat>>, TError = ErrorType<unknown>>(
+ chiave: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMessaggiChat>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMessaggiChatQueryOptions(chiave,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSendMessaggioChatUrl = (chiave: string,) => {
+
+
+
+
+  return `/api/backoffice/chat/conversazioni/${chiave}/messaggi`
+}
+
+/**
+ * @summary Scrive un messaggio
+ */
+export const sendMessaggioChat = async (chiave: string,
+    chatMessaggioInput: ChatMessaggioInput, options?: Parameters<typeof customFetch>[1]): Promise<ChatMessaggio> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ChatMessaggio>(getSendMessaggioChatUrl(chiave),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(chatMessaggioInput)
+  }
+);}
+
+
+
+
+
+export const getSendMessaggioChatMutationKey = () => ['sendMessaggioChat'] as const;
+
+export const getSendMessaggioChatMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendMessaggioChat>>, TError,SendMessaggioChatMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sendMessaggioChat>>, TError,SendMessaggioChatMutationVariables, TContext> => {
+
+const mutationKey = getSendMessaggioChatMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendMessaggioChat>>, SendMessaggioChatMutationVariables> = (props) => {
+          const {chiave,data} = props ?? {};
+
+          return  sendMessaggioChat(chiave,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SendMessaggioChatMutationResult = NonNullable<Awaited<ReturnType<typeof sendMessaggioChat>>>
+    export type SendMessaggioChatMutationBody = BodyType<ChatMessaggioInput>
+    export type SendMessaggioChatMutationError = ErrorType<unknown>
+    export type SendMessaggioChatMutationVariables = {chiave: string;data: BodyType<ChatMessaggioInput>}
+
+    /**
+ * @summary Scrive un messaggio
+ */
+export const useSendMessaggioChat = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendMessaggioChat>>, TError,SendMessaggioChatMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sendMessaggioChat>>,
+        TError,
+        SendMessaggioChatMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSendMessaggioChatMutationOptions(options));
+    }
+
+export const getSegnaLettaChatUrl = (chiave: string,) => {
+
+
+
+
+  return `/api/backoffice/chat/conversazioni/${chiave}/letti`
+}
+
+/**
+ * @summary Segna come letti i messaggi fino a quello indicato
+ */
+export const segnaLettaChat = async (chiave: string,
+    chatLettoInput: ChatLettoInput, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<void>(getSegnaLettaChatUrl(chiave),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(chatLettoInput)
+  }
+);}
+
+
+
+
+
+export const getSegnaLettaChatMutationKey = () => ['segnaLettaChat'] as const;
+
+export const getSegnaLettaChatMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof segnaLettaChat>>, TError,SegnaLettaChatMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof segnaLettaChat>>, TError,SegnaLettaChatMutationVariables, TContext> => {
+
+const mutationKey = getSegnaLettaChatMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof segnaLettaChat>>, SegnaLettaChatMutationVariables> = (props) => {
+          const {chiave,data} = props ?? {};
+
+          return  segnaLettaChat(chiave,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SegnaLettaChatMutationResult = NonNullable<Awaited<ReturnType<typeof segnaLettaChat>>>
+    export type SegnaLettaChatMutationBody = BodyType<ChatLettoInput>
+    export type SegnaLettaChatMutationError = ErrorType<unknown>
+    export type SegnaLettaChatMutationVariables = {chiave: string;data: BodyType<ChatLettoInput>}
+
+    /**
+ * @summary Segna come letti i messaggi fino a quello indicato
+ */
+export const useSegnaLettaChat = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof segnaLettaChat>>, TError,SegnaLettaChatMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof segnaLettaChat>>,
+        TError,
+        SegnaLettaChatMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSegnaLettaChatMutationOptions(options));
+    }
+
+export const getGetStatisticheOperatoriUrl = (params?: GetStatisticheOperatoriParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/backoffice/statistiche-operatori?${stringifiedParams}` : `/api/backoffice/statistiche-operatori`
+}
+
+/**
+ * @summary Statistiche di lavoro per operatore in un periodo (solo super admin)
+ */
+export const getStatisticheOperatori = async (params?: GetStatisticheOperatoriParams, options?: Parameters<typeof customFetch>[1]): Promise<StatisticheOperatori> => {
+
+  return customFetch<StatisticheOperatori>(getGetStatisticheOperatoriUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetStatisticheOperatoriQueryKey = (params?: GetStatisticheOperatoriParams,) => {
+    return [
+    `/api/backoffice/statistiche-operatori`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetStatisticheOperatoriQueryOptions = <TData = Awaited<ReturnType<typeof getStatisticheOperatori>>, TError = ErrorType<unknown>>(params?: GetStatisticheOperatoriParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStatisticheOperatori>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetStatisticheOperatoriQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getStatisticheOperatori>>> = ({ signal }) => getStatisticheOperatori(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getStatisticheOperatori>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetStatisticheOperatoriQueryResult = NonNullable<Awaited<ReturnType<typeof getStatisticheOperatori>>>
+export type GetStatisticheOperatoriQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Statistiche di lavoro per operatore in un periodo (solo super admin)
+ */
+
+export function useGetStatisticheOperatori<TData = Awaited<ReturnType<typeof getStatisticheOperatori>>, TError = ErrorType<unknown>>(
+ params?: GetStatisticheOperatoriParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getStatisticheOperatori>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetStatisticheOperatoriQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

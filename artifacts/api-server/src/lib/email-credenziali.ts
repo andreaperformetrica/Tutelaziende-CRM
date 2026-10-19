@@ -23,10 +23,10 @@ interface Credenziali {
   password: string;
 }
 
-function costruisci(c: Credenziali, mostraPassword: boolean) {
+async function costruisci(c: Credenziali, mostraPassword: boolean) {
   const apple = url("URL_APP_APPLE");
   const android = url("URL_APP_ANDROID");
-  const piattaforma = urlPiattaforma("/");
+  const piattaforma = await urlPiattaforma("/");
   const nomeCompleto = `${c.nome} ${c.cognome}`.trim().toUpperCase();
   const password = mostraPassword ? c.password : "(la password provvisoria indicata dall'amministratore)";
   const haApp = !!(apple || android);
@@ -94,11 +94,11 @@ export async function inviaCredenzialiCollaboratore(c: Credenziali): Promise<{ e
         destinatarioNome: `${c.nome} ${c.cognome}`.trim(),
         destinatarioContatto: c.email,
         oggetto,
-        testo: costruisci(c, false).testo,
+        testo: (await costruisci(c, false)).testo,
         elaboratoIl: new Date(),
       })
       .returning({ id: notificheTable.id });
-    const vera = costruisci(c, true);
+    const vera = await costruisci(c, true);
     const e = await spedisciEmail({
       a: c.email,
       oggetto,

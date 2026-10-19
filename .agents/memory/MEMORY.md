@@ -18,3 +18,4 @@
 - [Aggiornamento 1](tutela-crm-aggiornamento1.md) — sede fields, ENTRAMBI, mandati per provincia+tipo, firma OTP SMS, assistiti uppercase/edit rights (supersedes per-sede mandati)
 - [Aggiornamento 2](tutela-crm-aggiornamento2.md) — documenti noti, moduli auto-compilati, eccezioni compenso per collaboratore, normative, allegati operatore per tipo; categorie allegato removed
 - [Aggiornamento 3](tutela-crm-aggiornamento3.md) — priorità, scadenze+solleciti email, Scarica tutto, export Excel, filtri date sargable (indici), data e ora
+- [Aggiornamento 4](tutela-crm-aggiornamento4.md) — canale default, base URL link email, alert collaboratori, dashboard, chat interna, statistiche operatori

@@ -1,8 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
-import { getGetAvvisiQueryKey, getGetConteggioSegnalazioniQueryKey, useGetAvvisi, useGetConteggioSegnalazioni, useLogout, type SessioneUtente } from "@workspace/api-client-react";
-import { Inbox, UserCheck, KeyRound, LogOut, ScrollText, ShieldCheck, Users, UsersRound, Home, UserRound, TriangleAlert, FileText, FileSignature, ListOrdered, Clock, Bell, CalendarDays, Coins, Settings, ChevronDown, Newspaper, Menu } from "lucide-react";
+import { getGetAvvisiQueryKey, getGetConteggioAlertQueryKey, getGetConteggioSegnalazioniQueryKey, getGetNonLettiChatQueryKey, useGetAvvisi, useGetConteggioAlert, useGetConteggioSegnalazioni, useGetNonLettiChat, useLogout, type SessioneUtente } from "@workspace/api-client-react";
+import { Inbox, UserCheck, KeyRound, LogOut, ScrollText, ShieldCheck, Users, UsersRound, Home, UserRound, TriangleAlert, FileText, FileSignature, ListOrdered, Clock, Bell, CalendarDays, Coins, Settings, ChevronDown, Newspaper, Menu, LayoutDashboard, MessagesSquare, BellRing, ChartColumn } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { UtenteAvatar } from "@/components/utenti/colore-utente";
 import { iniziali, ruoloLabel } from "@/lib/format";
@@ -27,14 +27,18 @@ function Marchio({ chiaro }: { chiaro?: boolean }) {
 type Voce = { href: string; label: string; icon: typeof Inbox; roles: string[]; id: string; gruppo?: string };
 
 const VOCI: Voce[] = [
+  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["super_admin", "admin", "operatore"], id: "dashboard" },
   { href: "/admin/pratiche", label: "Pratiche", icon: Inbox, roles: ["super_admin", "admin", "operatore"], id: "pratiche" },
   { href: "/admin/le-mie-pratiche", label: "Le mie pratiche", icon: UserCheck, roles: ["super_admin", "admin", "operatore"], id: "le-mie-pratiche" },
   { href: "/admin/collaboratori", label: "Collaboratori", icon: UsersRound, roles: ["super_admin", "admin", "operatore"], id: "collaboratori" },
   { href: "/admin/assistiti", label: "Assistiti", icon: UserRound, roles: ["super_admin", "admin", "operatore"], id: "assistiti" },
   { href: "/admin/news", label: "News", icon: Newspaper, roles: ["super_admin", "admin", "operatore"], id: "news" },
+  { href: "/admin/chat", label: "Chat interna", icon: MessagesSquare, roles: ["super_admin", "admin", "operatore"], id: "chat" },
   { href: "/admin/segnalazioni", label: "Segnalazioni", icon: TriangleAlert, roles: ["super_admin", "admin"], id: "segnalazioni" },
+  { href: "/admin/alert", label: "Alert", icon: BellRing, roles: ["super_admin", "admin"], id: "alert" },
   { href: "/admin/eventi", label: "Eventi e corsi", icon: CalendarDays, roles: ["super_admin", "admin"], id: "eventi" },
   { href: "/admin/compensi", label: "Compensi", icon: Coins, roles: ["super_admin", "admin"], id: "compensi" },
+  { href: "/admin/statistiche", label: "Statistiche operatori", icon: ChartColumn, roles: ["super_admin"], id: "statistiche" },
   { href: "/admin/tipi-pratica", label: "Tipi di pratica", icon: FileText, roles: ["super_admin", "admin"], id: "tipi-pratica", gruppo: "settaggi" },
   { href: "/admin/mandati", label: "Mandati", icon: FileSignature, roles: ["super_admin", "admin"], id: "mandati", gruppo: "settaggi" },
   { href: "/admin/stati-pratica", label: "Stati pratica", icon: ListOrdered, roles: ["super_admin", "admin"], id: "stati-pratica", gruppo: "settaggi" },
@@ -44,15 +48,18 @@ const VOCI: Voce[] = [
   { href: "/admin/log", label: "Log operazioni", icon: ScrollText, roles: ["super_admin", "admin"], id: "log", gruppo: "settaggi" },
 ];
 
-function VoceMenu({ v, attiva, aperte }: { v: Voce; attiva: boolean; aperte: number }) {
+const ETICHETTA_BADGE: Record<string, string> = { segnalazioni: "segnalazioni aperte", chat: "messaggi non letti", alert: "alert aperti" };
+
+function VoceMenu({ v, attiva, conteggi }: { v: Voce; attiva: boolean; conteggi: Record<string, number> }) {
+  const n = conteggi[v.id] ?? 0;
   return (
     <Link href={v.href} data-testid={`link-menu-${v.id}`}
       className={cn("group relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors",
         attiva ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground")}>
       <span className={cn("absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded bg-sidebar-primary transition-transform origin-center", attiva ? "scale-y-100" : "scale-y-0")} />
       <v.icon className="size-4 opacity-80" /> {v.label}
-      {v.id === "segnalazioni" && aperte > 0 && (
-        <span className="ml-auto min-w-5 rounded-full bg-sidebar-primary px-1.5 text-center text-[11px] font-bold text-sidebar-primary-foreground" data-testid="badge-segnalazioni" aria-label={`${aperte} segnalazioni aperte`}>{aperte}</span>
+      {n > 0 && (
+        <span className="ml-auto min-w-5 rounded-full bg-sidebar-primary px-1.5 text-center text-[11px] font-bold text-sidebar-primary-foreground" data-testid={`badge-${v.id}`} aria-label={`${n} ${ETICHETTA_BADGE[v.id] ?? ""}`}>{n}</span>
       )}
     </Link>
   );
@@ -70,14 +77,16 @@ export function BackofficeShell({ s, children }: { s: SessioneUtente; children: 
   const [menuMobile, setMenuMobile] = useState(false);
   const vedeSegnalazioni = s.ruolo === "super_admin" || s.ruolo === "admin";
   const conteggio = useGetConteggioSegnalazioni({ query: { enabled: vedeSegnalazioni, refetchInterval: 30000, queryKey: getGetConteggioSegnalazioniQueryKey() } });
-  const aperte = conteggio.data?.aperte ?? 0;
+  const nonLetti = useGetNonLettiChat({ query: { refetchInterval: 15000, queryKey: getGetNonLettiChatQueryKey() } });
+  const alertAperti = useGetConteggioAlert({ query: { enabled: vedeSegnalazioni, refetchInterval: 60000, queryKey: getGetConteggioAlertQueryKey() } });
+  const conteggi: Record<string, number> = { segnalazioni: conteggio.data?.aperte ?? 0, chat: nonLetti.data?.totale ?? 0, alert: alertAperti.data?.aperti ?? 0 };
   // Su telefono il menu si chiude da solo quando si cambia pagina.
   useEffect(() => { setMenuMobile(false); }, [loc]);
   const voceCorrente = voci.find((v) => attivo(v.href));
 
   const elenco = (testid: string) => (
     <nav className="flex flex-col gap-1 flex-1" data-testid={testid}>
-      {principali.map((v) => <VoceMenu key={v.href} v={v} attiva={attivo(v.href)} aperte={aperte} />)}
+      {principali.map((v) => <VoceMenu key={v.href} v={v} attiva={attivo(v.href)} conteggi={conteggi} />)}
       {settaggi.length > 0 && (
         <div className="flex flex-col gap-1">
           <button type="button" onClick={() => setSettaggiAperto((a) => !a)} aria-expanded={settaggiAperto || settaggiAttivo}
@@ -86,7 +95,7 @@ export function BackofficeShell({ s, children }: { s: SessioneUtente; children: 
             <ChevronDown className={cn("ml-auto size-4 opacity-70 transition-transform", (settaggiAperto || settaggiAttivo) && "rotate-180")} />
           </button>
           <div className={cn("flex flex-col gap-1 ml-4 pl-2 border-l border-sidebar-border", !(settaggiAperto || settaggiAttivo) && "hidden")}>
-            {settaggi.map((v) => <VoceMenu key={v.href} v={v} attiva={attivo(v.href)} aperte={aperte} />)}
+            {settaggi.map((v) => <VoceMenu key={v.href} v={v} attiva={attivo(v.href)} conteggi={conteggi} />)}
           </div>
         </div>
       )}
@@ -127,7 +136,7 @@ export function BackofficeShell({ s, children }: { s: SessioneUtente; children: 
           <SheetTrigger asChild>
             <button type="button" aria-label="Apri il menu" data-testid="button-menu-mobile" className="relative size-11 grid place-items-center rounded-md hover:bg-sidebar-accent">
               <Menu className="size-6" />
-              {aperte > 0 && <span className="absolute top-1.5 right-1.5 size-2.5 rounded-full bg-sidebar-primary" aria-hidden />}
+              {Object.values(conteggi).some((n) => n > 0) && <span className="absolute top-1.5 right-1.5 size-2.5 rounded-full bg-sidebar-primary" aria-hidden />}
             </button>
           </SheetTrigger>
           <SheetContent side="left" className="bg-sidebar text-sidebar-foreground border-sidebar-border w-[85vw] max-w-xs p-5 flex flex-col overflow-y-auto" data-testid="menu-mobile">

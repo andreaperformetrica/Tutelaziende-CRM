@@ -115,7 +115,7 @@ export const commentiPraticaTable = pgTable(
     canaleAvviso: text("canale_avviso", { enum: ["email", "whatsapp", "chiamata", "entrambi", "tutti"] }),
     creatoIl: timestamp("creato_il", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("commenti_pratica_pratica_idx").on(t.praticaId)],
+  (t) => [index("commenti_pratica_pratica_idx").on(t.praticaId), index("commenti_pratica_utente_idx").on(t.utenteId, t.creatoIl)],
 );
 
 /** Eventi di gestione di una pratica (presa in carico, cambi di stato): con i nomi com'erano al momento. */
@@ -136,5 +136,5 @@ export const eventiPraticaTable = pgTable(
     a: text("a").notNull(),
     creatoIl: timestamp("creato_il", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index("eventi_pratica_pratica_idx").on(t.praticaId)],
+  (t) => [index("eventi_pratica_pratica_idx").on(t.praticaId), index("eventi_pratica_utente_idx").on(t.utenteId, t.creatoIl)],
 );

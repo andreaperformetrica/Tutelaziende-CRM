@@ -104,7 +104,7 @@ export default function PraticaDettaglioBackoffice() {
   const [eliminaAperto, setEliminaAperto] = useState(false);
   const [statoScelto, setStatoScelto] = useState<string>("");
   const [testo, setTesto] = useState("");
-  const [canale, setCanale] = useState<Canale>("email");
+  const [canale, setCanale] = useState<Canale>("entrambi");
   const [descrizione, setDescrizione] = useState("");
   const [voce, setVoce] = useState("");
   const [file, setFile] = useState<File | null>(null);

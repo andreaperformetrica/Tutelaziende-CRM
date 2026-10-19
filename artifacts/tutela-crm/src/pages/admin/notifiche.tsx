@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "wouter";
-import { keepPreviousData } from "@tanstack/react-query";
+import { keepPreviousData, useQueryClient } from "@tanstack/react-query";
 import {
-  getGetStatoNotificheQueryKey, getListNotificheQueryKey, useGetStatoNotifiche, useListNotifiche,
+  getGetImpostazioniNotificheQueryKey, getGetStatoNotificheQueryKey, getListNotificheQueryKey, useGetImpostazioniNotifiche, useGetStatoNotifiche, useListNotifiche, useUpdateImpostazioniNotifiche,
   type ListNotificheParams, type Notifica,
 } from "@workspace/api-client-react";
-import { Bell, ChevronLeft, ChevronRight, Eye, Info, Mail, MessageCircle, Phone, X } from "lucide-react";
+import { Bell, ChevronLeft, Link2, Loader2, ChevronRight, Eye, Info, Mail, MessageCircle, Phone, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,44 @@ function Esito({ n }: { n: Notifica }) {
   );
 }
 
+const ORIGINE: Record<string, string> = {
+  impostazioni: "scritto qui",
+  segreto: "dal segreto URL_PIATTAFORMA",
+  dominio: "dominio dell'app pubblicata, ricavato in automatico",
+  nessuna: "nessun indirizzo pubblico disponibile: nei messaggi comparirà solo il percorso della pagina",
+};
+
+/** Indirizzo dell'app usato nei link delle email: se non è scritto qui, si usa quello dell'app pubblicata. */
+function IndirizzoApp() {
+  const qc = useQueryClient();
+  const q = useGetImpostazioniNotifiche({ query: { queryKey: getGetImpostazioniNotificheQueryKey() } });
+  const salva = useUpdateImpostazioniNotifiche();
+  const [valore, setValore] = useState("");
+  const [errore, setErrore] = useState<string | null>(null);
+  const [salvato, setSalvato] = useState(false);
+  useEffect(() => { if (q.data) setValore(q.data.urlPiattaforma ?? ""); }, [q.data]);
+  const invia = () => {
+    setErrore(null); setSalvato(false);
+    salva.mutate({ data: { urlPiattaforma: valore.trim() || null } }, {
+      onSuccess: (n) => { qc.setQueryData(getGetImpostazioniNotificheQueryKey(), n); setSalvato(true); },
+      onError: (e) => setErrore(parseApiError(e).message),
+    });
+  };
+  return (
+    <div className="rounded-lg border border-border bg-card p-4 mb-4 rise" data-testid="box-indirizzo-app">
+      <div className="flex items-center gap-2 font-bold text-sm mb-1"><Link2 className="size-4" /> Indirizzo dell'app nei link delle email</div>
+      <p className="text-xs text-muted-foreground mb-3">Tutti i link nelle email e nei messaggi partono da questo indirizzo. Lascia vuoto per usare quello dell'app pubblicata.</p>
+      <div className="flex flex-wrap items-start gap-2">
+        <Input value={valore} onChange={(e) => { setValore(e.target.value); setSalvato(false); }} placeholder="https://gestionale.tuodominio.it" className="max-w-md bg-card" aria-label="Indirizzo dell'app" data-testid="input-url-piattaforma" />
+        <Button onClick={invia} disabled={salva.isPending} data-testid="button-salva-url">{salva.isPending && <Loader2 className="size-4 mr-2 animate-spin" />} Salva</Button>
+      </div>
+      {errore && <p role="alert" className="text-sm text-destructive font-medium mt-2" data-testid="errore-url">{errore}</p>}
+      {salvato && <p className="text-sm text-green-700 font-medium mt-2" data-testid="conferma-url">Indirizzo salvato.</p>}
+      {q.data && <p className="text-xs text-muted-foreground mt-2" data-testid="url-effettivo">In uso adesso: <span className="font-mono">{q.data.urlEffettivo ?? "—"}</span> ({ORIGINE[q.data.origine]})</p>}
+    </div>
+  );
+}
+
 export default function NotifichePage() {
   const [canale, setCanale] = useState("all");
   const [esito, setEsito] = useState("all");
@@ -62,6 +100,7 @@ export default function NotifichePage() {
   return (
     <div>
       <PageHeader kicker="Amministrazione" title="Registro notifiche" subtitle={q.data ? `${tot.toLocaleString("it-IT")} notifiche registrate, dalla più recente` : undefined} />
+      <IndirizzoApp />
       {inattivi.length > 0 && (
         <div className="flex gap-3 rounded-lg border border-amber-500/50 bg-amber-50 text-amber-950 p-4 text-sm mb-4 rise" data-testid="avviso-chiavi-mancanti">
           <Info className="size-5 shrink-0 mt-0.5" />

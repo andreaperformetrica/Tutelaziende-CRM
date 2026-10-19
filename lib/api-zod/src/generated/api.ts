@@ -1516,6 +1516,303 @@ export const GetStatoNotificheResponse = zod.object({
 
 
 /**
+ * @summary Indirizzo dell'app usato nei link delle email
+ */
+export const GetImpostazioniNotificheResponse = zod.object({
+  "urlPiattaforma": zod.string().nullable().describe('Indirizzo scritto dall\'admin'),
+  "urlEffettivo": zod.string().nullable().describe('Indirizzo che verrà davvero usato nei link'),
+  "origine": zod.enum(['impostazioni', 'segreto', 'dominio', 'nessuna'])
+})
+
+
+/**
+ * @summary Imposta l'indirizzo pubblico dell'app (vuoto = usa quello automatico)
+ */
+export const updateImpostazioniNotificheBodyUrlPiattaformaMax = 300;
+
+
+
+export const UpdateImpostazioniNotificheBody = zod.object({
+  "urlPiattaforma": zod.string().max(updateImpostazioniNotificheBodyUrlPiattaformaMax).nullable()
+})
+
+export const UpdateImpostazioniNotificheResponse = zod.object({
+  "urlPiattaforma": zod.string().nullable().describe('Indirizzo scritto dall\'admin'),
+  "urlEffettivo": zod.string().nullable().describe('Indirizzo che verrà davvero usato nei link'),
+  "origine": zod.enum(['impostazioni', 'segreto', 'dominio', 'nessuna'])
+})
+
+
+/**
+ * @summary Alert sui collaboratori (aperti oppure risolti)
+ */
+export const ListAlertCollaboratoriQueryParams = zod.object({
+  "stato": zod.enum(['aperto', 'risolto']).optional()
+})
+
+export const ListAlertCollaboratoriResponse = zod.object({
+  "elementi": zod.array(zod.object({
+  "id": zod.number().int(),
+  "regola": zod.enum(['inattivita', 'volume']),
+  "collaboratoreId": zod.number().int(),
+  "collaboratoreNome": zod.string(),
+  "sportello": zod.string(),
+  "tipoId": zod.number().int(),
+  "tipoNome": zod.string(),
+  "stato": zod.enum(['aperto', 'risolto']),
+  "valore": zod.number().int(),
+  "ultimaPraticaIl": zod.coerce.date().nullable(),
+  "creatoIl": zod.coerce.date(),
+  "risoltoIl": zod.coerce.date().nullable(),
+  "descrizione": zod.string()
+})),
+  "aperti": zod.number().int()
+})
+
+
+/**
+ * @summary Numero di alert aperti
+ */
+export const GetConteggioAlertResponse = zod.object({
+  "aperti": zod.number().int()
+})
+
+
+/**
+ * @summary Regole e soglie degli alert
+ */
+export const getConfigurazioneAlertResponseInattivitaMesiMax = 60;
+
+export const getConfigurazioneAlertResponseVolumeSogliaMax = 1000;
+
+export const getConfigurazioneAlertResponseVolumePeriodoGiorniMax = 365;
+
+
+
+export const GetConfigurazioneAlertResponse = zod.object({
+  "inattivita": zod.object({
+  "attiva": zod.boolean(),
+  "mesi": zod.number().int().min(1).max(getConfigurazioneAlertResponseInattivitaMesiMax),
+  "tipiIds": zod.array(zod.number().int())
+}),
+  "volume": zod.object({
+  "attiva": zod.boolean(),
+  "soglia": zod.number().int().min(1).max(getConfigurazioneAlertResponseVolumeSogliaMax),
+  "periodoGiorni": zod.number().int().min(1).max(getConfigurazioneAlertResponseVolumePeriodoGiorniMax),
+  "tipiIds": zod.array(zod.number().int())
+})
+})
+
+
+/**
+ * @summary Salva regole e soglie e ricalcola gli alert
+ */
+export const updateConfigurazioneAlertBodyInattivitaMesiMax = 60;
+
+export const updateConfigurazioneAlertBodyVolumeSogliaMax = 1000;
+
+export const updateConfigurazioneAlertBodyVolumePeriodoGiorniMax = 365;
+
+
+
+export const UpdateConfigurazioneAlertBody = zod.object({
+  "inattivita": zod.object({
+  "attiva": zod.boolean(),
+  "mesi": zod.number().int().min(1).max(updateConfigurazioneAlertBodyInattivitaMesiMax),
+  "tipiIds": zod.array(zod.number().int())
+}),
+  "volume": zod.object({
+  "attiva": zod.boolean(),
+  "soglia": zod.number().int().min(1).max(updateConfigurazioneAlertBodyVolumeSogliaMax),
+  "periodoGiorni": zod.number().int().min(1).max(updateConfigurazioneAlertBodyVolumePeriodoGiorniMax),
+  "tipiIds": zod.array(zod.number().int())
+})
+})
+
+export const updateConfigurazioneAlertResponseInattivitaMesiMax = 60;
+
+export const updateConfigurazioneAlertResponseVolumeSogliaMax = 1000;
+
+export const updateConfigurazioneAlertResponseVolumePeriodoGiorniMax = 365;
+
+
+
+export const UpdateConfigurazioneAlertResponse = zod.object({
+  "inattivita": zod.object({
+  "attiva": zod.boolean(),
+  "mesi": zod.number().int().min(1).max(updateConfigurazioneAlertResponseInattivitaMesiMax),
+  "tipiIds": zod.array(zod.number().int())
+}),
+  "volume": zod.object({
+  "attiva": zod.boolean(),
+  "soglia": zod.number().int().min(1).max(updateConfigurazioneAlertResponseVolumeSogliaMax),
+  "periodoGiorni": zod.number().int().min(1).max(updateConfigurazioneAlertResponseVolumePeriodoGiorniMax),
+  "tipiIds": zod.array(zod.number().int())
+})
+})
+
+
+/**
+ * @summary Riepilogo di lavoro dell'utente di back office
+ */
+export const GetDashboardOperatoreResponse = zod.object({
+  "inCarico": zod.number().int(),
+  "nuove": zod.number().int(),
+  "commentiSenzaRisposta": zod.number().int(),
+  "scadenze": zod.number().int(),
+  "nuoveElenco": zod.array(zod.object({
+  "id": zod.number().int(),
+  "numero": zod.number().int(),
+  "assistito": zod.string(),
+  "tipoNome": zod.string(),
+  "data": zod.coerce.date(),
+  "dettaglio": zod.string().nullish()
+})),
+  "commentiElenco": zod.array(zod.object({
+  "id": zod.number().int(),
+  "numero": zod.number().int(),
+  "assistito": zod.string(),
+  "tipoNome": zod.string(),
+  "data": zod.coerce.date(),
+  "dettaglio": zod.string().nullish()
+})),
+  "scadenzeElenco": zod.array(zod.object({
+  "id": zod.number().int(),
+  "numero": zod.number().int(),
+  "assistito": zod.string().describe('Cognome e nome'),
+  "tipoNome": zod.string(),
+  "scadenzaIl": zod.coerce.date(),
+  "stato": zod.enum(['vicina', 'superata']),
+  "giorniResidui": zod.number().int()
+}))
+})
+
+
+/**
+ * @summary Canale generale e persone con cui si può scrivere, con i messaggi non letti
+ */
+export const ListConversazioniChatResponseItem = zod.object({
+  "chiave": zod.string().describe('generale oppure u + id dell\'altra persona'),
+  "tipo": zod.enum(['generale', 'diretta']),
+  "utente": zod.union([zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "ruolo": zod.string(),
+  "colore": zod.string().nullable()
+}),zod.null()]),
+  "nonLetti": zod.number().int(),
+  "ultimoMessaggio": zod.union([zod.object({
+  "testo": zod.string(),
+  "creatoIl": zod.coerce.date(),
+  "mio": zod.boolean()
+}),zod.null()])
+})
+export const ListConversazioniChatResponse = zod.array(ListConversazioniChatResponseItem)
+
+
+/**
+ * @summary Totale dei messaggi non letti
+ */
+export const GetNonLettiChatResponse = zod.object({
+  "totale": zod.number().int()
+})
+
+
+/**
+ * @summary Messaggi di una conversazione (gli ultimi 200)
+ */
+export const ListMessaggiChatParams = zod.object({
+  "chiave": zod.coerce.string()
+})
+
+export const ListMessaggiChatResponseItem = zod.object({
+  "id": zod.number().int(),
+  "mittente": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "ruolo": zod.string(),
+  "colore": zod.string().nullable()
+}),
+  "testo": zod.string(),
+  "creatoIl": zod.coerce.date(),
+  "mio": zod.boolean()
+})
+export const ListMessaggiChatResponse = zod.array(ListMessaggiChatResponseItem)
+
+
+/**
+ * @summary Scrive un messaggio
+ */
+export const SendMessaggioChatParams = zod.object({
+  "chiave": zod.coerce.string()
+})
+
+export const sendMessaggioChatBodyTestoMax = 2000;
+
+
+
+export const SendMessaggioChatBody = zod.object({
+  "testo": zod.string().max(sendMessaggioChatBodyTestoMax)
+})
+
+export const SendMessaggioChatResponse = zod.object({
+  "id": zod.number().int(),
+  "mittente": zod.object({
+  "id": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "ruolo": zod.string(),
+  "colore": zod.string().nullable()
+}),
+  "testo": zod.string(),
+  "creatoIl": zod.coerce.date(),
+  "mio": zod.boolean()
+})
+
+
+/**
+ * @summary Segna come letti i messaggi fino a quello indicato
+ */
+export const SegnaLettaChatParams = zod.object({
+  "chiave": zod.coerce.string()
+})
+
+export const SegnaLettaChatBody = zod.object({
+  "fino": zod.number().int()
+})
+
+export const SegnaLettaChatResponse = zod.void()
+
+
+/**
+ * @summary Statistiche di lavoro per operatore in un periodo (solo super admin)
+ */
+export const GetStatisticheOperatoriQueryParams = zod.object({
+  "dal": zod.coerce.string().optional().describe('Data iniziale AAAA-MM-GG'),
+  "al": zod.coerce.string().optional().describe('Data finale AAAA-MM-GG')
+})
+
+export const GetStatisticheOperatoriResponse = zod.object({
+  "dal": zod.string(),
+  "al": zod.string(),
+  "righe": zod.array(zod.object({
+  "utenteId": zod.number().int(),
+  "nome": zod.string(),
+  "cognome": zod.string(),
+  "ruolo": zod.string(),
+  "colore": zod.string().nullable(),
+  "preseInCarico": zod.number().int(),
+  "lavorate": zod.number().int(),
+  "chiuse": zod.number().int(),
+  "tempoMedioOre": zod.number().nullable(),
+  "commentiInviati": zod.number().int()
+}))
+})
+
+
+/**
  * @summary Elenco eventi con i conteggi di inviti, conferme, iscritti e presenti
  */
 export const ListEventiBackofficeResponseItem = zod.object({

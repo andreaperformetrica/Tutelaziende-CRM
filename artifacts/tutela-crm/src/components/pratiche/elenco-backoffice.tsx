@@ -77,8 +77,10 @@ export function ElencoPraticheBackoffice({ soloMie }: { soloMie?: boolean }) {
   const { session } = useSession();
   const mieId = soloMie ? (session?.id ?? null) : null;
   const filtri = useGetFiltriPraticheBackoffice();
-  const [bozza, setBozza] = useState<Filtri>(VUOTI);
-  const [applicati, setApplicati] = useState<Filtri>(VUOTI);
+  // Dalla dashboard si arriva con ?gestitaDa=none: l'elenco si apre già sulle pratiche non assegnate.
+  const [iniziali] = useState<Filtri>(() => (!soloMie && new URLSearchParams(window.location.search).get("gestitaDa") === "none" ? { ...VUOTI, gestitaDa: "none" } : VUOTI));
+  const [bozza, setBozza] = useState<Filtri>(iniziali);
+  const [applicati, setApplicati] = useState<Filtri>(iniziali);
   const [ordina, setOrdina] = useState<ListPraticheBackofficeOrdina>("data");
   const [direzione, setDirezione] = useState<"asc" | "desc">("desc");
   const [pagina, setPagina] = useState(1);

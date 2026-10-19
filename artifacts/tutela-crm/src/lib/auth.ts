@@ -12,4 +12,11 @@ export function useSession() {
     refetch: q.refetch,
   };
 }
-export const homeFor = (area?: string) => (area === "collaboratore" ? "/collaboratore" : "/admin/pratiche");
+export const homeFor = (area?: string) => (area === "collaboratore" ? "/collaboratore" : "/admin/dashboard");
+
+/** Pagina richiesta prima del login (per esempio da un link in un'email): si torna lì dopo l'accesso. Solo percorsi interni all'app. */
+export function paginaDiRitorno(): string | null {
+  const r = new URLSearchParams(window.location.search).get("ritorno");
+  if (!r || !r.startsWith("/") || r.startsWith("//") || r.startsWith("/login") || r.includes("\\")) return null;
+  return r;
+}

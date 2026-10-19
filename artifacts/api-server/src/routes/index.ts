@@ -19,6 +19,10 @@ import eventiRouter from "./eventi";
 import compensiRouter from "./compensi";
 import newsRouter from "./news";
 import avvisiRouter from "./avvisi";
+import alertRouter from "./alert";
+import dashboardRouter from "./dashboard";
+import chatRouter from "./chat";
+import statisticheOperatoriRouter from "./statistiche-operatori";
 import importazioniRouter from "./importazioni";
 import { caricaUtente, controlloOrigine, richiediLogin, richiediPasswordCambiata } from "../middlewares/auth";
 
@@ -52,5 +56,9 @@ router.use(compensiRouter);
 router.use(importazioniRouter);
 router.use(newsRouter);
 router.use(avvisiRouter);
+router.use(alertRouter);
+router.use(dashboardRouter);
+router.use(chatRouter);
+router.use(statisticheOperatoriRouter);
 
 export default router;

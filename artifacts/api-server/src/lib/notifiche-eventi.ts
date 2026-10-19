@@ -2,11 +2,12 @@
  * Eventi che generano notifiche. Ogni funzione va chiamata DENTRO la transazione dell'operazione
  * e restituisce gli id da passare a `recapitaInBackground` dopo il commit.
  *
- * Regola di riservatezza: nessun messaggio contiene il tipo di pratica ne' dati dell'assistito,
- * solo il numero della pratica e il link alla piattaforma.
+ * Regola di riservatezza: nessun messaggio contiene il tipo di pratica. L'unico dato dell'assistito ammesso e' il nome
+ * e cognome nell'oggetto dell'email "Pratica aggiornata per NOME COGNOME" (scelta del cliente); WhatsApp e chiamata
+ * restano generici, con il solo numero della pratica e il link alla piattaforma.
  */
 import { and, eq, inArray } from "drizzle-orm";
-import { collaboratoriTable, personeTable, utentiTable } from "@workspace/db";
+import { assistitiTable, collaboratoriTable, personeTable, praticheTable, utentiTable } from "@workspace/db";
 import type { Executor } from "./log";
 import { formattaData } from "./eventi";
 import { accodaNotifiche, type CanaleNotifica, type DestinatarioNotifica } from "./notifiche";
@@ -94,13 +95,20 @@ export async function notificaPraticaInviata(ex: Executor, p: PraticaNotifica): 
 export async function notificaCommentoUfficio(ex: Executor, p: PraticaNotifica, canale: CanaleAvviso): Promise<number[]> {
   const sede = await caricaSede(ex, p.collaboratoreId);
   if (!sede) return [];
+  const [assistito] = await ex
+    .select({ nome: personeTable.nome, cognome: personeTable.cognome })
+    .from(praticheTable)
+    .innerJoin(assistitiTable, eq(assistitiTable.id, praticheTable.assistitoId))
+    .innerJoin(personeTable, eq(personeTable.id, assistitiTable.personaId))
+    .where(eq(praticheTable.id, p.id));
+  const nomeAssistito = assistito ? `${assistito.nome} ${assistito.cognome}`.trim().toUpperCase() : null;
   return accodaNotifiche(ex, {
     evento: "commento_ufficio",
     destinatari: [sede],
     canali: CANALI_AVVISO[canale],
     pratica: { id: p.id, numero: p.numero },
     percorso: `/collaboratore/pratiche/${p.id}`,
-    oggetto: `Aggiornamento sulla pratica n. ${p.numero}`,
+    oggetto: nomeAssistito ? `Pratica aggiornata per ${nomeAssistito}` : `Pratica aggiornata (n. ${p.numero})`,
     testoEmail: (d, link) => `Buongiorno ${d.nome},\n\nc'è un aggiornamento sulla pratica n. ${p.numero}.\n\nAccedi alla piattaforma: ${link}`,
   });
 }
@@ -201,5 +209,24 @@ export async function notificaScadenzaPratica(
     percorso: `/admin/pratiche/${p.id}`,
     oggetto: tipo === "vicina" ? `Scadenza vicina: pratica n. ${p.numero}` : `Scadenza superata: pratica n. ${p.numero}`,
     testoEmail: (d, link) => `Buongiorno ${d.nome},\n\nla pratica n. ${p.numero}, che hai in carico, ${frase}.\n\nApri la pratica: ${link}`,
+  });
+}
+
+export interface RigaAlertEmail {
+  collaboratore: string;
+  descrizione: string;
+}
+
+/** 7. Nuovi alert sui collaboratori: una sola email per admin con l'elenco dei nuovi alert. */
+export async function notificaAlertCollaboratori(ex: Executor, righe: RigaAlertEmail[]): Promise<number[]> {
+  if (righe.length === 0) return [];
+  const elenco = righe.map((r) => `- ${r.collaboratore}: ${r.descrizione}`).join("\n");
+  return accodaNotifiche(ex, {
+    evento: "alert_collaboratori",
+    destinatari: await caricaBackoffice(ex, ["super_admin", "admin"]),
+    canali: ["email"],
+    percorso: "/admin/alert",
+    oggetto: righe.length === 1 ? "Nuovo alert su un collaboratore" : `${righe.length} nuovi alert sui collaboratori`,
+    testoEmail: (d, link) => `Buongiorno ${d.nome},\n\n${righe.length === 1 ? "c'è un nuovo alert" : `ci sono ${righe.length} nuovi alert`} sui collaboratori:\n\n${elenco}\n\nApri gli alert: ${link}`,
   });
 }

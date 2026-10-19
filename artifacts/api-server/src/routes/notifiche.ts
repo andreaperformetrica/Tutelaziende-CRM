@@ -1,9 +1,11 @@
 import { Router, type IRouter } from "express";
 import { and, count, desc, eq, gte, lt, sql } from "drizzle-orm";
-import { ListNotificheQueryParams } from "@workspace/api-zod";
+import { ListNotificheQueryParams, UpdateImpostazioniNotificheBody } from "@workspace/api-zod";
 import { db, notificheTable } from "@workspace/db";
 import { HttpError } from "../lib/errori";
-import { ESITI_NOTIFICA, EVENTI_NOTIFICA, statoCanali } from "../lib/notifiche";
+import { baseUrlPiattaforma, ESITI_NOTIFICA, EVENTI_NOTIFICA, normalizzaUrlPiattaforma, salvaUrlPiattaforma, statoCanali } from "../lib/notifiche";
+import { contestoDa, registraLog } from "../lib/log";
+import { impostazioniTable } from "@workspace/db";
 import { valida } from "../lib/validazione";
 import { richiediRuolo } from "../middlewares/auth";
 
@@ -29,6 +31,37 @@ router.get("/notifiche/stato", (_req, res) => {
     eventi: Object.entries(EVENTI_NOTIFICA).map(([codice, e]) => ({ codice, etichetta: e })),
     esiti: Object.entries(ESITI_NOTIFICA).map(([codice, e]) => ({ codice, etichetta: e })),
   });
+});
+
+async function impostazioni() {
+  const [r] = await db.select({ valore: impostazioniTable.valore }).from(impostazioniTable).where(eq(impostazioniTable.chiave, "url_piattaforma"));
+  const effettivo = await baseUrlPiattaforma();
+  return { urlPiattaforma: r?.valore ?? null, urlEffettivo: effettivo.url, origine: effettivo.origine };
+}
+
+router.get("/notifiche/impostazioni", async (_req, res) => {
+  res.json(await impostazioni());
+});
+
+router.put("/notifiche/impostazioni", async (req, res) => {
+  const b = valida(UpdateImpostazioniNotificheBody, req.body);
+  const grezzo = b.urlPiattaforma?.trim() ?? "";
+  let url: string | null = null;
+  if (grezzo) {
+    const n = normalizzaUrlPiattaforma(grezzo);
+    if ("errore" in n) throw new HttpError(400, n.errore, "DATI_NON_VALIDI", "urlPiattaforma");
+    url = n.url;
+  }
+  await db.transaction(async (tx) => {
+    await salvaUrlPiattaforma(tx, url);
+    await registraLog(tx, contestoDa(req), {
+      azione: "notifiche.indirizzo_app",
+      entita: "impostazione",
+      descrizione: url ? `Indirizzo dell'app nei link delle email impostato a ${url}` : "Indirizzo dell'app nei link delle email riportato su quello automatico",
+      dettagli: { url },
+    });
+  });
+  res.json(await impostazioni());
 });
 
 router.get("/notifiche", async (req, res) => {

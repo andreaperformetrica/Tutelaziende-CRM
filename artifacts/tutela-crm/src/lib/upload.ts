@@ -75,3 +75,4 @@ export const urlAttestatiPresenti = (eventoId: number) => `${BASE}/backoffice/ev
 export const urlEstrattoPdf = (id: number) => `${BASE}/backoffice/compensi/estratti/${id}/pdf`;
 export const urlDareAverePdf = (collaboratoreId: number, anno: number) => `${BASE}/backoffice/compensi/dare-avere/pdf?collaboratoreId=${collaboratoreId}&anno=${anno}`;
 export const urlLogoStampa = (versione: string = "") => `${BASE}/backoffice/compensi/impostazioni-stampa/logo?v=${encodeURIComponent(versione)}`;
+export const urlEsportaStatisticheOperatori = (dal: string, al: string) => `${BASE}/backoffice/statistiche-operatori/esporta?${new URLSearchParams({ dal, al }).toString()}`;

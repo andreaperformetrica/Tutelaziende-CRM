@@ -13,10 +13,10 @@
  *              TWILIO_WHATSAPP_TEMPLATE_SID (Content SID del template approvato per le pratiche)
  *              TWILIO_WHATSAPP_TEMPLATE_EVENTO_SID (Content SID del template per gli inviti agli eventi)
  *  - chiamata: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN (gli stessi di WhatsApp), TWILIO_CHIAMATA_DA (numero mittente)
- *  - link:     URL_PIATTAFORMA (indirizzo pubblico della piattaforma; in sviluppo si usa il dominio dell'ambiente)
+ *  - link:     indirizzo scritto nelle impostazioni (Registro notifiche), altrimenti URL_PIATTAFORMA, altrimenti il dominio pubblicato
  */
 import { and, eq, inArray, isNull, lt, sql } from "drizzle-orm";
-import { db, notificheTable, type NotificaRow } from "@workspace/db";
+import { db, impostazioniTable, notificheTable, type NotificaRow } from "@workspace/db";
 import type { Executor } from "./log";
 import { logger } from "./logger";
 
@@ -32,6 +32,7 @@ export const EVENTI_NOTIFICA = {
   assistito_duplicato: "Anagrafica già registrata (agli admin)",
   evento_invito: "Invito a un evento (alla sede)",
   estratto_inviato: "Estratto pratiche chiuse (alla sede)",
+  alert_collaboratori: "Alert sui collaboratori (agli admin)",
   credenziali_collaboratore: "Credenziali di accesso (al nuovo collaboratore)",
 } as const;
 export type EventoNotifica = keyof typeof EVENTI_NOTIFICA;
@@ -112,11 +113,75 @@ export function statoCanali(): Record<CanaleNotifica, { attivo: boolean; mancant
   };
 }
 
-export function urlPiattaforma(percorso = "/"): string {
-  const configurato = valore("URL_PIATTAFORMA");
-  const dominio = valore("REPLIT_DEV_DOMAIN") ?? valore("REPLIT_DOMAINS")?.split(",")[0];
-  const base = (configurato ?? (dominio ? `https://${dominio}` : "http://localhost")).replace(/\/+$/, "");
-  return `${base}${percorso.startsWith("/") ? percorso : `/${percorso}`}`;
+// ---------------------------------------------------------------------------------------------
+// Indirizzo base dei link (mai localhost)
+// ---------------------------------------------------------------------------------------------
+
+const CHIAVE_URL_PIATTAFORMA = "url_piattaforma";
+export type OrigineUrl = "impostazioni" | "segreto" | "dominio" | "nessuna";
+
+/** Indirizzi che non si possono aprire da fuori: non vanno mai nelle email. */
+function eLocale(host: string): boolean {
+  const h = host.toLowerCase();
+  return h === "localhost" || h === "0.0.0.0" || h === "::1" || h === "[::1]" || /^127\./.test(h) || h.endsWith(".local") || h.endsWith(".internal") || !h.includes(".");
+}
+
+/** Normalizza l'indirizzo scritto dall'admin: restituisce l'indirizzo pulito oppure il motivo per cui non va bene. */
+export function normalizzaUrlPiattaforma(grezzo: string): { url: string } | { errore: string } {
+  const t = grezzo.trim();
+  if (!t) return { errore: "Scrivi l'indirizzo dell'app (per esempio https://gestionale.tuodominio.it)." };
+  let u: URL;
+  try {
+    u = new URL(/^https?:\/\//i.test(t) ? t : `https://${t}`);
+  } catch {
+    return { errore: "L'indirizzo non è valido. Esempio: https://gestionale.tuodominio.it" };
+  }
+  if (u.protocol !== "https:" && u.protocol !== "http:") return { errore: "L'indirizzo deve iniziare con https://" };
+  if (eLocale(u.hostname)) return { errore: "L'indirizzo deve essere quello pubblico dell'app: localhost e indirizzi interni non si possono aprire dalle email." };
+  const percorso = u.pathname.replace(/\/+$/, "");
+  return { url: `${u.protocol}//${u.host}${percorso}` };
+}
+
+let cacheUrl: { valore: string | null; scade: number } | null = null;
+
+async function urlSalvato(): Promise<string | null> {
+  if (cacheUrl && cacheUrl.scade > Date.now()) return cacheUrl.valore;
+  const [r] = await db.select({ valore: impostazioniTable.valore }).from(impostazioniTable).where(eq(impostazioniTable.chiave, CHIAVE_URL_PIATTAFORMA));
+  cacheUrl = { valore: r?.valore ?? null, scade: Date.now() + 30_000 };
+  return cacheUrl.valore;
+}
+
+export async function salvaUrlPiattaforma(ex: Executor, url: string | null): Promise<void> {
+  if (url === null) await ex.delete(impostazioniTable).where(eq(impostazioniTable.chiave, CHIAVE_URL_PIATTAFORMA));
+  else {
+    await ex.insert(impostazioniTable).values({ chiave: CHIAVE_URL_PIATTAFORMA, valore: url }).onConflictDoUpdate({ target: impostazioniTable.chiave, set: { valore: url } });
+  }
+  cacheUrl = null;
+}
+
+/**
+ * Indirizzo base dell'app per i link nelle email e nei messaggi. In ordine: quello scritto nelle impostazioni dall'admin,
+ * il segreto URL_PIATTAFORMA, il dominio pubblicato (REPLIT_DOMAINS), il dominio di sviluppo. Gli indirizzi locali si scartano.
+ */
+export async function baseUrlPiattaforma(): Promise<{ url: string | null; origine: OrigineUrl }> {
+  const candidati: { origine: OrigineUrl; v: string | null }[] = [
+    { origine: "impostazioni", v: await urlSalvato() },
+    { origine: "segreto", v: valore("URL_PIATTAFORMA") ?? null },
+    { origine: "dominio", v: valore("REPLIT_DOMAINS")?.split(",")[0]?.trim() ?? valore("REPLIT_DEV_DOMAIN") ?? null },
+  ];
+  for (const c of candidati) {
+    if (!c.v) continue;
+    const n = normalizzaUrlPiattaforma(c.v);
+    if ("url" in n) return { url: n.url, origine: c.origine };
+  }
+  return { url: null, origine: "nessuna" };
+}
+
+/** Link completo a una pagina dell'app. Se non c'e' nessun indirizzo pubblico restituisce solo il percorso (mai localhost). */
+export async function urlPiattaforma(percorso = "/"): Promise<string> {
+  const { url } = await baseUrlPiattaforma();
+  const p = percorso.startsWith("/") ? percorso : `/${percorso}`;
+  return `${url ?? ""}${p}`;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -131,7 +196,7 @@ const MOTIVO_SENZA_RECAPITO = {
 
 /** Scrive le righe del registro. Restituisce gli id da passare a `recapitaNotifiche` dopo il commit. */
 export async function accodaNotifiche(executor: Executor, r: RichiestaNotifica): Promise<number[]> {
-  const link = urlPiattaforma(r.percorso);
+  const link = await urlPiattaforma(r.percorso);
   const righe: (typeof notificheTable.$inferInsert)[] = [];
   for (const d of r.destinatari) {
     for (const canale of r.canali) {

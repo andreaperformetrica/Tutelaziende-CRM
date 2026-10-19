@@ -36,6 +36,10 @@ tags:
     description: Eventi e corsi di formazione nel back office (solo admin e super admin)
   - name: eventi
     description: Eventi e corsi di formazione nel Web Collaboratore
+  - name: alert
+  - name: dashboard
+  - name: chat
+  - name: statistiche
   - name: notifiche
     description: Registro delle notifiche email e WhatsApp. Solo admin e super admin
   - name: compensi
@@ -750,6 +754,192 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/StatoNotifiche"
+  /notifiche/impostazioni:
+    get:
+      operationId: getImpostazioniNotifiche
+      tags: [notifiche]
+      summary: Indirizzo dell'app usato nei link delle email
+      responses:
+        "200":
+          description: Impostazioni
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImpostazioniNotifiche"
+    put:
+      operationId: updateImpostazioniNotifiche
+      tags: [notifiche]
+      summary: Imposta l'indirizzo pubblico dell'app (vuoto = usa quello automatico)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImpostazioniNotificheInput"
+      responses:
+        "200":
+          description: Impostazioni aggiornate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImpostazioniNotifiche"
+  /backoffice/alert:
+    get:
+      operationId: listAlertCollaboratori
+      tags: [alert]
+      summary: Alert sui collaboratori (aperti oppure risolti)
+      parameters:
+        - { name: stato, in: query, required: false, schema: { type: string, enum: [aperto, risolto] } }
+      responses:
+        "200":
+          description: Alert
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertElenco"
+  /backoffice/alert/conteggio:
+    get:
+      operationId: getConteggioAlert
+      tags: [alert]
+      summary: Numero di alert aperti
+      responses:
+        "200":
+          description: Conteggio
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConteggioAlert"
+  /backoffice/alert/configurazione:
+    get:
+      operationId: getConfigurazioneAlert
+      tags: [alert]
+      summary: Regole e soglie degli alert
+      responses:
+        "200":
+          description: Configurazione
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertConfigurazione"
+    put:
+      operationId: updateConfigurazioneAlert
+      tags: [alert]
+      summary: Salva regole e soglie e ricalcola gli alert
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AlertConfigurazione"
+      responses:
+        "200":
+          description: Configurazione salvata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertConfigurazione"
+  /backoffice/dashboard:
+    get:
+      operationId: getDashboardOperatore
+      tags: [dashboard]
+      summary: Riepilogo di lavoro dell'utente di back office
+      responses:
+        "200":
+          description: Dashboard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardOperatore"
+  /backoffice/chat/conversazioni:
+    get:
+      operationId: listConversazioniChat
+      tags: [chat]
+      summary: Canale generale e persone con cui si può scrivere, con i messaggi non letti
+      responses:
+        "200":
+          description: Conversazioni
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatConversazione"
+  /backoffice/chat/non-letti:
+    get:
+      operationId: getNonLettiChat
+      tags: [chat]
+      summary: Totale dei messaggi non letti
+      responses:
+        "200":
+          description: Conteggio
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatNonLetti"
+  /backoffice/chat/conversazioni/{chiave}/messaggi:
+    parameters:
+      - { name: chiave, in: path, required: true, schema: { type: string } }
+    get:
+      operationId: listMessaggiChat
+      tags: [chat]
+      summary: Messaggi di una conversazione (gli ultimi 200)
+      responses:
+        "200":
+          description: Messaggi
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatMessaggio"
+    post:
+      operationId: sendMessaggioChat
+      tags: [chat]
+      summary: Scrive un messaggio
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatMessaggioInput"
+      responses:
+        "201":
+          description: Messaggio inviato
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatMessaggio"
+  /backoffice/chat/conversazioni/{chiave}/letti:
+    parameters:
+      - { name: chiave, in: path, required: true, schema: { type: string } }
+    post:
+      operationId: segnaLettaChat
+      tags: [chat]
+      summary: Segna come letti i messaggi fino a quello indicato
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatLettoInput"
+      responses:
+        "204":
+          description: Eseguito
+  /backoffice/statistiche-operatori:
+    get:
+      operationId: getStatisticheOperatori
+      tags: [statistiche]
+      summary: Statistiche di lavoro per operatore in un periodo (solo super admin)
+      parameters:
+        - { name: dal, in: query, required: false, schema: { type: string }, description: Data iniziale AAAA-MM-GG }
+        - { name: al, in: query, required: false, schema: { type: string }, description: Data finale AAAA-MM-GG }
+      responses:
+        "200":
+          description: Statistiche
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatisticheOperatori"
   /backoffice/eventi:
     get:
       operationId: listEventiBackoffice
@@ -3512,6 +3702,158 @@ components:
         scadenzaIl: { type: string, format: date-time }
         stato: { type: string, enum: [vicina, superata] }
         giorniResidui: { type: integer }
+    ImpostazioniNotifiche:
+      type: object
+      required: [urlPiattaforma, urlEffettivo, origine]
+      properties:
+        urlPiattaforma: { type: [string, "null"], description: Indirizzo scritto dall'admin }
+        urlEffettivo: { type: [string, "null"], description: Indirizzo che verrà davvero usato nei link }
+        origine: { type: string, enum: [impostazioni, segreto, dominio, nessuna] }
+    ImpostazioniNotificheInput:
+      type: object
+      required: [urlPiattaforma]
+      properties:
+        urlPiattaforma: { type: [string, "null"], maxLength: 300 }
+    AlertRegolaInattivita:
+      type: object
+      required: [attiva, mesi, tipiIds]
+      properties:
+        attiva: { type: boolean }
+        mesi: { type: integer, minimum: 1, maximum: 60 }
+        tipiIds: { type: array, items: { type: integer } }
+    AlertRegolaVolume:
+      type: object
+      required: [attiva, soglia, periodoGiorni, tipiIds]
+      properties:
+        attiva: { type: boolean }
+        soglia: { type: integer, minimum: 1, maximum: 1000 }
+        periodoGiorni: { type: integer, minimum: 1, maximum: 365 }
+        tipiIds: { type: array, items: { type: integer } }
+    AlertConfigurazione:
+      type: object
+      required: [inattivita, volume]
+      properties:
+        inattivita: { $ref: "#/components/schemas/AlertRegolaInattivita" }
+        volume: { $ref: "#/components/schemas/AlertRegolaVolume" }
+    ConteggioAlert:
+      type: object
+      required: [aperti]
+      properties:
+        aperti: { type: integer }
+    AlertCollaboratore:
+      type: object
+      required: [id, regola, collaboratoreId, collaboratoreNome, sportello, tipoId, tipoNome, stato, valore, ultimaPraticaIl, creatoIl, risoltoIl, descrizione]
+      properties:
+        id: { type: integer }
+        regola: { type: string, enum: [inattivita, volume] }
+        collaboratoreId: { type: integer }
+        collaboratoreNome: { type: string }
+        sportello: { type: string }
+        tipoId: { type: integer }
+        tipoNome: { type: string }
+        stato: { type: string, enum: [aperto, risolto] }
+        valore: { type: integer }
+        ultimaPraticaIl: { type: [string, "null"], format: date-time }
+        creatoIl: { type: string, format: date-time }
+        risoltoIl: { type: [string, "null"], format: date-time }
+        descrizione: { type: string }
+    AlertElenco:
+      type: object
+      required: [elementi, aperti]
+      properties:
+        elementi: { type: array, items: { $ref: "#/components/schemas/AlertCollaboratore" } }
+        aperti: { type: integer }
+    PraticaDaVedere:
+      type: object
+      required: [id, numero, assistito, tipoNome, data]
+      properties:
+        id: { type: integer }
+        numero: { type: integer }
+        assistito: { type: string }
+        tipoNome: { type: string }
+        data: { type: string, format: date-time }
+        dettaglio: { type: [string, "null"] }
+    DashboardOperatore:
+      type: object
+      required: [inCarico, nuove, commentiSenzaRisposta, scadenze, nuoveElenco, commentiElenco, scadenzeElenco]
+      properties:
+        inCarico: { type: integer }
+        nuove: { type: integer }
+        commentiSenzaRisposta: { type: integer }
+        scadenze: { type: integer }
+        nuoveElenco: { type: array, items: { $ref: "#/components/schemas/PraticaDaVedere" } }
+        commentiElenco: { type: array, items: { $ref: "#/components/schemas/PraticaDaVedere" } }
+        scadenzeElenco: { type: array, items: { $ref: "#/components/schemas/AvvisoScadenza" } }
+    ChatUtente:
+      type: object
+      required: [id, nome, cognome, ruolo, colore]
+      properties:
+        id: { type: integer }
+        nome: { type: string }
+        cognome: { type: string }
+        ruolo: { type: string }
+        colore: { type: [string, "null"] }
+    ChatUltimoMessaggio:
+      type: object
+      required: [testo, creatoIl, mio]
+      properties:
+        testo: { type: string }
+        creatoIl: { type: string, format: date-time }
+        mio: { type: boolean }
+    ChatConversazione:
+      type: object
+      required: [chiave, tipo, utente, nonLetti, ultimoMessaggio]
+      properties:
+        chiave: { type: string, description: "generale oppure u + id dell'altra persona" }
+        tipo: { type: string, enum: [generale, diretta] }
+        utente: { oneOf: [{ $ref: "#/components/schemas/ChatUtente" }, { type: "null" }] }
+        nonLetti: { type: integer }
+        ultimoMessaggio: { oneOf: [{ $ref: "#/components/schemas/ChatUltimoMessaggio" }, { type: "null" }] }
+    ChatMessaggio:
+      type: object
+      required: [id, mittente, testo, creatoIl, mio]
+      properties:
+        id: { type: integer }
+        mittente: { $ref: "#/components/schemas/ChatUtente" }
+        testo: { type: string }
+        creatoIl: { type: string, format: date-time }
+        mio: { type: boolean }
+    ChatMessaggioInput:
+      type: object
+      required: [testo]
+      properties:
+        testo: { type: string, maxLength: 2000 }
+    ChatLettoInput:
+      type: object
+      required: [fino]
+      properties:
+        fino: { type: integer }
+    ChatNonLetti:
+      type: object
+      required: [totale]
+      properties:
+        totale: { type: integer }
+    StatisticaOperatore:
+      type: object
+      required: [utenteId, nome, cognome, ruolo, colore, preseInCarico, lavorate, chiuse, tempoMedioOre, commentiInviati]
+      properties:
+        utenteId: { type: integer }
+        nome: { type: string }
+        cognome: { type: string }
+        ruolo: { type: string }
+        colore: { type: [string, "null"] }
+        preseInCarico: { type: integer }
+        lavorate: { type: integer }
+        chiuse: { type: integer }
+        tempoMedioOre: { type: [number, "null"] }
+        commentiInviati: { type: integer }
+    StatisticheOperatori:
+      type: object
+      required: [dal, al, righe]
+      properties:
+        dal: { type: string }
+        al: { type: string }
+        righe: { type: array, items: { $ref: "#/components/schemas/StatisticaOperatore" } }
     CambioPrioritaInput:
       type: object
       required: [priorita]

@@ -22,6 +22,10 @@ import CollaboratoreNuovo from '@/pages/admin/collaboratore-nuovo';
 import CollaboratoreDettaglioPage from '@/pages/admin/collaboratore-dettaglio';
 import UtentiPage from '@/pages/admin/utenti';
 import LogPage from '@/pages/admin/log';
+import DashboardPage from '@/pages/admin/dashboard';
+import ChatPage from '@/pages/admin/chat';
+import AlertPage from '@/pages/admin/alert';
+import StatisticheOperatoriPage from '@/pages/admin/statistiche';
 import NotifichePage from '@/pages/admin/notifiche';
 import AssistitiBackoffice from '@/pages/admin/assistiti';
 import AssistitoDettaglioBackoffice from '@/pages/admin/assistito-dettaglio';
@@ -55,7 +59,7 @@ function Gate({ area, roles, children }: { area?: 'backoffice' | 'collaboratore'
   const [loc] = useLocation();
   if (isLoading) return <div className="min-h-[100dvh] p-10 space-y-3"><Skeleton className="h-10 w-64" /><Skeleton className="h-64 w-full" /></div>;
   if (failed) return <div className="p-10"><ErrorState message="Impossibile verificare la sessione." onRetry={() => refetch()} /></div>;
-  if (!session) return <Redirect to="/login" />;
+  if (!session) return <Redirect to={loc === "/" ? "/login" : `/login?ritorno=${encodeURIComponent(loc + window.location.search)}`} />;
   const forzato = session.deveCambiarePassword;
   if (forzato && loc !== '/cambia-password') return <Redirect to="/cambia-password" />;
   if (!forzato && area && session.area !== area) return <Redirect to={homeFor(session.area)} />;
@@ -81,6 +85,10 @@ function Router() {
         <Route path="/" component={Root} />
         <Route path="/login" component={LoginPage} />
         <Route path="/cambia-password" component={g(<CambiaPasswordPage />)} />
+        <Route path="/admin/dashboard" component={g(<DashboardPage />, 'backoffice', TUTTI_BO)} />
+        <Route path="/admin/chat" component={g(<ChatPage />, 'backoffice', TUTTI_BO)} />
+        <Route path="/admin/alert" component={g(<AlertPage />, 'backoffice', ADMIN)} />
+        <Route path="/admin/statistiche" component={g(<StatisticheOperatoriPage />, 'backoffice', ['super_admin'])} />
         <Route path="/admin/pratiche" component={g(<PraticheBackoffice />, 'backoffice', TUTTI_BO)} />
         <Route path="/admin/le-mie-pratiche" component={g(<LeMiePraticheBackoffice />, 'backoffice', TUTTI_BO)} />
         <Route path="/admin/pratiche/:id" component={g(<PraticaDettaglioBackoffice />, 'backoffice', TUTTI_BO)} />

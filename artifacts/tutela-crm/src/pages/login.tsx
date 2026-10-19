@@ -6,7 +6,7 @@ import { Loader2, LockKeyhole } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useSession, homeFor } from "@/lib/auth";
+import { useSession, homeFor, paginaDiRitorno } from "@/lib/auth";
 import { parseApiError } from "@/lib/format";
 
 export default function LoginPage() {
@@ -18,7 +18,7 @@ export default function LoginPage() {
   const [errore, setErrore] = useState<string | null>(null);
   const login = useLogin();
 
-  if (session) return <Redirect to={session.deveCambiarePassword ? "/cambia-password" : homeFor(session.area)} />;
+  if (session) return <Redirect to={session.deveCambiarePassword ? "/cambia-password" : (paginaDiRitorno() ?? homeFor(session.area))} />;
 
   const invia = (ev: React.FormEvent) => {
     ev.preventDefault();
@@ -27,7 +27,7 @@ export default function LoginPage() {
       onSuccess: (s) => {
         qc.setQueryData(getGetSessioneQueryKey(), s);
         qc.invalidateQueries({ queryKey: getGetSessioneQueryKey() });
-        nav(s.deveCambiarePassword ? "/cambia-password" : homeFor(s.area));
+        nav(s.deveCambiarePassword ? "/cambia-password" : (paginaDiRitorno() ?? homeFor(s.area)));
       },
       onError: (e) => {
         const p = parseApiError(e);
