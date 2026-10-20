@@ -14,15 +14,15 @@ import { UtenteAvatar } from "@/components/utenti/colore-utente";
 import { cn } from "@/lib/utils";
 import { fmtIstante, parseApiError, ruoloLabel } from "@/lib/format";
 
-const titolo = (c: ChatConversazione) => (c.utente ? `${c.utente.nome} ${c.utente.cognome}` : "Canale generale");
+export const titolo = (c: ChatConversazione) => (c.utente ? `${c.utente.nome} ${c.utente.cognome}` : "Canale generale");
 
-function Icona({ c }: { c: ChatConversazione }) {
+export function Icona({ c }: { c: ChatConversazione }) {
   return c.utente
     ? <UtenteAvatar id={c.utente.id} colore={c.utente.colore} nome={c.utente.nome} cognome={c.utente.cognome} />
     : <div className="size-9 rounded-full bg-primary text-primary-foreground grid place-items-center"><Hash className="size-4" /></div>;
 }
 
-function Conversazione({ c }: { c: ChatConversazione }) {
+export function Conversazione({ c }: { c: ChatConversazione }) {
   const qc = useQueryClient();
   const chiave = c.chiave;
   const q = useListMessaggiChat(chiave, { query: { queryKey: getListMessaggiChatQueryKey(chiave), refetchInterval: 4000 } });
