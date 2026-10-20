@@ -22,3 +22,4 @@
 - [Aggiornamento 5](tutela-crm-aggiornamento5.md) — eventi: email partecipanti+QR, check-out/ore, soglia attestato, documenti ai presenti, questionario online monouso
 - [Aggiornamento 6](tutela-crm-aggiornamento6.md) — ricevute/pagamenti e fatture, crediti, esclusioni estratti, invio massivo, allegato pagamento, ruolo operatore
 - [Aggiornamento 7](tutela-crm-aggiornamento7.md) — importa compensi Excel 730/ISEE/NASPI: sportello match, NASPI differenze, un import per anno, file mai due volte
+- [Publish schema staging](publish-schema-staging.md) — drop+add in one Publish breaks; pending removal of categorie_allegato and importazioni.configurazione after next publish

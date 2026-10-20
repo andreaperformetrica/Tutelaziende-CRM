@@ -119,6 +119,11 @@ export const importazioniTable = pgTable(
     servizio: text("servizio", { enum: SERVIZI_IMPORT }).notNull(),
     /** Anno di riferimento (730/2025, ISEE trimestre 1 2026); per la NASPI e' l'anno della serie dei cumulati. */
     anno: integer("anno").notNull(),
+    /**
+     * Colonna non piu' usata (vecchia configurazione dell'import). Resta definita solo per il passaggio in produzione:
+     * eliminarla nello stesso Publish in cui compare "trimestre" viene scambiato per una rinomina. Si elimina con un Publish successivo.
+     */
+    configurazione: text("configurazione"),
     /** Solo ISEE: trimestre 1-4. */
     trimestre: integer("trimestre"),
     /** Solo NASPI: periodo scritto dall'admin (es. "gen-set 2026"), usato nella riga del dare/avere. */
