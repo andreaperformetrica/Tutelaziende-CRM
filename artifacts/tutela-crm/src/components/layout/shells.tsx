@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getGetAvvisiQueryKey, getGetConteggioAlertQueryKey, getGetConteggioSegnalazioniQueryKey, getGetNonLettiChatQueryKey, useGetAvvisi, useGetConteggioAlert, useGetConteggioSegnalazioni, useGetNonLettiChat, useLogout, type SessioneUtente } from "@workspace/api-client-react";
 import { Inbox, UserCheck, KeyRound, LogOut, ScrollText, ShieldCheck, Users, UsersRound, Home, UserRound, TriangleAlert, FileText, FileSignature, ListOrdered, Clock, Bell, CalendarDays, Coins, Settings, ChevronDown, Newspaper, Menu, LayoutDashboard, MessagesSquare, BellRing, ChartColumn, Receipt, FileSpreadsheet } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { ChatFlottante } from "@/components/layout/chat-flottante";
 import { UtenteAvatar } from "@/components/utenti/colore-utente";
 import { iniziali, ruoloLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -155,6 +156,7 @@ export function BackofficeShell({ s, children }: { s: SessioneUtente; children: 
         {voceCorrente && <div className="text-sm font-semibold truncate max-w-[45%] text-right" data-testid="titolo-sezione-mobile">{voceCorrente.label}</div>}
       </header>
       <main className="min-w-0 px-4 py-5 md:px-8 md:py-8 w-full">{children}</main>
+      <ChatFlottante />
     </div>
   );
 }
