@@ -92,7 +92,6 @@ export function Conversazione({ c }: { c: ChatConversazione }) {
             {invia.isPending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
           </Button>
         </div>
-        <p className="text-[11px] text-muted-foreground">Invio con Invio, a capo con Maiusc + Invio. I messaggi non si possono modificare né cancellare.</p>
       </div>
     </div>
   );
