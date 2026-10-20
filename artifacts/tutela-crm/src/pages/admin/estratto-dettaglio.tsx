@@ -15,7 +15,7 @@ import { ErrorState, PageHeader } from "@/components/common";
 import { ConfermaElimina } from "@/components/pratiche/conferma-elimina";
 import { useToast } from "@/hooks/use-toast";
 import { fmtData, fmtEuro, fmtIstante, parseApiError } from "@/lib/format";
-import { FORMATI_DOCUMENTI, formatoDimensione, inviaFile, messaggioErrore, urlAllegatoPagamentoEstratto, urlEstrattoPdf } from "@/lib/upload";
+import { FORMATI_DOCUMENTI, formatoDimensione, inviaFile, messaggioErrore, urlAllegatoPagamentoEstratto, urlEstrattoPdf, apriFile } from "@/lib/upload";
 
 const METODI = { bonifico: "Bonifico", contanti: "Contanti", assegno: "Assegno", altro: "Altro" } as const;
 const oggi = () => new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Rome" }).format(new Date());
@@ -81,7 +81,7 @@ export default function EstrattoDettaglioPage() {
         subtitle={<>del {fmtData(e.dataEstratto)} · Totale pratiche {e.numeroPratiche} · Totale punti {e.totalePunti} · ristorno {fmtEuro(e.totaleEuro)}</>}
         actions={
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" asChild><a href={urlEstrattoPdf(id)} target="_blank" rel="noreferrer" data-testid="button-pdf-estratto"><Printer className="size-4 mr-2" />Stampa PDF</a></Button>
+            <Button variant="outline" asChild><a href={urlEstrattoPdf(id)} onClick={(e) => apriFile(e, urlEstrattoPdf(id))} target="_blank" rel="noreferrer" data-testid="button-pdf-estratto"><Printer className="size-4 mr-2" />Stampa PDF</a></Button>
             <Button variant="outline" disabled={invia.isPending} data-testid="button-invia-estratto"
               onClick={() => invia.mutate({ id }, {
                 onSuccess: (r) => { aggiorna(); toast({ title: r.esitoEtichetta, description: r.dettaglio ?? undefined }); },
@@ -99,7 +99,7 @@ export default function EstrattoDettaglioPage() {
             <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-border pt-3" data-testid="allegato-pagamento">
               <Paperclip className="size-4 text-muted-foreground" />
               {allegato ? (
-                <span>Documento allegato: <a href={urlAllegatoPagamentoEstratto(id, true)} target="_blank" rel="noreferrer" className="underline font-medium" data-testid="link-allegato-pagamento">{allegato.nome}</a> <span className="text-muted-foreground">({formatoDimensione(allegato.dimensione)}, caricato il {fmtIstante(allegato.caricatoIl)})</span></span>
+                <span>Documento allegato: <a href={urlAllegatoPagamentoEstratto(id, true)} onClick={(e) => apriFile(e, urlAllegatoPagamentoEstratto(id, true))} target="_blank" rel="noreferrer" className="underline font-medium" data-testid="link-allegato-pagamento">{allegato.nome}</a> <span className="text-muted-foreground">({formatoDimensione(allegato.dimensione)}, caricato il {fmtIstante(allegato.caricatoIl)})</span></span>
               ) : <span className="text-muted-foreground">Nessun documento allegato (per esempio la contabile del bonifico).</span>}
               <input ref={inputAllegato} type="file" accept={FORMATI_DOCUMENTI} className="hidden" onChange={(x) => allega(x.target.files?.[0])} data-testid="input-allegato-pagamento" />
               <Button size="sm" variant="outline" disabled={carica} onClick={() => inputAllegato.current?.click()} data-testid="button-allega-pagamento">{carica ? "Caricamento…" : allegato ? "Sostituisci documento" : "Allega documento"}</Button>

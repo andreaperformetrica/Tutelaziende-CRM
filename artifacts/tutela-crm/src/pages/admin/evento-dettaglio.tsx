@@ -26,8 +26,7 @@ import { EsitoQuizBadge, QuizOnline } from "@/components/eventi/quiz-online";
 import { useToast } from "@/hooks/use-toast";
 import { fmtData, fmtIstante, fmtOrarioEvento, fmtOre, oraDaIstante, parseApiError, tipologiaLabel } from "@/lib/format";
 import {
-  formatoDimensione, inviaFile, messaggioErrore, urlAnteprimaAttestato, urlAttestatiPresenti, urlAttestatoPartecipante, urlQuestionarioBackoffice,
-} from "@/lib/upload";
+  formatoDimensione, inviaFile, messaggioErrore, urlAnteprimaAttestato, urlAttestatiPresenti, urlAttestatoPartecipante, urlQuestionarioBackoffice, apriFile } from "@/lib/upload";
 
 export default function EventoDettaglioBackoffice() {
   const params = useParams<{ id: string }>();
@@ -126,7 +125,7 @@ function Iscritti({ s, id, presenti, onSalva }: Comune & { presenti: number }) {
       <div className="flex flex-wrap items-center gap-3 justify-between">
         <p className="text-sm text-muted-foreground" data-testid="text-conteggio-presenti"><strong className="text-foreground">{presenti}</strong> presenti su {s.partecipanti.length} iscritti · <strong className="text-foreground">{idonei}</strong> con almeno {fmtOre(Math.round(s.evento.oreMinimeAttestato * 60))} di presenza</p>
         {haLayout && idonei > 0 ? (
-          <Button asChild variant="outline"><a href={urlAttestatiPresenti(id)} target="_blank" rel="noreferrer" data-testid="link-attestati-presenti"><Printer className="size-4 mr-2" /> Attestati di chi ha le ore ({idonei})</a></Button>
+          <Button asChild variant="outline"><a href={urlAttestatiPresenti(id)} onClick={(e) => apriFile(e, urlAttestatiPresenti(id))} target="_blank" rel="noreferrer" data-testid="link-attestati-presenti"><Printer className="size-4 mr-2" /> Attestati di chi ha le ore ({idonei})</a></Button>
         ) : (
           <Button variant="outline" disabled title={haLayout ? "Nessun partecipante ha le ore minime" : "Indica prima tipo di corso e argomento nell'evento"}><Printer className="size-4 mr-2" /> Attestati di chi ha le ore (0)</Button>
         )}
@@ -152,7 +151,7 @@ function Iscritti({ s, id, presenti, onSalva }: Comune & { presenti: number }) {
                   <TableCell data-label="Questionario online" className="whitespace-nowrap" data-testid={`quiz-iscritto-${p.id}`}><EsitoQuizBadge quiz={p.quiz} /></TableCell>
                   <TableCell className="text-right whitespace-nowrap">
                     <Button size="sm" variant="ghost" onClick={() => apri(p)} data-testid={`button-orari-${p.id}`}><Pencil className="size-3.5 mr-1.5" /> Orari</Button>
-                    {haLayout && p.idoneoAttestato && <Button asChild size="sm" variant="ghost"><a href={urlAttestatoPartecipante(id, p.id)} target="_blank" rel="noreferrer" data-testid={`link-attestato-${p.id}`}><Award className="size-3.5 mr-1.5" /> Attestato</a></Button>}
+                    {haLayout && p.idoneoAttestato && <Button asChild size="sm" variant="ghost"><a href={urlAttestatoPartecipante(id, p.id)} onClick={(e) => apriFile(e, urlAttestatoPartecipante(id, p.id))} target="_blank" rel="noreferrer" data-testid={`link-attestato-${p.id}`}><Award className="size-3.5 mr-1.5" /> Attestato</a></Button>}
                   </TableCell>
                 </TableRow>
               ))}

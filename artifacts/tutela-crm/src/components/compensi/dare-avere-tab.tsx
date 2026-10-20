@@ -15,7 +15,7 @@ import { ConfermaElimina } from "@/components/pratiche/conferma-elimina";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@/lib/auth";
 import { fmtData, fmtEuro, parseApiError } from "@/lib/format";
-import { urlDareAverePdf } from "@/lib/upload";
+import { urlDareAverePdf, apriFile } from "@/lib/upload";
 import { SceltaCollaboratore } from "./scelta-collaboratore";
 
 type SezioneManuale = "naspi" | "pensionati" | "caf" | "crediti" | "debiti";
@@ -148,7 +148,7 @@ export function DareAvereTab() {
       <div className="flex flex-wrap items-end gap-3 mb-4">
         <div className="space-y-1.5"><Label>Collaboratore</Label><div><SceltaCollaboratore valore={coll} onChange={setColl} testid="dare-avere-collaboratore" /></div></div>
         <div className="space-y-1.5"><Label htmlFor="da-anno">Anno</Label><Input id="da-anno" inputMode="numeric" maxLength={4} value={anno} onChange={(e) => setAnno(e.target.value)} className="w-28 bg-card" data-testid="dare-avere-anno" /></div>
-        {coll && annoOk && <Button variant="outline" asChild><a href={urlDareAverePdf(Number(coll), Number(anno))} target="_blank" rel="noreferrer" data-testid="button-pdf-dare-avere"><Printer className="size-4 mr-2" />Stampa PDF</a></Button>}
+        {coll && annoOk && <Button variant="outline" asChild><a href={urlDareAverePdf(Number(coll), Number(anno))} onClick={(e) => apriFile(e, urlDareAverePdf(Number(coll), Number(anno)))} target="_blank" rel="noreferrer" data-testid="button-pdf-dare-avere"><Printer className="size-4 mr-2" />Stampa PDF</a></Button>}
       </div>
       {!coll ? <p className="text-sm text-muted-foreground">Scegli un collaboratore per vedere il dare e avere dell'anno.</p>
         : !annoOk ? <p className="text-sm text-muted-foreground">Inserisci un anno valido (aaaa).</p>

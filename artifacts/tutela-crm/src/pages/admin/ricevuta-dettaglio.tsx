@@ -14,7 +14,7 @@ import { ErrorState, PageHeader } from "@/components/common";
 import { ConfermaElimina } from "@/components/pratiche/conferma-elimina";
 import { useToast } from "@/hooks/use-toast";
 import { fmtData, fmtEuro, fmtIstante, parseApiError } from "@/lib/format";
-import { FORMATI_DOCUMENTI, formatoDimensione, inviaFile, messaggioErrore, urlAllegatoRicevuta, urlRicevutaPdf } from "@/lib/upload";
+import { FORMATI_DOCUMENTI, formatoDimensione, inviaFile, messaggioErrore, urlAllegatoRicevuta, urlRicevutaPdf, apriFile } from "@/lib/upload";
 
 const METODI = { bonifico: "Bonifico", contanti: "Contanti", assegno: "Assegno", altro: "Altro" } as const;
 const oggi = () => new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Rome" }).format(new Date());
@@ -82,7 +82,7 @@ export default function RicevutaDettaglioPage() {
       <PageHeader title={`Ricevuta n. ${r.numero}/${r.anno}`} kicker={r.collaboratoreNome} subtitle={<>del {fmtData(r.dataRicevuta)} · {r.origineDescrizione}</>}
         actions={
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" asChild><a href={urlRicevutaPdf(id)} target="_blank" rel="noreferrer" data-testid="button-pdf-ricevuta"><Printer className="size-4 mr-2" />Scarica PDF</a></Button>
+            <Button variant="outline" asChild><a href={urlRicevutaPdf(id)} onClick={(e) => apriFile(e, urlRicevutaPdf(id))} target="_blank" rel="noreferrer" data-testid="button-pdf-ricevuta"><Printer className="size-4 mr-2" />Scarica PDF</a></Button>
             {!r.pagata && <Button onClick={() => { setErr(null); setFile(null); setPagamento({ data: oggi(), metodo: "bonifico" }); }} data-testid="button-registra-pagamento-ricevuta"><Banknote className="size-4 mr-2" />Registra pagamento</Button>}
             {d.eliminabile && <Button variant="outline" onClick={() => setConferma(true)} data-testid="button-elimina-ricevuta"><Trash2 className="size-4 mr-2" />Elimina</Button>}
           </div>
@@ -110,7 +110,7 @@ export default function RicevutaDettaglioPage() {
             <div className="flex flex-wrap items-center gap-3 border-t border-border pt-3" data-testid="allegato-ricevuta">
               <Paperclip className="size-4 text-muted-foreground" />
               {d.allegato
-                ? <span>Bonifico: <a href={urlAllegatoRicevuta(id, true)} target="_blank" rel="noreferrer" className="underline font-medium" data-testid="link-allegato-ricevuta">{d.allegato.nome}</a> <span className="text-muted-foreground">({formatoDimensione(d.allegato.dimensione)}, caricato il {fmtIstante(d.allegato.caricatoIl)})</span></span>
+                ? <span>Bonifico: <a href={urlAllegatoRicevuta(id, true)} onClick={(e) => apriFile(e, urlAllegatoRicevuta(id, true))} target="_blank" rel="noreferrer" className="underline font-medium" data-testid="link-allegato-ricevuta">{d.allegato.nome}</a> <span className="text-muted-foreground">({formatoDimensione(d.allegato.dimensione)}, caricato il {fmtIstante(d.allegato.caricatoIl)})</span></span>
                 : <span className="text-muted-foreground">Nessun bonifico allegato.</span>}
               <input ref={inputAllegato} type="file" accept={FORMATI_DOCUMENTI} className="hidden" onChange={(x) => allega(x.target.files?.[0])} data-testid="input-allegato-ricevuta" />
               <Button size="sm" variant="outline" disabled={carica} onClick={() => inputAllegato.current?.click()} data-testid="button-allega-ricevuta">{carica ? "Caricamento…" : d.allegato ? "Sostituisci bonifico" : "Allega bonifico"}</Button>

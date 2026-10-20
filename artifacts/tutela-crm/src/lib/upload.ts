@@ -1,4 +1,5 @@
 /** Caricamento di file verso l'API (corpo binario, fuori dal client generato) e link di download. */
+import { toast } from "@/hooks/use-toast";
 const BASE = `${import.meta.env.BASE_URL}api`;
 export const MAX_FILE_BYTES = 15 * 1024 * 1024;
 /** Per i documenti delle pratiche sono ammessi solo PDF e immagini. */
@@ -81,3 +82,30 @@ export const urlEsportaStatisticheOperatori = (dal: string, al: string) => `${BA
 export const urlAllegatoPagamentoEstratto = (id: number, anteprima = false) => `${BASE}/backoffice/compensi/estratti/${id}/pagamento/allegato/file${anteprima ? "?anteprima=1" : ""}`;
 export const urlRicevutaPdf = (id: number) => `${BASE}/backoffice/ricevute/${id}/pdf`;
 export const urlAllegatoRicevuta = (id: number, anteprima = false) => `${BASE}/backoffice/ricevute/${id}/allegato/file${anteprima ? "?anteprima=1" : ""}`;
+
+/**
+ * Apre un file riservato (PDF, allegato) in una nuova scheda. Nell'anteprima di Replit il cookie di sessione
+ * non viene inviato a una scheda aperta con un semplice link, quindi il file si scarica da qui, con la sessione, e
+ * la nuova scheda mostra la copia scaricata. Si apre la scheda subito (prima del download) per non farla bloccare dal browser.
+ */
+export function apriFile(e: { preventDefault: () => void }, url: string): void {
+  e.preventDefault();
+  const scheda = window.open("", "_blank");
+  fetch(url, { credentials: "include" })
+    .then(async (res) => {
+      if (!res.ok) {
+        let d: { error?: string } | null = null;
+        try { d = await res.json(); } catch { /* risposta non JSON */ }
+        throw new Error(d?.error ?? "Non è stato possibile aprire il file.");
+      }
+      const blob = await res.blob();
+      const indirizzo = URL.createObjectURL(blob);
+      if (scheda) scheda.location.href = indirizzo;
+      else window.location.href = indirizzo;
+      setTimeout(() => URL.revokeObjectURL(indirizzo), 10 * 60 * 1000);
+    })
+    .catch((err: unknown) => {
+      scheda?.close();
+      toast({ title: "File non disponibile", description: messaggioErrore(err, "Non è stato possibile aprire il file."), variant: "destructive" });
+    });
+}
